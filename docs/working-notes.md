@@ -92,3 +92,21 @@ Changes should be deliberate and traceable rather than added directly to the imp
 - A bug can transition from In Progress to Testing.
 - A bug can transition from Testing to Closed when testing passes.
 - A bug can transition from Testing to In Progress when testing fails.
+
+
+
+
+
+
+
+### Work Tracking
+
+Registration
+✅ Database/users table created
+✅ POST /register implemented
+✅ Password hashing implemented
+✅ Successful registration manually tested
+✅ Duplicate email manually tested
+✅ Duplicate email returns 409
+⬜ Automated tests
+⬜ Login
