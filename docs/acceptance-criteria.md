@@ -38,12 +38,7 @@
 - Login is rejected when an incorrect email or password is provided.
 - The user is informed that the credentials are invalid.
 
-### AC-002.3 — Unregistered Account
-
-- Login is rejected when the email address is not associated with an existing account.
-- The user is informed that the credentials are invalid.
-
-### AC-002.4 — Unauthenticated Access
+### AC-002.3 — Unauthenticated Access
 
 - A user who is not authenticated cannot access areas of the application that require authentication.
 - The user is redirected to the login page or otherwise informed that authentication is required.
