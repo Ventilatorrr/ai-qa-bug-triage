@@ -70,16 +70,9 @@ The system shall allow authorized users to set and update a bug's severity and p
 
 The system shall manage bug status according to the defined bug lifecycle.
 
-The lifecycle shall support:
-
-- Triage → In Progress
-- In Progress → Testing
-- Testing → Closed when testing passes
-- Testing → In Progress when testing fails
-
 ### REQ-017 — Fix Version
 
-The system shall allow a Fix Version to be specified when a bug enters Testing.
+The system shall support recording the version in which a bug was fixed.
 
 ### REQ-018 — Bug Search and Filtering
 

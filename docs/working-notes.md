@@ -81,3 +81,14 @@ Changes should be deliberate and traceable rather than added directly to the imp
 
 - Can multiple projects have the same name?
 - A Project Owner cannot remove themselves.
+
+
+
+
+
+### AC-010.1 — Bug Status Lifecycle
+
+- A bug can transition from Triage to In Progress.
+- A bug can transition from In Progress to Testing.
+- A bug can transition from Testing to Closed when testing passes.
+- A bug can transition from Testing to In Progress when testing fails.

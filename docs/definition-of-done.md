@@ -58,7 +58,3 @@ The Definition of Done (DoD) applies to every product increment. An increment is
 - Relevant documentation has been updated.
 - Requirements, user stories, and acceptance criteria remain traceable to the implemented functionality and tests.
 - Known limitations or unresolved lower-severity defects are documented.
-
-## Completion
-
-An increment is Done when all applicable DoD criteria have been satisfied.
