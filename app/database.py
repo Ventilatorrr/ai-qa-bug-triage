@@ -1,6 +1,7 @@
+import os
 import sqlite3
 
-DATABASE_NAME = "bugtriage.db"
+DATABASE_NAME = os.getenv("DATABASE_NAME", "bugtriage.db")
 
 
 def get_connection():
@@ -22,3 +23,4 @@ def create_tables():
 
     conn.commit()
     conn.close()
+    

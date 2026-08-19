@@ -67,3 +67,5 @@ for user in users:
 conn.close()
 
 ##################################################
+
+print("hello", end="!")

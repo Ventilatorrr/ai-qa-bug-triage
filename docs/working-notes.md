@@ -110,3 +110,22 @@ Registration
 ✅ Duplicate email returns 409
 ⬜ Automated tests
 ⬜ Login
+
+
+We'll eventually put the hashing into its own function, because that's a good candidate for a unit test.
+
+
+
+
+
+
+
+
+SECRET_KEY = "dev-secret-key"
+is deliberately temporary and suitable only for our local development project.
+
+We will eventually move the secret into an environment variable when we get to the deployment/Docker stage.
+
+That's one of those things where environment variables actually make sense: we don't want a real production secret committed to GitHub.
+
+But we're not going to introduce that complexity right now.
