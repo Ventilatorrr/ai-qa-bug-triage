@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+
 from app.database import create_tables
 from app.api.auth import router as auth_router
 
