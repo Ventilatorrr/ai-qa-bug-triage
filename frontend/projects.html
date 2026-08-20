@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bug Triage - Projects</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <header>
+            <h1>AI QA Assistant</h1>
+            <p>This app is designed to help QA analysts with their bug reporting process.</p>
+
+            <nav>
+                <a href="projects.html">Projects</a>
+                <a href="bugs.html">Bugs</a>
+                <a href="about.html">About</a>
+                <button id="logout-button" type="button">Logout</button>
+            </nav>
+        </header>
+
+        <main>
+            <section>
+                <h2>Projects</h2>
+
+                <p id="message"></p>
+
+                <form id="project-form">
+                    <label for="project-name">Project name:</label>
+                    <input
+                        type="text"
+                        id="project-name"
+                        class="form-input"
+                        name="project_name"
+                        placeholder="Enter project name"
+                        required>
+
+                    <button type="submit">Create Project</button>
+                </form>
+
+                <div id="projects"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Copyright &copy; 2026 AI QA Assistant</p>
+        </footer>
+
+        <script src="js/logout.js"></script>
+        <script src="js/projects.js"></script>
+    </body>
+</html>

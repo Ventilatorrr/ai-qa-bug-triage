@@ -106,6 +106,35 @@ def test_registration_without_number_password(test_client):
     assert "Password must contain at least one number." in response.json()["detail"][0]["msg"]
 
 
+# AC-001.4 — Invalid Password: Existing Email with Invalid Password
+def test_registration_rejects_invalid_password_for_existing_email(test_client):
+    user = {
+        "email": "existing@example.com",
+        "password": "Password1"
+    }
+
+    registration_response = test_client.post(
+        "/register",
+        json=user
+    )
+
+    assert registration_response.status_code == 201
+
+    invalid_user = {
+        "email": "existing@example.com",
+        "password": "rs3Tss"
+    }
+
+    response = test_client.post(
+        "/register",
+        json=invalid_user
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "password"]
+    assert "Password must be at least 8 characters long." in response.json()["detail"][0]["msg"]
+
+
 # AC-001.5 — Password Security
 def test_password_is_not_stored_as_plain_text(test_client):
     user = {

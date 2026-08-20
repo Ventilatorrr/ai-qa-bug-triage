@@ -1,0 +1,137 @@
+/* Page */
+
+body {
+    background-color: #f4f8f9;
+    margin: 0;
+    scrollbar-gutter: stable;
+}
+
+
+/* Typography */
+
+h1 {
+    color: white;
+    font-size: 33px;
+}
+
+h2 {
+    color: #374151;
+    font-size: 24px;
+}
+
+h1,
+h2 {
+    font-family: Arial;
+}
+
+
+/* Header */
+
+header {
+    background-color: #1f2937;
+    color: white;
+    text-align: center;
+    padding: 10px;
+}
+
+header p {
+    color: #9ca3af;
+    font-size: 20px;
+}
+/* Navigation */
+
+nav {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 0;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+nav a:hover {
+    color: #60a5fa;
+    /* text-decoration: underline; */
+}
+
+/* Main content */
+
+main {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+main h2 {
+    text-align: center;
+}
+
+
+/* Form */
+
+form {
+    padding: 25px;
+    background-color: white;
+    border: 1px solid gray;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.form-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: Arial;
+    font-size: 16px;
+}
+
+.form-input::placeholder {
+    font-style: italic;
+    color: #9ca3af;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #60a5fa;
+}
+
+/* Message */
+
+#message {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Button */
+
+button {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+}
+
+button:hover {
+    background-color: #1d4ed8;
+}
+
+/* Footer */
+
+footer {
+    padding: 20px;
+    color: #6b7280;
+    font-size: 14px;
+    text-align: center;
+}

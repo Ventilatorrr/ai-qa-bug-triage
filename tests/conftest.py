@@ -15,7 +15,9 @@ def test_client(monkeypatch):
 
     create_tables()
 
-    yield TestClient(app)
+    with TestClient(app) as client:
+        yield client
 
     if os.path.exists(TEST_DATABASE):
         os.remove(TEST_DATABASE)
+        

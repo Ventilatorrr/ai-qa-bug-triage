@@ -129,3 +129,17 @@ We will eventually move the secret into an environment variable when we get to t
 That's one of those things where environment variables actually make sense: we don't want a real production secret committed to GitHub.
 
 But we're not going to introduce that complexity right now.
+
+
+
+
+
+Perhaps add email with bug title and description, and auotmatic bug creation, plus notification...
+
+
+
+
+Refactor repeating code in projects.py and test_projects.py
+
+
+
