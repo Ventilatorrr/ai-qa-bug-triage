@@ -37,7 +37,7 @@
 ### AC-002.1 — Successful Login
 
 - A registered user can log in using valid credentials.
-- The user is granted access to authenticated areas of the application after successful login.
+- The user receives an access token after successful login.
 
 ### AC-002.2 — Invalid Credentials
 
@@ -48,6 +48,10 @@
 
 - A user who is not authenticated cannot access areas of the application that require authentication.
 - The user is redirected to the login page or otherwise informed that authentication is required.
+
+### AC-002.4 — Authenticated Access
+
+- An authenticated user can access areas of the application that require authentication.
 
 ## REQ-003 — User Logout
 

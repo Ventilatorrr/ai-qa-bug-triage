@@ -72,9 +72,63 @@ def test_login_with_unknown_email(test_client):
         "detail": "Invalid email or password."
     }
 
-# AC-002.3 — Unauthenticated Access
+
+# AC-002.3 — Unauthenticated Access: No Token
 def test_unauthenticated_user_cannot_access_protected_endpoint(test_client):
     response = test_client.get("/protected")
 
     assert response.status_code == 401
-    
+
+
+# AC-002.3 — Unauthenticated Access: Invalid Token
+def test_invalid_token_cannot_access_protected_endpoint(test_client):
+    response = test_client.get(
+        "/protected",
+        headers={
+            "Authorization": "Bearer invalid-token"
+        }
+    )
+
+    assert response.status_code == 401
+
+    assert response.json() == {
+        "detail": "Invalid or expired token."
+    }
+
+
+# AC-002.4 — Authenticated Access
+def test_authenticated_user_can_access_protected_endpoint(test_client):
+    user = {
+        "email": "protected@example.com",
+        "password": "Password1"
+    }
+
+    registration_response = test_client.post(
+        "/register",
+        json=user
+    )
+
+    assert registration_response.status_code == 201
+
+    login_response = test_client.post(
+        "/login",
+        json=user
+    )
+
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()["access_token"]
+
+    response = test_client.get(
+        "/protected",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    assert response.status_code == 200
+
+    assert response.json() == {
+        "message": "You are authenticated.",
+        "user_id": 1
+    }
