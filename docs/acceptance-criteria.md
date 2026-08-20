@@ -57,12 +57,15 @@
 
 ### AC-003.1 — Successful Logout
 
-- An authenticated user can log out, terminating their authenticated session.
-- The user is redirected to the login page or another appropriate unauthenticated page.
+- An authenticated user can log out of their account.
+- Logging out removes the user's authentication token from the browser.
+- The user is redirected to the login page.
 
 ### AC-003.2 — Protected Access After Logout
 
+- After logging out, the browser no longer sends the user's authentication token with protected requests.
 - A user cannot access protected application areas after logging out.
+- The user is redirected to the login page when attempting to access a protected application area after logging out.
 
 ## REQ-004 — Project Creation
 

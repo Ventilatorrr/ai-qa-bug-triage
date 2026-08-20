@@ -132,3 +132,4 @@ def test_authenticated_user_can_access_protected_endpoint(test_client):
         "message": "You are authenticated.",
         "user_id": 1
     }
+

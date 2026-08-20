@@ -21,6 +21,17 @@ def create_tables():
         """
     )
 
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            owner_id INTEGER NOT NULL,
+            FOREIGN KEY (owner_id) REFERENCES users(id)
+        )
+        """
+    )
+
     conn.commit()
     conn.close()
     
