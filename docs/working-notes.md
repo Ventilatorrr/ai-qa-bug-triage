@@ -143,3 +143,26 @@ Refactor repeating code in projects.py and test_projects.py
 
 
 
+One test issue I want to flag
+
+This:
+
+assert response.json() == {
+    "message": "You are authenticated.",
+    "user_id": 1
+}
+
+is brittle.
+
+You're saying:
+
+The authenticated user's ID must specifically be 1.
+
+That's not actually part of the behaviour we're testing.
+
+The test should verify that the returned ID corresponds to the authenticated user, not that the database happened to assign them ID 1.
+
+That's a real test-quality issue we should fix when we refactor the test suite.
+
+
+

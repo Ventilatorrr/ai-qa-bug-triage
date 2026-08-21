@@ -1,136 +1,157 @@
 # Requirements
 
+## Requirement Structure
+
+Each requirement may include a User Story and one or more Acceptance Criteria.
+
+- **REQ** — Requirement: a high-level statement of what the system shall do.
+- **US** — User Story: a user-focused statement describing who wants a capability, what they want, and why.
+- **AC** — Acceptance Criterion: a specific, testable condition that must be satisfied for the requirement to be accepted.
+
+---
+
 ## Increment 1 — User & Project Management
 
-### Requirements
-
-#### REQ-001 — User Registration
+### REQ-001 — User Registration
 
 The system shall allow a new user to register an account using a unique email address and password.
 
-#### REQ-002 — User Login
+#### US-001.1 — Register an Account
+
+As a new user, I want to register an account so that I can access the system.
+
+#### AC-001.1 — Successful Registration
+
+* A new user can register using a unique email address and a valid password.
+* A user account is created after successful registration.
+
+#### AC-001.2 — Duplicate Email
+
+* Registration is rejected when the email address is already associated with an existing account.
+* The user receives a `409 Conflict` response.
+* The user is informed that the email address is already registered.
+
+#### AC-001.3 — Invalid Email
+
+* Registration is rejected when an invalid email address is provided.
+* The user receives a `422 Unprocessable Content` response.
+* The user is informed that the email address is invalid.
+
+#### AC-001.4 — Invalid Password: Minimum Length
+
+* Registration is rejected when the password contains fewer than 8 characters.
+* The user receives a `422 Unprocessable Content` response.
+* The user is informed that the password must contain at least 8 characters.
+
+#### AC-001.5 — Invalid Password: Uppercase Required
+
+* Registration is rejected when the password does not contain at least one uppercase letter.
+* The user receives a `422 Unprocessable Content` response.
+* The user is informed that the password must contain at least one uppercase letter.
+
+#### AC-001.6 — Invalid Password: Lowercase Required
+
+* Registration is rejected when the password does not contain at least one lowercase letter.
+* The user receives a `422 Unprocessable Content` response.
+* The user is informed that the password must contain at least one lowercase letter.
+
+#### AC-001.7 — Invalid Password: Number Required
+
+* Registration is rejected when the password does not contain at least one number.
+* The user receives a `422 Unprocessable Content` response.
+* The user is informed that the password must contain at least one number.
+
+#### AC-001.8 — Password Security
+
+* User passwords are not stored as plain text.
+* User passwords are stored using a secure password hash.
+
+---
+
+### REQ-002 — User Login
 
 The system shall allow registered users to log in using valid account credentials.
 
-#### REQ-003 — User Logout
+#### US-002.1 — Log In
+
+As a registered user, I want to log in so that I can access the system.
+
+#### AC-002.1 — Successful Login
+
+* A registered user can log in using valid credentials.
+* The user receives an access token after successful login.
+
+#### AC-002.2 — Invalid Credentials
+
+* Login is rejected when an incorrect email or password is provided.
+* The user is informed that the credentials are invalid.
+
+---
+
+### REQ-003 — Protected Access
+
+The system shall restrict protected application functionality to authenticated users.
+
+#### US-003.1 — Access Protected Areas
+
+As an authenticated user, I want to access protected areas of the application so that I can use functionality available to my account.
+
+#### AC-003.1 — Authenticated Access
+
+* An authenticated user can access areas of the application that require authentication.
+
+#### AC-003.2 — Unauthenticated Access
+
+* An unauthenticated user cannot access areas of the application that require authentication.
+* The user is redirected to the login page.
+
+#### AC-003.3 — Invalid Authentication
+
+* A request containing an invalid or expired authentication token cannot access a protected area.
+* The user receives a `401 Unauthorized` response.
+
+---
+
+### REQ-004 — User Logout
 
 The system shall allow authenticated users to log out of their account.
 
-#### REQ-004 — Project Creation
+#### US-004.1 — Log Out
+
+As an authenticated user, I want to log out so that I can end my session securely.
+
+#### AC-004.1 — Successful Logout
+
+* An authenticated user can log out of their account.
+* The user's authentication token is removed from the browser.
+* The user is redirected to the login page.
+
+#### AC-004.2 — Protected Access After Logout
+
+* After logging out, the browser no longer sends the user's authentication token with protected requests.
+* A user cannot access protected application areas after logging out.
+* The user is redirected to the login page when attempting to access a protected application area after logging out.
+
+---
+
+### REQ-005 — Project Creation
 
 The system shall allow authenticated users to create a project.
 
-#### REQ-005 — Project Access
+#### US-005.1 — Create a Project
 
-The system shall allow authenticated users to view projects they have access to and open a project to view its details.
+As an authenticated user, I want to create a project so that I can manage bugs within it.
 
-#### REQ-006 — Project Name Editing
+#### AC-005.1 — Successful Project Creation
 
-The system shall allow a Project Owner to change the project's name.
+* An authenticated user can create a project by providing a valid project name.
+* The user becomes the Project Owner of the new project.
 
-#### REQ-007 — Project Deletion
+#### AC-005.2 — Invalid Project Name
 
-The system shall allow a Project Owner to delete a project.
+* Project creation is rejected when the project name is empty.
+* The user is informed that a valid project name is required.
 
-#### REQ-008 — Project Member Management
+#### AC-005.3 — Unauthenticated User
 
-The system shall allow a Project Owner to add an existing user as a member of the project and remove existing members.
-
-#### REQ-009 — Project Roles
-
-The system shall support QA Analyst and Developer user roles and a Project Owner project role.
-
-### Development Tasks
-
-#### Authentication
-
-- [ ] Connect registration form to `POST /register`
-- [ ] Display registration success/error messages
-- [ ] Connect login form to `POST /login`
-- [ ] Display login error messages
-- [ ] Store the access token after successful login
-- [ ] Use the access token for protected requests
-- [ ] Implement logout
-- [ ] Redirect unauthenticated users appropriately
-
-
----
-
-## Increment 2 — Bug Management
-
-### Requirements
-
-#### REQ-010 — Bug Creation
-
-The system shall allow authorized project members to create a bug report within a project.
-
-#### REQ-011 — Bug Access
-
-The system shall allow authorized project members to view and open bug reports within projects they have access to.
-
-#### REQ-012 — Bug Editing
-
-The system shall allow authorized users to edit bug report information.
-
-#### REQ-013 — Bug Deletion
-
-The system shall allow authorized users to delete bug reports.
-
-#### REQ-014 — Bug Assignment
-
-The system shall allow an authorized QA Analyst or Project Owner to assign a bug report to a Developer who is a member of the project.
-
-#### REQ-015 — Bug Classification
-
-The system shall allow authorized users to set and update a bug's severity and priority.
-
-#### REQ-016 — Bug Lifecycle
-
-The system shall manage bug status according to the defined bug lifecycle.
-
-#### REQ-017 — Fix Version
-
-The system shall support recording the version in which a bug was fixed.
-
-#### REQ-018 — Bug Search and Filtering
-
-The system shall allow authorized users to search and filter bug reports within a project.
-
-### Development Tasks
-
-_To be defined when Increment 2 is started._
-
-
----
-
-## Increment 3 — AI-Assisted Bug Triage
-
-### Requirements
-
-#### REQ-019 — AI-Assisted Triage
-
-The system shall allow an authorized QA Analyst to request AI-assisted triage for a bug report.
-
-#### REQ-020 — AI Suggestions
-
-The system shall provide AI-generated suggestions for bug classification, severity, priority, description, and reproduction steps.
-
-#### REQ-021 — AI Suggestion Review
-
-The system shall allow a QA Analyst to review, modify, accept, or reject AI-generated suggestions before they are applied to a bug report.
-
-#### REQ-022 — AI Suggestion Identification
-
-The system shall clearly identify AI-generated content while it is presented as a suggestion for user review.
-
-#### REQ-023 — AI Tool Authorization
-
-The system shall restrict AI tool access to explicitly authorized tools and prevent unauthorized AI actions from modifying system data.
-
-#### REQ-024 — AI Failure Handling
-
-The system shall handle AI service failures without preventing the QA Analyst from manually managing the bug.
-
-### Development Tasks
-
-_To be defined when Increment 3 is started._
+* An unauthenticated user cannot create a project.
