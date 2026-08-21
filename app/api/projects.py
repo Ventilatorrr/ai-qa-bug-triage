@@ -106,3 +106,51 @@ def get_projects(
         }
         for row in rows
     ]
+
+
+@router.get("/projects/{project_id}")
+def get_project(
+    project_id: int,
+    authorization: str | None = Header(default=None)
+):
+    if authorization is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication scheme."
+        )
+
+    token = authorization.removeprefix("Bearer ")
+    payload = verify_access_token(token)
+    user_id = payload["user_id"]
+
+    conn = get_connection()
+
+    try:
+        row = conn.execute(
+            """
+            SELECT id, name, owner_id
+            FROM projects
+            WHERE id = ? AND owner_id = ?
+            """,
+            (project_id, user_id)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found."
+        )
+
+    return {
+        "id": row[0],
+        "name": row[1],
+        "owner_id": row[2]
+    }
