@@ -5,26 +5,33 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <header>
-            <h1>AI QA Assistant</h1>
-            <p>This app is designed to help QA analysts with their bug reporting process.</p>
+        <header class="site-header">
+            <div class="header-left">
+                <nav class="main-navigation">
+                    <a href="/about.html">About</a>
+                </nav>
+            </div>
 
-            <nav>
-                <a href="projects.html">Projects</a>
-                <a href="bugs.html">Bugs</a>
-                <a href="about.html">About</a>
+            <h1 class="site-title">AI QA Bug Triage</h1>
+
+            <div class="header-right">
                 <button id="logout-button" type="button">Logout</button>
-            </nav>
+            </div>
         </header>
 
         <main>
             <section>
-                <h2>Projects</h2>
+                <h2>My Projects</h2>
 
                 <p id="message"></p>
 
-                <form id="project-form">
+                <div class="project-actions">
+                    <button id="show-project-form" type="button">New Project</button>
+                </div>
+
+                <form id="project-form" hidden>
                     <label for="project-name">Project name:</label>
+
                     <input
                         type="text"
                         id="project-name"
@@ -33,7 +40,10 @@
                         placeholder="Enter project name"
                         required>
 
-                    <button type="submit">Create Project</button>
+                    <div class="form-actions">
+                        <button type="submit">Create</button>
+                        <button id="cancel-project-form" type="button">Cancel</button>
+                    </div>
                 </form>
 
                 <div id="projects"></div>

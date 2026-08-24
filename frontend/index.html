@@ -1,65 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Bug Triage</title>
-        <link rel="stylesheet" href="style.css">
+        <title>AI QA Bug Triage</title>
+        <meta http-equiv="refresh" content="0; url=/projects.html">
     </head>
     <body>
-        <header>
-            <h1>AI QA Assistant</h1>
-            <p>This app is designed to help QA analysts with their bug reporting process.</p>
-
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="bugs.html">Bugs</a>
-                <a href="about.html">About</a>
-            </nav>
-        </header>
-
-        <main>
-            <section>
-                <h2>Submit a Bug</h2>
-
-                <form method="POST" action="/bugs">
-                    <label for="title">Bug title:</label>
-                    <input 
-                        type="text" 
-                        id="title"
-                        class="form-input"
-                        name="bug_title"
-                        placeholder="Enter bug title"
-                        required>
-
-                    <label for="description">Description:</label>
-                    <textarea 
-                        id="description"
-                        class="form-input"
-                        name="description"
-                        rows="10"
-                        placeholder="Describe the bug and steps to reproduce"
-                        required></textarea>
-
-                    <label for="email">Email:</label>
-                    <input
-                        type="email"
-                        id="email"
-                        class="form-input"
-                        name="email"
-                        placeholder="Enter your email"
-                        autocomplete="email"
-                        required>
-                        
-                    <button type="submit">Submit Bug</button>
-                </form>
-
-                <p id="message"></p>
-            </section>
-        </main>
-
-        <footer>
-           <p>Copyright &copy; 2026 AI QA Assistant</p>
-        </footer>
-        
-    <script src="script.js"></script>
     </body>
 </html>

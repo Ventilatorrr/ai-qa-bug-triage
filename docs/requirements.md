@@ -169,10 +169,41 @@ As an authenticated user, I want to access projects I am authorized to access so
 
 * The system denies access to a requested project when the authenticated user is not authorized to access it.
 
+---
 
+### REQ-007 — Project Name Editing
 
+The system shall allow a Project Owner to change the project's name.
 
+### US-007 — Edit a Project Name
 
+As a Project Owner, I want to change a project's name so that I can keep project information accurate.
 
+#### AC-007.1 — Successful Project Name Editing
 
-old:
+- A Project Owner can change the name of a project they own.
+- The new project name is saved and displayed after the change.
+
+#### AC-007.2 — Unauthorized Project Name Editing
+
+- A user cannot edit a project they do not own.
+
+---
+
+### REQ-008 — Project Deletion
+
+The system shall allow a Project Owner to delete a project.
+
+### US-008 — Delete a Project
+
+As a Project Owner, I want to delete a project so that I can remove projects that are no longer needed.
+
+#### AC-008.1 — Successful Project Deletion
+
+* A Project Owner can delete a project they own.
+* A confirmation is required before the project is deleted.
+* A deleted project is no longer accessible.
+
+#### AC-008.2 — Unauthorized Project Deletion
+
+* A user cannot delete a project they do not own.
