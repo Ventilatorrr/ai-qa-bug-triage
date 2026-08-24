@@ -9,7 +9,6 @@ def test_successful_login(test_client):
         "/register",
         json=user
     )
-
     assert registration_response.status_code == 201
 
     response = test_client.post(
@@ -20,7 +19,6 @@ def test_successful_login(test_client):
     assert response.status_code == 200
 
     response_data = response.json()
-
     assert "access_token" in response_data
     assert response_data["token_type"] == "bearer"
 
@@ -36,7 +34,6 @@ def test_login_with_incorrect_password(test_client):
         "/register",
         json=user
     )
-
     assert registration_response.status_code == 201
 
     invalid_user = {
@@ -73,30 +70,7 @@ def test_login_with_unknown_email(test_client):
     }
 
 
-# AC-002.3 — Unauthenticated Access: No Token
-def test_unauthenticated_user_cannot_access_protected_endpoint(test_client):
-    response = test_client.get("/protected")
-
-    assert response.status_code == 401
-
-
-# AC-002.3 — Unauthenticated Access: Invalid Token
-def test_invalid_token_cannot_access_protected_endpoint(test_client):
-    response = test_client.get(
-        "/protected",
-        headers={
-            "Authorization": "Bearer invalid-token"
-        }
-    )
-
-    assert response.status_code == 401
-
-    assert response.json() == {
-        "detail": "Invalid or expired token."
-    }
-
-
-# AC-002.4 — Authenticated Access
+# AC-003.1 — Authenticated Access
 def test_authenticated_user_can_access_protected_endpoint(test_client):
     user = {
         "email": "protected@example.com",
@@ -107,14 +81,12 @@ def test_authenticated_user_can_access_protected_endpoint(test_client):
         "/register",
         json=user
     )
-
     assert registration_response.status_code == 201
 
     login_response = test_client.post(
         "/login",
         json=user
     )
-
     assert login_response.status_code == 200
 
     access_token = login_response.json()["access_token"]
@@ -128,8 +100,28 @@ def test_authenticated_user_can_access_protected_endpoint(test_client):
 
     assert response.status_code == 200
 
-    assert response.json() == {
-        "message": "You are authenticated.",
-        "user_id": 1
-    }
+    response_data = response.json()
+    assert response_data["message"] == "You are authenticated."
 
+
+# AC-003.2 — Unauthenticated Access
+def test_unauthenticated_user_cannot_access_protected_endpoint(test_client):
+    response = test_client.get("/protected")
+
+    assert response.status_code == 401
+
+
+# AC-003.3 — Invalid Authentication
+def test_invalid_token_cannot_access_protected_endpoint(test_client):
+    response = test_client.get(
+        "/protected",
+        headers={
+            "Authorization": "Bearer invalid-token"
+        }
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Invalid or expired token."
+    }
+    

@@ -1,8 +1,55 @@
-# AC-004.1 — Successful Project Creation
+# AC-005.1 — Successful Project Creation
 def test_create_project(test_client):
-
     user = {
         "email": "project@example.com",
+        "password": "Password1"
+    }
+
+    registration_response = test_client.post(
+        "/register",
+        json=user
+    )
+    assert registration_response.status_code == 201
+
+    login_response = test_client.post(
+        "/login",
+        json=user
+    )
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()["access_token"]
+
+    protected_response = test_client.get(
+        "/protected",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+    assert protected_response.status_code == 200
+
+    user_id = protected_response.json()["user_id"]
+
+    response = test_client.post(
+        "/projects",
+        json={
+            "name": "QA Bug Triage"
+        },
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    assert response.status_code == 201
+
+    data = response.json()
+    assert data["name"] == "QA Bug Triage"
+    assert data["owner_id"] == user_id
+
+
+# AC-005.2 — Invalid Project Name
+def test_create_project_with_empty_name(test_client):
+    user = {
+        "email": "invalid-project@example.com",
         "password": "Password1"
     }
 
@@ -23,23 +70,36 @@ def test_create_project(test_client):
     response = test_client.post(
         "/projects",
         json={
-            "name": "QA Bug Triage"
+            "name": ""
         },
         headers={
             "Authorization": f"Bearer {access_token}"
         }
     )
-    assert response.status_code == 201
 
-    data = response.json()
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "Project name is required."
+    }
 
-    assert data["name"] == "QA Bug Triage"
-    assert data["owner_id"] > 0
 
+# AC-005.3 — Unauthenticated User
+def test_unauthenticated_user_cannot_create_project(test_client):
+    response = test_client.post(
+        "/projects",
+        json={
+            "name": "QA Bug Triage"
+        }
+    )
 
-# AC-005.1 — View Projects: Owner Sees Own Projects
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Authentication required."
+    }
+    
+
+# AC-006.1 — View Project List
 def test_get_projects(test_client):
-
     user = {
         "email": "projects@example.com",
         "password": "Password1"
@@ -76,17 +136,16 @@ def test_get_projects(test_client):
             "Authorization": f"Bearer {access_token}"
         }
     )
+
     assert response.status_code == 200
 
     projects = response.json()
-
     assert len(projects) == 1
     assert projects[0]["name"] == "QA Bug Triage"
 
 
-# AC-005.1 — View Projects: User Sees Only Authorized Projects
+# AC-006.2 — Project List Authorization
 def test_user_only_sees_own_projects(test_client):
-
     user1 = {
         "email": "user1@example.com",
         "password": "Password1"
@@ -114,7 +173,6 @@ def test_user_only_sees_own_projects(test_client):
         json=user1
     )
     assert login1.status_code == 200
-
     token1 = login1.json()["access_token"]
 
     login2 = test_client.post(
@@ -122,7 +180,6 @@ def test_user_only_sees_own_projects(test_client):
         json=user2
     )
     assert login2.status_code == 200
-
     token2 = login2.json()["access_token"]
 
     response1 = test_client.post(
@@ -153,17 +210,16 @@ def test_user_only_sees_own_projects(test_client):
             "Authorization": f"Bearer {token1}"
         }
     )
+
     assert response.status_code == 200
 
     projects = response.json()
-
     assert len(projects) == 1
     assert projects[0]["name"] == "User 1 Project"
 
 
-# AC-005.2 — Open Project: Owner Can Open Own Project
+# AC-006.3 — Open Project
 def test_get_project(test_client):
-
     user = {
         "email": "single-project@example.com",
         "password": "Password1"
@@ -202,17 +258,16 @@ def test_get_project(test_client):
             "Authorization": f"Bearer {access_token}"
         }
     )
+
     assert response.status_code == 200
 
     project = response.json()
-
     assert project["id"] == project_id
     assert project["name"] == "Single Project"
 
 
-# AC-005.3 — Unauthorized Project Access: User Cannot Open Another User's Project
+# AC-006.4 — Unauthorized Project Access
 def test_user_cannot_access_another_users_project(test_client):
-
     user1 = {
         "email": "owner@example.com",
         "password": "Password1"
@@ -240,7 +295,6 @@ def test_user_cannot_access_another_users_project(test_client):
         json=user1
     )
     assert login1.status_code == 200
-
     token1 = login1.json()["access_token"]
 
     login2 = test_client.post(
@@ -248,7 +302,6 @@ def test_user_cannot_access_another_users_project(test_client):
         json=user2
     )
     assert login2.status_code == 200
-
     token2 = login2.json()["access_token"]
 
     create_response = test_client.post(

@@ -1,3 +1,7 @@
+working-notes.md
+requirements_old.md
+bugtriage.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -3,15 +3,24 @@ const message = document.querySelector("#message");
 
 const projectForm = document.querySelector("#project-form");
 
+const accessToken = localStorage.getItem("access_token");
+
+if (!accessToken) {
+    window.location.href = "/login.html";
+}
 
 async function loadProjects() {
-    const accessToken = localStorage.getItem("access_token");
-
     const response = await fetch("/projects", {
         headers: {
             "Authorization": "Bearer " + accessToken
         }
     });
+
+    if (response.status === 401) {
+        localStorage.removeItem("access_token");
+        window.location.href = "/login.html";
+        return;
+    }
 
     const data = await response.json();
 

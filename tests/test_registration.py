@@ -50,7 +50,7 @@ def test_registration_with_invalid_email(test_client):
     assert response.json()["detail"][0]["loc"] == ["body", "email"]
 
 
-# AC-001.4 — Invalid Password: Fewer Than 8 Characters
+# AC-001.4 — Invalid Password: Minimum Length
 def test_registration_with_short_password(test_client):
     user = {
         "email": "short@example.com",
@@ -64,7 +64,7 @@ def test_registration_with_short_password(test_client):
     assert "Password must be at least 8 characters long." in response.json()["detail"][0]["msg"]
 
 
-# AC-001.4 — Invalid Password: Missing Uppercase Letter
+# AC-001.5 — Invalid Password: Uppercase Required
 def test_registration_without_uppercase_password(test_client):
     user = {
         "email": "uppercase@example.com",
@@ -77,8 +77,7 @@ def test_registration_without_uppercase_password(test_client):
     assert response.json()["detail"][0]["loc"] == ["body", "password"]
     assert "Password must contain at least one uppercase letter." in response.json()["detail"][0]["msg"]
 
-
-# AC-001.4 — Invalid Password: Missing Lowercase Letter
+# AC-001.6 — Invalid Password: Lowercase Required
 def test_registration_without_lowercase_password(test_client):
     user = {
         "email": "lowercase@example.com",
@@ -92,7 +91,7 @@ def test_registration_without_lowercase_password(test_client):
     assert "Password must contain at least one lowercase letter." in response.json()["detail"][0]["msg"]
 
 
-# AC-001.4 — Invalid Password: Missing Number
+# AC-001.7 — Invalid Password: Number Required
 def test_registration_without_number_password(test_client):
     user = {
         "email": "number@example.com",
@@ -106,7 +105,7 @@ def test_registration_without_number_password(test_client):
     assert "Password must contain at least one number." in response.json()["detail"][0]["msg"]
 
 
-# AC-001.4 — Invalid Password: Existing Email with Invalid Password
+# Additional validation test: existing email with invalid password
 def test_registration_rejects_invalid_password_for_existing_email(test_client):
     user = {
         "email": "existing@example.com",
@@ -135,7 +134,7 @@ def test_registration_rejects_invalid_password_for_existing_email(test_client):
     assert "Password must be at least 8 characters long." in response.json()["detail"][0]["msg"]
 
 
-# AC-001.5 — Password Security
+# AC-001.8 — Password Security
 def test_password_is_not_stored_as_plain_text(test_client):
     user = {
         "email": "security@example.com",
