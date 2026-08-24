@@ -154,3 +154,130 @@ def get_project(
         "name": row[1],
         "owner_id": row[2]
     }
+
+
+@router.put("/projects/{project_id}")
+def update_project(
+    project_id: int,
+    project: dict,
+    authorization: str | None = Header(default=None)
+):
+    if authorization is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication scheme."
+        )
+
+    token = authorization.removeprefix("Bearer ")
+    payload = verify_access_token(token)
+    user_id = payload["user_id"]
+
+    project_name = project.get("name")
+
+    if not project_name:
+        raise HTTPException(
+            status_code=422,
+            detail="Project name is required."
+        )
+
+    conn = get_connection()
+
+    try:
+        row = conn.execute(
+            """
+            SELECT id, name, owner_id
+            FROM projects
+            WHERE id = ? AND owner_id = ?
+            """,
+            (project_id, user_id)
+        ).fetchone()
+
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found."
+            )
+
+        conn.execute(
+            """
+            UPDATE projects
+            SET name = ?
+            WHERE id = ? AND owner_id = ?
+            """,
+            (project_name, project_id, user_id)
+        )
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    return {
+        "id": project_id,
+        "name": project_name,
+        "owner_id": user_id
+    }
+
+
+@router.delete("/projects/{project_id}")
+def delete_project(
+    project_id: int,
+    authorization: str | None = Header(default=None)
+):
+    if authorization is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication scheme."
+        )
+
+    token = authorization.removeprefix("Bearer ")
+    payload = verify_access_token(token)
+    user_id = payload["user_id"]
+
+    conn = get_connection()
+
+    try:
+        row = conn.execute(
+            """
+            SELECT id
+            FROM projects
+            WHERE id = ? AND owner_id = ?
+            """,
+            (project_id, user_id)
+        ).fetchone()
+
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found."
+            )
+
+        conn.execute(
+            """
+            DELETE FROM projects
+            WHERE id = ? AND owner_id = ?
+            """,
+            (project_id, user_id)
+        )
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    return {
+        "message": "Project deleted successfully."
+    }
+    

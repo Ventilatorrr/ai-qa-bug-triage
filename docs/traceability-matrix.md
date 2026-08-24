@@ -65,12 +65,12 @@ The matrix is updated throughout development and testing.
 
 ### REQ-003 — Protected Access
 
-| REQ | US | AC | BDD Scenario | Automated Test | Test Type | Status |
-|---|---|---|---|---|---|---|
-| REQ-003 | US-003.1 | AC-003.1 — Authenticated Access | Authenticated user accesses a protected area | `test_authenticated_user_can_access_protected_endpoint` | API | Covered |
-| REQ-003 | US-003.1 | AC-003.2 — Unauthenticated Access | Unauthenticated user accesses a protected area | `test_unauthenticated_user_cannot_access_protected_endpoint` | API / Security | Covered |
-| REQ-003 | US-003.1 | AC-003.2 — Unauthenticated Access | Unauthenticated user is redirected to the login page | — | UI | Manual |
-| REQ-003 | US-003.1 | AC-003.3 — Invalid Authentication | User accesses a protected area with invalid authentication | `test_invalid_token_cannot_access_protected_endpoint` | API / Security | Covered |
+| REQ     | US          | AC                                | BDD Scenario                                               | Automated Test                                               | Test Type        | Status  |
+| ------- | ----------- | --------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------------- | ------- |
+| REQ-003 | US-003.1    | AC-003.1 — Authenticated Access   | Authenticated user accesses a protected area               | `test_authenticated_user_can_access_protected_endpoint`      | API              | Covered |
+| REQ-003 | US-003.1    | AC-003.2 — Unauthenticated Access | Unauthenticated user accesses a protected area             | `test_unauthenticated_user_cannot_access_protected_endpoint` | API / Security   | Covered |
+| REQ-003 | US-003.1    | AC-003.2 — Unauthenticated Access | Unauthenticated user is redirected to the login page       | —                                                            | UI               | Manual  |
+| REQ-003 | US-003.1    | AC-003.3 — Invalid Authentication | User accesses a protected area with invalid authentication | `test_invalid_token_cannot_access_protected_endpoint`        | API / Security   | Covered |
 
 
 ### REQ-004 — User Logout
@@ -89,7 +89,6 @@ The matrix is updated throughout development and testing.
 | REQ-005 | US-005.1 | AC-005.2 — Invalid Project Name        | Create a project with an empty name               | `test_create_project_with_empty_name`             | API       | Covered |
 | REQ-005 | US-005.1 | AC-005.3 — Unauthenticated User        | Unauthenticated user attempts to create a project | `test_unauthenticated_user_cannot_create_project` | API       | Covered |
 
----
 
 ### REQ-006 — Project Access
 
@@ -100,8 +99,21 @@ The matrix is updated throughout development and testing.
 | REQ-006 | US-006.1 | AC-006.3 — Open Project                | Open an authorized project              | `test_get_project`                              | API            | Covered |
 | REQ-006 | US-006.1 | AC-006.4 — Unauthorized Project Access | Attempt to open an unauthorized project | `test_user_cannot_access_another_users_project` | API / Security | Covered |
 
+### REQ-007 — Project Name Editing
 
----
+| REQ     | US       | AC                                           | Automated Test                                | Test Type      | Status  |
+| ------- | -------- | -------------------------------------------- | --------------------------------------------- | -------------- | ------- |
+| REQ-007 | US-007.1 | AC-007.1 — Successful Project Name Editing   | `test_update_project`                         | API            | Covered |
+| REQ-007 | US-007.1 | AC-007.2 — Unauthorized Project Name Editing | `test_user_cannot_edit_another_users_project` | API / Security | Covered |
+
+### REQ-008 — Project Deletion
+
+| REQ     | US       | AC                                       | Automated Test                                  | Test Type      | Status  |
+| ------- | -------- | ---------------------------------------- | ----------------------------------------------- | -------------- | ------- |
+| REQ-008 | US-008.1 | AC-008.1 — Successful Project Deletion   | `test_delete_project`                           | API            | Partial |
+| REQ-008 | US-008.1 | AC-008.2 — Unauthorized Project Deletion | `test_user_cannot_delete_another_users_project` | API / Security | Covered |
+
+**Coverage note:** AC-008.1 is currently **Partial** because the API deletion is automated, while the required browser confirmation is currently tested manually. Playwright coverage will be added after Increment 1 is complete.
 
 ## BDD Specification Status
 

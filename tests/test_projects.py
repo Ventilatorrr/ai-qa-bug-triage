@@ -325,3 +325,272 @@ def test_user_cannot_access_another_users_project(test_client):
     )
 
     assert response.status_code == 404
+
+
+# AC-007.1 — Successful Project Name Editing
+def test_update_project_name(test_client):
+    user = {
+        "email": "edit-project@example.com",
+        "password": "Password1"
+    }
+
+    registration_response = test_client.post(
+        "/register",
+        json=user
+    )
+    assert registration_response.status_code == 201
+
+    login_response = test_client.post(
+        "/login",
+        json=user
+    )
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()["access_token"]
+
+    create_response = test_client.post(
+        "/projects",
+        json={
+            "name": "Original Project"
+        },
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+    assert create_response.status_code == 201
+
+    project_id = create_response.json()["id"]
+
+    response = test_client.put(
+        f"/projects/{project_id}",
+        json={
+            "name": "Updated Project"
+        },
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == project_id
+    assert data["name"] == "Updated Project"
+    assert data["owner_id"] > 0
+
+    get_response = test_client.get(
+        f"/projects/{project_id}",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    assert get_response.json()["name"] == "Updated Project"
+
+
+# AC-007.2 — Unauthorized Project Name Editing
+def test_user_cannot_update_another_users_project(test_client):
+    user1 = {
+        "email": "project-owner@example.com",
+        "password": "Password1"
+    }
+
+    user2 = {
+        "email": "project-other@example.com",
+        "password": "Password1"
+    }
+
+    registration1 = test_client.post(
+        "/register",
+        json=user1
+    )
+    assert registration1.status_code == 201
+
+    registration2 = test_client.post(
+        "/register",
+        json=user2
+    )
+    assert registration2.status_code == 201
+
+    login1 = test_client.post(
+        "/login",
+        json=user1
+    )
+    assert login1.status_code == 200
+
+    token1 = login1.json()["access_token"]
+
+    login2 = test_client.post(
+        "/login",
+        json=user2
+    )
+    assert login2.status_code == 200
+
+    token2 = login2.json()["access_token"]
+
+    create_response = test_client.post(
+        "/projects",
+        json={
+            "name": "Original Project"
+        },
+        headers={
+            "Authorization": f"Bearer {token1}"
+        }
+    )
+    assert create_response.status_code == 201
+
+    project_id = create_response.json()["id"]
+
+    response = test_client.put(
+        f"/projects/{project_id}",
+        json={
+            "name": "Unauthorized Change"
+        },
+        headers={
+            "Authorization": f"Bearer {token2}"
+        }
+    )
+
+    assert response.status_code == 404
+
+    get_response = test_client.get(
+        f"/projects/{project_id}",
+        headers={
+            "Authorization": f"Bearer {token1}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    assert get_response.json()["name"] == "Original Project"
+
+
+# AC-008.1 — Successful Project Deletion
+def test_delete_project(test_client):
+    user = {
+        "email": "delete-project@example.com",
+        "password": "Password1"
+    }
+
+    registration_response = test_client.post(
+        "/register",
+        json=user
+    )
+    assert registration_response.status_code == 201
+
+    login_response = test_client.post(
+        "/login",
+        json=user
+    )
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()["access_token"]
+
+    create_response = test_client.post(
+        "/projects",
+        json={
+            "name": "Project To Delete"
+        },
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+    assert create_response.status_code == 201
+
+    project_id = create_response.json()["id"]
+
+    response = test_client.delete(
+        f"/projects/{project_id}",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["message"] == "Project deleted successfully."
+
+    get_response = test_client.get(
+        f"/projects/{project_id}",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        }
+    )
+
+    assert get_response.status_code == 404
+
+
+# AC-008.2 — Unauthorized Project Deletion
+def test_user_cannot_delete_another_users_project(test_client):
+    user1 = {
+        "email": "delete-owner@example.com",
+        "password": "Password1"
+    }
+
+    user2 = {
+        "email": "delete-other@example.com",
+        "password": "Password1"
+    }
+
+    registration1 = test_client.post(
+        "/register",
+        json=user1
+    )
+    assert registration1.status_code == 201
+
+    registration2 = test_client.post(
+        "/register",
+        json=user2
+    )
+    assert registration2.status_code == 201
+
+    login1 = test_client.post(
+        "/login",
+        json=user1
+    )
+    assert login1.status_code == 200
+
+    token1 = login1.json()["access_token"]
+
+    login2 = test_client.post(
+        "/login",
+        json=user2
+    )
+    assert login2.status_code == 200
+
+    token2 = login2.json()["access_token"]
+
+    create_response = test_client.post(
+        "/projects",
+        json={
+            "name": "Protected Project"
+        },
+        headers={
+            "Authorization": f"Bearer {token1}"
+        }
+    )
+    assert create_response.status_code == 201
+
+    project_id = create_response.json()["id"]
+
+    response = test_client.delete(
+        f"/projects/{project_id}",
+        headers={
+            "Authorization": f"Bearer {token2}"
+        }
+    )
+
+    assert response.status_code == 404
+
+    get_response = test_client.get(
+        f"/projects/{project_id}",
+        headers={
+            "Authorization": f"Bearer {token1}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    assert get_response.json()["name"] == "Protected Project"
