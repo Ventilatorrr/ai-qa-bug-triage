@@ -23,7 +23,7 @@ form.addEventListener("submit", async function (event) {
 
     if (response.ok) {
         localStorage.setItem("access_token", data.access_token);
-        message.textContent = "Login successful.";
+        window.location.href = "/projects.html";
     } else {
         message.textContent = data.detail;
     }

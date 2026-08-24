@@ -37,31 +37,17 @@ As a new user, I want to register an account so that I can access the system.
 * The user receives a `422 Unprocessable Content` response.
 * The user is informed that the email address is invalid.
 
-#### AC-001.4 — Invalid Password: Minimum Length
+#### AC-001.4 — Invalid Password
 
-* Registration is rejected when the password contains fewer than 8 characters.
+* Registration is rejected when the password does not meet the required password policy.
+* The password must contain at least 8 characters.
+* The password must contain at least one uppercase letter.
+* The password must contain at least one lowercase letter.
+* The password must contain at least one number.
 * The user receives a `422 Unprocessable Content` response.
-* The user is informed that the password must contain at least 8 characters.
+* The user is informed which password requirement has not been met.
 
-#### AC-001.5 — Invalid Password: Uppercase Required
-
-* Registration is rejected when the password does not contain at least one uppercase letter.
-* The user receives a `422 Unprocessable Content` response.
-* The user is informed that the password must contain at least one uppercase letter.
-
-#### AC-001.6 — Invalid Password: Lowercase Required
-
-* Registration is rejected when the password does not contain at least one lowercase letter.
-* The user receives a `422 Unprocessable Content` response.
-* The user is informed that the password must contain at least one lowercase letter.
-
-#### AC-001.7 — Invalid Password: Number Required
-
-* Registration is rejected when the password does not contain at least one number.
-* The user receives a `422 Unprocessable Content` response.
-* The user is informed that the password must contain at least one number.
-
-#### AC-001.8 — Password Security
+#### AC-001.5 — Password Security
 
 * User passwords are not stored as plain text.
 * User passwords are stored using a secure password hash.
@@ -79,7 +65,8 @@ As a registered user, I want to log in so that I can access the system.
 #### AC-002.1 — Successful Login
 
 * A registered user can log in using valid credentials.
-* The user receives an access token after successful login.
+* The user receives an access token after a successful login.
+* The user is redirected to the Projects page after a successful login.
 
 #### AC-002.2 — Invalid Credentials
 
@@ -155,3 +142,37 @@ As an authenticated user, I want to create a project so that I can manage bugs w
 #### AC-005.3 — Unauthenticated User
 
 * An unauthenticated user cannot create a project.
+
+---
+
+### REQ-006 — Project Access
+
+The system shall allow authenticated users to view projects they are authorized to access and prevent unauthorized access to projects.
+
+#### US-006.1 — Access Projects
+
+As an authenticated user, I want to access projects I am authorized to access so that I can work with the projects available to me.
+
+#### AC-006.1 — View Project List
+
+* The system returns the projects available to the authenticated user.
+
+#### AC-006.2 — Project List Authorization
+
+* The project list does not include projects the authenticated user is not authorized to access.
+
+#### AC-006.3 — Open Project
+
+* The system returns the details of a requested project when the authenticated user is authorized to access it.
+
+#### AC-006.4 — Unauthorized Project Access
+
+* The system denies access to a requested project when the authenticated user is not authorized to access it.
+
+
+
+
+
+
+
+old:
