@@ -115,6 +115,19 @@ The matrix is updated throughout development and testing.
 
 **Coverage note:** AC-008.1 is currently **Partial** because the API deletion is automated, while the required browser confirmation is currently tested manually. Playwright coverage will be added after Increment 1 is complete.
 
+### REQ-009 — Project Member Management
+
+| REQ     | US       | AC                                        | BDD Scenario                              | Automated Test                                                     | Test Type        | Status  |
+| ------- | -------- | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ | ---------------- | ------- |
+| REQ-009 | US-009.1 | AC-009.1 — Add Member                     | Add a member to a project                 | `test_owner_can_add_project_member`                                | API              | Covered |
+| REQ-009 | US-009.1 | AC-009.1 — Add Member                     | Access a project as an added member       | `test_added_member_can_access_project`                             | API / Security   | Covered |
+| REQ-009 | US-009.1 | AC-009.2 — Remove Member                  | Remove a member from a project            | `test_owner_can_remove_project_member`                             | API              | Covered |
+| REQ-009 | US-009.1 | AC-009.2 — Remove Member                  | Access a project after being removed      | `test_removed_member_can_no_longer_access_project`                 | API / Security   | Covered |
+| REQ-009 | US-009.1 | AC-009.3 — Invalid Member                 | Attempt to add a nonexistent user         | `test_project_owner_cannot_add_user_who_does_not_have_an_account`  | API / Validation | Covered |
+| REQ-009 | US-009.1 | AC-009.4 — Unauthorized Member Management | Attempt to add a member as a non-owner    | `test_user_who_is_not_project_owner_cannot_add_project_members`    | API / Security   | Covered |
+| REQ-009 | US-009.1 | AC-009.4 — Unauthorized Member Management | Attempt to remove a member as a non-owner | `test_user_who_is_not_project_owner_cannot_remove_project_members` | API / Security   | Covered |
+| REQ-009 | US-009.1 | AC-009.5 — Duplicate Member               | Attempt to add the same member twice      | `test_project_owner_cannot_add_same_user_more_than_once`           | API / Validation | Covered |
+
 ## BDD Specification Status
 
 The current `.feature` files describe intended behaviour but are **not currently executable with pytest-bdd**.

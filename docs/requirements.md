@@ -207,3 +207,41 @@ As a Project Owner, I want to delete a project so that I can remove projects tha
 #### AC-008.2 — Unauthorized Project Deletion
 
 * A user cannot delete a project they do not own.
+
+---
+
+### REQ-009 — Project Member Management
+
+The system shall allow a Project Owner to add an existing user as a member of the project and remove existing members.
+
+### US-009 — Manage Project Members
+
+As a Project Owner, I want to add and remove project members so that I can control who has access to the project.
+
+#### AC-009.1 — Add Member
+
+* A Project Owner can add an existing user to a project.
+* The added user can access the project after being added.
+
+#### AC-009.2 — Remove Member
+
+* A Project Owner can remove a member from a project.
+* A removed member can no longer access the project.
+
+#### AC-009.3 — Invalid Member
+
+* A Project Owner cannot add a user who does not have an account.
+* The system rejects the request when the specified user does not exist.
+
+#### AC-009.4 — Unauthorized Member Management
+
+* A user who is not the Project Owner cannot add or remove project members.
+* The system rejects unauthorized member-management requests.
+
+#### AC-009.5 — Duplicate Member
+
+* A Project Owner cannot add the same user to a project more than once.
+* The system rejects an attempt to add a user who is already a member of the project.
+
+---
+
