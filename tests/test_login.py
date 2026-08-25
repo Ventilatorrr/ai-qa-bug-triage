@@ -23,7 +23,7 @@ def test_successful_login(test_client):
     assert response_data["token_type"] == "bearer"
 
 
-# AC-002.2 — Invalid Credentials: Incorrect Password
+# AC-002.2 — Invalid Credentials
 def test_login_with_incorrect_password(test_client):
     user = {
         "email": "wrong-password@example.com",
@@ -52,7 +52,7 @@ def test_login_with_incorrect_password(test_client):
     }
 
 
-# AC-002.2 — Invalid Credentials: Unknown Email
+# AC-002.2 — Invalid Credentials
 def test_login_with_unknown_email(test_client):
     user = {
         "email": "unknown@example.com",
