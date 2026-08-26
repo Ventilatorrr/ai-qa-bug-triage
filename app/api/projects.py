@@ -1,5 +1,3 @@
-import sqlite3
-
 from fastapi import APIRouter, HTTPException, Header
 
 from app.database import get_connection
@@ -14,6 +12,7 @@ def create_project(
     project: dict,
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -28,8 +27,8 @@ def create_project(
 
     token = authorization.removeprefix("Bearer ")
     payload = verify_access_token(token)
+    user_id = payload["user_id"]
 
-    owner_id = payload["user_id"]
     project_name = project.get("name")
 
     if not project_name:
@@ -43,29 +42,38 @@ def create_project(
     try:
         cursor = conn.execute(
             """
-            INSERT INTO projects (name, owner_id)
-            VALUES (?, ?)
+            INSERT INTO projects (name)
+            VALUES (?)
             """,
-            (project_name, owner_id)
+            (project_name,)
+        )
+
+        project_id = cursor.lastrowid
+
+        conn.execute(
+            """
+            INSERT INTO project_members (project_id, user_id, role)
+            VALUES (?, ?, ?)
+            """,
+            (project_id, user_id, "Project Owner")
         )
 
         conn.commit()
-
-        project_id = cursor.lastrowid
 
     finally:
         conn.close()
 
     return {
         "id": project_id,
-        "name": project_name,
-        "owner_id": owner_id
+        "name": project_name
     }
-    
+
+
 @router.get("/projects")
 def get_projects(
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -80,7 +88,6 @@ def get_projects(
 
     token = authorization.removeprefix("Bearer ")
     payload = verify_access_token(token)
-
     user_id = payload["user_id"]
 
     conn = get_connection()
@@ -88,9 +95,11 @@ def get_projects(
     try:
         rows = conn.execute(
             """
-            SELECT id, name, owner_id
-            FROM projects
-            WHERE owner_id = ?
+            SELECT p.id, p.name
+            FROM projects p
+            JOIN project_members pm
+                ON p.id = pm.project_id
+            WHERE pm.user_id = ?
             """,
             (user_id,)
         ).fetchall()
@@ -101,8 +110,7 @@ def get_projects(
     return [
         {
             "id": row[0],
-            "name": row[1],
-            "owner_id": row[2]
+            "name": row[1]
         }
         for row in rows
     ]
@@ -113,6 +121,7 @@ def get_project(
     project_id: int,
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -134,16 +143,16 @@ def get_project(
     try:
         row = conn.execute(
             """
-            SELECT p.id, p.name, p.owner_id
+            SELECT p.id, p.name
             FROM projects p
-            LEFT JOIN project_members pm
+            JOIN project_members pm
                 ON p.id = pm.project_id
-                AND pm.user_id = ?
             WHERE p.id = ?
-            AND (p.owner_id = ? OR pm.user_id IS NOT NULL)
+            AND pm.user_id = ?
             """,
-            (user_id, project_id, user_id)
+            (project_id, user_id)
         ).fetchone()
+
     finally:
         conn.close()
 
@@ -155,8 +164,7 @@ def get_project(
 
     return {
         "id": row[0],
-        "name": row[1],
-        "owner_id": row[2]
+        "name": row[1]
     }
 
 
@@ -166,6 +174,7 @@ def update_project(
     project: dict,
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -195,11 +204,15 @@ def update_project(
     try:
         row = conn.execute(
             """
-            SELECT id, name, owner_id
-            FROM projects
-            WHERE id = ? AND owner_id = ?
+            SELECT p.id
+            FROM projects p
+            JOIN project_members pm
+                ON p.id = pm.project_id
+            WHERE p.id = ?
+            AND pm.user_id = ?
+            AND pm.role = ?
             """,
-            (project_id, user_id)
+            (project_id, user_id, "Project Owner")
         ).fetchone()
 
         if row is None:
@@ -212,9 +225,9 @@ def update_project(
             """
             UPDATE projects
             SET name = ?
-            WHERE id = ? AND owner_id = ?
+            WHERE id = ?
             """,
-            (project_name, project_id, user_id)
+            (project_name, project_id)
         )
 
         conn.commit()
@@ -224,8 +237,7 @@ def update_project(
 
     return {
         "id": project_id,
-        "name": project_name,
-        "owner_id": user_id
+        "name": project_name
     }
 
 
@@ -234,6 +246,7 @@ def delete_project(
     project_id: int,
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -253,16 +266,20 @@ def delete_project(
     conn = get_connection()
 
     try:
-        row = conn.execute(
+        project = conn.execute(
             """
-            SELECT id
-            FROM projects
-            WHERE id = ? AND owner_id = ?
+            SELECT p.id
+            FROM projects p
+            JOIN project_members pm
+                ON p.id = pm.project_id
+            WHERE p.id = ?
+            AND pm.user_id = ?
+            AND pm.role = ?
             """,
-            (project_id, user_id)
+            (project_id, user_id, "Project Owner")
         ).fetchone()
 
-        if row is None:
+        if project is None:
             raise HTTPException(
                 status_code=404,
                 detail="Project not found."
@@ -270,10 +287,18 @@ def delete_project(
 
         conn.execute(
             """
-            DELETE FROM projects
-            WHERE id = ? AND owner_id = ?
+            DELETE FROM project_members
+            WHERE project_id = ?
             """,
-            (project_id, user_id)
+            (project_id,)
+        )
+
+        conn.execute(
+            """
+            DELETE FROM projects
+            WHERE id = ?
+            """,
+            (project_id,)
         )
 
         conn.commit()
@@ -284,7 +309,7 @@ def delete_project(
     return {
         "message": "Project deleted successfully."
     }
-    
+
 
 @router.post("/projects/{project_id}/members", status_code=201)
 def add_project_member(
@@ -292,6 +317,7 @@ def add_project_member(
     member: dict,
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -308,30 +334,47 @@ def add_project_member(
     payload = verify_access_token(token)
     user_id = payload["user_id"]
 
-    member_email = member.get("email")
-
-    if not member_email:
-        raise HTTPException(
-            status_code=422,
-            detail="Member email is required."
-        )
-
     conn = get_connection()
 
     try:
         project = conn.execute(
             """
-            SELECT id
-            FROM projects
-            WHERE id = ? AND owner_id = ?
+            SELECT p.id
+            FROM projects p
+            JOIN project_members pm
+                ON p.id = pm.project_id
+            WHERE p.id = ?
+            AND pm.user_id = ?
+            AND pm.role = ?
             """,
-            (project_id, user_id)
+            (project_id, user_id, "Project Owner")
         ).fetchone()
 
         if project is None:
             raise HTTPException(
                 status_code=404,
                 detail="Project not found."
+            )
+
+        member_email = member.get("email")
+        member_role = member.get("role")
+
+        if not member_email:
+            raise HTTPException(
+                status_code=422,
+                detail="Member email is required."
+            )
+
+        if not member_role:
+            raise HTTPException(
+                status_code=422,
+                detail="Member role is required."
+            )
+
+        if member_role not in ["QA Analyst", "Developer"]:
+            raise HTTPException(
+                status_code=422,
+                detail="Invalid project role."
             )
 
         member_user = conn.execute(
@@ -368,10 +411,10 @@ def add_project_member(
 
         conn.execute(
             """
-            INSERT INTO project_members (project_id, user_id)
-            VALUES (?, ?)
+            INSERT INTO project_members (project_id, user_id, role)
+            VALUES (?, ?, ?)
             """,
-            (project_id, member_user_id)
+            (project_id, member_user_id, member_role)
         )
 
         conn.commit()
@@ -382,7 +425,8 @@ def add_project_member(
     return {
         "project_id": project_id,
         "user_id": member_user_id,
-        "email": member_user[1]
+        "email": member_user[1],
+        "role": member_role
     }
 
 
@@ -392,6 +436,7 @@ def remove_project_member(
     member_user_id: int,
     authorization: str | None = Header(default=None)
 ):
+
     if authorization is None:
         raise HTTPException(
             status_code=401,
@@ -413,11 +458,15 @@ def remove_project_member(
     try:
         project = conn.execute(
             """
-            SELECT id
-            FROM projects
-            WHERE id = ? AND owner_id = ?
+            SELECT p.id
+            FROM projects p
+            JOIN project_members pm
+                ON p.id = pm.project_id
+            WHERE p.id = ?
+            AND pm.user_id = ?
+            AND pm.role = ?
             """,
-            (project_id, user_id)
+            (project_id, user_id, "Project Owner")
         ).fetchone()
 
         if project is None:

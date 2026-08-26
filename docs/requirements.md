@@ -245,3 +245,42 @@ As a Project Owner, I want to add and remove project members so that I can contr
 
 ---
 
+### REQ-010 — Project Roles and Permissions
+
+The system shall support role-based access control for project members. Each project member must have exactly one project role that determines their permissions within the project.
+
+### US-010 — Use Project Roles and Permissions
+
+As a project user, I want my project role to determine what I can do within a project so that project functionality is controlled according to my responsibilities.
+
+#### AC-010.1 — Supported Project Roles
+
+* The system supports the `Project Owner`, `QA Analyst`, and `Developer` project roles.
+* Each project member must have exactly one project role.
+
+#### AC-010.2 — Project Owner Role
+
+* The user who creates a project is assigned the Project Owner role.
+* A Project Owner can edit and delete the project.
+* A Project Owner can manage project members.
+* A Project Owner can create and manage bugs within projects they own.
+
+#### AC-010.3 — QA Analyst Role
+
+* A QA Analyst can access projects they are a member of.
+* A QA Analyst can create and manage bugs within projects they have access to.
+* A QA Analyst cannot manage project members.
+
+#### AC-010.4 — Developer Role
+
+* A Developer can access projects they are a member of.
+* A Developer can view bugs within projects they have access to.
+* A Developer can update bugs within projects they have access to.
+* A Developer cannot manage project members.
+
+#### AC-010.5 — Unauthorized Project Actions
+
+* A project user cannot perform actions that are not permitted by their project role.
+* The system shall reject unauthorized project actions.
+
+

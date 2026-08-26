@@ -1,4 +1,5 @@
 import os
+
 import sqlite3
 
 DATABASE_NAME = os.getenv("DATABASE_NAME", "bugtriage.db")
@@ -25,9 +26,7 @@ def create_tables():
         """
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            owner_id INTEGER NOT NULL,
-            FOREIGN KEY (owner_id) REFERENCES users(id)
+            name VARCHAR(255) NOT NULL
         )
         """
     )
@@ -37,6 +36,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS project_members (
             project_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
+            role VARCHAR(50) NOT NULL,
             PRIMARY KEY (project_id, user_id),
             FOREIGN KEY (project_id) REFERENCES projects(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -46,4 +46,3 @@ def create_tables():
 
     conn.commit()
     conn.close()
-    
