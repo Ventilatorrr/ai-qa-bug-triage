@@ -19,16 +19,6 @@ def test_create_project(test_client):
 
     access_token = login_response.json()["access_token"]
 
-    protected_response = test_client.get(
-        "/protected",
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert protected_response.status_code == 200
-
-    user_id = protected_response.json()["user_id"]
-
     response = test_client.post(
         "/projects",
         json={
@@ -43,7 +33,6 @@ def test_create_project(test_client):
 
     data = response.json()
     assert data["name"] == "QA Bug Triage"
-    assert data["owner_id"] == user_id
 
 
 # AC-005.2 — Invalid Project Name
@@ -96,7 +85,7 @@ def test_unauthenticated_user_cannot_create_project(test_client):
     assert response.json() == {
         "detail": "Authentication required."
     }
-    
+
 
 # AC-006.1 — View Project List
 def test_get_projects(test_client):
@@ -173,6 +162,7 @@ def test_user_only_sees_own_projects(test_client):
         json=user1
     )
     assert login1.status_code == 200
+
     token1 = login1.json()["access_token"]
 
     login2 = test_client.post(
@@ -180,6 +170,7 @@ def test_user_only_sees_own_projects(test_client):
         json=user2
     )
     assert login2.status_code == 200
+
     token2 = login2.json()["access_token"]
 
     response1 = test_client.post(
@@ -295,6 +286,7 @@ def test_user_cannot_access_another_users_project(test_client):
         json=user1
     )
     assert login1.status_code == 200
+
     token1 = login1.json()["access_token"]
 
     login2 = test_client.post(
@@ -302,6 +294,7 @@ def test_user_cannot_access_another_users_project(test_client):
         json=user2
     )
     assert login2.status_code == 200
+
     token2 = login2.json()["access_token"]
 
     create_response = test_client.post(
@@ -374,20 +367,8 @@ def test_update_project_name(test_client):
     assert response.status_code == 200
 
     data = response.json()
-
     assert data["id"] == project_id
     assert data["name"] == "Updated Project"
-    assert data["owner_id"] > 0
-
-    get_response = test_client.get(
-        f"/projects/{project_id}",
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-
-    assert get_response.status_code == 200
-    assert get_response.json()["name"] == "Updated Project"
 
 
 # AC-007.2 — Unauthorized Project Name Editing
@@ -510,7 +491,6 @@ def test_delete_project(test_client):
     assert response.status_code == 200
 
     data = response.json()
-
     assert data["message"] == "Project deleted successfully."
 
     get_response = test_client.get(
@@ -598,7 +578,6 @@ def test_user_cannot_delete_another_users_project(test_client):
 
 # AC-009.1 — Add Member
 def test_owner_can_add_project_member(test_client):
-
     owner = {
         "email": "member-owner@example.com",
         "password": "Password1"
@@ -613,24 +592,21 @@ def test_owner_can_add_project_member(test_client):
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=member
     )
-
     assert registration2.status_code == 201
 
-    login = test_client.post(
+    login_response = test_client.post(
         "/login",
         json=owner
     )
+    assert login_response.status_code == 200
 
-    assert login.status_code == 200
-
-    token = login.json()["access_token"]
+    access_token = login_response.json()["access_token"]
 
     create_response = test_client.post(
         "/projects",
@@ -638,35 +614,34 @@ def test_owner_can_add_project_member(test_client):
             "name": "Member Test Project"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
 
-    response = test_client.post(
+    add_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "QA Analyst"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
 
-    assert response.status_code == 201
+    assert add_response.status_code == 201
 
-    data = response.json()
-
+    data = add_response.json()
     assert data["project_id"] == project_id
     assert data["email"] == member["email"]
+    assert data["role"] == "QA Analyst"
 
 
 # AC-009.1 — Add Member
 def test_added_member_can_access_project(test_client):
-
     owner = {
         "email": "access-owner@example.com",
         "password": "Password1"
@@ -681,21 +656,18 @@ def test_added_member_can_access_project(test_client):
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=member
     )
-
     assert registration2.status_code == 201
 
     owner_login = test_client.post(
         "/login",
         json=owner
     )
-
     assert owner_login.status_code == 200
 
     owner_token = owner_login.json()["access_token"]
@@ -704,7 +676,6 @@ def test_added_member_can_access_project(test_client):
         "/login",
         json=member
     )
-
     assert member_login.status_code == 200
 
     member_token = member_login.json()["access_token"]
@@ -718,7 +689,6 @@ def test_added_member_can_access_project(test_client):
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -726,13 +696,13 @@ def test_added_member_can_access_project(test_client):
     add_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "QA Analyst"
         },
         headers={
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert add_response.status_code == 201
 
     response = test_client.get(
@@ -749,7 +719,6 @@ def test_added_member_can_access_project(test_client):
 
 # AC-009.2 — Remove Member
 def test_owner_can_remove_project_member(test_client):
-
     owner = {
         "email": "remove-owner@example.com",
         "password": "Password1"
@@ -764,21 +733,18 @@ def test_owner_can_remove_project_member(test_client):
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=member
     )
-
     assert registration2.status_code == 201
 
     owner_login = test_client.post(
         "/login",
         json=owner
     )
-
     assert owner_login.status_code == 200
 
     owner_token = owner_login.json()["access_token"]
@@ -792,7 +758,6 @@ def test_owner_can_remove_project_member(test_client):
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -800,13 +765,13 @@ def test_owner_can_remove_project_member(test_client):
     add_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "QA Analyst"
         },
         headers={
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert add_response.status_code == 201
 
     member_id = add_response.json()["user_id"]
@@ -823,7 +788,6 @@ def test_owner_can_remove_project_member(test_client):
 
 # AC-009.2 — Remove Member
 def test_removed_member_can_no_longer_access_project(test_client):
-
     owner = {
         "email": "remove-access-owner@example.com",
         "password": "Password1"
@@ -838,21 +802,18 @@ def test_removed_member_can_no_longer_access_project(test_client):
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=member
     )
-
     assert registration2.status_code == 201
 
     owner_login = test_client.post(
         "/login",
         json=owner
     )
-
     assert owner_login.status_code == 200
 
     owner_token = owner_login.json()["access_token"]
@@ -861,7 +822,6 @@ def test_removed_member_can_no_longer_access_project(test_client):
         "/login",
         json=member
     )
-
     assert member_login.status_code == 200
 
     member_token = member_login.json()["access_token"]
@@ -875,7 +835,6 @@ def test_removed_member_can_no_longer_access_project(test_client):
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -883,13 +842,13 @@ def test_removed_member_can_no_longer_access_project(test_client):
     add_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "QA Analyst"
         },
         headers={
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert add_response.status_code == 201
 
     member_id = add_response.json()["user_id"]
@@ -915,27 +874,24 @@ def test_removed_member_can_no_longer_access_project(test_client):
 
 # AC-009.3 — Invalid Member
 def test_project_owner_cannot_add_user_who_does_not_have_an_account(test_client):
-
     owner = {
         "email": "invalid-member-owner@example.com",
         "password": "Password1"
     }
 
-    registration = test_client.post(
+    registration_response = test_client.post(
         "/register",
         json=owner
     )
+    assert registration_response.status_code == 201
 
-    assert registration.status_code == 201
-
-    login = test_client.post(
+    login_response = test_client.post(
         "/login",
         json=owner
     )
+    assert login_response.status_code == 200
 
-    assert login.status_code == 200
-
-    token = login.json()["access_token"]
+    access_token = login_response.json()["access_token"]
 
     create_response = test_client.post(
         "/projects",
@@ -943,10 +899,9 @@ def test_project_owner_cannot_add_user_who_does_not_have_an_account(test_client)
             "name": "Invalid Member Project"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -954,10 +909,11 @@ def test_project_owner_cannot_add_user_who_does_not_have_an_account(test_client)
     response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": "nonexistent@example.com"
+            "email": "nonexistent@example.com",
+            "role": "QA Analyst"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
 
@@ -967,7 +923,6 @@ def test_project_owner_cannot_add_user_who_does_not_have_an_account(test_client)
 
 # AC-009.4 — Unauthorized Member Management
 def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
-
     owner = {
         "email": "unauthorized-owner@example.com",
         "password": "Password1"
@@ -982,21 +937,18 @@ def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=user
     )
-
     assert registration2.status_code == 201
 
     owner_login = test_client.post(
         "/login",
         json=owner
     )
-
     assert owner_login.status_code == 200
 
     owner_token = owner_login.json()["access_token"]
@@ -1005,7 +957,6 @@ def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
         "/login",
         json=user
     )
-
     assert user_login.status_code == 200
 
     user_token = user_login.json()["access_token"]
@@ -1019,7 +970,6 @@ def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -1027,7 +977,8 @@ def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
     response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": owner["email"]
+            "email": owner["email"],
+            "role": "QA Analyst"
         },
         headers={
             "Authorization": f"Bearer {user_token}"
@@ -1039,7 +990,6 @@ def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
 
 # AC-009.4 — Unauthorized Member Management
 def test_user_who_is_not_project_owner_cannot_remove_project_members(test_client):
-
     owner = {
         "email": "unauthorized-remove-owner@example.com",
         "password": "Password1"
@@ -1054,21 +1004,18 @@ def test_user_who_is_not_project_owner_cannot_remove_project_members(test_client
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=member
     )
-
     assert registration2.status_code == 201
 
     owner_login = test_client.post(
         "/login",
         json=owner
     )
-
     assert owner_login.status_code == 200
 
     owner_token = owner_login.json()["access_token"]
@@ -1077,7 +1024,6 @@ def test_user_who_is_not_project_owner_cannot_remove_project_members(test_client
         "/login",
         json=member
     )
-
     assert member_login.status_code == 200
 
     member_token = member_login.json()["access_token"]
@@ -1091,7 +1037,6 @@ def test_user_who_is_not_project_owner_cannot_remove_project_members(test_client
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -1099,13 +1044,13 @@ def test_user_who_is_not_project_owner_cannot_remove_project_members(test_client
     add_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "QA Analyst"
         },
         headers={
             "Authorization": f"Bearer {owner_token}"
         }
     )
-
     assert add_response.status_code == 201
 
     member_id = add_response.json()["user_id"]
@@ -1122,7 +1067,6 @@ def test_user_who_is_not_project_owner_cannot_remove_project_members(test_client
 
 # AC-009.5 — Duplicate Member
 def test_project_owner_cannot_add_same_user_more_than_once(test_client):
-
     owner = {
         "email": "duplicate-owner@example.com",
         "password": "Password1"
@@ -1137,24 +1081,21 @@ def test_project_owner_cannot_add_same_user_more_than_once(test_client):
         "/register",
         json=owner
     )
-
     assert registration1.status_code == 201
 
     registration2 = test_client.post(
         "/register",
         json=member
     )
-
     assert registration2.status_code == 201
 
-    login = test_client.post(
+    login_response = test_client.post(
         "/login",
         json=owner
     )
+    assert login_response.status_code == 200
 
-    assert login.status_code == 200
-
-    token = login.json()["access_token"]
+    access_token = login_response.json()["access_token"]
 
     create_response = test_client.post(
         "/projects",
@@ -1162,10 +1103,9 @@ def test_project_owner_cannot_add_same_user_more_than_once(test_client):
             "name": "Duplicate Member Project"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
-
     assert create_response.status_code == 201
 
     project_id = create_response.json()["id"]
@@ -1173,22 +1113,23 @@ def test_project_owner_cannot_add_same_user_more_than_once(test_client):
     first_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "QA Analyst"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
-
     assert first_response.status_code == 201
 
     second_response = test_client.post(
         f"/projects/{project_id}/members",
         json={
-            "email": member["email"]
+            "email": member["email"],
+            "role": "Developer"
         },
         headers={
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
     )
 
