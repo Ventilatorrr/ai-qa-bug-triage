@@ -125,9 +125,9 @@ As an authenticated user, I want to log out so that I can end my session securel
 
 The system shall allow authenticated users to create a project.
 
-#### US-005.1 — Create a Project
+#### AC-005.1 — Successful Project Creation
 
-As an authenticated user, I want to create a project so that I can manage bugs within it.
+* An authenticated user can create a project by providing a valid project name.
 
 #### AC-005.1 — Successful Project Creation
 
