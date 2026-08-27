@@ -210,9 +210,9 @@ As a Project Owner, I want to delete a project so that I can remove projects tha
 
 ---
 
-### REQ-009 — Project Member Management
+## REQ-009 — Project Member Management
 
-The system shall allow a Project Owner to add an existing user as a member of the project and remove existing members.
+The system shall allow a Project Owner to add and remove project members and allow project members to view project membership information.
 
 ### US-009 — Manage Project Members
 
@@ -233,54 +233,54 @@ As a Project Owner, I want to add and remove project members so that I can contr
 * A Project Owner cannot add a user who does not have an account.
 * The system rejects the request when the specified user does not exist.
 
-#### AC-009.4 — Unauthorized Member Management
-
-* A user who is not the Project Owner cannot add or remove project members.
-* The system rejects unauthorized member-management requests.
-
-#### AC-009.5 — Duplicate Member
+#### AC-009.4 — Duplicate Member
 
 * A Project Owner cannot add the same user to a project more than once.
 * The system rejects an attempt to add a user who is already a member of the project.
 
+#### AC-009.5 — View Project Members
+
+* A project member can view the members of a project they have access to.
+* The project member list displays each member's email address and project role.
+
 ---
 
-### REQ-010 — Project Roles and Permissions
+## REQ-010 — Project Roles and Permissions
 
-The system shall support role-based access control for project members. Each project member must have exactly one project role that determines their permissions within the project.
+The system shall support role-based access control for project members. A project member's assigned project role shall determine the actions they are authorized to perform within the project.
 
 ### US-010 — Use Project Roles and Permissions
 
 As a project user, I want my project role to determine what I can do within a project so that project functionality is controlled according to my responsibilities.
 
-#### AC-010.1 — Supported Project Roles
+#### AC-010.1 — Project Owner Role
 
-* The system supports the `Project Owner`, `QA Analyst`, and `Developer` project roles.
-* Each project member must have exactly one project role.
+* The system supports the `Project Owner` project role.
+* The user who creates a project is assigned the `Project Owner` role.
 
-#### AC-010.2 — Project Owner Role
+#### AC-010.2 — QA Analyst Role
 
-* The user who creates a project is assigned the Project Owner role.
-* A Project Owner can edit and delete the project.
-* A Project Owner can manage project members.
-* A Project Owner can create and manage bugs within projects they own.
-
-#### AC-010.3 — QA Analyst Role
-
+* The system supports the `QA Analyst` project role.
 * A QA Analyst can access projects they are a member of.
-* A QA Analyst can create and manage bugs within projects they have access to.
-* A QA Analyst cannot manage project members.
 
-#### AC-010.4 — Developer Role
+#### AC-010.3 — Developer Role
 
+* The system supports the `Developer` project role.
 * A Developer can access projects they are a member of.
-* A Developer can view bugs within projects they have access to.
-* A Developer can update bugs within projects they have access to.
-* A Developer cannot manage project members.
+
+#### AC-010.4 — Unauthorized Project Member Management
+
+* A user who is not the Project Owner cannot add project members.
+* A user who is not the Project Owner cannot remove project members.
 
 #### AC-010.5 — Unauthorized Project Actions
 
-* A project user cannot perform actions that are not permitted by their project role.
-* The system shall reject unauthorized project actions.
+* A user who is not the Project Owner cannot edit the project name.
+* A user who is not the Project Owner cannot delete the project.
+
+
+
+
+---
 
 
