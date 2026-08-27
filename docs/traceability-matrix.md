@@ -101,10 +101,10 @@ The matrix is updated throughout development and testing.
 
 ### REQ-007 — Project Name Editing
 
-| REQ     | US       | AC                                           | Automated Test                                | Test Type      | Status  |
-| ------- | -------- | -------------------------------------------- | --------------------------------------------- | -------------- | ------- |
-| REQ-007 | US-007.1 | AC-007.1 — Successful Project Name Editing   | `test_update_project`                         | API            | Covered |
-| REQ-007 | US-007.1 | AC-007.2 — Unauthorized Project Name Editing | `test_user_cannot_edit_another_users_project` | API / Security | Covered |
+| REQ     | US       | AC                                           | Automated Test                                     | Test Type      | Status  |
+| ------- | -------- | -------------------------------------------- | -------------------------------------------------- | -------------- | ------- |
+| REQ-007 | US-007.1 | AC-007.1 — Successful Project Name Editing   | `test_edit_project_name`                           | API            | Covered |
+| REQ-007 | US-007.1 | AC-007.2 — Unauthorized Project Name Editing | `test_user_cannot_edit_another_users_project_name` | API / Security | Covered |
 
 ### REQ-008 — Project Deletion
 
@@ -117,16 +117,32 @@ The matrix is updated throughout development and testing.
 
 ### REQ-009 — Project Member Management
 
-| REQ     | US       | AC                                        | BDD Scenario                              | Automated Test                                                     | Test Type        | Status  |
-| ------- | -------- | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ | ---------------- | ------- |
-| REQ-009 | US-009.1 | AC-009.1 — Add Member                     | Add a member to a project                 | `test_owner_can_add_project_member`                                | API              | Covered |
-| REQ-009 | US-009.1 | AC-009.1 — Add Member                     | Access a project as an added member       | `test_added_member_can_access_project`                             | API / Security   | Covered |
-| REQ-009 | US-009.1 | AC-009.2 — Remove Member                  | Remove a member from a project            | `test_owner_can_remove_project_member`                             | API              | Covered |
-| REQ-009 | US-009.1 | AC-009.2 — Remove Member                  | Access a project after being removed      | `test_removed_member_can_no_longer_access_project`                 | API / Security   | Covered |
-| REQ-009 | US-009.1 | AC-009.3 — Invalid Member                 | Attempt to add a nonexistent user         | `test_project_owner_cannot_add_user_who_does_not_have_an_account`  | API / Validation | Covered |
-| REQ-009 | US-009.1 | AC-009.4 — Unauthorized Member Management | Attempt to add a member as a non-owner    | `test_user_who_is_not_project_owner_cannot_add_project_members`    | API / Security   | Covered |
-| REQ-009 | US-009.1 | AC-009.4 — Unauthorized Member Management | Attempt to remove a member as a non-owner | `test_user_who_is_not_project_owner_cannot_remove_project_members` | API / Security   | Covered |
-| REQ-009 | US-009.1 | AC-009.5 — Duplicate Member               | Attempt to add the same member twice      | `test_project_owner_cannot_add_same_user_more_than_once`           | API / Validation | Covered |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-009 | US-009.1 | AC-009.1 — Add Member | `test_owner_can_add_project_member` | API / Validation | Covered |
+| REQ-009 | US-009.1 | AC-009.1 — Add Member | `test_added_member_can_access_project` | API / Security | Covered |
+| REQ-009 | US-009.1 | AC-009.2 — Remove Member | `test_owner_can_remove_project_member` | API | Covered |
+| REQ-009 | US-009.1 | AC-009.2 — Remove Member | `test_removed_member_can_no_longer_access_project` | API / Security | Covered |
+| REQ-009 | US-009.1 | AC-009.3 — Invalid Member | `test_project_owner_cannot_add_user_who_does_not_have_an_account` | API / Validation | Covered |
+| REQ-009 | US-009.1 | AC-009.4 — Duplicate Member | `test_project_owner_cannot_add_same_user_more_than_once` | API / Validation | Covered |
+| REQ-009 | US-009.1 | AC-009.5 — View Project Members | `test_project_member_can_view_project_members` | API / Authorization | Missing |
+
+
+### REQ-010 — Project Roles and Permissions
+
+| REQ     | US       | AC                                                | Automated Test                                 | Test Type           | Status  |
+| ------- | -------- | ------------------------------------------------- | ---------------------------------------------- | ------------------- | ------- |
+| REQ-010 | US-010.1 | AC-010.1 — Project Owner Role                     | `test_project_creator_is_project_owner`        | API / Database      | Covered |
+| REQ-010 | US-010.1 | AC-010.2 — QA Analyst Role                        | `test_qa_analyst_can_access_project`           | API / Authorization | Covered |
+| REQ-010 | US-010.1 | AC-010.3 — Developer Role                         | `test_developer_can_access_project`            | API / Authorization | Covered |
+| REQ-010 | US-010.1 | AC-010.4 — Unauthorized Project Member Management | `test_non_owner_cannot_manage_project_members` | API / Security      | Covered |
+| REQ-010 | US-010.1 | AC-010.5 — Unauthorized Project Actions           | `test_non_owner_cannot_edit_project`           | API / Security      | Covered |
+| REQ-010 | US-010.1 | AC-010.5 — Unauthorized Project Actions           | `test_non_owner_cannot_delete_project`         | API / Security      | Covered |
+
+
+
+
+
 
 ## BDD Specification Status
 
