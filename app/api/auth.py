@@ -1,8 +1,10 @@
 import sqlite3
+
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
+
 from fastapi import APIRouter, HTTPException, Header
 
 from app.database import get_connection
@@ -17,7 +19,6 @@ ALGORITHM = "HS256"
 
 def create_access_token(user_id):
     expiration = datetime.now(timezone.utc) + timedelta(hours=1)
-
     payload = {
         "user_id": user_id,
         "exp": expiration
@@ -28,6 +29,7 @@ def create_access_token(user_id):
         key=SECRET_KEY,
         algorithm=ALGORITHM
     )
+
 
 def verify_access_token(token):
     try:
@@ -44,6 +46,25 @@ def verify_access_token(token):
             status_code=401,
             detail="Invalid or expired token."
         )
+
+
+def get_current_user_id(authorization: str | None) -> int:
+    if authorization is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication scheme."
+        )
+
+    token = authorization.removeprefix("Bearer ")
+    payload = verify_access_token(token)
+
+    return payload["user_id"]
 
 
 @router.post("/register", status_code=201)
@@ -75,7 +96,9 @@ def register(user: UserCreate):
     finally:
         conn.close()
 
-    return {"message": "User registered successfully."}
+    return {
+        "message": "User registered successfully."
+    }
 
 
 @router.post("/login")
@@ -119,24 +142,10 @@ def login(user: UserCreate):
 
 @router.get("/protected")
 def protected(authorization: str | None = Header(default=None)):
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-
-    payload = verify_access_token(token)
+    user_id = get_current_user_id(authorization)
 
     return {
         "message": "You are authenticated.",
-        "user_id": payload["user_id"]
+        "user_id": user_id
     }
     

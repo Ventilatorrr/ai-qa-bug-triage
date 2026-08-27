@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header
 
 from app.database import get_connection
-from app.api.auth import verify_access_token
+from app.api.auth import get_current_user_id
 
 
 router = APIRouter(tags=["Projects"])
@@ -12,22 +12,7 @@ def create_project(
     project: dict,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     project_name = project.get("name")
 
@@ -73,22 +58,7 @@ def create_project(
 def get_projects(
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     conn = get_connection()
 
@@ -121,22 +91,7 @@ def get_project(
     project_id: int,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     conn = get_connection()
 
@@ -167,27 +122,13 @@ def get_project(
         "name": row[1]
     }
 
+
 @router.get("/projects/{project_id}/members")
 def get_project_members(
     project_id: int,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     conn = get_connection()
 
@@ -231,29 +172,14 @@ def get_project_members(
         for row in rows
     ]
 
-    
+
 @router.put("/projects/{project_id}")
 def update_project(
     project_id: int,
     project: dict,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     project_name = project.get("name")
 
@@ -310,22 +236,7 @@ def delete_project(
     project_id: int,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     conn = get_connection()
 
@@ -381,22 +292,7 @@ def add_project_member(
     member: dict,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     conn = get_connection()
 
@@ -500,22 +396,7 @@ def remove_project_member(
     member_user_id: int,
     authorization: str | None = Header(default=None)
 ):
-
-    if authorization is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required."
-        )
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication scheme."
-        )
-
-    token = authorization.removeprefix("Bearer ")
-    payload = verify_access_token(token)
-    user_id = payload["user_id"]
+    user_id = get_current_user_id(authorization)
 
     conn = get_connection()
 
@@ -570,3 +451,4 @@ def remove_project_member(
     return {
         "message": "Project member removed successfully."
     }
+    

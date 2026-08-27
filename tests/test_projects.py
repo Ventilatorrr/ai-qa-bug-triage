@@ -2,62 +2,26 @@ import pytest
 
 
 # AC-005.1 — Successful Project Creation
-def test_create_project(test_client):
-    user = {
-        "email": "project@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
-    )
-    assert registration_response.status_code == 201
-
-    login_response = test_client.post(
-        "/login",
-        json=user
-    )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    response = test_client.post(
-        "/projects",
-        json={
-            "name": "QA Bug Triage"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
+def test_create_project(test_client, authenticated_user_factory, project_factory):
+    authenticated_user = authenticated_user_factory(
+        email="project@example.com",
+        password="Password1"
     )
 
-    assert response.status_code == 201
+    project = project_factory(
+        authenticated_user["token"],
+        name="QA Bug Triage"
+    )
 
-    data = response.json()
-    assert data["name"] == "QA Bug Triage"
+    assert project["name"] == "QA Bug Triage"
 
 
 # AC-005.2 — Invalid Project Name
-def test_create_project_with_empty_name(test_client):
-    user = {
-        "email": "invalid-project@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+def test_create_project_with_empty_name(test_client, authenticated_user_factory):
+    authenticated_user = authenticated_user_factory(
+        email="invalid-project@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    login_response = test_client.post(
-        "/login",
-        json=user
-    )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
 
     response = test_client.post(
         "/projects",
@@ -65,7 +29,7 @@ def test_create_project_with_empty_name(test_client):
             "name": ""
         },
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {authenticated_user['token']}"
         }
     )
 
@@ -91,232 +55,124 @@ def test_unauthenticated_user_cannot_create_project(test_client):
 
 
 # AC-006.1 — View Project List
-def test_get_projects(test_client):
-    user = {
-        "email": "projects@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+def test_get_projects(test_client, authenticated_user_factory, project_factory):
+    authenticated_user = authenticated_user_factory(
+        email="projects@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=user
+    project_factory(
+        authenticated_user["token"],
+        name="QA Bug Triage"
     )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "QA Bug Triage"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
 
     response = test_client.get(
         "/projects",
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {authenticated_user['token']}"
         }
     )
 
     assert response.status_code == 200
 
     projects = response.json()
+
     assert len(projects) == 1
     assert projects[0]["name"] == "QA Bug Triage"
 
 
 # AC-006.2 — Project List Authorization
-def test_user_only_sees_own_projects(test_client):
-    user1 = {
-        "email": "user1@example.com",
-        "password": "Password1"
-    }
-
-    user2 = {
-        "email": "user2@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=user1
+def test_user_only_sees_own_projects(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user1 = authenticated_user_factory(
+        email="user1@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=user2
+    user2 = authenticated_user_factory(
+        email="user2@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    login1 = test_client.post(
-        "/login",
-        json=user1
+    project_factory(
+        user1["token"],
+        name="User 1 Project"
     )
-    assert login1.status_code == 200
-
-    token1 = login1.json()["access_token"]
-
-    login2 = test_client.post(
-        "/login",
-        json=user2
+    project_factory(
+        user2["token"],
+        name="User 2 Project"
     )
-    assert login2.status_code == 200
-
-    token2 = login2.json()["access_token"]
-
-    response1 = test_client.post(
-        "/projects",
-        json={
-            "name": "User 1 Project"
-        },
-        headers={
-            "Authorization": f"Bearer {token1}"
-        }
-    )
-    assert response1.status_code == 201
-
-    response2 = test_client.post(
-        "/projects",
-        json={
-            "name": "User 2 Project"
-        },
-        headers={
-            "Authorization": f"Bearer {token2}"
-        }
-    )
-    assert response2.status_code == 201
 
     response = test_client.get(
         "/projects",
         headers={
-            "Authorization": f"Bearer {token1}"
+            "Authorization": f"Bearer {user1['token']}"
         }
     )
 
     assert response.status_code == 200
 
     projects = response.json()
+
     assert len(projects) == 1
     assert projects[0]["name"] == "User 1 Project"
 
 
 # AC-006.3 — Open Project
-def test_get_project(test_client):
-    user = {
-        "email": "single-project@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+def test_get_project(test_client, authenticated_user_factory, project_factory):
+    authenticated_user = authenticated_user_factory(
+        email="single-project@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=user
+    project = project_factory(
+        authenticated_user["token"],
+        name="Single Project"
     )
-    assert login_response.status_code == 200
 
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Single Project"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
+    project_id = project["id"]
 
     response = test_client.get(
         f"/projects/{project_id}",
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {authenticated_user['token']}"
         }
     )
 
     assert response.status_code == 200
 
     project = response.json()
+
     assert project["id"] == project_id
     assert project["name"] == "Single Project"
 
 
 # AC-006.4 — Unauthorized Project Access
-def test_user_cannot_access_another_users_project(test_client):
-    user1 = {
-        "email": "owner@example.com",
-        "password": "Password1"
-    }
-
-    user2 = {
-        "email": "other@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=user1
+def test_user_cannot_access_another_users_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user1 = authenticated_user_factory(
+        email="owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=user2
+    user2 = authenticated_user_factory(
+        email="other@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    login1 = test_client.post(
-        "/login",
-        json=user1
+    project = project_factory(
+        user1["token"],
+        name="Private Project"
     )
-    assert login1.status_code == 200
-
-    token1 = login1.json()["access_token"]
-
-    login2 = test_client.post(
-        "/login",
-        json=user2
-    )
-    assert login2.status_code == 200
-
-    token2 = login2.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Private Project"
-        },
-        headers={
-            "Authorization": f"Bearer {token1}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {token2}"
+            "Authorization": f"Bearer {user2['token']}"
         }
     )
 
@@ -324,125 +180,71 @@ def test_user_cannot_access_another_users_project(test_client):
 
 
 # AC-007.1 — Successful Project Name Editing
-def test_edit_project_name(test_client):
-    user = {
-        "email": "edit-project@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+def test_edit_project_name(test_client, authenticated_user_factory, project_factory):
+    authenticated_user = authenticated_user_factory(
+        email="edit-project@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=user
+    project = project_factory(
+        authenticated_user["token"],
+        name="Original Project"
     )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Original Project"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.put(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         json={
             "name": "Updated Project"
         },
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {authenticated_user['token']}"
         }
     )
 
     assert response.status_code == 200
 
     data = response.json()
-    assert data["id"] == project_id
+
+    assert data["id"] == project["id"]
     assert data["name"] == "Updated Project"
 
 
 # AC-007.2 — Unauthorized Project Name Editing
-def test_user_cannot_edit_another_users_project_name(test_client):
-    user1 = {
-        "email": "project-owner@example.com",
-        "password": "Password1"
-    }
-
-    user2 = {
-        "email": "project-other@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=user1
+def test_user_cannot_edit_another_users_project_name(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user1 = authenticated_user_factory(
+        email="project-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=user2
+    user2 = authenticated_user_factory(
+        email="project-other@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    login1 = test_client.post(
-        "/login",
-        json=user1
+    project = project_factory(
+        user1["token"],
+        name="Original Project"
     )
-    assert login1.status_code == 200
-
-    token1 = login1.json()["access_token"]
-
-    login2 = test_client.post(
-        "/login",
-        json=user2
-    )
-    assert login2.status_code == 200
-
-    token2 = login2.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Original Project"
-        },
-        headers={
-            "Authorization": f"Bearer {token1}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.put(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         json={
             "name": "Unauthorized Change"
         },
         headers={
-            "Authorization": f"Bearer {token2}"
+            "Authorization": f"Bearer {user2['token']}"
         }
     )
 
     assert response.status_code == 404
 
     get_response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {token1}"
+            "Authorization": f"Bearer {user1['token']}"
         }
     )
 
@@ -451,55 +253,34 @@ def test_user_cannot_edit_another_users_project_name(test_client):
 
 
 # AC-008.1 — Successful Project Deletion
-def test_delete_project(test_client):
-    user = {
-        "email": "delete-project@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+def test_delete_project(test_client, authenticated_user_factory, project_factory):
+    authenticated_user = authenticated_user_factory(
+        email="delete-project@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=user
+    project = project_factory(
+        authenticated_user["token"],
+        name="Project To Delete"
     )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Project To Delete"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.delete(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {authenticated_user['token']}"
         }
     )
 
     assert response.status_code == 200
 
     data = response.json()
+
     assert data["message"] == "Project deleted successfully."
 
     get_response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {authenticated_user['token']}"
         }
     )
 
@@ -507,71 +288,38 @@ def test_delete_project(test_client):
 
 
 # AC-008.2 — Unauthorized Project Deletion
-def test_user_cannot_delete_another_users_project(test_client):
-    user1 = {
-        "email": "delete-owner@example.com",
-        "password": "Password1"
-    }
-
-    user2 = {
-        "email": "delete-other@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=user1
+def test_user_cannot_delete_another_users_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user1 = authenticated_user_factory(
+        email="delete-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=user2
+    user2 = authenticated_user_factory(
+        email="delete-other@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    login1 = test_client.post(
-        "/login",
-        json=user1
+    project = project_factory(
+        user1["token"],
+        name="Protected Project"
     )
-    assert login1.status_code == 200
-
-    token1 = login1.json()["access_token"]
-
-    login2 = test_client.post(
-        "/login",
-        json=user2
-    )
-    assert login2.status_code == 200
-
-    token2 = login2.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Protected Project"
-        },
-        headers={
-            "Authorization": f"Bearer {token1}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.delete(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {token2}"
+            "Authorization": f"Bearer {user2['token']}"
         }
     )
 
     assert response.status_code == 404
 
     get_response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {token1}"
+            "Authorization": f"Bearer {user1['token']}"
         }
     )
 
@@ -580,209 +328,111 @@ def test_user_cannot_delete_another_users_project(test_client):
 
 
 # AC-009.1 — Add Member
-def test_owner_can_add_project_member(test_client):
-    owner = {
-        "email": "member-owner@example.com",
-        "password": "Password1"
-    }
-
-    member = {
-        "email": "project-member@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=owner
+def test_owner_can_add_project_member(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="member-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=member
-    )
-    assert registration2.status_code == 201
-
-    login_response = test_client.post(
-        "/login",
-        json=owner
-    )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Member Test Project"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": member["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
+    member = user_factory(
+        email="project-member@example.com",
+        password="Password1"
     )
 
-    assert add_response.status_code == 201
+    project = project_factory(
+        owner["token"],
+        name="Member Test Project"
+    )
 
-    data = add_response.json()
-    assert data["project_id"] == project_id
-    assert data["email"] == member["email"]
-    assert data["role"] == "QA Analyst"
+    member_data = member_factory(
+        owner["token"],
+        project["id"],
+        member["email"],
+        "QA Analyst"
+    )
+
+    assert member_data["project_id"] == project["id"]
+    assert member_data["email"] == member["email"]
+    assert member_data["role"] == "QA Analyst"
 
 
 # AC-009.1 — Add Member
-def test_added_member_can_access_project(test_client):
-    owner = {
-        "email": "access-owner@example.com",
-        "password": "Password1"
-    }
-
-    member = {
-        "email": "access-member@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=owner
+def test_added_member_can_access_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="access-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=member
+    member = authenticated_user_factory(
+        email="access-member@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    owner_login = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Member Access Project"
     )
-    assert owner_login.status_code == 200
 
-    owner_token = owner_login.json()["access_token"]
-
-    member_login = test_client.post(
-        "/login",
-        json=member
+    member_factory(
+        owner["token"],
+        project["id"],
+        member["user"]["email"],
+        "QA Analyst"
     )
-    assert member_login.status_code == 200
-
-    member_token = member_login.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Member Access Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": member["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
 
     response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {member_token}"
+            "Authorization": f"Bearer {member['token']}"
         }
     )
 
     assert response.status_code == 200
-    assert response.json()["id"] == project_id
+    assert response.json()["id"] == project["id"]
     assert response.json()["name"] == "Member Access Project"
 
 
 # AC-009.2 — Remove Member
-def test_owner_can_remove_project_member(test_client):
-    owner = {
-        "email": "remove-owner@example.com",
-        "password": "Password1"
-    }
-
-    member = {
-        "email": "remove-member@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=owner
+def test_owner_can_remove_project_member(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="remove-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=member
+    member = authenticated_user_factory(
+        email="remove-member@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    owner_login = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Remove Member Project"
     )
-    assert owner_login.status_code == 200
 
-    owner_token = owner_login.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Remove Member Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
+    member_data = member_factory(
+        owner["token"],
+        project["id"],
+        member["user"]["email"],
+        "QA Analyst"
     )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": member["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-
-    member_id = add_response.json()["user_id"]
 
     response = test_client.delete(
-        f"/projects/{project_id}/members/{member_id}",
+        f"/projects/{project['id']}/members/{member_data['user_id']}",
         headers={
-            "Authorization": f"Bearer {owner_token}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -790,85 +440,46 @@ def test_owner_can_remove_project_member(test_client):
 
 
 # AC-009.2 — Remove Member
-def test_removed_member_can_no_longer_access_project(test_client):
-    owner = {
-        "email": "remove-access-owner@example.com",
-        "password": "Password1"
-    }
-
-    member = {
-        "email": "remove-access-member@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=owner
+def test_removed_member_can_no_longer_access_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="remove-access-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=member
+    member = authenticated_user_factory(
+        email="remove-access-member@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    owner_login = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Remove Access Project"
     )
-    assert owner_login.status_code == 200
 
-    owner_token = owner_login.json()["access_token"]
-
-    member_login = test_client.post(
-        "/login",
-        json=member
+    member_data = member_factory(
+        owner["token"],
+        project["id"],
+        member["user"]["email"],
+        "QA Analyst"
     )
-    assert member_login.status_code == 200
-
-    member_token = member_login.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Remove Access Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": member["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-
-    member_id = add_response.json()["user_id"]
 
     delete_response = test_client.delete(
-        f"/projects/{project_id}/members/{member_id}",
+        f"/projects/{project['id']}/members/{member_data['user_id']}",
         headers={
-            "Authorization": f"Bearer {owner_token}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
     assert delete_response.status_code == 200
 
     response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {member_token}"
+            "Authorization": f"Bearer {member['token']}"
         }
     )
 
@@ -876,47 +487,29 @@ def test_removed_member_can_no_longer_access_project(test_client):
 
 
 # AC-009.3 — Invalid Member
-def test_project_owner_cannot_add_user_who_does_not_have_an_account(test_client):
-    owner = {
-        "email": "invalid-member-owner@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_project_owner_cannot_add_user_who_does_not_have_an_account(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    owner = authenticated_user_factory(
+        email="invalid-member-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Invalid Member Project"
     )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Invalid Member Project"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.post(
-        f"/projects/{project_id}/members",
+        f"/projects/{project['id']}/members",
         json={
             "email": "nonexistent@example.com",
             "role": "QA Analyst"
         },
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -925,70 +518,42 @@ def test_project_owner_cannot_add_user_who_does_not_have_an_account(test_client)
 
 
 # AC-009.4 — Duplicate Member
-def test_project_owner_cannot_add_same_user_more_than_once(test_client):
-    owner = {
-        "email": "duplicate-owner@example.com",
-        "password": "Password1"
-    }
-
-    member = {
-        "email": "duplicate-member@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=owner
+def test_project_owner_cannot_add_same_user_more_than_once(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="duplicate-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=member
+    member = user_factory(
+        email="duplicate-member@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Duplicate Member Project"
     )
-    assert login_response.status_code == 200
 
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Duplicate Member Project"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
+    member_factory(
+        owner["token"],
+        project["id"],
+        member["email"],
+        "QA Analyst"
     )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    first_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": member["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert first_response.status_code == 201
 
     second_response = test_client.post(
-        f"/projects/{project_id}/members",
+        f"/projects/{project['id']}/members",
         json={
             "email": member["email"],
             "role": "Developer"
         },
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -996,166 +561,220 @@ def test_project_owner_cannot_add_same_user_more_than_once(test_client):
     assert second_response.json()["detail"] == "This user is already a member of this project."
 
 
-# AC-010.5 — Role-Based Member Management
-def test_user_who_is_not_project_owner_cannot_add_project_members(test_client):
-    owner = {
-        "email": "unauthorized-owner@example.com",
-        "password": "Password1"
-    }
-
-    user = {
-        "email": "unauthorized-user@example.com",
-        "password": "Password1"
-    }
-
-    registration1 = test_client.post(
-        "/register",
-        json=owner
+# AC-010.4 — Unauthorized Project Member Management
+@pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
+def test_non_owner_cannot_manage_project_members(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="manage-owner@example.com",
+        password="Password1"
     )
-    assert registration1.status_code == 201
-
-    registration2 = test_client.post(
-        "/register",
-        json=user
+    non_owner = authenticated_user_factory(
+        email="manage-non-owner@example.com",
+        password="Password1"
     )
-    assert registration2.status_code == 201
-
-    owner_login = test_client.post(
-        "/login",
-        json=owner
+    existing_member = user_factory(
+        email="manage-existing-member@example.com",
+        password="Password1"
     )
-    assert owner_login.status_code == 200
-
-    owner_token = owner_login.json()["access_token"]
-
-    user_login = test_client.post(
-        "/login",
-        json=user
+    new_user = user_factory(
+        email="manage-new-user@example.com",
+        password="Password1"
     )
-    assert user_login.status_code == 200
 
-    user_token = user_login.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Unauthorized Member Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
+    project = project_factory(
+        owner["token"],
+        name="Member Management Authorization Project"
     )
-    assert create_response.status_code == 201
 
-    project_id = create_response.json()["id"]
+    member_factory(
+        owner["token"],
+        project["id"],
+        non_owner["user"]["email"],
+        role
+    )
+
+    existing_member_data = member_factory(
+        owner["token"],
+        project["id"],
+        existing_member["email"],
+        "Developer"
+    )
 
     response = test_client.post(
-        f"/projects/{project_id}/members",
+        f"/projects/{project['id']}/members",
         json={
-            "email": owner["email"],
-            "role": "QA Analyst"
+            "email": new_user["email"],
+            "role": "Developer"
         },
         headers={
-            "Authorization": f"Bearer {user_token}"
+            "Authorization": f"Bearer {non_owner['token']}"
+        }
+    )
+
+    assert response.status_code == 404
+
+    response = test_client.delete(
+        f"/projects/{project['id']}/members/{existing_member_data['user_id']}",
+        headers={
+            "Authorization": f"Bearer {non_owner['token']}"
         }
     )
 
     assert response.status_code == 404
 
 
+# AC-010.5 — Unauthorized Project Actions
+@pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
+def test_non_owner_cannot_edit_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="edit-owner@example.com",
+        password="Password1"
+    )
+    non_owner = authenticated_user_factory(
+        email="edit-non-owner@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Edit Project"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        non_owner["user"]["email"],
+        role
+    )
+
+    response = test_client.put(
+        f"/projects/{project['id']}",
+        json={
+            "name": "Unauthorized Change"
+        },
+        headers={
+            "Authorization": f"Bearer {non_owner['token']}"
+        }
+    )
+
+    assert response.status_code == 404
+
+    get_response = test_client.get(
+        f"/projects/{project['id']}",
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    assert get_response.json()["name"] == "Protected Edit Project"
+
+
+# AC-010.5 — Unauthorized Project Actions
+@pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
+def test_non_owner_cannot_delete_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="delete-owner@example.com",
+        password="Password1"
+    )
+    non_owner = authenticated_user_factory(
+        email="delete-non-owner@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Delete Project"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        non_owner["user"]["email"],
+        role
+    )
+
+    response = test_client.delete(
+        f"/projects/{project['id']}",
+        headers={
+            "Authorization": f"Bearer {non_owner['token']}"
+        }
+    )
+
+    assert response.status_code == 404
+
+    get_response = test_client.get(
+        f"/projects/{project['id']}",
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    assert get_response.json()["name"] == "Protected Delete Project"
+
+
 # AC-009.5 — View Project Members
-def test_project_member_can_view_project_members(test_client):
-
-    owner = {
-        "email": "members-owner@example.com",
-        "password": "Password1"
-    }
-
-    qa_analyst = {
-        "email": "members-qa@example.com",
-        "password": "Password1"
-    }
-
-    developer = {
-        "email": "members-developer@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_project_member_can_view_project_members(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="members-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=qa_analyst
+    qa_analyst = authenticated_user_factory(
+        email="members-qa@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=developer
+    developer = authenticated_user_factory(
+        email="members-developer@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Project Members Test"
     )
-    assert login_response.status_code == 200
 
-    owner_token = login_response.json()["access_token"]
-
-    login_response = test_client.post(
-        "/login",
-        json=qa_analyst
+    member_factory(
+        owner["token"],
+        project["id"],
+        qa_analyst["user"]["email"],
+        "QA Analyst"
     )
-    assert login_response.status_code == 200
-
-    qa_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Project Members Test"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
+    member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
     )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": qa_analyst["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": developer["email"],
-            "role": "Developer"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
 
     response = test_client.get(
-        f"/projects/{project_id}/members",
+        f"/projects/{project['id']}/members",
         headers={
-            "Authorization": f"Bearer {qa_token}"
+            "Authorization": f"Bearer {qa_analyst['token']}"
         }
     )
 
@@ -1170,50 +789,31 @@ def test_project_member_can_view_project_members(test_client):
         for member in members
     }
 
-    assert member_roles[owner["email"]] == "Project Owner"
-    assert member_roles[qa_analyst["email"]] == "QA Analyst"
-    assert member_roles[developer["email"]] == "Developer"
+    assert member_roles[owner["user"]["email"]] == "Project Owner"
+    assert member_roles[qa_analyst["user"]["email"]] == "QA Analyst"
+    assert member_roles[developer["user"]["email"]] == "Developer"
 
 
 # AC-010.1 — Project Owner Role
-def test_project_creator_is_project_owner(test_client):
-
-    user = {
-        "email": "creator-owner@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+def test_project_creator_is_project_owner(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="creator-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=user
+    project = project_factory(
+        user["token"],
+        name="Owner Role Project"
     )
-    assert login_response.status_code == 200
-
-    access_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Owner Role Project"
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
 
     response = test_client.get(
-        f"/projects/{project_id}/members",
+        f"/projects/{project['id']}/members",
         headers={
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {user['token']}"
         }
     )
 
@@ -1224,296 +824,165 @@ def test_project_creator_is_project_owner(test_client):
     owner = next(
         member
         for member in members
-        if member["email"] == user["email"]
+        if member["email"] == user["user"]["email"]
     )
 
     assert owner["role"] == "Project Owner"
 
 
 # AC-010.2 — QA Analyst Role
-def test_qa_analyst_can_access_project(test_client):
-
-    owner = {
-        "email": "qa-access-owner@example.com",
-        "password": "Password1"
-    }
-
-    qa_analyst = {
-        "email": "qa-access-user@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_qa_analyst_can_access_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="qa-access-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=qa_analyst
+    qa_analyst = authenticated_user_factory(
+        email="qa-access-user@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="QA Analyst Access Project"
     )
-    assert login_response.status_code == 200
 
-    owner_token = login_response.json()["access_token"]
-
-    login_response = test_client.post(
-        "/login",
-        json=qa_analyst
+    member_data = member_factory(
+        owner["token"],
+        project["id"],
+        qa_analyst["user"]["email"],
+        "QA Analyst"
     )
-    assert login_response.status_code == 200
 
-    qa_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "QA Analyst Access Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": qa_analyst["email"],
-            "role": "QA Analyst"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-    assert add_response.json()["role"] == "QA Analyst"
+    assert member_data["role"] == "QA Analyst"
 
     response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {qa_token}"
+            "Authorization": f"Bearer {qa_analyst['token']}"
         }
     )
 
     assert response.status_code == 200
 
-    project = response.json()
+    project_data = response.json()
 
-    assert project["id"] == project_id
-    assert project["name"] == "QA Analyst Access Project"
+    assert project_data["id"] == project["id"]
+    assert project_data["name"] == "QA Analyst Access Project"
 
 
 # AC-010.3 — Developer Role
-def test_developer_can_access_project(test_client):
-
-    owner = {
-        "email": "developer-access-owner@example.com",
-        "password": "Password1"
-    }
-
-    developer = {
-        "email": "developer-access-user@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_developer_can_access_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="developer-access-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=developer
+    developer = authenticated_user_factory(
+        email="developer-access-user@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Developer Access Project"
     )
-    assert login_response.status_code == 200
 
-    owner_token = login_response.json()["access_token"]
-
-    login_response = test_client.post(
-        "/login",
-        json=developer
+    member_data = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
     )
-    assert login_response.status_code == 200
 
-    developer_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Developer Access Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": developer["email"],
-            "role": "Developer"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-    assert add_response.json()["role"] == "Developer"
+    assert member_data["role"] == "Developer"
 
     response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {developer_token}"
+            "Authorization": f"Bearer {developer['token']}"
         }
     )
 
     assert response.status_code == 200
 
-    project = response.json()
+    project_data = response.json()
 
-    assert project["id"] == project_id
-    assert project["name"] == "Developer Access Project"
+    assert project_data["id"] == project["id"]
+    assert project_data["name"] == "Developer Access Project"
 
 
-# AC-010.4 — Unathorized Project Member Management
+# AC-010.4 — Unauthorized Project Member Management
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
-def test_non_owner_cannot_manage_project_members(test_client, role):
-
-    owner = {
-        "email": "manage-owner@example.com",
-        "password": "Password1"
-    }
-
-    non_owner = {
-        "email": "manage-non-owner@example.com",
-        "password": "Password1"
-    }
-
-    existing_member = {
-        "email": "manage-existing-member@example.com",
-        "password": "Password1"
-    }
-
-    new_user = {
-        "email": "manage-new-user@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_non_owner_cannot_manage_project_members(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="manage-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=non_owner
+    non_owner = authenticated_user_factory(
+        email="manage-non-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=existing_member
+    existing_member = user_factory(
+        email="manage-existing-member@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=new_user
+    new_user = user_factory(
+        email="manage-new-user@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    login_response = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Member Management Authorization Project"
     )
-    assert login_response.status_code == 200
 
-    owner_token = login_response.json()["access_token"]
-
-    login_response = test_client.post(
-        "/login",
-        json=non_owner
+    member_factory(
+        owner["token"],
+        project["id"],
+        non_owner["user"]["email"],
+        role
     )
-    assert login_response.status_code == 200
 
-    non_owner_token = login_response.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Member Management Authorization Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
+    existing_member_data = member_factory(
+        owner["token"],
+        project["id"],
+        existing_member["email"],
+        "Developer"
     )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": non_owner["email"],
-            "role": role
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": existing_member["email"],
-            "role": "Developer"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
 
     response = test_client.post(
-        f"/projects/{project_id}/members",
+        f"/projects/{project['id']}/members",
         json={
             "email": new_user["email"],
             "role": "Developer"
         },
         headers={
-            "Authorization": f"Bearer {non_owner_token}"
+            "Authorization": f"Bearer {non_owner['token']}"
         }
     )
 
     assert response.status_code == 404
 
-    member_id = add_response.json()["user_id"]
-
     response = test_client.delete(
-        f"/projects/{project_id}/members/{member_id}",
+        f"/projects/{project['id']}/members/{existing_member_data['user_id']}",
         headers={
-            "Authorization": f"Bearer {non_owner_token}"
+            "Authorization": f"Bearer {non_owner['token']}"
         }
     )
 
@@ -1522,88 +991,50 @@ def test_non_owner_cannot_manage_project_members(test_client, role):
 
 # AC-010.5 — Unauthorized Project Actions
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
-def test_non_owner_cannot_edit_project(test_client, role):
-
-    owner = {
-        "email": "edit-owner@example.com",
-        "password": "Password1"
-    }
-
-    non_owner = {
-        "email": "edit-non-owner@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_non_owner_cannot_edit_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="edit-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=non_owner
+    non_owner = authenticated_user_factory(
+        email="edit-non-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    owner_login = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Protected Edit Project"
     )
-    assert owner_login.status_code == 200
 
-    owner_token = owner_login.json()["access_token"]
-
-    non_owner_login = test_client.post(
-        "/login",
-        json=non_owner
+    member_factory(
+        owner["token"],
+        project["id"],
+        non_owner["user"]["email"],
+        role
     )
-    assert non_owner_login.status_code == 200
-
-    non_owner_token = non_owner_login.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Protected Edit Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": non_owner["email"],
-            "role": role
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-    assert add_response.json()["role"] == role
 
     response = test_client.put(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         json={
             "name": "Unauthorized Change"
         },
         headers={
-            "Authorization": f"Bearer {non_owner_token}"
+            "Authorization": f"Bearer {non_owner['token']}"
         }
     )
 
     assert response.status_code == 404
 
     get_response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {owner_token}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -1613,87 +1044,50 @@ def test_non_owner_cannot_edit_project(test_client, role):
 
 # AC-010.5 — Unauthorized Project Actions
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
-def test_non_owner_cannot_delete_project(test_client, role):
-
-    owner = {
-        "email": "delete-owner@example.com",
-        "password": "Password1"
-    }
-
-    non_owner = {
-        "email": "delete-non-owner@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=owner
+def test_non_owner_cannot_delete_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="delete-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
-
-    registration_response = test_client.post(
-        "/register",
-        json=non_owner
+    non_owner = authenticated_user_factory(
+        email="delete-non-owner@example.com",
+        password="Password1"
     )
-    assert registration_response.status_code == 201
 
-    owner_login = test_client.post(
-        "/login",
-        json=owner
+    project = project_factory(
+        owner["token"],
+        name="Protected Delete Project"
     )
-    assert owner_login.status_code == 200
 
-    owner_token = owner_login.json()["access_token"]
-
-    non_owner_login = test_client.post(
-        "/login",
-        json=non_owner
+    member_factory(
+        owner["token"],
+        project["id"],
+        non_owner["user"]["email"],
+        role
     )
-    assert non_owner_login.status_code == 200
-
-    non_owner_token = non_owner_login.json()["access_token"]
-
-    create_response = test_client.post(
-        "/projects",
-        json={
-            "name": "Protected Delete Project"
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert create_response.status_code == 201
-
-    project_id = create_response.json()["id"]
-
-    add_response = test_client.post(
-        f"/projects/{project_id}/members",
-        json={
-            "email": non_owner["email"],
-            "role": role
-        },
-        headers={
-            "Authorization": f"Bearer {owner_token}"
-        }
-    )
-    assert add_response.status_code == 201
-    assert add_response.json()["role"] == role
 
     response = test_client.delete(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {non_owner_token}"
+            "Authorization": f"Bearer {non_owner['token']}"
         }
     )
 
     assert response.status_code == 404
 
     get_response = test_client.get(
-        f"/projects/{project_id}",
+        f"/projects/{project['id']}",
         headers={
-            "Authorization": f"Bearer {owner_token}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
     assert get_response.status_code == 200
     assert get_response.json()["name"] == "Protected Delete Project"
+    

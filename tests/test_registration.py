@@ -10,7 +10,10 @@ def test_successful_registration(test_client):
         "password": "Password1"
     }
 
-    response = test_client.post("/register", json=user)
+    response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert response.status_code == 201
     assert response.json() == {
@@ -19,17 +22,16 @@ def test_successful_registration(test_client):
 
 
 # AC-001.2 — Duplicate Email
-def test_registration_with_duplicate_email(test_client):
-    user = {
-        "email": "existing@example.com",
-        "password": "Password1"
-    }
+def test_registration_with_duplicate_email(test_client, user_factory):
+    user = user_factory(
+        email="existing@example.com",
+        password="Password1"
+    )
 
-    first_response = test_client.post("/register", json=user)
-
-    assert first_response.status_code == 201
-
-    second_response = test_client.post("/register", json=user)
+    second_response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert second_response.status_code == 409
     assert second_response.json() == {
@@ -44,7 +46,10 @@ def test_registration_with_invalid_email(test_client):
         "password": "Password1"
     }
 
-    response = test_client.post("/register", json=user)
+    response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert response.status_code == 422
     assert response.json()["detail"][0]["loc"] == ["body", "email"]
@@ -57,70 +62,76 @@ def test_registration_with_short_password(test_client):
         "password": "Pass1"
     }
 
-    response = test_client.post("/register", json=user)
+    response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert response.status_code == 422
     assert response.json()["detail"][0]["loc"] == ["body", "password"]
     assert "Password must be at least 8 characters long." in response.json()["detail"][0]["msg"]
 
 
-# AC-001.5 — Invalid Password
+# AC-001.4 — Invalid Password: Uppercase
 def test_registration_without_uppercase_password(test_client):
     user = {
         "email": "uppercase@example.com",
         "password": "password1"
     }
 
-    response = test_client.post("/register", json=user)
+    response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert response.status_code == 422
     assert response.json()["detail"][0]["loc"] == ["body", "password"]
     assert "Password must contain at least one uppercase letter." in response.json()["detail"][0]["msg"]
 
-# AC-001.6 — Invalid Password
+
+# AC-001.4 — Invalid Password: Lowercase
 def test_registration_without_lowercase_password(test_client):
     user = {
         "email": "lowercase@example.com",
         "password": "PASSWORD1"
     }
 
-    response = test_client.post("/register", json=user)
+    response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert response.status_code == 422
     assert response.json()["detail"][0]["loc"] == ["body", "password"]
     assert "Password must contain at least one lowercase letter." in response.json()["detail"][0]["msg"]
 
 
-# AC-001.7 — Invalid Password
+# AC-001.4 — Invalid Password: Number
 def test_registration_without_number_password(test_client):
     user = {
         "email": "number@example.com",
         "password": "Password"
     }
 
-    response = test_client.post("/register", json=user)
+    response = test_client.post(
+        "/register",
+        json=user
+    )
 
     assert response.status_code == 422
     assert response.json()["detail"][0]["loc"] == ["body", "password"]
     assert "Password must contain at least one number." in response.json()["detail"][0]["msg"]
 
 
-# Additional validation test    
-def test_registration_rejects_invalid_password_for_existing_email(test_client):
-    user = {
-        "email": "existing@example.com",
-        "password": "Password1"
-    }
-
-    registration_response = test_client.post(
-        "/register",
-        json=user
+# Additional validation test
+def test_registration_rejects_invalid_password_for_existing_email(test_client, user_factory):
+    user = user_factory(
+        email="existing@example.com",
+        password="Password1"
     )
 
-    assert registration_response.status_code == 201
-
     invalid_user = {
-        "email": "existing@example.com",
+        "email": user["email"],
         "password": "rs3Tss"
     }
 
@@ -135,15 +146,11 @@ def test_registration_rejects_invalid_password_for_existing_email(test_client):
 
 
 # AC-001.5 — Password Security
-def test_password_is_not_stored_as_plain_text(test_client):
-    user = {
-        "email": "security@example.com",
-        "password": "Password1"
-    }
-
-    response = test_client.post("/register", json=user)
-
-    assert response.status_code == 201
+def test_password_is_not_stored_as_plain_text(test_client, user_factory):
+    user = user_factory(
+        email="security@example.com",
+        password="Password1"
+    )
 
     conn = sqlite3.connect("test_bugtriage.db")
 
@@ -155,9 +162,7 @@ def test_password_is_not_stored_as_plain_text(test_client):
     conn.close()
 
     assert row[0] != user["password"]
-
     assert bcrypt.checkpw(
         user["password"].encode("utf-8"),
         row[0].encode("utf-8")
     )
-    
