@@ -420,6 +420,12 @@ def remove_project_member(
                 detail="Project not found."
             )
 
+        if member_user_id == user_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Project Owner cannot be removed from the project."
+            )
+
         member = conn.execute(
             """
             SELECT 1

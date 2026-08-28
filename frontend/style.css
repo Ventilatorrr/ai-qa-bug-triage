@@ -64,6 +64,7 @@ h2 {
 .main-navigation {
     display: flex;
     align-items: center;
+    gap: 20px;
 }
 
 .main-navigation a {

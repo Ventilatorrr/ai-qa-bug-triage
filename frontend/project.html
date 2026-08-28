@@ -8,13 +8,63 @@
 </head>
 
 <body>
-    <header>
-        <h1>AI QA Bug Triage</h1>
+    <header class="site-header">
+        <div class="header-left">
+            <nav class="main-navigation">
+                <a href="/projects.html">Projects</a>
+                <a href="/about.html">About</a>
+            </nav>
+        </div>
+
+        <h1 class="site-title">AI QA Bug Triage</h1>
+
+        <div class="header-right">
+            <button id="logout-button" type="button">Logout</button>
+        </div>
     </header>
 
     <main>
         <section>
             <h2 id="project-name"></h2>
+
+            <h3>Project Members</h3>
+
+            <p id="message"></p>
+
+            <div id="members"></div>
+
+            <div id="member-management" hidden>
+                <button id="show-member-form" type="button">Add Member</button>
+
+                <form id="member-form" hidden>
+                    <label for="member-email">Email:</label>
+
+                    <input
+                        type="email"
+                        id="member-email"
+                        class="form-input"
+                        name="member_email"
+                        placeholder="Enter member email"
+                        autocomplete="email"
+                        required>
+
+                    <label for="member-role">Role:</label>
+
+                    <select
+                        id="member-role"
+                        class="form-input"
+                        name="member_role"
+                        required>
+                        <option value="QA Analyst">QA Analyst</option>
+                        <option value="Developer">Developer</option>
+                    </select>
+
+                    <div class="form-actions">
+                        <button type="submit">Add Member</button>
+                        <button id="cancel-member-form" type="button">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </section>
     </main>
 
