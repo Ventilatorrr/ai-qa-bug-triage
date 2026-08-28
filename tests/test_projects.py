@@ -794,6 +794,71 @@ def test_project_member_can_view_project_members(
     assert member_roles[developer["user"]["email"]] == "Developer"
 
 
+# Additional security test — Project Owner Self-Removal
+def test_project_owner_cannot_remove_themselves(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    owner = authenticated_user_factory(
+        email="self-remove-owner@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Owner Self-Removal Project"
+    )
+
+    members_response = test_client.get(
+        f"/projects/{project['id']}/members",
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert members_response.status_code == 200
+
+    members = members_response.json()
+
+    owner_member = next(
+        member
+        for member in members
+        if member["email"] == owner["user"]["email"]
+    )
+
+    response = test_client.delete(
+        f"/projects/{project['id']}/members/{owner_member['user_id']}",
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == (
+        "Project Owner cannot be removed from the project."
+    )
+
+    members_response = test_client.get(
+        f"/projects/{project['id']}/members",
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert members_response.status_code == 200
+
+    members = members_response.json()
+
+    owner_member = next(
+        member
+        for member in members
+        if member["email"] == owner["user"]["email"]
+    )
+
+    assert owner_member["role"] == "Project Owner"
+
+
 # AC-010.1 — Project Owner Role
 def test_project_creator_is_project_owner(
     test_client,
@@ -1090,4 +1155,3 @@ def test_non_owner_cannot_delete_project(
 
     assert get_response.status_code == 200
     assert get_response.json()["name"] == "Protected Delete Project"
-    

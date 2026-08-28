@@ -126,6 +126,7 @@ The matrix is updated throughout development and testing.
 | REQ-009 | US-009.1 | AC-009.3 — Invalid Member | `test_project_owner_cannot_add_user_who_does_not_have_an_account` | API / Validation | Covered |
 | REQ-009 | US-009.1 | AC-009.4 — Duplicate Member | `test_project_owner_cannot_add_same_user_more_than_once` | API / Validation | Covered |
 | REQ-009 | US-009.1 | AC-009.5 — View Project Members | `test_project_member_can_view_project_members` | API / Authorization | Covered |
+| — | — | — | `test_project_owner_cannot_remove_themselves` | API / Security | Covered |
 
 
 ### REQ-010 — Project Roles and Permissions
