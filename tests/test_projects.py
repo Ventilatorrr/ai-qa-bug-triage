@@ -784,14 +784,14 @@ def test_project_member_can_view_project_members(
 
     assert len(members) == 3
 
-    member_roles = {
-        member["email"]: member["role"]
-        for member in members
-    }
+    assert members[0]["email"] == owner["user"]["email"]
+    assert members[0]["role"] == "Project Owner"
 
-    assert member_roles[owner["user"]["email"]] == "Project Owner"
-    assert member_roles[qa_analyst["user"]["email"]] == "QA Analyst"
-    assert member_roles[developer["user"]["email"]] == "Developer"
+    assert members[1]["email"] == qa_analyst["user"]["email"]
+    assert members[1]["role"] == "QA Analyst"
+
+    assert members[2]["email"] == developer["user"]["email"]
+    assert members[2]["role"] == "Developer"
 
 
 # Additional security test — Project Owner Self-Removal

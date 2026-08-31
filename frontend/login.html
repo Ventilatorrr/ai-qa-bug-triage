@@ -5,20 +5,27 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <header>
-            <h1>AI QA Assistant</h1>
-            <p>This app is designed to help QA analysts with their bug reporting process.</p>
+        <header class="site-header">
+            <div class="header-left">
+                <nav class="main-navigation">
+                    <a href="/register.html">Register</a>
+                </nav>
+            </div>
 
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="register.html">Register</a>
-                <a href="about.html">About</a>
-            </nav>
+            <h1 class="site-title">AI QA Bug Triage</h1>
+
+            <div class="header-right">
+                <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
+            </div>
         </header>
 
         <main>
             <section>
                 <h2>Login</h2>
+
+                <p class="page-description">
+                    Log in to access your projects.
+                </p>
 
                 <form id="login-form">
                     <label for="email">Email:</label>
@@ -49,9 +56,11 @@
         </main>
 
         <footer>
+            <p><a href="/about.html">About</a></p>
             <p>Copyright &copy; 2026 AI QA Assistant</p>
         </footer>
 
+        <script src="js/theme.js"></script>
         <script src="js/login.js"></script>
     </body>
 </html>
