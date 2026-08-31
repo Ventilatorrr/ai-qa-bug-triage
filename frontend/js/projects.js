@@ -1,13 +1,56 @@
 const projectsContainer = document.querySelector("#projects");
 const message = document.querySelector("#message");
 const projectForm = document.querySelector("#project-form");
+
 const accessToken = localStorage.getItem("access_token");
+
 const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
+
 
 if (!accessToken) {
     window.location.href = "/login.html";
 }
+
+
+function getCurrentUserId() {
+    const payload = accessToken.split(".")[1];
+
+    return JSON.parse(atob(payload)).user_id;
+}
+
+
+async function getProjectRole(projectId) {
+    const response = await fetch(`/projects/${projectId}/members`, {
+        headers: {
+            "Authorization": "Bearer " + accessToken
+        }
+    });
+
+    if (response.status === 401) {
+        localStorage.removeItem("access_token");
+        window.location.href = "/login.html";
+        return null;
+    }
+
+    if (!response.ok) {
+        return null;
+    }
+
+    const members = await response.json();
+    const currentUserId = getCurrentUserId();
+
+    const currentUser = members.find(function (member) {
+        return member.user_id === currentUserId;
+    });
+
+    if (!currentUser) {
+        return null;
+    }
+
+    return currentUser.role;
+}
+
 
 async function loadProjects() {
     const response = await fetch("/projects", {
@@ -27,7 +70,9 @@ async function loadProjects() {
     if (response.ok) {
         projectsContainer.innerHTML = "";
 
-        data.forEach(function (project) {
+        for (const project of data) {
+            const role = await getProjectRole(project.id);
+
             const projectElement = document.createElement("div");
             projectElement.className = "project";
 
@@ -36,39 +81,44 @@ async function loadProjects() {
             projectLink.className = "project-name";
             projectLink.href = `/project.html?id=${project.id}`;
 
-            const editButton = document.createElement("button");
-            editButton.textContent = "Edit";
-            editButton.type = "button";
-
-            editButton.addEventListener("click", function () {
-                editProject(project);
-            });
-
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.type = "button";
-
-            deleteButton.addEventListener("click", function () {
-                deleteProject(project);
-            });
-
-            const projectButtons = document.createElement("div");
-            projectButtons.className = "project-buttons";
-
-            projectButtons.appendChild(editButton);
-            projectButtons.appendChild(deleteButton);
-
             projectElement.appendChild(projectLink);
-            projectElement.appendChild(projectButtons);
+
+            if (role === "Project Owner") {
+                const editButton = document.createElement("button");
+                editButton.textContent = "Edit";
+                editButton.type = "button";
+
+                editButton.addEventListener("click", function () {
+                    editProject(project);
+                });
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete";
+                deleteButton.type = "button";
+
+                deleteButton.addEventListener("click", function () {
+                    deleteProject(project);
+                });
+
+                const projectButtons = document.createElement("div");
+                projectButtons.className = "project-buttons";
+
+                projectButtons.appendChild(editButton);
+                projectButtons.appendChild(deleteButton);
+
+                projectElement.appendChild(projectButtons);
+            }
 
             projectsContainer.appendChild(projectElement);
-        });
+        }
     } else {
         message.textContent = data.detail;
     }
 }
 
+
 loadProjects();
+
 
 async function editProject(project) {
     const newName = prompt(
@@ -104,6 +154,7 @@ async function editProject(project) {
     }
 }
 
+
 async function deleteProject(project) {
     const confirmed = confirm(
         `Are you sure you want to delete "${project.name}"?`
@@ -129,16 +180,19 @@ async function deleteProject(project) {
     }
 }
 
+
 showProjectFormButton.addEventListener("click", function () {
     projectForm.hidden = false;
     showProjectFormButton.hidden = true;
 });
+
 
 cancelProjectFormButton.addEventListener("click", function () {
     projectForm.reset();
     projectForm.hidden = true;
     showProjectFormButton.hidden = false;
 });
+
 
 projectForm.addEventListener("submit", async function (event) {
     event.preventDefault();

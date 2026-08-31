@@ -8,7 +8,7 @@ import jwt
 from fastapi import APIRouter, HTTPException, Header
 
 from app.database import get_connection
-from app.schemas import UserCreate
+from app.schemas import UserCreate, UserLogin
 
 
 router = APIRouter(tags=["Authentication"])
@@ -102,7 +102,7 @@ def register(user: UserCreate):
 
 
 @router.post("/login")
-def login(user: UserCreate):
+def login(user: UserLogin):
     conn = get_connection()
 
     try:

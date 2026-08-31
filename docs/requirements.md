@@ -242,6 +242,8 @@ As a Project Owner, I want to add and remove project members so that I can contr
 
 * A project member can view the members of a project they have access to.
 * The project member list displays each member's email address and project role.
+* Project members are displayed in the following order: Project Owner, QA Analyst, Developer.
+* Members within the same role are displayed alphabetically by email address.
 
 ---
 

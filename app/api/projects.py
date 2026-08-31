@@ -155,7 +155,13 @@ def get_project_members(
             JOIN users u
                 ON pm.user_id = u.id
             WHERE pm.project_id = ?
-            ORDER BY pm.user_id
+            ORDER BY
+                CASE pm.role
+                    WHEN 'Project Owner' THEN 1
+                    WHEN 'QA Analyst' THEN 2
+                    WHEN 'Developer' THEN 3
+                END,
+                u.email
             """,
             (project_id,)
         ).fetchall()
