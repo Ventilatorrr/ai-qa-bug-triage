@@ -280,9 +280,654 @@ As a project user, I want my project role to determine what I can do within a pr
 * A user who is not the Project Owner cannot edit the project name.
 * A user who is not the Project Owner cannot delete the project.
 
+---
 
+## Increment 2 — Bug Management
 
+### REQ-011 — Bug Creation
+
+The system shall allow authorized project members to create a bug report within a project.
+
+### US-011 — Create a Bug Report
+
+As an authorized project member, I want to create a bug report with the information available to me so that I can record a software defect for further triage.
+
+### Acceptance Criteria
+
+#### AC-011.1 — Successful Bug Creation
+
+* An authorized project member can create a bug report within a project they have access to.
+* A bug report can be created by providing a title.
+* The title is required when creating a bug report.
+* A newly created bug report has the status `Triage`.
+* The system records the project and user who created the bug report.
+* The system records the bug's creation date and time.
+* The system records the bug's Last Updated date and time.
+* The newly created bug report can be viewed within the project.
+
+#### AC-011.2 — Missing Bug Title
+
+* Bug creation is rejected when no title is provided.
+* The user is informed that a bug title is required.
+
+#### AC-011.3 — Unauthorized Bug Creation
+
+* A user who is not a member of the project cannot create a bug report within that project.
+* The system denies the request.
+
+#### AC-011.4 — Optional Bug Information
+
+* Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, Assignee, and Fix Version are optional when creating a bug report.
+* Optional bug information can be provided when the bug is created or added or updated later.
 
 ---
 
+### REQ-012 — Bug Access
+
+The system shall allow authorized project members to view and open bug reports within projects they have access to.
+
+### US-012 — Access Bug Reports
+
+As an authorized project member, I want to view and open bug reports in projects I have access to so that I can review project defects.
+
+### Acceptance Criteria
+
+#### AC-012.1 — View Bug List
+
+* An authorized project member can view the bug reports within a project they have access to.
+* The bug list displays the Bug ID, Title, Status, and Last Updated date for each bug report.
+* Severity, Priority, and Assignee are displayed where available.
+
+#### AC-012.2 — Open Bug Report
+
+* An authorized project member can open a bug report within a project they have access to.
+* The bug report details are displayed, including all available bug information.
+
+#### AC-012.3 — Unauthorized Bug Access
+
+* A user who is not a member of the project cannot view or open its bug reports.
+* The system denies unauthorized access to the bug reports.
+
+#### AC-012.4 — Sort Bug Reports
+
+* An authorized project member can sort the bug list by all columns.
+* The default bug list order is most recently updated first.
+* Severity is ordered from highest to lowest impact: Blocker, Major, Minor.
+* Priority is ordered from highest to lowest: High, Medium, Low.
+* Missing optional values are displayed last when sorting.
+
+---
+
+### REQ-013 — Bug Editing
+
+The system shall allow authorized project members to update bug report information for bugs within projects they have access to.
+
+### US-013 — Edit Bug Reports
+
+As an authorized project member, I want to edit bug report information so that I can keep defect information accurate and up to date.
+
+### Acceptance Criteria
+
+#### AC-013.1 — Edit Bug Report
+
+* An authorized project member can edit a bug report within a project they have access to.
+* A project member can add or update available bug information.
+* Updated bug information is saved and displayed after the change.
+* Editing a bug updates its Last Updated date and time.
+
+#### AC-013.2 — Optional Bug Information
+
+* A project member can add or update Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Fix Version after the bug has been created.
+
+#### AC-013.3 — Unauthorized Bug Editing
+
+* A user who is not a member of the project cannot edit a bug report within that project.
+* The system rejects an unauthorized modification of the bug report.
+
+---
+
+### REQ-014 — Bug Deletion
+
+The system shall allow a Project Owner or QA Analyst to delete bug reports within projects they have access to.
+
+### US-014 — Delete Bug Reports
+
+As a Project Owner or QA Analyst, I want to delete bug reports so that obsolete or invalid reports can be removed from the project.
+
+### Acceptance Criteria
+
+#### AC-014.1 — Successful Bug Deletion
+
+* A Project Owner or QA Analyst can delete a bug report within a project they have access to.
+* A confirmation is required before the bug report is deleted.
+* A deleted bug report is no longer accessible.
+
+#### AC-014.2 — Unauthorized Bug Deletion
+
+* A Developer cannot delete a bug report.
+* A user who is not a member of the project cannot delete a bug report.
+* The system rejects an unauthorized attempt to delete a bug report.
+
+---
+
+### REQ-015 — Bug Assignment
+
+The system shall allow a Project Owner or QA Analyst to assign a bug report to a QA Analyst or Developer who is a member of the project.
+
+### US-015 — Assign Bugs
+
+As a Project Owner or QA Analyst, I want to assign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
+
+### Acceptance Criteria
+
+#### AC-015.1 — Successful Bug Assignment
+
+* A Project Owner or QA Analyst can assign a bug report to a QA Analyst or Developer who is a member of the project.
+* The assigned user is displayed on the bug report.
+
+#### AC-015.2 — Invalid Assignment
+
+* A bug cannot be assigned to a Project Owner.
+* A bug cannot be assigned to a QA Analyst or Developer who is not a member of the project.
+
+#### AC-015.3 — Unauthorized Bug Assignment
+
+* A Developer cannot assign a bug report.
+* A user who is not a member of the project cannot assign a bug report.
+* The system rejects an unauthorized attempt to assign a bug report.
+
+#### AC-015.4 — Change Bug Assignee
+
+* A Project Owner or QA Analyst can change the assignee of an existing bug report.
+* A bug can be reassigned to another QA Analyst or Developer who is a member of the project.
+* A bug can be unassigned.
+* Changing the assignee updates the bug's Last Updated date and time.
+
+---
+
+### REQ-016 — Bug Classification
+
+The system shall allow authorized project members to set and update a bug report's severity and priority.
+
+### US-016 — Classify Bugs
+
+As an authorized project member, I want to set and update a bug's severity and priority so that defects can be assessed consistently and addressed appropriately.
+
+### Acceptance Criteria
+
+#### AC-016.1 — Set Bug Severity
+
+* An authorized project member can set the severity of a bug report.
+* The supported severity values are `Blocker`, `Major`, and `Minor`.
+* The selected severity is saved and displayed on the bug report.
+
+#### AC-016.2 — Set Bug Priority
+
+* An authorized project member can set the priority of a bug report.
+* The supported priority values are `High`, `Medium`, and `Low`.
+* The selected priority is saved and displayed on the bug report.
+
+#### AC-016.3 — Update Bug Classification
+
+- An authorized project member can update the severity and priority of an existing bug report.
+- Updated severity and priority values are saved and displayed on the bug report.
+- Changing the severity or priority updates the bug's Last Updated date and time.
+
+#### AC-016.4 — Unauthorized Bug Classification
+
+* A user who is not a member of the project cannot set or update the severity or priority of a bug report.
+* The system rejects an unauthorized attempt to modify bug classification.
+
+---
+
+## Increment 2 — Bug Management
+
+### REQ-011 — Bug Creation
+
+The system shall allow authorized project members to create a bug report within a project.
+
+### US-011 — Create a Bug Report
+
+As an authorized project member, I want to create a bug report with the information available to me so that I can record a software defect for further triage.
+
+### Acceptance Criteria
+
+#### AC-011.1 — Successful Bug Creation
+
+* An authorized project member can create a bug report within a project they have access to.
+* A bug report can be created by providing a title.
+* The title is required when creating a bug report.
+* A newly created bug report has the status `Triage`.
+* The system records the project and user who created the bug report.
+* The system records the bug's creation date and time.
+* The system records the bug's Last Updated date and time.
+* The newly created bug report can be viewed within the project.
+
+#### AC-011.2 — Missing Bug Title
+
+* Bug creation is rejected when no title is provided.
+* The user is informed that a bug title is required.
+
+#### AC-011.3 — Unauthorized Bug Creation
+
+* A user who is not a member of the project cannot create a bug report within that project.
+* The system rejects the request.
+
+#### AC-011.4 — Optional Bug Information
+
+* Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, Assignee, and Fix Version are optional when creating a bug report.
+* Optional bug information can be provided when the bug is created or added or updated later.
+
+---
+
+### REQ-012 — Bug Access
+
+The system shall allow authorized project members to view and open bug reports within projects they have access to.
+
+### US-012 — Access Bug Reports
+
+As an authorized project member, I want to view and open bug reports in projects I have access to so that I can review project defects.
+
+### Acceptance Criteria
+
+#### AC-012.1 — View Bug List
+
+* An authorized project member can view the bug reports within a project they have access to.
+* The bug list displays the Bug ID, Title, Status, and Last Updated date for each bug report.
+* Severity, Priority, and Assignee are displayed where available.
+
+#### AC-012.2 — Open Bug Report
+
+* An authorized project member can open a bug report within a project they have access to.
+* The bug report details are displayed, including all available bug information.
+
+#### AC-012.3 — Unauthorized Bug Access
+
+* A user who is not a member of the project cannot view or open its bug reports.
+* The system denies unauthorized access to the bug reports.
+
+#### AC-012.4 — Sort Bug Reports
+
+* An authorized project member can sort the bug list by all columns.
+* The default bug list order is most recently updated first.
+* Severity is ordered from highest to lowest impact: Blocker, Major, Minor.
+* Priority is ordered from highest to lowest: High, Medium, Low.
+* Missing optional values are displayed last when sorting.
+
+---
+
+### REQ-013 — Bug Editing
+
+The system shall allow authorized project members to update bug report information for bugs within projects they have access to.
+
+### US-013 — Edit Bug Reports
+
+As an authorized project member, I want to edit bug report information so that I can keep defect information accurate and up to date.
+
+### Acceptance Criteria
+
+#### AC-013.1 — Edit Bug Report
+
+* An authorized project member can edit a bug report within a project they have access to.
+* A project member can add or update available bug information.
+* Updated bug information is saved and displayed after the change.
+* Editing a bug updates its Last Updated date and time.
+
+#### AC-013.2 — Optional Bug Information
+
+* A project member can add or update Title, Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Fix Version after the bug has been created.
+
+#### AC-013.3 — Unauthorized Bug Editing
+
+* A user who is not a member of the project cannot edit a bug report within that project.
+* The system rejects an unauthorized modification of the bug report.
+
+---
+
+### REQ-014 — Bug Deletion
+
+The system shall allow a Project Owner or QA Analyst to delete bug reports within projects they have access to.
+
+### US-014 — Delete Bug Reports
+
+As a Project Owner or QA Analyst, I want to delete bug reports so that obsolete or invalid reports can be removed from the project.
+
+### Acceptance Criteria
+
+#### AC-014.1 — Successful Bug Deletion
+
+* A Project Owner or QA Analyst can delete a bug report within a project they have access to.
+* A confirmation is required before the bug report is deleted.
+* A deleted bug report is no longer accessible.
+
+#### AC-014.2 — Unauthorized Bug Deletion
+
+* A Developer cannot delete a bug report.
+* A user who is not a member of the project cannot delete a bug report.
+* The system rejects an unauthorized attempt to delete a bug report.
+
+---
+
+### REQ-015 — Bug Assignment
+
+The system shall allow a Project Owner or QA Analyst to assign a bug report to a QA Analyst or Developer who is a member of the project.
+
+### US-015 — Assign Bugs
+
+As a Project Owner or QA Analyst, I want to assign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
+
+### Acceptance Criteria
+
+#### AC-015.1 — Successful Bug Assignment
+
+* A Project Owner or QA Analyst can assign a bug report to a QA Analyst or Developer who is a member of the project.
+* The assigned user is displayed on the bug report.
+* Assigning a bug updates the bug's Last Updated date and time.
+
+#### AC-015.2 — Invalid Assignment
+
+* A bug cannot be assigned to a Project Owner.
+* A bug cannot be assigned to a QA Analyst or Developer who is not a member of the project.
+
+#### AC-015.3 — Unauthorized Bug Assignment
+
+* A Developer cannot assign a bug report.
+* A user who is not a member of the project cannot assign a bug report.
+* The system rejects an unauthorized attempt to assign a bug report.
+
+#### AC-015.4 — Change Bug Assignee
+
+* A Project Owner or QA Analyst can change the assignee of an existing bug report.
+* A bug can be reassigned to another QA Analyst or Developer who is a member of the project.
+* A bug can be unassigned.
+* Assigning, reassigning, or unassigning a bug updates the bug's Last Updated date and time.
+
+---
+
+### REQ-016 — Bug Classification
+
+The system shall allow authorized project members to set and update a bug report's severity and priority.
+
+### US-016 — Classify Bugs
+
+As an authorized project member, I want to set and update a bug's severity and priority so that defects can be assessed consistently and addressed appropriately.
+
+### Acceptance Criteria
+
+#### AC-016.1 — Set Bug Severity
+
+* An authorized project member can set the severity of a bug report.
+* The supported severity values are `Blocker`, `Major`, and `Minor`.
+* The selected severity is saved and displayed on the bug report.
+
+#### AC-016.2 — Set Bug Priority
+
+* An authorized project member can set the priority of a bug report.
+* The supported priority values are `High`, `Medium`, and `Low`.
+* The selected priority is saved and displayed on the bug report.
+
+#### AC-016.3 — Update Bug Classification
+
+* An authorized project member can update the severity and priority of an existing bug report.
+* Updated severity and priority values are saved and displayed on the bug report.
+* Changing the severity or priority updates the bug's Last Updated date and time.
+
+#### AC-016.4 — Unauthorized Bug Classification
+
+* A user who is not a member of the project cannot set or update the severity or priority of a bug report.
+* The system rejects an unauthorized attempt to modify bug classification.
+
+---
+
+## Increment 2 — Bug Management
+
+### REQ-011 — Bug Creation
+
+The system shall allow authorized project members to create a bug report within a project.
+
+### US-011 — Create a Bug Report
+
+As an authorized project member, I want to create a bug report with the information available to me so that I can record a software defect for further triage.
+
+### Acceptance Criteria
+
+#### AC-011.1 — Successful Bug Creation
+
+* An authorized project member can create a bug report within a project they have access to.
+* A bug report can be created by providing a title.
+* The title is required when creating a bug report.
+* A newly created bug report has the status `Triage`.
+* The system records the project and user who created the bug report.
+* The system records the bug's creation date and time.
+* The system records the bug's Last Updated date and time.
+* The newly created bug report can be viewed within the project.
+
+#### AC-011.2 — Missing Bug Title
+
+* Bug creation is rejected when no title is provided.
+* The user is informed that a bug title is required.
+
+#### AC-011.3 — Unauthorized Bug Creation
+
+* A user who is not a member of the project cannot create a bug report within that project.
+* The system rejects the request.
+
+#### AC-011.4 — Optional Bug Information
+
+* Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, Assignee, and Fix Version are optional when creating a bug report.
+* Optional bug information can be provided when the bug is created or added or updated later.
+
+---
+
+### REQ-012 — Bug Access
+
+The system shall allow authorized project members to view and open bug reports within projects they have access to.
+
+### US-012 — Access Bug Reports
+
+As an authorized project member, I want to view and open bug reports in projects I have access to so that I can review project defects.
+
+### Acceptance Criteria
+
+#### AC-012.1 — View Bug List
+
+* An authorized project member can view the bug reports within a project they have access to.
+* The bug list displays the Bug ID, Title, Status, and Last Updated date for each bug report.
+* Severity, Priority, and Assignee are displayed where available.
+
+#### AC-012.2 — Open Bug Report
+
+* An authorized project member can open a bug report within a project they have access to.
+* The bug report details are displayed, including all available bug information.
+
+#### AC-012.3 — Unauthorized Bug Access
+
+* A user who is not a member of the project cannot view or open its bug reports.
+* The system denies unauthorized access to the bug reports.
+
+#### AC-012.4 — Sort Bug Reports
+
+* An authorized project member can sort the bug list by all columns.
+* The default bug list order is most recently updated first.
+* Severity is ordered from highest to lowest impact: Blocker, Major, Minor.
+* Priority is ordered from highest to lowest: High, Medium, Low.
+* Missing optional values are displayed last when sorting.
+
+---
+
+### REQ-013 — Bug Editing
+
+The system shall allow authorized project members to update bug report information for bugs within projects they have access to.
+
+### US-013 — Edit Bug Reports
+
+As an authorized project member, I want to edit bug report information so that I can keep defect information accurate and up to date.
+
+### Acceptance Criteria
+
+#### AC-013.1 — Edit Bug Report
+
+* An authorized project member can edit a bug report within a project they have access to.
+* A project member can add or update available bug information.
+* Updated bug information is saved and displayed after the change.
+* Editing a bug updates its Last Updated date and time.
+
+#### AC-013.2 — Optional Bug Information
+
+* A project member can add or update Title, Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Fix Version after the bug has been created.
+
+#### AC-013.3 — Unauthorized Bug Editing
+
+* A user who is not a member of the project cannot edit a bug report within that project.
+* The system rejects an unauthorized modification of the bug report.
+
+---
+
+### REQ-014 — Bug Deletion
+
+The system shall allow a Project Owner or QA Analyst to delete bug reports within projects they have access to.
+
+### US-014 — Delete Bug Reports
+
+As a Project Owner or QA Analyst, I want to delete bug reports so that obsolete or invalid reports can be removed from the project.
+
+### Acceptance Criteria
+
+#### AC-014.1 — Successful Bug Deletion
+
+* A Project Owner or QA Analyst can delete a bug report within a project they have access to.
+* A confirmation is required before the bug report is deleted.
+* A deleted bug report is no longer accessible.
+
+#### AC-014.2 — Unauthorized Bug Deletion
+
+* A Developer cannot delete a bug report.
+* A user who is not a member of the project cannot delete a bug report.
+* The system rejects an unauthorized attempt to delete a bug report.
+
+---
+
+### REQ-015 — Bug Assignment
+
+The system shall allow a Project Owner or QA Analyst to assign a bug report to a QA Analyst or Developer who is a member of the project.
+
+### US-015 — Assign Bugs
+
+As a Project Owner or QA Analyst, I want to assign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
+
+### Acceptance Criteria
+
+#### AC-015.1 — Successful Bug Assignment
+
+* A Project Owner or QA Analyst can assign a bug report to a QA Analyst or Developer who is a member of the project.
+* The assigned user is displayed on the bug report.
+* Assigning a bug updates the bug's Last Updated date and time.
+
+#### AC-015.2 — Invalid Assignment
+
+* A bug cannot be assigned to a Project Owner.
+* A bug cannot be assigned to a QA Analyst or Developer who is not a member of the project.
+
+#### AC-015.3 — Unauthorized Bug Assignment
+
+* A Developer cannot assign a bug report.
+* A user who is not a member of the project cannot assign a bug report.
+* The system rejects an unauthorized attempt to assign a bug report.
+
+#### AC-015.4 — Change Bug Assignee
+
+* A Project Owner or QA Analyst can change the assignee of an existing bug report.
+* A bug can be reassigned to another QA Analyst or Developer who is a member of the project.
+* A bug can be unassigned.
+* Assigning, reassigning, or unassigning a bug updates the bug's Last Updated date and time.
+
+---
+
+### REQ-016 — Bug Classification
+
+The system shall allow authorized project members to set and update a bug report's severity and priority.
+
+### US-016 — Classify Bugs
+
+As an authorized project member, I want to set and update a bug's severity and priority so that defects can be assessed consistently and addressed appropriately.
+
+### Acceptance Criteria
+
+#### AC-016.1 — Set Bug Severity
+
+* An authorized project member can set the severity of a bug report.
+* The supported severity values are `Blocker`, `Major`, and `Minor`.
+* The selected severity is saved and displayed on the bug report.
+
+#### AC-016.2 — Set Bug Priority
+
+* An authorized project member can set the priority of a bug report.
+* The supported priority values are `High`, `Medium`, and `Low`.
+* The selected priority is saved and displayed on the bug report.
+
+#### AC-016.3 — Update Bug Classification
+
+* An authorized project member can update the severity and priority of an existing bug report.
+* Updated severity and priority values are saved and displayed on the bug report.
+* Changing the severity or priority updates the bug's Last Updated date and time.
+
+#### AC-016.4 — Unauthorized Bug Classification
+
+* A user who is not a member of the project cannot set or update the severity or priority of a bug report.
+* The system rejects an unauthorized attempt to modify bug classification.
+
+---
+
+### REQ-017 — Bug Lifecycle
+
+The system shall manage bug reports through the defined bug lifecycle.
+
+### US-017 — Manage Bug Status
+
+As a QA Analyst or Developer, I want bugs to progress through a defined lifecycle so that their current state and next responsibility are clear.
+
+### Acceptance Criteria
+
+#### AC-017.1 — Bug Status
+
+* A bug report has one of the following statuses: `Triage`, `Open`, `Development`, `Testing`, or `Closed`.
+* A newly created bug report has the status `Triage`.
+
+#### AC-017.2 — Triage to Open
+
+* A Project Owner or QA Analyst can move a bug from `Triage` to `Open`.
+* A bug can be moved to `Open` only after it has been reviewed by a Project Owner or QA Analyst.
+* A bug in `Open` status can be unassigned or assigned to a QA Analyst or Developer.
+
+#### AC-017.3 — Open to Development
+
+* A Project Owner or QA Analyst can move a bug from `Open` to `Development`.
+* A Developer must be assigned to the bug before it can be moved to `Development`.
+
+#### AC-017.4 — Development to Testing
+
+* A Developer can move a bug from `Development` to `Testing` when the fix is ready for verification.
+* A QA Analyst must be assigned to the bug before it can be moved to `Testing`.
+
+#### AC-017.5 — Testing Outcome
+
+* A QA Analyst can mark testing as `Passed` or `Failed`.
+* When testing is `Passed`, the bug status changes to `Closed`.
+* When testing is `Failed`, the bug status changes to `Development`.
+* When testing is `Failed`, a Developer must be assigned to the bug before it can continue in `Development`.
+
+#### AC-017.6 — Closed Bugs
+
+* A bug in `Closed` status cannot be moved to another status through the normal bug workflow.
+
+#### AC-017.7 — Invalid Status Transitions
+
+* A bug cannot transition between statuses in a way that is not permitted by the defined bug lifecycle.
+* The system rejects an invalid status transition.
+
+#### AC-017.8 — Status Update Timestamp
+
+* Changing the bug status updates the bug's Last Updated date and time.
+
+---
 
