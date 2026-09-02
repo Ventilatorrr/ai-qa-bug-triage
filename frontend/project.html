@@ -66,6 +66,116 @@
                 </form>
             </div>
         </section>
+
+        <section>
+            <h3>Bugs</h3>
+
+            <div class="project-actions">
+                <button id="show-bug-form" type="button">New Bug</button>
+            </div>
+
+            <form id="bug-form" hidden>
+                <label for="bug-title">Title:</label>
+
+                <input
+                    type="text"
+                    id="bug-title"
+                    class="form-input"
+                    name="bug_title"
+                    placeholder="Enter bug title"
+                    required>
+
+                <label for="bug-affected-version">Affected Version:</label>
+
+                <input
+                    type="text"
+                    id="bug-affected-version"
+                    class="form-input"
+                    name="affected_version"
+                    placeholder="e.g. 1.2.0">
+
+                <label for="bug-description">Description:</label>
+
+                <textarea
+                    id="bug-description"
+                    class="form-input"
+                    name="description"
+                    placeholder="Describe the bug"></textarea>
+
+                <label for="bug-steps">Steps to Reproduce:</label>
+
+                <textarea
+                    id="bug-steps"
+                    class="form-input"
+                    name="steps_to_reproduce"
+                    placeholder="Describe how to reproduce the bug"></textarea>
+
+                <label for="bug-expected">Expected Result:</label>
+
+                <textarea
+                    id="bug-expected"
+                    class="form-input"
+                    name="expected_result"
+                    placeholder="What should happen?"></textarea>
+
+                <label for="bug-actual">Actual Result:</label>
+
+                <textarea
+                    id="bug-actual"
+                    class="form-input"
+                    name="actual_result"
+                    placeholder="What actually happens?"></textarea>
+
+                <label for="bug-severity">Severity:</label>
+
+                <select
+                    id="bug-severity"
+                    class="form-input"
+                    name="severity">
+                    <option value="">Select severity</option>
+                    <option value="Blocker">Blocker</option>
+                    <option value="Major">Major</option>
+                    <option value="Minor">Minor</option>
+                </select>
+
+                <label for="bug-priority">Priority:</label>
+
+                <select
+                    id="bug-priority"
+                    class="form-input"
+                    name="priority">
+                    <option value="">Select priority</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+
+                <label for="bug-assignee">Assignee:</label>
+
+                <select
+                    id="bug-assignee"
+                    class="form-input"
+                    name="assignee_id">
+                    <option value="">Unassigned</option>
+                </select>
+
+                <label for="bug-fix-version">Fix Version:</label>
+
+                <input
+                    type="text"
+                    id="bug-fix-version"
+                    class="form-input"
+                    name="fix_version"
+                    placeholder="e.g. 1.3.0">
+
+                <div class="form-actions">
+                    <button type="submit">Create Bug</button>
+                    <button id="cancel-bug-form" type="button">Cancel</button>
+                </div>
+            </form>
+
+            <div id="bugs"></div>
+        </section>
     </main>
 
     <footer>

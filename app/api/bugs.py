@@ -129,4 +129,144 @@ def create_bug(
         "created_at": now,
         "updated_at": now
     }
+
+
+@router.get("/projects/{project_id}/bugs")
+def get_bugs(
+    project_id: int,
+    authorization: str | None = Header(default=None)
+):
+    user_id = get_current_user_id(authorization)
+
+    conn = get_connection()
+
+    try:
+        membership = conn.execute(
+            """
+            SELECT 1
+            FROM project_members
+            WHERE project_id = ? AND user_id = ?
+            """,
+            (project_id, user_id)
+        ).fetchone()
+
+        if membership is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found."
+            )
+
+        rows = conn.execute(
+            """
+            SELECT
+                b.id,
+                b.title,
+                b.severity,
+                b.priority,
+                b.status,
+                b.assignee_id,
+                b.updated_at
+            FROM bugs b
+            WHERE b.project_id = ?
+            ORDER BY b.updated_at DESC
+            """,
+            (project_id,)
+        ).fetchall()
+
+    finally:
+        conn.close()
+
+    return [
+        {
+            "id": row[0],
+            "title": row[1],
+            "severity": row[2],
+            "priority": row[3],
+            "status": row[4],
+            "assignee_id": row[5],
+            "updated_at": row[6]
+        }
+        for row in rows
+    ]
+
+
+@router.get("/projects/{project_id}/bugs/{bug_id}")
+def get_bug(
+    project_id: int,
+    bug_id: int,
+    authorization: str | None = Header(default=None)
+):
+    user_id = get_current_user_id(authorization)
+
+    conn = get_connection()
+
+    try:
+        membership = conn.execute(
+            """
+            SELECT 1
+            FROM project_members
+            WHERE project_id = ? AND user_id = ?
+            """,
+            (project_id, user_id)
+        ).fetchone()
+
+        if membership is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found."
+            )
+
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                project_id,
+                title,
+                severity,
+                priority,
+                status,
+                assignee_id,
+                affected_version,
+                fix_version,
+                description,
+                steps_to_reproduce,
+                expected_result,
+                actual_result,
+                created_by,
+                created_at,
+                updated_at
+            FROM bugs
+            WHERE id = ? AND project_id = ?
+            """,
+            (bug_id, project_id)
+        ).fetchone()
+
+    finally:
+        conn.close()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Bug not found."
+        )
+
+    return {
+        "id": row[0],
+        "project_id": row[1],
+        "title": row[2],
+        "severity": row[3],
+        "priority": row[4],
+        "status": row[5],
+        "assignee_id": row[6],
+        "affected_version": row[7],
+        "fix_version": row[8],
+        "description": row[9],
+        "steps_to_reproduce": row[10],
+        "expected_result": row[11],
+        "actual_result": row[12],
+        "created_by": row[13],
+        "created_at": row[14],
+        "updated_at": row[15]
+    }
+
     
