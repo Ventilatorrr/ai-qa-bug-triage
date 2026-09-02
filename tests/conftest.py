@@ -1,5 +1,6 @@
 import os
 
+import jwt
 import pytest
 
 from fastapi.testclient import TestClient
@@ -64,9 +65,17 @@ def authenticated_user_factory(test_client, user_factory):
 
         assert response.status_code == 200
 
+        token = response.json()["access_token"]
+
+        payload = jwt.decode(
+            token,
+            options={"verify_signature": False}
+        )
+
         return {
             "user": user,
-            "token": response.json()["access_token"]
+            "user_id": payload["user_id"],
+            "token": token
         }
 
     return create_authenticated_user

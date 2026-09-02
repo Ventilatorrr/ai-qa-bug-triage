@@ -44,5 +44,32 @@ def create_tables():
         """
     )
 
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS bugs (
+            id INTEGER PRIMARY KEY,
+            project_id INTEGER NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            affected_version VARCHAR(20),
+            description TEXT,
+            steps_to_reproduce TEXT,
+            expected_result TEXT,
+            actual_result TEXT,
+            severity VARCHAR(10),
+            priority VARCHAR(10),
+            assignee_id INTEGER,
+            fix_version VARCHAR(20),
+            status VARCHAR(20) NOT NULL DEFAULT 'Triage',
+            created_by INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (project_id) REFERENCES projects(id),
+            FOREIGN KEY (assignee_id) REFERENCES users(id),
+            FOREIGN KEY (created_by) REFERENCES users(id)
+        )
+        """
+    )
+
     conn.commit()
     conn.close()
+    
