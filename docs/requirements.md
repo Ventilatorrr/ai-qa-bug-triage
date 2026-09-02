@@ -490,7 +490,7 @@ The system shall allow authorized project members to create a bug report within 
 
 As an authorized project member, I want to create a bug report with the information available to me so that I can record a software defect for further triage.
 
-### Acceptance Criteria
+### Acceptance Criteriai
 
 #### AC-011.1 — Successful Bug Creation
 
@@ -809,19 +809,21 @@ As a Project Owner or QA Analyst, I want to delete bug reports so that obsolete 
 
 ### REQ-015 — Bug Assignment
 
-The system shall allow a Project Owner or QA Analyst to assign a bug report to a QA Analyst or Developer who is a member of the project.
+The system shall allow a Project Owner or QA Analyst to assign, reassign, or unassign a bug report to or from a QA Analyst or Developer who is a member of the project.
 
 ### US-015 — Assign Bugs
 
-As a Project Owner or QA Analyst, I want to assign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
+As a Project Owner or QA Analyst, I want to assign, reassign, or unassign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
 
 ### Acceptance Criteria
 
-#### AC-015.1 — Successful Bug Assignment
+#### AC-015.1 — Assign and Unassign Bugs
 
 * A Project Owner or QA Analyst can assign a bug report to a QA Analyst or Developer who is a member of the project.
 * The assigned user is displayed on the bug report.
-* Assigning a bug updates the bug's Last Updated date and time.
+* A bug report can have only one assignee at a time.
+* A bug report can be unassigned.
+* Assigning or unassigning a bug updates the bug's Last Updated date and time.
 
 #### AC-015.2 — Invalid Assignment
 
@@ -838,8 +840,7 @@ As a Project Owner or QA Analyst, I want to assign bugs to QA Analysts or Develo
 
 * A Project Owner or QA Analyst can change the assignee of an existing bug report.
 * A bug can be reassigned to another QA Analyst or Developer who is a member of the project.
-* A bug can be unassigned.
-* Assigning, reassigning, or unassigning a bug updates the bug's Last Updated date and time.
+* Reassigning a bug updates the bug's Last Updated date and time.
 
 ---
 
