@@ -533,8 +533,8 @@ As an authorized project member, I want to view and open bug reports in projects
 #### AC-012.1 — View Bug List
 
 * An authorized project member can view the bug reports within a project they have access to.
-* The bug list displays the Bug ID, Title, Status, and Last Updated date for each bug report.
-* Severity, Priority, and Assignee are displayed where available.
+* The bug list displays the Bug ID, Title, Severity, Priority, Status, Assignee, and Last Updated date for each bug report.
+* Missing optional values are displayed as empty or unassigned where applicable.
 
 #### AC-012.2 — Open Bug Report
 
@@ -548,11 +548,14 @@ As an authorized project member, I want to view and open bug reports in projects
 
 #### AC-012.4 — Sort Bug Reports
 
-* An authorized project member can sort the bug list by all columns.
+* An authorized project member can sort the bug list by all displayed columns.
+* Both ascending and descending sort orders are supported.
 * The default bug list order is most recently updated first.
 * Severity is ordered from highest to lowest impact: Blocker, Major, Minor.
 * Priority is ordered from highest to lowest: High, Medium, Low.
+* Status is ordered according to the bug lifecycle: Triage, Open, Development, Testing, Closed.
 * Missing optional values are displayed last when sorting.
+
 
 ---
 
