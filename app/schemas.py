@@ -10,16 +10,12 @@ class UserCreate(BaseModel):
     def validate_password(cls, password):
         if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long.")
-
         if not any(char.isupper() for char in password):
             raise ValueError("Password must contain at least one uppercase letter.")
-
         if not any(char.islower() for char in password):
             raise ValueError("Password must contain at least one lowercase letter.")
-
         if not any(char.isdigit() for char in password):
             raise ValueError("Password must contain at least one number.")
-
         return password
 
 
@@ -46,5 +42,52 @@ class BugCreate(BaseModel):
         if not title.strip():
             raise ValueError("Bug title is required.")
         return title
-        
-        
+
+    @field_validator("severity")
+    @classmethod
+    def validate_severity(cls, severity):
+        if severity is not None and severity not in ["Blocker", "Major", "Minor"]:
+            raise ValueError("Invalid severity.")
+        return severity
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, priority):
+        if priority is not None and priority not in ["High", "Medium", "Low"]:
+            raise ValueError("Invalid priority.")
+        return priority
+
+
+class BugUpdate(BaseModel):
+    title: str | None = None
+    affected_version: str | None = None
+    description: str | None = None
+    steps_to_reproduce: str | None = None
+    expected_result: str | None = None
+    actual_result: str | None = None
+    severity: str | None = None
+    priority: str | None = None
+    assignee_id: int | None = None
+    fix_version: str | None = None
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, title):
+        if title is not None and not title.strip():
+            raise ValueError("Bug title is required.")
+        return title
+
+    @field_validator("severity")
+    @classmethod
+    def validate_severity(cls, severity):
+        if severity is not None and severity not in ["Blocker", "Major", "Minor"]:
+            raise ValueError("Invalid severity.")
+        return severity
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, priority):
+        if priority is not None and priority not in ["High", "Medium", "Low"]:
+            raise ValueError("Invalid priority.")
+        return priority
+

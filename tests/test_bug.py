@@ -1,3 +1,6 @@
+import pytest
+
+
 # AC-011.1 — Successful Bug Creation
 def test_project_member_can_create_bug(
     test_client,
@@ -364,4 +367,1018 @@ def test_non_member_cannot_open_bug_report(
     assert response.json() == {
         "detail": "Project not found."
     }
+
+
+# AC-013.1 — Edit Bug Report
+def test_project_member_can_edit_bug_report(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="bug-editor@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Bug Editing Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Login button does not work",
+            "description": "Original description."
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+    original_updated_at = create_response.json()["updated_at"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "title": "Login button still does not work",
+            "description": "Updated description."
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["id"] == bug_id
+    assert data["title"] == "Login button still does not work"
+    assert data["description"] == "Updated description."
+    assert data["status"] == "Triage"
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-013.2 — Optional Bug Information
+def test_project_member_can_update_optional_bug_information(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="optional-editor@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Optional Bug Editing Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Login button does not work"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "affected_version": "1.2.0",
+            "severity": "Blocker",
+            "priority": "High",
+            "fix_version": "1.3.0"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["affected_version"] == "1.2.0"
+    assert data["severity"] == "Blocker"
+    assert data["priority"] == "High"
+    assert data["fix_version"] == "1.3.0"
+
+
+# AC-013.3 — Unauthorized Bug Editing
+def test_non_member_cannot_edit_bug_report(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    owner = authenticated_user_factory(
+        email="edit-owner@example.com",
+        password="Password1"
+    )
+
+    non_member = authenticated_user_factory(
+        email="edit-non-member@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Bug Editing Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Protected bug"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "title": "Unauthorized change"
+        },
+        headers={
+            "Authorization": f"Bearer {non_member['token']}"
+        }
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Project not found."
+    }
+
+
+# AC-014.1 — Successful Bug Deletion
+@pytest.mark.parametrize("role", ["Project Owner", "QA Analyst"])
+def test_authorized_member_can_delete_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email=f"delete-owner-{role.lower().replace(' ', '-') }@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Bug Deletion {role} Project"
+    )
+
+    actor = owner
+
+    if role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="delete-qa@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+
+        actor = qa
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to delete"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    delete_response = test_client.delete(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        headers={
+            "Authorization": f"Bearer {actor['token']}"
+        }
+    )
+
+    assert delete_response.status_code == 204
+
+    get_response = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        headers={
+            "Authorization": f"Bearer {actor['token']}"
+        }
+    )
+
+    assert get_response.status_code == 404
+    assert get_response.json() == {
+        "detail": "Bug not found."
+    }
+
+
+# AC-014.2 — Unauthorized Bug Deletion
+@pytest.mark.parametrize("role", ["Developer", "non-member"])
+def test_unauthorized_member_cannot_delete_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email="delete-security-owner@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Bug Deletion Project"
+    )
+
+    actor = authenticated_user_factory(
+        email=f"delete-{role.lower()}@example.com",
+        password="Password1"
+    )
+
+    if role == "Developer":
+        member_factory(
+            owner["token"],
+            project["id"],
+            actor["user"]["email"],
+            "Developer"
+        )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Protected bug"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    delete_response = test_client.delete(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        headers={
+            "Authorization": f"Bearer {actor['token']}"
+        }
+    )
+
+    if role == "Developer":
+        assert delete_response.status_code == 403
+        assert delete_response.json() == {
+            "detail": "You are not authorized to delete bugs."
+        }
+    else:
+        assert delete_response.status_code == 404
+        assert delete_response.json() == {
+            "detail": "Project not found."
+        }
+
+
+# AC-015.1 — Assign and Unassign Bugs
+@pytest.mark.parametrize(
+    "actor_role, assignee_role",
+    [
+        ("Project Owner", "QA Analyst"),
+        ("Project Owner", "Developer"),
+        ("QA Analyst", "QA Analyst"),
+        ("QA Analyst", "Developer"),
+    ]
+)
+def test_authorized_member_can_assign_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    actor_role,
+    assignee_role
+):
+    owner = authenticated_user_factory(
+        email=f"assign-owner-{actor_role.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Bug Assignment {actor_role} Project"
+    )
+
+    actor = owner
+
+    if actor_role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="assign-qa@example.com",
+            password="Password1"
+        )
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+        actor = qa
+
+    assignee = authenticated_user_factory(
+        email=f"assignee-{assignee_role.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    assignee_member = member_factory(
+        owner["token"],
+        project["id"],
+        assignee["user"]["email"],
+        assignee_role
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to assign"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+    original_updated_at = create_response.json()["updated_at"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "assignee_id": assignee_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {actor['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+    data = update_response.json()
+    assert data["assignee_id"] == assignee_member["user_id"]
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-015.1 — Assign and Unassign Bugs
+def test_authorized_member_can_unassign_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="unassign-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="unassign-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Bug Unassignment Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to unassign",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "assignee_id": None
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+    data = update_response.json()
+    assert data["assignee_id"] is None
+
+
+# AC-015.2 — Invalid Assignment
+@pytest.mark.parametrize("assignee_type", ["Project Owner", "non-member"])
+def test_bug_cannot_be_assigned_to_invalid_member(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    assignee_type
+):
+    owner = authenticated_user_factory(
+        email=f"invalid-assignee-owner-{assignee_type.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Invalid Bug Assignee {assignee_type} Project"
+    )
+
+    if assignee_type == "Project Owner":
+        assignee_id = owner["user_id"]
+    else:
+        non_member = authenticated_user_factory(
+            email="invalid-assignee-non-member@example.com",
+            password="Password1"
+        )
+        assignee_id = non_member["user_id"]
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug with invalid assignee"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "assignee_id": assignee_id
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert update_response.status_code == 422
+    assert update_response.json() == {
+        "detail": "Invalid bug assignee."
+    }
+
+
+# AC-015.3 — Unauthorized Bug Assignment
+@pytest.mark.parametrize("role", ["Developer", "non-member"])
+def test_unauthorized_member_cannot_assign_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(
+        email=f"assign-security-owner-{role.lower()}@example.com",
+        password="Password1"
+    )
+
+    actor = authenticated_user_factory(
+        email=f"assign-{role.lower()}@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email=f"assign-target-{role.lower()}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Protected Bug Assignment {role} Project"
+    )
+
+    if role == "Developer":
+        member_factory(
+            owner["token"],
+            project["id"],
+            actor["user"]["email"],
+            "Developer"
+        )
+
+    target_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Protected assignment bug"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "assignee_id": target_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {actor['token']}"
+        }
+    )
+
+    if role == "Developer":
+        assert update_response.status_code == 403
+        assert update_response.json() == {
+            "detail": "You are not authorized to assign bugs."
+        }
+    else:
+        assert update_response.status_code == 404
+        assert update_response.json() == {
+            "detail": "Project not found."
+        }
+
+
+# AC-015.4 — Change Bug Assignee
+def test_authorized_member_can_reassign_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="reassign-owner@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="reassign-qa@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="reassign-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Bug Reassignment Project"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to reassign",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["assignee_id"] == developer_member["user_id"]
+
+
+# AC-016.1 — Set Bug Severity
+def test_project_member_can_set_bug_severity(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="severity-user@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Bug Severity Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to classify"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "severity": "Blocker"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["severity"] == "Blocker"
+
+
+# AC-016.2 — Set Bug Priority
+def test_project_member_can_set_bug_priority(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="priority-user@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Bug Priority Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to prioritize"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "priority": "High"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["priority"] == "High"
+
+
+# AC-016.3 — Update Bug Classification
+def test_project_member_can_update_bug_classification(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="classification-user@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Bug Classification Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to update classification",
+            "severity": "Minor",
+            "priority": "Low"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+    original_updated_at = create_response.json()["updated_at"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "severity": "Blocker",
+            "priority": "High"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["severity"] == "Blocker"
+    assert data["priority"] == "High"
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-016.4 — Unauthorized Bug Classification
+def test_non_member_cannot_update_bug_classification(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    owner = authenticated_user_factory(
+        email="classification-security-owner@example.com",
+        password="Password1"
+    )
+
+    non_member = authenticated_user_factory(
+        email="classification-security-non-member@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Bug Classification Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Protected classification bug"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "severity": "Blocker",
+            "priority": "High"
+        },
+        headers={
+            "Authorization": f"Bearer {non_member['token']}"
+        }
+    )
+
+    assert update_response.status_code == 404
+
+    assert update_response.json() == {
+        "detail": "Project not found."
+    }
+
+
+# Additional Authorization Test
+def test_developer_can_update_bug_classification(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="classification-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="classification-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Developer Classification Project"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug for developer classification"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "severity": "Major",
+            "priority": "Medium"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["severity"] == "Major"
+    assert data["priority"] == "Medium"
+
+
+# Additional Validation Test
+@pytest.mark.parametrize(
+    "severity",
+    ["Critical", "High", "Invalid"]
+)
+def test_bug_rejects_invalid_severity(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    severity
+):
+    user = authenticated_user_factory(
+        email=f"invalid-severity-{severity.lower()}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name=f"Invalid Severity {severity} Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug with invalid severity"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "severity": severity
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 422
+
+    detail = update_response.json()["detail"]
+
+    assert detail[0]["loc"] == ["body", "severity"]
+    assert "Invalid severity." in detail[0]["msg"]
+
+
+# Additional Validation Test
+@pytest.mark.parametrize(
+    "priority",
+    ["Critical", "Urgent", "Invalid"]
+)
+def test_bug_rejects_invalid_priority(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    priority
+):
+    user = authenticated_user_factory(
+        email=f"invalid-priority-{priority.lower()}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name=f"Invalid Priority {priority} Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug with invalid priority"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "priority": priority
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 422
+
+    detail = update_response.json()["detail"]
+
+    assert detail[0]["loc"] == ["body", "priority"]
+    assert "Invalid priority." in detail[0]["msg"]
 
