@@ -169,37 +169,41 @@ The matrix is updated throughout development and testing.
 
 ### REQ-013 — Bug Editing
 
-| REQ     | US     | AC                                  | Automated Test | Test Type        | Status  |
-| ------- | ------ | ----------------------------------- | -------------- | ---------------- | ------- |
-| REQ-013 | US-013 | AC-013.1 — Edit Bug Report          | —              | API              | Pending |
-| REQ-013 | US-013 | AC-013.2 — Optional Bug Information | —              | API / Validation | Pending |
-| REQ-013 | US-013 | AC-013.3 — Unauthorized Bug Editing | —              | API / Security   | Pending |
+| REQ     | US     | AC                                  | Automated Test                                            | Test Type        | Status  |
+| ------- | ------ | ----------------------------------- | --------------------------------------------------------- | ---------------- | ------- |
+| REQ-013 | US-013 | AC-013.1 — Edit Bug Report          | `test_project_member_can_edit_bug_report`                 | API              | Covered |
+| REQ-013 | US-013 | AC-013.2 — Optional Bug Information | `test_project_member_can_update_optional_bug_information` | API / Validation | Covered |
+| REQ-013 | US-013 | AC-013.3 — Unauthorized Bug Editing | `test_non_member_cannot_edit_bug_report`                  | API / Security   | Covered |
 
 ### REQ-014 — Bug Deletion
 
-| REQ     | US     | AC                                      | Automated Test | Test Type      | Status  |
-| ------- | ------ | --------------------------------------- | -------------- | -------------- | ------- |
-| REQ-014 | US-014 | AC-014.1 — Successful Bug Deletion      | —              | API            | Pending |
-| REQ-014 | US-014 | AC-014.1 — Delete Confirmation Required | —              | UI             | Pending |
-| REQ-014 | US-014 | AC-014.2 — Unauthorized Bug Deletion    | —              | API / Security | Pending |
+| REQ     | US     | AC                                      | Automated Test                               | Test Type      | Status  |
+| ------- | ------ | --------------------------------------- | -------------------------------------------- | -------------- | ------- |
+| REQ-014 | US-014 | AC-014.1 — Successful Bug Deletion      | `test_authorized_member_can_delete_bug`      | API            | Covered |
+| REQ-014 | US-014 | AC-014.1 — Delete Confirmation Required | —                                            | UI             | Pending |
+| REQ-014 | US-014 | AC-014.2 — Unauthorized Bug Deletion    | `test_unauthorized_member_cannot_delete_bug` | API / Security | Covered |
 
 ### REQ-015 — Bug Assignment
 
-| REQ     | US     | AC                                     | Automated Test | Test Type        | Status  |
-| ------- | ------ | -------------------------------------- | -------------- | ---------------- | ------- |
-| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs    | —              | API              | Pending |
-| REQ-015 | US-015 | AC-015.2 — Invalid Assignment          | —              | API / Validation | Pending |
-| REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | —              | API / Security   | Pending |
-| REQ-015 | US-015 | AC-015.4 — Change Bug Assignee         | —              | API              | Pending |
+| REQ     | US     | AC                                     | Automated Test                                  | Test Type        | Status  |
+| ------- | ------ | -------------------------------------- | ----------------------------------------------- | ---------------- | ------- |
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs    | `test_authorized_member_can_assign_bug`         | API              | Covered |
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs    | `test_authorized_member_can_unassign_bug`       | API              | Covered |
+| REQ-015 | US-015 | AC-015.2 — Invalid Assignment          | `test_bug_cannot_be_assigned_to_invalid_member` | API / Validation | Covered |
+| REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | `test_unauthorized_member_cannot_assign_bug`    | API / Security   | Covered |
+| REQ-015 | US-015 | AC-015.4 — Change Bug Assignee         | `test_authorized_member_can_reassign_bug`       | API              | Covered |
 
 ### REQ-016 — Bug Classification
 
-| REQ     | US     | AC                                         | Automated Test | Test Type        | Status  |
-| ------- | ------ | ------------------------------------------ | -------------- | ---------------- | ------- |
-| REQ-016 | US-016 | AC-016.1 — Set Bug Severity                | —              | API / Validation | Pending |
-| REQ-016 | US-016 | AC-016.2 — Set Bug Priority                | —              | API / Validation | Pending |
-| REQ-016 | US-016 | AC-016.3 — Update Bug Classification       | —              | API              | Pending |
-| REQ-016 | US-016 | AC-016.4 — Unauthorized Bug Classification | —              | API / Security   | Pending |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-016 | US-016 | AC-016.1 — Set Bug Severity | `test_project_member_can_set_bug_severity` | API | Covered |
+| REQ-016 | US-016 | AC-016.2 — Set Bug Priority | `test_project_member_can_set_bug_priority` | API | Covered |
+| REQ-016 | US-016 | AC-016.3 — Update Bug Classification | `test_project_member_can_update_bug_classification` | API | Covered |
+| REQ-016 | US-016 | AC-016.4 — Unauthorized Bug Classification | `test_non_member_cannot_update_bug_classification` | API / Security | Covered |
+| REQ-016 | US-016 | — | `test_developer_can_update_bug_classification` | API | Covered |
+| REQ-016 | US-016 | — | `test_bug_rejects_invalid_severity` | API / Validation | Covered |
+| REQ-016 | US-016 | — | `test_bug_rejects_invalid_priority` | API / Validation | Covered |
 
 ### REQ-017 — Bug Lifecycle
 
@@ -214,7 +218,8 @@ The matrix is updated throughout development and testing.
 | REQ-017 | US-017 | AC-017.7 — Invalid Status Transitions | —              | API / Validation | Pending |
 | REQ-017 | US-017 | AC-017.8 — Status Update Timestamp    | —              | API              | Pending |
 
----
+
+
 
 ## BDD Specification Status
 
