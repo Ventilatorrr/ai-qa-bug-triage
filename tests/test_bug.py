@@ -39,6 +39,25 @@ def test_project_member_can_create_bug(
     assert data["created_at"] is not None
     assert data["updated_at"] is not None
 
+    bug_id = data["id"]
+
+    view_response = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert view_response.status_code == 200
+
+    viewed_bug = view_response.json()
+
+    assert viewed_bug["id"] == bug_id
+    assert viewed_bug["project_id"] == project["id"]
+    assert viewed_bug["title"] == "Login button does not work"
+    assert viewed_bug["status"] == "Triage"
+    assert viewed_bug["created_by"] == user["user_id"]
+
 
 # AC-011.2 — Missing Bug Title
 def test_bug_creation_rejected_without_title(
@@ -369,6 +388,95 @@ def test_non_member_cannot_open_bug_report(
     }
 
 
+# AC-012.4 — Sort Bug Reports
+def test_bug_list_defaults_to_most_recently_updated_first(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="bug-sort-user@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Bug Sort Project"
+    )
+
+    first_bug_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "First bug"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert first_bug_response.status_code == 201
+    first_bug_id = first_bug_response.json()["id"]
+
+    second_bug_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Second bug"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert second_bug_response.status_code == 201
+    second_bug_id = second_bug_response.json()["id"]
+
+    response = test_client.get(
+        f"/projects/{project['id']}/bugs",
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert response.status_code == 200
+
+    bugs = response.json()
+
+    assert len(bugs) == 2
+    assert bugs[0]["id"] == second_bug_id
+    assert bugs[0]["title"] == "Second bug"
+    assert bugs[1]["id"] == first_bug_id
+    assert bugs[1]["title"] == "First bug"
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{first_bug_id}",
+        json={
+            "description": "Updated first bug"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    response = test_client.get(
+        f"/projects/{project['id']}/bugs",
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert response.status_code == 200
+
+    bugs = response.json()
+
+    assert len(bugs) == 2
+    assert bugs[0]["id"] == first_bug_id
+    assert bugs[0]["title"] == "First bug"
+    assert bugs[1]["id"] == second_bug_id
+    assert bugs[1]["title"] == "Second bug"
+
+
 # AC-013.1 — Edit Bug Report
 def test_project_member_can_edit_bug_report(
     test_client,
@@ -537,7 +645,7 @@ def test_authorized_member_can_delete_bug(
     role
 ):
     owner = authenticated_user_factory(
-        email=f"delete-owner-{role.lower().replace(' ', '-') }@example.com",
+        email=f"delete-owner-{role.lower().replace(' ', '-')}@example.com",
         password="Password1"
     )
 

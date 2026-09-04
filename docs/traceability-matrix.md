@@ -158,14 +158,17 @@ The matrix is updated throughout development and testing.
 | REQ-011 | US-011 | AC-011.3 — Unauthorized Bug Creation | `test_non_member_cannot_create_bug`                 | API / Security   | Covered |
 | REQ-011 | US-011 | AC-011.4 — Optional Bug Information  | `test_bug_can_be_created_with_optional_information` | API / Validation | Covered |
 
+
 ### REQ-012 — Bug Access
 
-| REQ     | US     | AC                                 | Automated Test                            | Test Type      | Status  |
-| ------- | ------ | ---------------------------------- | ----------------------------------------- | -------------- | ------- |
-| REQ-012 | US-012 | AC-012.1 — View Bug List           | `test_project_member_can_view_bug_list`   | API            | Covered |
-| REQ-012 | US-012 | AC-012.2 — Open Bug Report         | `test_project_member_can_open_bug_report` | API            | Covered |
-| REQ-012 | US-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report`  | API / Security | Covered |
-| REQ-012 | US-012 | AC-012.4 — Sort Bug Reports        | —                                         | UI             | Pending |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-012 | US-012 | AC-012.1 — View Bug List | `test_project_member_can_view_bug_list` | API | Covered |
+| REQ-012 | US-012 | AC-012.2 — Open Bug Report | `test_project_member_can_open_bug_report` | API | Covered |
+| REQ-012 | US-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Covered |
+| REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Covered |
+| REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | — | UI | Pending |
+
 
 ### REQ-013 — Bug Editing
 
@@ -185,21 +188,25 @@ The matrix is updated throughout development and testing.
 
 ### REQ-015 — Bug Assignment
 
-| REQ     | US     | AC                                     | Automated Test                                  | Test Type        | Status  |
-| ------- | ------ | -------------------------------------- | ----------------------------------------------- | ---------------- | ------- |
-| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs    | `test_authorized_member_can_assign_bug`         | API              | Covered |
-| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs    | `test_authorized_member_can_unassign_bug`       | API              | Covered |
-| REQ-015 | US-015 | AC-015.2 — Invalid Assignment          | `test_bug_cannot_be_assigned_to_invalid_member` | API / Validation | Covered |
-| REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | `test_unauthorized_member_cannot_assign_bug`    | API / Security   | Covered |
-| REQ-015 | US-015 | AC-015.4 — Change Bug Assignee         | `test_authorized_member_can_reassign_bug`       | API              | Covered |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_assign_bug` | API | Covered |
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_unassign_bug` | API | Covered |
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | — | UI | Pending |
+| REQ-015 | US-015 | AC-015.2 — Invalid Assignment | `test_bug_cannot_be_assigned_to_invalid_member` | API / Validation | Covered |
+| REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | `test_unauthorized_member_cannot_assign_bug` | API / Security | Covered |
+| REQ-015 | US-015 | AC-015.4 — Change Bug Assignee | `test_authorized_member_can_reassign_bug` | API | Covered |
 
 ### REQ-016 — Bug Classification
 
 | REQ | US | AC | Automated Test | Test Type | Status |
 |---|---|---|---|---|---|
 | REQ-016 | US-016 | AC-016.1 — Set Bug Severity | `test_project_member_can_set_bug_severity` | API | Covered |
+| REQ-016 | US-016 | AC-016.1 — Set Bug Severity | — | UI | Pending |
 | REQ-016 | US-016 | AC-016.2 — Set Bug Priority | `test_project_member_can_set_bug_priority` | API | Covered |
+| REQ-016 | US-016 | AC-016.2 — Set Bug Priority | — | UI | Pending |
 | REQ-016 | US-016 | AC-016.3 — Update Bug Classification | `test_project_member_can_update_bug_classification` | API | Covered |
+| REQ-016 | US-016 | AC-016.3 — Update Bug Classification | — | UI | Pending |
 | REQ-016 | US-016 | AC-016.4 — Unauthorized Bug Classification | `test_non_member_cannot_update_bug_classification` | API / Security | Covered |
 | REQ-016 | US-016 | — | `test_developer_can_update_bug_classification` | API | Covered |
 | REQ-016 | US-016 | — | `test_bug_rejects_invalid_severity` | API / Validation | Covered |
