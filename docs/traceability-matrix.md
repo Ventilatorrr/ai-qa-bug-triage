@@ -194,7 +194,7 @@ The matrix is updated throughout development and testing.
 | REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_unassign_bug` | API | Covered |
 | REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | — | UI | Pending |
 | REQ-015 | US-015 | AC-015.2 — Invalid Assignment | `test_bug_cannot_be_assigned_to_invalid_member` | API / Validation | Covered |
-| REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | `test_unauthorized_member_cannot_assign_bug` | API / Security | Covered |
+| REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | `test_non_member_cannot_assign_bug` | API / Security | Covered |
 | REQ-015 | US-015 | AC-015.4 — Change Bug Assignee | `test_authorized_member_can_reassign_bug` | API | Covered |
 
 ### REQ-016 — Bug Classification
@@ -208,9 +208,22 @@ The matrix is updated throughout development and testing.
 | REQ-016 | US-016 | AC-016.3 — Update Bug Classification | `test_project_member_can_update_bug_classification` | API | Covered |
 | REQ-016 | US-016 | AC-016.3 — Update Bug Classification | — | UI | Pending |
 | REQ-016 | US-016 | AC-016.4 — Unauthorized Bug Classification | `test_non_member_cannot_update_bug_classification` | API / Security | Covered |
-| REQ-016 | US-016 | — | `test_developer_can_update_bug_classification` | API | Covered |
 | REQ-016 | US-016 | — | `test_bug_rejects_invalid_severity` | API / Validation | Covered |
 | REQ-016 | US-016 | — | `test_bug_rejects_invalid_priority` | API / Validation | Covered |
+
+### REQ-017 — Bug Lifecycle
+
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-017 | US-017 | AC-017.1 — Bug Status | — | API | Pending |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | — | API / Security | Pending |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | — | API / Security | Pending |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | — | API / Security | Pending |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | — | API / Security | Pending |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | — | API / Security | Pending |
+| REQ-017 | US-017 | AC-017.7 — Closed Bugs | — | API / Validation | Pending |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | — | API / Validation | Pending |
+| REQ-017 | US-017 | AC-017.9 — Status Update Timestamp | — | API | Pending |
 
 ### REQ-017 — Bug Lifecycle
 
