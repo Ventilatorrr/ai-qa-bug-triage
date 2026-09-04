@@ -412,38 +412,37 @@ As a Project Owner or QA Analyst, I want to delete bug reports so that obsolete 
 
 ### REQ-015 — Bug Assignment
 
-The system shall allow a Project Owner or QA Analyst to assign, reassign, or unassign a bug report to or from a QA Analyst or Developer who is a member of the project.
+The system shall allow a Project Owner, QA Analyst, or Developer to assign, reassign, or unassign a bug report to or from a QA Analyst or Developer who is a member of the project.
 
 ### US-015 — Assign Bugs
 
-As a Project Owner or QA Analyst, I want to assign, reassign, or unassign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
+As a project member, I want to assign, reassign, or unassign bugs to QA Analysts or Developers so that responsibility for investigating or fixing defects is clear.
 
 ### Acceptance Criteria
 
 #### AC-015.1 — Assign and Unassign Bugs
 
-* A Project Owner or QA Analyst can assign a bug report to a QA Analyst or Developer who is a member of the project.
-* The assigned user is displayed on the bug report.
-* A bug report can have only one assignee at a time.
-* A bug report can be unassigned.
-* Assigning or unassigning a bug updates the bug's Last Updated date and time.
+- A Project Owner, QA Analyst, or Developer can assign a bug report to a QA Analyst or Developer who is a member of the project.
+- The assigned user is displayed on the bug report.
+- A bug report can have only one assignee at a time.
+- A bug report can be unassigned when permitted by the bug lifecycle.
+- Assigning or unassigning a bug updates the bug's Last Updated date and time.
 
 #### AC-015.2 — Invalid Assignment
 
-* A bug cannot be assigned to a Project Owner.
-* A bug cannot be assigned to a QA Analyst or Developer who is not a member of the project.
+- A bug cannot be assigned to a Project Owner.
+- A bug cannot be assigned to a QA Analyst or Developer who is not a member of the project.
 
 #### AC-015.3 — Unauthorized Bug Assignment
 
-* A Developer cannot assign a bug report.
-* A user who is not a member of the project cannot assign a bug report.
-* The system rejects an unauthorized attempt to assign a bug report.
+- A user who is not a member of the project cannot assign, reassign, or unassign a bug report.
+- The system rejects an unauthorized attempt to modify the bug assignee.
 
 #### AC-015.4 — Change Bug Assignee
 
-* A Project Owner or QA Analyst can change the assignee of an existing bug report.
-* A bug can be reassigned to another QA Analyst or Developer who is a member of the project.
-* Reassigning a bug updates the bug's Last Updated date and time.
+- A Project Owner, QA Analyst, or Developer can change the assignee of an existing bug report.
+- A bug can be reassigned to another QA Analyst or Developer who is a member of the project.
+- Reassigning a bug updates the bug's Last Updated date and time.
 
 ---
 
@@ -484,11 +483,11 @@ As an authorized project member, I want to set and update a bug's severity and p
 
 ### REQ-017 — Bug Lifecycle
 
-The system shall manage bug reports through the defined bug lifecycle.
+The system shall manage bug reports through the defined bug lifecycle and record the resolution when a bug is closed.
 
 ### US-017 — Manage Bug Status
 
-As a QA Analyst or Developer, I want bugs to progress through a defined lifecycle so that their current state and next responsibility are clear.
+As a project member with the appropriate permissions, I want bugs to progress through a defined lifecycle so that their current state and next responsibility are clear.ok
 
 ### Acceptance Criteria
 
@@ -500,36 +499,43 @@ As a QA Analyst or Developer, I want bugs to progress through a defined lifecycl
 #### AC-017.2 — Triage to Open
 
 * A Project Owner or QA Analyst can move a bug from `Triage` to `Open`.
-* A bug can be moved to `Open` only after it has been reviewed by a Project Owner or QA Analyst.
-* A bug in `Open` status can be unassigned or assigned to a QA Analyst or Developer.
+* A bug in `Open` status must have a QA Analyst or Developer assigned.
 
 #### AC-017.3 — Open to Development
 
-* A Project Owner or QA Analyst can move a bug from `Open` to `Development`.
+* An assigned Developer can move a bug from `Open` to `Development`.
 * A Developer must be assigned to the bug before it can be moved to `Development`.
 
 #### AC-017.4 — Development to Testing
 
-* A Developer can move a bug from `Development` to `Testing` when the fix is ready for verification.
-* A QA Analyst must be assigned to the bug before it can be moved to `Testing`.
+* An assigned Developer can move a bug from `Development` to `Testing` when the fix is ready for verification.
+* The Developer selects a QA Analyst who is a member of the project as part of the transition to `Testing`.
+* The selected QA Analyst becomes the assignee of the bug.
 
 #### AC-017.5 — Testing Outcome
 
-* A QA Analyst can mark testing as `Passed` or `Failed`.
-* When testing is `Passed`, the bug status changes to `Closed`.
-* When testing is `Failed`, the bug status changes to `Development`.
-* When testing is `Failed`, a Developer must be assigned to the bug before it can continue in `Development`.
+- An assigned QA Analyst can select `Passed` or `Failed` as the testing outcome.
+- When testing is `Passed`, the bug status changes to `Closed` and the resolution is automatically set to `Fixed`.
+- When testing is `Failed`, the bug status changes to `Development`.
+- When testing is `Failed`, a Developer who is a member of the project must be assigned to the bug.
+- The assigned Developer becomes the bug's assignee when testing fails.
 
-#### AC-017.6 — Closed Bugs
+#### AC-017.6 — Close Without Fixing
+
+* An assigned Developer or Project Owner can close a bug from `Development` without sending it through `Testing`.
+* When a bug is closed without being fixed, a resolution must be selected.
+* Supported resolutions are `Won't Fix`, `Duplicate`, and `Not a Bug`.
+
+#### AC-017.7 — Closed Bugs
 
 * A bug in `Closed` status cannot be moved to another status through the normal bug workflow.
 
-#### AC-017.7 — Invalid Status Transitions
+#### AC-017.8 — Invalid Status Transitions
 
 * A bug cannot transition between statuses in a way that is not permitted by the defined bug lifecycle.
 * The system rejects an invalid status transition.
 
-#### AC-017.8 — Status Update Timestamp
+#### AC-017.9 — Status Update Timestamp
 
 * Changing the bug status updates the bug's Last Updated date and time.
 

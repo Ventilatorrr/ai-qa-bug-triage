@@ -780,6 +780,8 @@ def test_unauthorized_member_cannot_delete_bug(
         ("Project Owner", "Developer"),
         ("QA Analyst", "QA Analyst"),
         ("QA Analyst", "Developer"),
+        ("Developer", "QA Analyst"),
+        ("Developer", "Developer"),
     ]
 )
 def test_authorized_member_can_assign_bug(
@@ -790,6 +792,7 @@ def test_authorized_member_can_assign_bug(
     actor_role,
     assignee_role
 ):
+
     owner = authenticated_user_factory(
         email=f"assign-owner-{actor_role.lower().replace(' ', '-')}@example.com",
         password="Password1"
@@ -807,13 +810,30 @@ def test_authorized_member_can_assign_bug(
             email="assign-qa@example.com",
             password="Password1"
         )
+
         member_factory(
             owner["token"],
             project["id"],
             qa["user"]["email"],
             "QA Analyst"
         )
+
         actor = qa
+
+    elif actor_role == "Developer":
+        developer = authenticated_user_factory(
+            email="assign-developer@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            developer["user"]["email"],
+            "Developer"
+        )
+
+        actor = developer
 
     assignee = authenticated_user_factory(
         email=f"assignee-{assignee_role.lower().replace(' ', '-')}@example.com",
@@ -838,6 +858,7 @@ def test_authorized_member_can_assign_bug(
     )
 
     assert create_response.status_code == 201
+
     bug_id = create_response.json()["id"]
     original_updated_at = create_response.json()["updated_at"]
 
@@ -852,37 +873,77 @@ def test_authorized_member_can_assign_bug(
     )
 
     assert update_response.status_code == 200
+
     data = update_response.json()
+
     assert data["assignee_id"] == assignee_member["user_id"]
     assert data["updated_at"] != original_updated_at
 
 
 # AC-015.1 — Assign and Unassign Bugs
+@pytest.mark.parametrize(
+    "actor_role",
+    ["Project Owner", "QA Analyst", "Developer"]
+)
 def test_authorized_member_can_unassign_bug(
     test_client,
     authenticated_user_factory,
     project_factory,
-    member_factory
+    member_factory,
+    actor_role
 ):
-    owner = authenticated_user_factory(
-        email="unassign-owner@example.com",
-        password="Password1"
-    )
 
-    developer = authenticated_user_factory(
-        email="unassign-developer@example.com",
+    owner = authenticated_user_factory(
+        email=f"unassign-owner-{actor_role.lower().replace(' ', '-')}@example.com",
         password="Password1"
     )
 
     project = project_factory(
         owner["token"],
-        name="Bug Unassignment Project"
+        name=f"Bug Unassignment {actor_role} Project"
     )
 
-    developer_member = member_factory(
+    actor = owner
+
+    if actor_role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="unassign-qa@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+
+        actor = qa
+
+    elif actor_role == "Developer":
+        developer = authenticated_user_factory(
+            email="unassign-developer@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            developer["user"]["email"],
+            "Developer"
+        )
+
+        actor = developer
+
+    assignee = authenticated_user_factory(
+        email=f"unassign-assignee-{actor_role.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    assignee_member = member_factory(
         owner["token"],
         project["id"],
-        developer["user"]["email"],
+        assignee["user"]["email"],
         "Developer"
     )
 
@@ -890,7 +951,7 @@ def test_authorized_member_can_unassign_bug(
         f"/projects/{project['id']}/bugs",
         json={
             "title": "Bug to unassign",
-            "assignee_id": developer_member["user_id"]
+            "assignee_id": assignee_member["user_id"]
         },
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -898,7 +959,9 @@ def test_authorized_member_can_unassign_bug(
     )
 
     assert create_response.status_code == 201
+
     bug_id = create_response.json()["id"]
+    original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
         f"/projects/{project['id']}/bugs/{bug_id}",
@@ -906,13 +969,16 @@ def test_authorized_member_can_unassign_bug(
             "assignee_id": None
         },
         headers={
-            "Authorization": f"Bearer {owner['token']}"
+            "Authorization": f"Bearer {actor['token']}"
         }
     )
 
     assert update_response.status_code == 200
+
     data = update_response.json()
+
     assert data["assignee_id"] is None
+    assert data["updated_at"] != original_updated_at
 
 
 # AC-015.2 — Invalid Assignment
@@ -924,6 +990,7 @@ def test_bug_cannot_be_assigned_to_invalid_member(
     member_factory,
     assignee_type
 ):
+
     owner = authenticated_user_factory(
         email=f"invalid-assignee-owner-{assignee_type.lower().replace(' ', '-')}@example.com",
         password="Password1"
@@ -935,12 +1002,16 @@ def test_bug_cannot_be_assigned_to_invalid_member(
     )
 
     if assignee_type == "Project Owner":
+
         assignee_id = owner["user_id"]
+
     else:
+
         non_member = authenticated_user_factory(
             email="invalid-assignee-non-member@example.com",
             password="Password1"
         )
+
         assignee_id = non_member["user_id"]
 
     create_response = test_client.post(
@@ -954,6 +1025,7 @@ def test_bug_cannot_be_assigned_to_invalid_member(
     )
 
     assert create_response.status_code == 201
+
     bug_id = create_response.json()["id"]
 
     update_response = test_client.patch(
@@ -967,47 +1039,39 @@ def test_bug_cannot_be_assigned_to_invalid_member(
     )
 
     assert update_response.status_code == 422
+
     assert update_response.json() == {
         "detail": "Invalid bug assignee."
     }
 
 
 # AC-015.3 — Unauthorized Bug Assignment
-@pytest.mark.parametrize("role", ["Developer", "non-member"])
-def test_unauthorized_member_cannot_assign_bug(
+def test_non_member_cannot_assign_bug(
     test_client,
     authenticated_user_factory,
     project_factory,
-    member_factory,
-    role
+    member_factory
 ):
+
     owner = authenticated_user_factory(
-        email=f"assign-security-owner-{role.lower()}@example.com",
+        email="assign-security-owner@example.com",
         password="Password1"
     )
 
-    actor = authenticated_user_factory(
-        email=f"assign-{role.lower()}@example.com",
+    non_member = authenticated_user_factory(
+        email="assign-non-member@example.com",
         password="Password1"
     )
 
     developer = authenticated_user_factory(
-        email=f"assign-target-{role.lower()}@example.com",
+        email="assign-target-developer@example.com",
         password="Password1"
     )
 
     project = project_factory(
         owner["token"],
-        name=f"Protected Bug Assignment {role} Project"
+        name="Protected Bug Assignment Project"
     )
-
-    if role == "Developer":
-        member_factory(
-            owner["token"],
-            project["id"],
-            actor["user"]["email"],
-            "Developer"
-        )
 
     target_member = member_factory(
         owner["token"],
@@ -1027,6 +1091,7 @@ def test_unauthorized_member_cannot_assign_bug(
     )
 
     assert create_response.status_code == 201
+
     bug_id = create_response.json()["id"]
 
     update_response = test_client.patch(
@@ -1035,20 +1100,15 @@ def test_unauthorized_member_cannot_assign_bug(
             "assignee_id": target_member["user_id"]
         },
         headers={
-            "Authorization": f"Bearer {actor['token']}"
+            "Authorization": f"Bearer {non_member['token']}"
         }
     )
 
-    if role == "Developer":
-        assert update_response.status_code == 403
-        assert update_response.json() == {
-            "detail": "You are not authorized to assign bugs."
-        }
-    else:
-        assert update_response.status_code == 404
-        assert update_response.json() == {
-            "detail": "Project not found."
-        }
+    assert update_response.status_code == 404
+
+    assert update_response.json() == {
+        "detail": "Project not found."
+    }
 
 
 # AC-015.4 — Change Bug Assignee
@@ -1058,6 +1118,7 @@ def test_authorized_member_can_reassign_bug(
     project_factory,
     member_factory
 ):
+
     owner = authenticated_user_factory(
         email="reassign-owner@example.com",
         password="Password1"
@@ -1104,7 +1165,9 @@ def test_authorized_member_can_reassign_bug(
     )
 
     assert create_response.status_code == 201
+
     bug_id = create_response.json()["id"]
+    original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
         f"/projects/{project['id']}/bugs/{bug_id}",
@@ -1121,23 +1184,63 @@ def test_authorized_member_can_reassign_bug(
     data = update_response.json()
 
     assert data["assignee_id"] == developer_member["user_id"]
+    assert data["updated_at"] != original_updated_at
 
 
 # AC-016.1 — Set Bug Severity
+@pytest.mark.parametrize(
+    "actor_role",
+    ["Project Owner", "QA Analyst", "Developer"]
+)
 def test_project_member_can_set_bug_severity(
     test_client,
     authenticated_user_factory,
-    project_factory
+    project_factory,
+    member_factory,
+    actor_role
 ):
-    user = authenticated_user_factory(
-        email="severity-user@example.com",
+
+    owner = authenticated_user_factory(
+        email=f"severity-owner-{actor_role.lower().replace(' ', '-')}@example.com",
         password="Password1"
     )
 
     project = project_factory(
-        user["token"],
-        name="Bug Severity Project"
+        owner["token"],
+        name=f"Bug Severity {actor_role} Project"
     )
+
+    actor = owner
+
+    if actor_role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="severity-qa@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+
+        actor = qa
+
+    elif actor_role == "Developer":
+        developer = authenticated_user_factory(
+            email="severity-developer@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            developer["user"]["email"],
+            "Developer"
+        )
+
+        actor = developer
 
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
@@ -1145,7 +1248,7 @@ def test_project_member_can_set_bug_severity(
             "title": "Bug to classify"
         },
         headers={
-            "Authorization": f"Bearer {user['token']}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -1159,7 +1262,7 @@ def test_project_member_can_set_bug_severity(
             "severity": "Blocker"
         },
         headers={
-            "Authorization": f"Bearer {user['token']}"
+            "Authorization": f"Bearer {actor['token']}"
         }
     )
 
@@ -1171,20 +1274,59 @@ def test_project_member_can_set_bug_severity(
 
 
 # AC-016.2 — Set Bug Priority
+@pytest.mark.parametrize(
+    "actor_role",
+    ["Project Owner", "QA Analyst", "Developer"]
+)
 def test_project_member_can_set_bug_priority(
     test_client,
     authenticated_user_factory,
-    project_factory
+    project_factory,
+    member_factory,
+    actor_role
 ):
-    user = authenticated_user_factory(
-        email="priority-user@example.com",
+
+    owner = authenticated_user_factory(
+        email=f"priority-owner-{actor_role.lower().replace(' ', '-')}@example.com",
         password="Password1"
     )
 
     project = project_factory(
-        user["token"],
-        name="Bug Priority Project"
+        owner["token"],
+        name=f"Bug Priority {actor_role} Project"
     )
+
+    actor = owner
+
+    if actor_role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="priority-qa@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+
+        actor = qa
+
+    elif actor_role == "Developer":
+        developer = authenticated_user_factory(
+            email="priority-developer@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            developer["user"]["email"],
+            "Developer"
+        )
+
+        actor = developer
 
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
@@ -1192,7 +1334,7 @@ def test_project_member_can_set_bug_priority(
             "title": "Bug to prioritize"
         },
         headers={
-            "Authorization": f"Bearer {user['token']}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -1206,7 +1348,7 @@ def test_project_member_can_set_bug_priority(
             "priority": "High"
         },
         headers={
-            "Authorization": f"Bearer {user['token']}"
+            "Authorization": f"Bearer {actor['token']}"
         }
     )
 
@@ -1218,20 +1360,59 @@ def test_project_member_can_set_bug_priority(
 
 
 # AC-016.3 — Update Bug Classification
+@pytest.mark.parametrize(
+    "actor_role",
+    ["Project Owner", "QA Analyst", "Developer"]
+)
 def test_project_member_can_update_bug_classification(
     test_client,
     authenticated_user_factory,
-    project_factory
+    project_factory,
+    member_factory,
+    actor_role
 ):
-    user = authenticated_user_factory(
-        email="classification-user@example.com",
+
+    owner = authenticated_user_factory(
+        email=f"classification-owner-{actor_role.lower().replace(' ', '-')}@example.com",
         password="Password1"
     )
 
     project = project_factory(
-        user["token"],
-        name="Bug Classification Project"
+        owner["token"],
+        name=f"Bug Classification {actor_role} Project"
     )
+
+    actor = owner
+
+    if actor_role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="classification-qa@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+
+        actor = qa
+
+    elif actor_role == "Developer":
+        developer = authenticated_user_factory(
+            email="classification-developer@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            developer["user"]["email"],
+            "Developer"
+        )
+
+        actor = developer
 
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
@@ -1241,7 +1422,7 @@ def test_project_member_can_update_bug_classification(
             "priority": "Low"
         },
         headers={
-            "Authorization": f"Bearer {user['token']}"
+            "Authorization": f"Bearer {owner['token']}"
         }
     )
 
@@ -1257,7 +1438,7 @@ def test_project_member_can_update_bug_classification(
             "priority": "High"
         },
         headers={
-            "Authorization": f"Bearer {user['token']}"
+            "Authorization": f"Bearer {actor['token']}"
         }
     )
 
@@ -1276,6 +1457,7 @@ def test_non_member_cannot_update_bug_classification(
     authenticated_user_factory,
     project_factory
 ):
+
     owner = authenticated_user_factory(
         email="classification-security-owner@example.com",
         password="Password1"
@@ -1323,68 +1505,6 @@ def test_non_member_cannot_update_bug_classification(
     }
 
 
-# Additional Authorization Test
-def test_developer_can_update_bug_classification(
-    test_client,
-    authenticated_user_factory,
-    project_factory,
-    member_factory
-):
-    owner = authenticated_user_factory(
-        email="classification-owner@example.com",
-        password="Password1"
-    )
-
-    developer = authenticated_user_factory(
-        email="classification-developer@example.com",
-        password="Password1"
-    )
-
-    project = project_factory(
-        owner["token"],
-        name="Developer Classification Project"
-    )
-
-    member_factory(
-        owner["token"],
-        project["id"],
-        developer["user"]["email"],
-        "Developer"
-    )
-
-    create_response = test_client.post(
-        f"/projects/{project['id']}/bugs",
-        json={
-            "title": "Bug for developer classification"
-        },
-        headers={
-            "Authorization": f"Bearer {owner['token']}"
-        }
-    )
-
-    assert create_response.status_code == 201
-
-    bug_id = create_response.json()["id"]
-
-    update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
-        json={
-            "severity": "Major",
-            "priority": "Medium"
-        },
-        headers={
-            "Authorization": f"Bearer {developer['token']}"
-        }
-    )
-
-    assert update_response.status_code == 200
-
-    data = update_response.json()
-
-    assert data["severity"] == "Major"
-    assert data["priority"] == "Medium"
-
-
 # Additional Validation Test
 @pytest.mark.parametrize(
     "severity",
@@ -1396,6 +1516,7 @@ def test_bug_rejects_invalid_severity(
     project_factory,
     severity
 ):
+
     user = authenticated_user_factory(
         email=f"invalid-severity-{severity.lower()}@example.com",
         password="Password1"
@@ -1449,6 +1570,7 @@ def test_bug_rejects_invalid_priority(
     project_factory,
     priority
 ):
+
     user = authenticated_user_factory(
         email=f"invalid-priority-{priority.lower()}@example.com",
         password="Password1"

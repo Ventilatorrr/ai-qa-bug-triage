@@ -39,7 +39,7 @@ def create_bug(
         assignee_id = bug.assignee_id
 
         if assignee_id is not None:
-            if membership[0] not in ["Project Owner", "QA Analyst"]:
+            if membership[0] not in ["Project Owner", "QA Analyst", "Developer"]:
                 raise HTTPException(
                     status_code=403,
                     detail="You are not authorized to assign bugs."
@@ -320,7 +320,7 @@ def update_bug(
             )
 
         if "assignee_id" in updates:
-            if membership[0] not in ["Project Owner", "QA Analyst"]:
+            if membership[0] not in ["Project Owner", "QA Analyst", "Developer"]:
                 raise HTTPException(
                     status_code=403,
                     detail="You are not authorized to assign bugs."
