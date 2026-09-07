@@ -1612,3 +1612,2369 @@ def test_bug_rejects_invalid_priority(
     assert detail[0]["loc"] == ["body", "priority"]
     assert "Invalid priority." in detail[0]["msg"]
 
+
+# AC-017.1 — Bug Status
+def test_new_bug_starts_in_triage(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="status-user@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Bug Status Project"
+    )
+
+    response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "New lifecycle bug"
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert response.status_code == 201
+
+    data = response.json()
+
+    assert data["status"] == "Triage"
+    assert data["resolution"] is None
+
+
+# AC-017.2 — Triage to Open
+@pytest.mark.parametrize(
+    "actor_role",
+    ["Project Owner", "QA Analyst"]
+)
+def test_project_owner_or_qa_can_move_bug_from_triage_to_open(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    actor_role
+):
+    owner = authenticated_user_factory(
+        email=f"triage-owner-{actor_role.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Triage to Open {actor_role} Project"
+    )
+
+    actor = owner
+
+    if actor_role == "QA Analyst":
+        qa = authenticated_user_factory(
+            email="triage-qa@example.com",
+            password="Password1"
+        )
+
+        member_factory(
+            owner["token"],
+            project["id"],
+            qa["user"]["email"],
+            "QA Analyst"
+        )
+
+        actor = qa
+
+    developer = authenticated_user_factory(
+        email="triage-developer@example.com",
+        password="Password1"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug ready for triage",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {actor['token']}"
+        }
+    )
+
+    assert update_response.status_code == 200
+
+    data = update_response.json()
+
+    assert data["status"] == "Open"
+    assert data["assignee_id"] == developer_member["user_id"]
+
+
+# AC-017.2 — Triage to Open
+def test_developer_cannot_move_bug_from_triage_to_open(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="triage-security-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="triage-security-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Triage Project"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Developer cannot move this bug"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert update_response.status_code == 403
+
+    assert update_response.json() == {
+        "detail": "You are not authorized to move bugs from Triage to Open."
+    }
+
+
+# AC-017.2 — Triage to Open
+def test_bug_without_assignee_cannot_move_from_triage_to_open(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    owner = authenticated_user_factory(
+        email="triage-no-assignee-owner@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Triage No Assignee Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug without assignee"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert update_response.status_code == 422
+
+    assert update_response.json() == {
+        "detail": "Bug must have a QA Analyst or Developer assigned before it can be moved to Open."
+    }
+
+
+# AC-017.3 — Open to Development
+def test_assigned_developer_can_move_bug_from_open_to_development(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="development-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="development-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Open to Development Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug for development",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+    assert open_response.json()["status"] == "Open"
+
+    original_updated_at = open_response.json()["updated_at"]
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    data = development_response.json()
+
+    assert data["status"] == "Development"
+    assert data["assignee_id"] == developer_member["user_id"]
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-017.3 — Open to Development
+def test_qa_analyst_cannot_move_bug_from_open_to_development(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="development-security-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="development-security-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="development-security-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Open to Development Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "QA cannot move this bug",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert development_response.status_code == 403
+
+    assert development_response.json() == {
+        "detail": "Only the assigned Developer can move a bug from Open to Development."
+    }
+
+
+# AC-017.3 — Open to Development
+def test_non_assigned_developer_cannot_move_bug_from_open_to_development(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="development-owner-2@example.com",
+        password="Password1"
+    )
+
+    assigned_developer = authenticated_user_factory(
+        email="assigned-developer@example.com",
+        password="Password1"
+    )
+
+    other_developer = authenticated_user_factory(
+        email="other-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Assigned Developer Project"
+    )
+
+    assigned_developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        assigned_developer["user"]["email"],
+        "Developer"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        other_developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Only assigned developer can move this bug",
+            "assignee_id": assigned_developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {other_developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 403
+
+    assert development_response.json() == {
+        "detail": "Only the assigned Developer can move a bug from Open to Development."
+    }
+
+
+# AC-017.4 — Development to Testing
+def test_assigned_developer_can_move_bug_from_development_to_testing(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="testing-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="testing-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="testing-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Development to Testing Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug ready for testing",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+    assert development_response.json()["status"] == "Development"
+
+    original_updated_at = development_response.json()["updated_at"]
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    data = testing_response.json()
+
+    assert data["status"] == "Testing"
+    assert data["assignee_id"] == qa_member["user_id"]
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-017.4 — Development to Testing
+def test_non_assigned_developer_cannot_move_bug_from_development_to_testing(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="testing-security-owner@example.com",
+        password="Password1"
+    )
+
+    assigned_developer = authenticated_user_factory(
+        email="testing-assigned-developer@example.com",
+        password="Password1"
+    )
+
+    other_developer = authenticated_user_factory(
+        email="testing-other-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="testing-security-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Development to Testing Project"
+    )
+
+    assigned_developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        assigned_developer["user"]["email"],
+        "Developer"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        other_developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Only assigned developer can send to testing",
+            "assignee_id": assigned_developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {assigned_developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {other_developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 403
+
+    assert testing_response.json() == {
+        "detail": "Only the assigned Developer can move a bug from Development to Testing."
+    }
+
+
+# AC-017.4 — Development to Testing
+def test_bug_cannot_move_to_testing_with_developer_assignee(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="testing-validation-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="testing-validation-developer@example.com",
+        password="Password1"
+    )
+
+    other_developer = authenticated_user_factory(
+        email="testing-validation-other-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Testing Assignee Validation Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    other_developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        other_developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Testing must have QA assignee",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": other_developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 422
+
+    assert testing_response.json() == {
+        "detail": "Invalid QA Analyst assignee."
+    }
+
+
+# AC-017.5 — Testing Outcome
+def test_assigned_qa_can_pass_bug_and_close_it(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="outcome-pass-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="outcome-pass-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="outcome-pass-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Testing Outcome Pass Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug that passes testing",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={"status": "Open"},
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={"status": "Development"},
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+    assert testing_response.json()["status"] == "Testing"
+    assert testing_response.json()["assignee_id"] == qa_member["user_id"]
+
+    original_updated_at = testing_response.json()["updated_at"]
+
+    pass_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "testing_outcome": "Passed"
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert pass_response.status_code == 200
+
+    data = pass_response.json()
+
+    assert data["status"] == "Closed"
+    assert data["testing_outcome"] == "Passed" if "testing_outcome" in data else True
+    assert data["resolution"] == "Fixed"
+    assert data["assignee_id"] == qa_member["user_id"]
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-017.5 — Testing Outcome
+def test_assigned_qa_can_fail_bug_and_return_it_to_development(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="outcome-fail-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="outcome-fail-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="outcome-fail-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Testing Outcome Fail Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug that fails testing",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={"status": "Open"},
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={"status": "Development"},
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    original_updated_at = testing_response.json()["updated_at"]
+
+    fail_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development",
+            "testing_outcome": "Failed",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert fail_response.status_code == 200
+
+    data = fail_response.json()
+
+    assert data["status"] == "Development"
+    assert data["assignee_id"] == developer_member["user_id"]
+    assert data["resolution"] is None
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-017.5 — Testing Outcome
+def test_non_assigned_qa_cannot_record_testing_outcome(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="outcome-security-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="outcome-security-developer@example.com",
+        password="Password1"
+    )
+
+    assigned_qa = authenticated_user_factory(
+        email="outcome-security-assigned-qa@example.com",
+        password="Password1"
+    )
+
+    other_qa = authenticated_user_factory(
+        email="outcome-security-other-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Protected Testing Outcome Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    assigned_qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        assigned_qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        other_qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Only assigned QA can test",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={"status": "Open"},
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={"status": "Development"},
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": assigned_qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    outcome_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "testing_outcome": "Passed"
+        },
+        headers={
+            "Authorization": f"Bearer {other_qa['token']}"
+        }
+    )
+
+    assert outcome_response.status_code == 403
+
+    assert outcome_response.json() == {
+        "detail": "Only the assigned QA Analyst can record the testing outcome."
+    }
+
+
+# AC-017.5 — Testing Outcome
+@pytest.mark.parametrize(
+    "status",
+    ["Closed", "Development"]
+)
+def test_testing_outcome_is_required(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    status
+):
+    owner = authenticated_user_factory(
+        email=f"outcome-required-owner-{status.lower()}@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email=f"outcome-required-developer-{status.lower()}@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email=f"outcome-required-qa-{status.lower()}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Testing Outcome Required {status} Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Testing outcome is required",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    payload = {
+        "status": status
+    }
+
+    if status == "Development":
+        payload["assignee_id"] = developer_member["user_id"]
+
+    outcome_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json=payload,
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert outcome_response.status_code == 422
+
+    assert outcome_response.json() == {
+        "detail": "Testing outcome is required."
+    }
+
+
+# AC-017.5 — Testing Outcome
+def test_invalid_testing_outcome_is_rejected(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="outcome-invalid-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="outcome-invalid-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="outcome-invalid-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Testing Outcome Invalid Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Invalid testing outcome",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    outcome_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "testing_outcome": "Invalid"
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert outcome_response.status_code == 422
+
+    detail = outcome_response.json()["detail"]
+
+    assert detail[0]["loc"] == ["body", "testing_outcome"]
+    assert "Input should be 'Passed' or 'Failed'" in detail[0]["msg"]
+
+
+# AC-017.6 — Close Without Fixing
+@pytest.mark.parametrize(
+    "resolution",
+    ["Won't Fix", "Duplicate", "Not a Bug"]
+)
+def test_assigned_developer_can_close_bug_without_fixing(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    resolution
+):
+    owner = authenticated_user_factory(
+        email=f"close-developer-owner-{resolution.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email=f"close-developer-{resolution.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Developer Close {resolution} Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug to close without fixing",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    original_updated_at = development_response.json()["updated_at"]
+
+    close_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "resolution": resolution
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert close_response.status_code == 200
+
+    data = close_response.json()
+
+    assert data["status"] == "Closed"
+    assert data["resolution"] == resolution
+    assert data["assignee_id"] == developer_member["user_id"]
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-017.6 — Close Without Fixing
+@pytest.mark.parametrize(
+    "resolution",
+    ["Won't Fix", "Duplicate", "Not a Bug"]
+)
+def test_project_owner_can_close_bug_without_fixing(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    resolution
+):
+    owner = authenticated_user_factory(
+        email=f"close-owner-{resolution.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email=f"close-owner-developer-{resolution.lower().replace(' ', '-')}@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name=f"Owner Close {resolution} Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug for owner closure",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    original_updated_at = development_response.json()["updated_at"]
+
+    close_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "resolution": resolution
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert close_response.status_code == 200
+
+    data = close_response.json()
+
+    assert data["status"] == "Closed"
+    assert data["resolution"] == resolution
+    assert data["assignee_id"] == developer_member["user_id"]
+    assert data["updated_at"] != original_updated_at
+
+
+# AC-017.6 — Close Without Fixing
+def test_bug_cannot_be_closed_without_resolution(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="close-required-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="close-required-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Resolution Required Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Resolution is required",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    close_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert close_response.status_code == 422
+
+    assert close_response.json() == {
+        "detail": "Resolution is required when closing a bug without fixing it."
+    }
+
+
+# AC-017.6 — Close Without Fixing
+def test_fixed_resolution_cannot_be_manually_selected_when_closing_bug(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="close-fixed-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="close-fixed-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Fixed Resolution Validation Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Fixed cannot be manually selected",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    close_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "resolution": "Fixed"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert close_response.status_code == 422
+
+    detail = close_response.json()["detail"]
+
+    assert detail[0]["loc"] == ["body", "resolution"]
+    assert "Input should be" in detail[0]["msg"]
+    assert "Won't Fix" in detail[0]["msg"]
+    assert "Duplicate" in detail[0]["msg"]
+    assert "Not a Bug" in detail[0]["msg"]
+
+
+# AC-017.7 — Closed Bugs
+def test_closed_bug_cannot_be_moved_to_another_status(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="closed-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="closed-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="closed-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Closed Bug Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Closed bug cannot reopen",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    close_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Closed",
+            "testing_outcome": "Passed"
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert close_response.status_code == 200
+    assert close_response.json()["status"] == "Closed"
+    assert close_response.json()["resolution"] == "Fixed"
+
+    reopen_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert reopen_response.status_code == 422
+
+    assert reopen_response.json() == {
+        "detail": "Closed bugs cannot be moved to another status."
+    }
+
+
+# AC-017.8 — Invalid Status Transitions
+def test_bug_cannot_skip_from_triage_to_development(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="invalid-transition-triage-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="invalid-transition-triage-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Invalid Triage Transition Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Cannot skip Open",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert response.status_code == 422
+
+    assert response.json() == {
+        "detail": "Invalid bug status transition."
+    }
+
+
+# AC-017.8 — Invalid Status Transitions
+def test_bug_cannot_skip_from_open_to_testing(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="invalid-transition-open-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="invalid-transition-open-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="invalid-transition-open-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Invalid Open Transition Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Cannot skip Development",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert response.status_code == 422
+
+    assert response.json() == {
+        "detail": "Invalid bug status transition."
+    }
+
+
+# AC-017.8 — Invalid Status Transitions
+def test_bug_cannot_move_from_development_back_to_open(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="invalid-transition-development-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="invalid-transition-development-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Invalid Development Transition Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Cannot move backwards",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert response.status_code == 422
+
+    assert response.json() == {
+        "detail": "Invalid bug status transition."
+    }
+
+
+# AC-017.8 — Invalid Status Transitions
+def test_bug_cannot_move_from_testing_back_to_open(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="invalid-transition-testing-open-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="invalid-transition-testing-open-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="invalid-transition-testing-open-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Invalid Testing to Open Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Testing cannot return to Open",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert response.status_code == 422
+
+    assert response.json() == {
+        "detail": "Invalid bug status transition."
+    }
+
+
+# AC-017.8 — Invalid Status Transitions
+def test_bug_cannot_move_from_testing_back_to_triage(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="invalid-transition-testing-triage-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="invalid-transition-testing-triage-developer@example.com",
+        password="Password1"
+    )
+
+    qa = authenticated_user_factory(
+        email="invalid-transition-testing-triage-qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Invalid Testing to Triage Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    qa_member = member_factory(
+        owner["token"],
+        project["id"],
+        qa["user"]["email"],
+        "QA Analyst"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Testing cannot return to Triage",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+
+    open_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert open_response.status_code == 200
+
+    development_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Development"
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert development_response.status_code == 200
+
+    testing_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Testing",
+            "assignee_id": qa_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {developer['token']}"
+        }
+    )
+
+    assert testing_response.status_code == 200
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Triage"
+        },
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert response.status_code == 422
+
+    assert response.json() == {
+        "detail": "Invalid bug status transition."
+    }
+
+
+# AC-017.9 — Status Update Timestamp
+def test_changing_bug_status_updates_last_updated_timestamp(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory
+):
+    owner = authenticated_user_factory(
+        email="timestamp-owner@example.com",
+        password="Password1"
+    )
+
+    developer = authenticated_user_factory(
+        email="timestamp-developer@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Status Timestamp Project"
+    )
+
+    developer_member = member_factory(
+        owner["token"],
+        project["id"],
+        developer["user"]["email"],
+        "Developer"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Status timestamp bug",
+            "assignee_id": developer_member["user_id"]
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    bug_id = create_response.json()["id"]
+    original_updated_at = create_response.json()["updated_at"]
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        json={
+            "status": "Open"
+        },
+        headers={
+            "Authorization": f"Bearer {owner['token']}"
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["status"] == "Open"
+    assert data["updated_at"] != original_updated_at

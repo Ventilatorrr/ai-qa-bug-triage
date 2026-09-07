@@ -169,7 +169,6 @@ The matrix is updated throughout development and testing.
 | REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Covered |
 | REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | — | UI | Pending |
 
-
 ### REQ-013 — Bug Editing
 
 | REQ     | US     | AC                                  | Automated Test                                            | Test Type        | Status  |
@@ -215,28 +214,44 @@ The matrix is updated throughout development and testing.
 
 | REQ | US | AC | Automated Test | Test Type | Status |
 |---|---|---|---|---|---|
-| REQ-017 | US-017 | AC-017.1 — Bug Status | — | API | Pending |
-| REQ-017 | US-017 | AC-017.2 — Triage to Open | — | API / Security | Pending |
-| REQ-017 | US-017 | AC-017.3 — Open to Development | — | API / Security | Pending |
-| REQ-017 | US-017 | AC-017.4 — Development to Testing | — | API / Security | Pending |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome | — | API / Security | Pending |
-| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | — | API / Security | Pending |
-| REQ-017 | US-017 | AC-017.7 — Closed Bugs | — | API / Validation | Pending |
-| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | — | API / Validation | Pending |
-| REQ-017 | US-017 | AC-017.9 — Status Update Timestamp | — | API | Pending |
+| REQ-017 | US-017 | AC-017.1 — Bug Status | `test_new_bug_starts_in_triage` | API | Covered |
+| REQ-017 | US-017 | AC-017.1 — Bug Status | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_project_owner_or_qa_can_move_bug_from_triage_to_open` | API | Covered |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_developer_cannot_move_bug_from_triage_to_open` | API / Security | Covered |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_bug_without_assignee_cannot_move_from_triage_to_open` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_assigned_developer_can_move_bug_from_open_to_development` | API | Covered |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_qa_analyst_cannot_move_bug_from_open_to_development` | API / Security | Covered |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_non_assigned_developer_cannot_move_bug_from_open_to_development` | API / Security | Covered |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_assigned_developer_can_move_bug_from_development_to_testing` | API | Covered |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_non_assigned_developer_cannot_move_bug_from_development_to_testing` | API / Security | Covered |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_bug_cannot_move_to_testing_with_developer_assignee` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_pass_bug_and_close_it` | API | Covered |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_fail_bug_and_return_it_to_development` | API | Covered |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_non_assigned_qa_cannot_record_testing_outcome` | API / Security | Covered |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_testing_outcome_is_required` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_invalid_testing_outcome_is_rejected` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Covered |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Covered |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_bug_cannot_be_closed_without_resolution` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_fixed_resolution_cannot_be_manually_selected_when_closing_bug` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.7 — Closed Bugs | `test_closed_bug_cannot_be_moved_to_another_status` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.7 — Closed Bugs | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_triage_to_development` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_open_to_testing` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_development_back_to_open` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_open` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_triage` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | — | UI | Pending |
+| REQ-017 | US-017 | AC-017.9 — Status Update Timestamp | `test_changing_bug_status_updates_last_updated_timestamp` | API | Covered |
 
-### REQ-017 — Bug Lifecycle
 
-| REQ     | US     | AC                                    | Automated Test | Test Type        | Status  |
-| ------- | ------ | ------------------------------------- | -------------- | ---------------- | ------- |
-| REQ-017 | US-017 | AC-017.1 — Bug Status                 | —              | API / Validation | Pending |
-| REQ-017 | US-017 | AC-017.2 — Triage to Open             | —              | API / Security   | Pending |
-| REQ-017 | US-017 | AC-017.3 — Open to Development        | —              | API / Security   | Pending |
-| REQ-017 | US-017 | AC-017.4 — Development to Testing     | —              | API / Security   | Pending |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome            | —              | API / Security   | Pending |
-| REQ-017 | US-017 | AC-017.6 — Closed Bugs                | —              | API / Validation | Pending |
-| REQ-017 | US-017 | AC-017.7 — Invalid Status Transitions | —              | API / Validation | Pending |
-| REQ-017 | US-017 | AC-017.8 — Status Update Timestamp    | —              | API              | Pending |
+
+
 
 
 

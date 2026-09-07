@@ -1,3 +1,4 @@
+from typing import Literal
 from pydantic import BaseModel, EmailStr, field_validator
 
 
@@ -90,4 +91,13 @@ class BugUpdate(BaseModel):
         if priority is not None and priority not in ["High", "Medium", "Low"]:
             raise ValueError("Invalid priority.")
         return priority
+
+
+class BugStatusUpdate(BaseModel):
+    status: Literal["Triage", "Open", "Development", "Testing", "Closed"]
+    assignee_id: int | None = None
+    testing_outcome: Literal["Passed", "Failed"] | None = None
+    resolution: Literal["Won't Fix", "Duplicate", "Not a Bug"] | None = None
+
+
 

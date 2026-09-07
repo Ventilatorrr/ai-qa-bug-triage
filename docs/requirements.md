@@ -487,7 +487,7 @@ The system shall manage bug reports through the defined bug lifecycle and record
 
 ### US-017 — Manage Bug Status
 
-As a project member with the appropriate permissions, I want bugs to progress through a defined lifecycle so that their current state and next responsibility are clear.ok
+As a project member with the appropriate permissions, I want bugs to progress through a defined lifecycle so that their current state and next responsibility are clear.
 
 ### Acceptance Criteria
 
