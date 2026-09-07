@@ -2,8 +2,13 @@ const params = new URLSearchParams(window.location.search);
 const projectId = params.get("id");
 
 const projectName = document.querySelector("#project-name");
+
 const membersContainer = document.querySelector("#members");
-const message = document.querySelector("#message");
+const memberMessage = document.querySelector("#member-message");
+const bugMessage = document.querySelector("#bug-message");
+
+const membersContent = document.querySelector("#members-content");
+const toggleMembersButton = document.querySelector("#toggle-members");
 
 const memberManagement = document.querySelector("#member-management");
 const showMemberFormButton = document.querySelector("#show-member-form");
@@ -30,14 +35,17 @@ const bugFixVersionInput = document.querySelector("#bug-fix-version");
 
 const accessToken = localStorage.getItem("access_token");
 
+
 function getCurrentUserId() {
     if (!accessToken) {
         return null;
     }
 
     const payload = accessToken.split(".")[1];
+
     return JSON.parse(atob(payload)).user_id;
 }
+
 
 async function loadProject() {
     const response = await fetch(`/projects/${projectId}`, {
@@ -51,9 +59,10 @@ async function loadProject() {
     if (response.ok) {
         projectName.textContent = data.name;
     } else {
-        message.textContent = data.detail;
+        bugMessage.textContent = data.detail;
     }
 }
+
 
 async function loadMembers() {
     const response = await fetch(`/projects/${projectId}/members`, {
@@ -65,8 +74,8 @@ async function loadMembers() {
     const data = await response.json();
 
     if (!response.ok) {
-        message.textContent = data.detail;
-        return;
+        memberMessage.textContent = data.detail;
+        return null;
     }
 
     membersContainer.innerHTML = "";
@@ -83,18 +92,22 @@ async function loadMembers() {
 
     data.forEach(function (member) {
         const memberElement = document.createElement("div");
+
         memberElement.className = "project";
 
         const memberInfo = document.createElement("div");
 
         const email = document.createElement("strong");
+
         email.textContent = member.email;
 
         const role = document.createElement("span");
+
         role.textContent = ` (${member.role})`;
 
         memberInfo.appendChild(email);
         memberInfo.appendChild(role);
+
         memberElement.appendChild(memberInfo);
 
         if (
@@ -103,6 +116,7 @@ async function loadMembers() {
             member.role !== "Project Owner"
         ) {
             const removeButton = document.createElement("button");
+
             removeButton.textContent = "Remove";
             removeButton.type = "button";
 
@@ -116,8 +130,16 @@ async function loadMembers() {
         membersContainer.appendChild(memberElement);
     });
 
+    updateMembersToggle(data.length);
+
     return currentUser;
 }
+
+
+function updateMembersToggle(memberCount) {
+    toggleMembersButton.textContent = `Show Members (${memberCount})`;
+}
+
 
 async function addMember(event) {
     event.preventDefault();
@@ -142,12 +164,17 @@ async function addMember(event) {
         memberForm.reset();
         memberForm.hidden = true;
         showMemberFormButton.hidden = false;
-        message.textContent = "";
-        loadMembers();
+
+        memberMessage.textContent = "Member added successfully.";
+
+        await loadMembers();
+        await loadBugs();
+        await loadBugAssignees();
     } else {
-        message.textContent = data.detail;
+        memberMessage.textContent = data.detail;
     }
 }
+
 
 async function removeMember(member) {
     const confirmed = confirm(
@@ -171,12 +198,16 @@ async function removeMember(member) {
     const data = await response.json();
 
     if (response.ok) {
-        message.textContent = "";
-        loadMembers();
+        memberMessage.textContent = "Member removed successfully.";
+
+        await loadMembers();
+        await loadBugs();
+        await loadBugAssignees();
     } else {
-        message.textContent = data.detail;
+        memberMessage.textContent = data.detail;
     }
 }
+
 
 async function loadBugAssignees() {
     const response = await fetch(`/projects/${projectId}/members`, {
@@ -188,15 +219,17 @@ async function loadBugAssignees() {
     const data = await response.json();
 
     if (!response.ok) {
-        message.textContent = data.detail;
+        bugMessage.textContent = data.detail;
         return;
     }
 
     bugAssigneeInput.innerHTML = "";
 
     const unassignedOption = document.createElement("option");
+
     unassignedOption.value = "";
     unassignedOption.textContent = "Unassigned";
+
     bugAssigneeInput.appendChild(unassignedOption);
 
     data.forEach(function (member) {
@@ -205,12 +238,15 @@ async function loadBugAssignees() {
             member.role === "Developer"
         ) {
             const option = document.createElement("option");
+
             option.value = member.user_id;
             option.textContent = `${member.email} (${member.role})`;
+
             bugAssigneeInput.appendChild(option);
         }
     });
 }
+
 
 async function updateBugAssigneeVisibility() {
     const membersResponse = await fetch(`/projects/${projectId}/members`, {
@@ -239,7 +275,8 @@ async function updateBugAssigneeVisibility() {
         currentUser &&
         (
             currentUser.role === "Project Owner" ||
-            currentUser.role === "QA Analyst"
+            currentUser.role === "QA Analyst" ||
+            currentUser.role === "Developer"
         )
     ) {
         bugAssigneeInput.hidden = false;
@@ -250,19 +287,158 @@ async function updateBugAssigneeVisibility() {
     }
 }
 
+
+async function loadBugs() {
+    const response = await fetch(`/projects/${projectId}/bugs`, {
+        headers: {
+            "Authorization": "Bearer " + accessToken
+        }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        bugMessage.textContent = data.detail;
+        return;
+    }
+
+    bugsContainer.innerHTML = "";
+
+    if (data.length === 0) {
+        const emptyMessage = document.createElement("p");
+
+        emptyMessage.className = "page-description";
+        emptyMessage.textContent = "No bugs in this project.";
+
+        bugsContainer.appendChild(emptyMessage);
+
+        return;
+    }
+
+    const table = document.createElement("table");
+
+    table.className = "bug-table";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+
+    const headers = [
+        "Bug ID",
+        "Title",
+        "Severity",
+        "Priority",
+        "Status",
+        "Assignee",
+        "Last Updated"
+    ];
+
+    headers.forEach(function (headerText) {
+        const th = document.createElement("th");
+
+        th.textContent = headerText;
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    data.forEach(function (bug) {
+        const row = document.createElement("tr");
+
+        const bugIdCell = document.createElement("td");
+        const bugLink = document.createElement("a");
+
+        bugLink.href = `/bugs.html?project_id=${projectId}&bug_id=${bug.id}`;
+        bugLink.textContent = `BUG-${bug.id}`;
+        bugLink.className = "bug-link";
+
+        bugIdCell.appendChild(bugLink);
+
+        const titleCell = document.createElement("td");
+        titleCell.textContent = bug.title;
+
+        const severityCell = document.createElement("td");
+        severityCell.textContent = bug.severity || "—";
+
+        const priorityCell = document.createElement("td");
+        priorityCell.textContent = bug.priority || "—";
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = bug.status;
+
+        const assigneeCell = document.createElement("td");
+        assigneeCell.textContent = bug.assignee_id
+            ? `User ${bug.assignee_id}`
+            : "Unassigned";
+
+        const updatedCell = document.createElement("td");
+        updatedCell.textContent = formatDateTime(bug.updated_at);
+
+        row.appendChild(bugIdCell);
+        row.appendChild(titleCell);
+        row.appendChild(severityCell);
+        row.appendChild(priorityCell);
+        row.appendChild(statusCell);
+        row.appendChild(assigneeCell);
+        row.appendChild(updatedCell);
+
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    bugsContainer.appendChild(table);
+}
+
+
+function formatDateTime(value) {
+    if (!value) {
+        return "—";
+    }
+
+    const date = new Date(value);
+
+    return date.toLocaleString();
+}
+
+
+toggleMembersButton.addEventListener("click", function () {
+    const isExpanded = toggleMembersButton.getAttribute("aria-expanded") === "true";
+
+    membersContent.hidden = isExpanded;
+
+    toggleMembersButton.setAttribute(
+        "aria-expanded",
+        String(!isExpanded)
+    );
+
+    const memberCount = membersContainer.children.length;
+
+    if (isExpanded) {
+        toggleMembersButton.textContent = `Show Members (${memberCount})`;
+    } else {
+        toggleMembersButton.textContent = `Hide Members (${memberCount})`;
+    }
+});
+
+
 showMemberFormButton.addEventListener("click", function () {
     memberForm.hidden = false;
     showMemberFormButton.hidden = true;
 });
 
+
 cancelMemberFormButton.addEventListener("click", function () {
     memberForm.reset();
     memberForm.hidden = true;
     showMemberFormButton.hidden = false;
-    message.textContent = "";
+    memberMessage.textContent = "";
 });
 
+
 memberForm.addEventListener("submit", addMember);
+
 
 showBugFormButton.addEventListener("click", async function () {
     bugForm.hidden = false;
@@ -272,12 +448,14 @@ showBugFormButton.addEventListener("click", async function () {
     await updateBugAssigneeVisibility();
 });
 
+
 cancelBugFormButton.addEventListener("click", function () {
     bugForm.reset();
     bugForm.hidden = true;
     showBugFormButton.hidden = false;
-    message.textContent = "";
+    bugMessage.textContent = "";
 });
+
 
 bugForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -312,15 +490,21 @@ bugForm.addEventListener("submit", async function (event) {
         bugForm.reset();
         bugForm.hidden = true;
         showBugFormButton.hidden = false;
-        message.textContent = `Bug #${data.id} created successfully.`;
+
+        bugMessage.textContent = `Bug #${data.id} created successfully.`;
+
+        await loadBugs();
     } else {
-        message.textContent = data.detail;
+        bugMessage.textContent = data.detail;
     }
 });
+
 
 if (!accessToken) {
     window.location.href = "/login.html";
 } else {
     loadProject();
     loadMembers();
+    loadBugs();
 }
+
