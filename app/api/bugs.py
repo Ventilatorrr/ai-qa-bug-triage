@@ -4,7 +4,7 @@ from fastapi import APIRouter, Header, HTTPException
 
 from app.api.auth import get_current_user_id
 from app.database import get_connection
-from app.schemas import BugCreate, BugUpdate
+from app.schemas import BugCreate, BugStatusUpdate, BugUpdate
 
 
 router = APIRouter(tags=["Bugs"])
@@ -79,11 +79,12 @@ def create_bug(
                 assignee_id,
                 fix_version,
                 status,
+                resolution,
                 created_by,
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 project_id,
@@ -98,6 +99,7 @@ def create_bug(
                 assignee_id,
                 bug.fix_version,
                 "Triage",
+                None,
                 user_id,
                 now,
                 now
@@ -125,6 +127,7 @@ def create_bug(
         "assignee_id": assignee_id,
         "fix_version": bug.fix_version,
         "status": "Triage",
+        "resolution": None,
         "created_by": user_id,
         "created_at": now,
         "updated_at": now
@@ -225,6 +228,7 @@ def get_bug(
                 severity,
                 priority,
                 status,
+                resolution,
                 assignee_id,
                 affected_version,
                 fix_version,
@@ -257,19 +261,20 @@ def get_bug(
         "severity": row[3],
         "priority": row[4],
         "status": row[5],
-        "assignee_id": row[6],
-        "affected_version": row[7],
-        "fix_version": row[8],
-        "description": row[9],
-        "steps_to_reproduce": row[10],
-        "expected_result": row[11],
-        "actual_result": row[12],
-        "created_by": row[13],
-        "created_at": row[14],
-        "updated_at": row[15]
+        "resolution": row[6],
+        "assignee_id": row[7],
+        "affected_version": row[8],
+        "fix_version": row[9],
+        "description": row[10],
+        "steps_to_reproduce": row[11],
+        "expected_result": row[12],
+        "actual_result": row[13],
+        "created_by": row[14],
+        "created_at": row[15],
+        "updated_at": row[16]
     }
 
-    
+
 @router.patch("/projects/{project_id}/bugs/{bug_id}")
 def update_bug(
     project_id: int,
@@ -298,7 +303,7 @@ def update_bug(
 
         existing_bug = conn.execute(
             """
-            SELECT id
+            SELECT id, status, assignee_id
             FROM bugs
             WHERE id = ? AND project_id = ?
             """,
@@ -311,6 +316,8 @@ def update_bug(
                 detail="Bug not found."
             )
 
+        current_status = existing_bug[1]
+
         updates = bug.model_dump(exclude_unset=True)
 
         if not updates:
@@ -320,6 +327,12 @@ def update_bug(
             )
 
         if "assignee_id" in updates:
+            if current_status == "Closed":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Closed bugs cannot be reassigned."
+                )
+
             if membership[0] not in ["Project Owner", "QA Analyst", "Developer"]:
                 raise HTTPException(
                     status_code=403,
@@ -327,6 +340,26 @@ def update_bug(
                 )
 
             assignee_id = updates["assignee_id"]
+
+            if current_status == "Open" and assignee_id is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Open bugs must have an assignee."
+                )
+
+            if current_status == "Development":
+                if assignee_id is None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Development bugs must have a Developer assigned."
+                    )
+
+            if current_status == "Testing":
+                if assignee_id is None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Testing bugs must have a QA Analyst assigned."
+                    )
 
             if assignee_id is not None:
                 assignee = conn.execute(
@@ -349,6 +382,18 @@ def update_bug(
                     raise HTTPException(
                         status_code=422,
                         detail="Invalid bug assignee."
+                    )
+
+                if current_status == "Development" and assignee[0] != "Developer":
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Development bugs must have a Developer assigned."
+                    )
+
+                if current_status == "Testing" and assignee[0] != "QA Analyst":
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Testing bugs must have a QA Analyst assigned."
                     )
 
         fields = []
@@ -388,6 +433,7 @@ def update_bug(
                 severity,
                 priority,
                 status,
+                resolution,
                 assignee_id,
                 affected_version,
                 fix_version,
@@ -414,16 +460,399 @@ def update_bug(
         "severity": row[3],
         "priority": row[4],
         "status": row[5],
-        "assignee_id": row[6],
-        "affected_version": row[7],
-        "fix_version": row[8],
-        "description": row[9],
-        "steps_to_reproduce": row[10],
-        "expected_result": row[11],
-        "actual_result": row[12],
-        "created_by": row[13],
-        "created_at": row[14],
-        "updated_at": row[15]
+        "resolution": row[6],
+        "assignee_id": row[7],
+        "affected_version": row[8],
+        "fix_version": row[9],
+        "description": row[10],
+        "steps_to_reproduce": row[11],
+        "expected_result": row[12],
+        "actual_result": row[13],
+        "created_by": row[14],
+        "created_at": row[15],
+        "updated_at": row[16]
+    }
+
+
+@router.patch("/projects/{project_id}/bugs/{bug_id}/status")
+def update_bug_status(
+    project_id: int,
+    bug_id: int,
+    status_update: BugStatusUpdate,
+    authorization: str | None = Header(default=None)
+):
+    user_id = get_current_user_id(authorization)
+    conn = get_connection()
+
+    try:
+        membership = conn.execute(
+            """
+            SELECT role
+            FROM project_members
+            WHERE project_id = ? AND user_id = ?
+            """,
+            (project_id, user_id)
+        ).fetchone()
+
+        if membership is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found."
+            )
+
+        bug = conn.execute(
+            """
+            SELECT
+                id,
+                status,
+                resolution,
+                assignee_id
+            FROM bugs
+            WHERE id = ? AND project_id = ?
+            """,
+            (bug_id, project_id)
+        ).fetchone()
+
+        if bug is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Bug not found."
+            )
+
+        current_status = bug[1]
+        current_resolution = bug[2]
+        current_assignee_id = bug[3]
+
+        requested_status = status_update.status
+        requested_assignee_id = status_update.assignee_id
+        testing_outcome = status_update.testing_outcome
+        requested_resolution = status_update.resolution
+
+        if current_status == "Closed":
+            raise HTTPException(
+                status_code=422,
+                detail="Closed bugs cannot be moved to another status."
+            )
+
+        if current_status == "Triage":
+            if requested_status != "Open":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid bug status transition."
+                )
+
+            if membership[0] not in ["Project Owner", "QA Analyst"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You are not authorized to move bugs from Triage to Open."
+                )
+
+            assignee_id = current_assignee_id
+
+            if assignee_id is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Bug must have a QA Analyst or Developer assigned before it can be moved to Open."
+                )
+
+            assignee = conn.execute(
+                """
+                SELECT role
+                FROM project_members
+                WHERE project_id = ?
+                AND user_id = ?
+                """,
+                (project_id, assignee_id)
+            ).fetchone()
+
+            if assignee is None or assignee[0] not in ["QA Analyst", "Developer"]:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Bug must have a QA Analyst or Developer assigned before it can be moved to Open."
+                )
+
+            if requested_assignee_id is not None or testing_outcome is not None or requested_resolution is not None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid status update data."
+                )
+
+            new_assignee_id = current_assignee_id
+            new_resolution = current_resolution
+
+        elif current_status == "Open":
+            if requested_status != "Development":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid bug status transition."
+                )
+
+            if membership[0] != "Developer" or current_assignee_id != user_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only the assigned Developer can move a bug from Open to Development."
+                )
+
+            assignee = conn.execute(
+                """
+                SELECT role
+                FROM project_members
+                WHERE project_id = ?
+                AND user_id = ?
+                """,
+                (project_id, current_assignee_id)
+            ).fetchone()
+
+            if assignee is None or assignee[0] != "Developer":
+                raise HTTPException(
+                    status_code=422,
+                    detail="A Developer must be assigned before the bug can be moved to Development."
+                )
+
+            if requested_assignee_id is not None or testing_outcome is not None or requested_resolution is not None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid status update data."
+                )
+
+            new_assignee_id = current_assignee_id
+            new_resolution = current_resolution
+
+        elif current_status == "Development":
+            if requested_status == "Testing":
+                if membership[0] != "Developer" or current_assignee_id != user_id:
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Only the assigned Developer can move a bug from Development to Testing."
+                    )
+
+                if requested_assignee_id is None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="A QA Analyst must be selected before the bug can be moved to Testing."
+                    )
+
+                qa = conn.execute(
+                    """
+                    SELECT role
+                    FROM project_members
+                    WHERE project_id = ?
+                    AND user_id = ?
+                    """,
+                    (project_id, requested_assignee_id)
+                ).fetchone()
+
+                if qa is None or qa[0] != "QA Analyst":
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid QA Analyst assignee."
+                    )
+
+                if testing_outcome is not None or requested_resolution is not None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid status update data."
+                    )
+
+                new_assignee_id = requested_assignee_id
+                new_resolution = current_resolution
+
+            elif requested_status == "Closed":
+                if membership[0] == "Developer":
+                    if current_assignee_id != user_id:
+                        raise HTTPException(
+                            status_code=403,
+                            detail="Only the assigned Developer can close this bug."
+                        )
+                elif membership[0] != "Project Owner":
+                    raise HTTPException(
+                        status_code=403,
+                        detail="You are not authorized to close this bug."
+                    )
+
+                if requested_resolution is None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Resolution is required when closing a bug without fixing it."
+                    )
+
+                if requested_resolution not in ["Won't Fix", "Duplicate", "Not a Bug"]:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid bug resolution."
+                    )
+
+                if requested_assignee_id is not None or testing_outcome is not None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid status update data."
+                    )
+
+                new_assignee_id = current_assignee_id
+                new_resolution = requested_resolution
+
+            else:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid bug status transition."
+                )
+
+        elif current_status == "Testing":
+            if requested_status != "Closed" and requested_status != "Development":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid bug status transition."
+                )
+
+            if membership[0] != "QA Analyst" or current_assignee_id != user_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only the assigned QA Analyst can record the testing outcome."
+                )
+
+            if testing_outcome is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Testing outcome is required."
+                )
+
+            if testing_outcome == "Passed":
+                if requested_status != "Closed":
+                    raise HTTPException(
+                        status_code=422,
+                        detail="A passed bug must be closed."
+                    )
+
+                if requested_assignee_id is not None or requested_resolution is not None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid status update data."
+                    )
+
+                new_assignee_id = current_assignee_id
+                new_resolution = "Fixed"
+
+            elif testing_outcome == "Failed":
+                if requested_status != "Development":
+                    raise HTTPException(
+                        status_code=422,
+                        detail="A failed bug must return to Development."
+                    )
+
+                if requested_assignee_id is None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="A Developer must be assigned when testing fails."
+                    )
+
+                developer = conn.execute(
+                    """
+                    SELECT role
+                    FROM project_members
+                    WHERE project_id = ?
+                    AND user_id = ?
+                    """,
+                    (project_id, requested_assignee_id)
+                ).fetchone()
+
+                if developer is None or developer[0] != "Developer":
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid Developer assignee."
+                    )
+
+                if requested_resolution is not None:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid bug resolution."
+                    )
+
+                new_assignee_id = requested_assignee_id
+                new_resolution = None
+
+            else:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid testing outcome."
+                )
+
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail="Invalid bug status transition."
+            )
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        conn.execute(
+            """
+            UPDATE bugs
+            SET
+                status = ?,
+                assignee_id = ?,
+                resolution = ?,
+                updated_at = ?
+            WHERE id = ? AND project_id = ?
+            """,
+            (
+                requested_status,
+                new_assignee_id,
+                new_resolution,
+                now,
+                bug_id,
+                project_id
+            )
+        )
+
+        conn.commit()
+
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                project_id,
+                title,
+                severity,
+                priority,
+                status,
+                resolution,
+                assignee_id,
+                affected_version,
+                fix_version,
+                description,
+                steps_to_reproduce,
+                expected_result,
+                actual_result,
+                created_by,
+                created_at,
+                updated_at
+            FROM bugs
+            WHERE id = ? AND project_id = ?
+            """,
+            (bug_id, project_id)
+        ).fetchone()
+
+    finally:
+        conn.close()
+
+    return {
+        "id": row[0],
+        "project_id": row[1],
+        "title": row[2],
+        "severity": row[3],
+        "priority": row[4],
+        "status": row[5],
+        "resolution": row[6],
+        "assignee_id": row[7],
+        "affected_version": row[8],
+        "fix_version": row[9],
+        "description": row[10],
+        "steps_to_reproduce": row[11],
+        "expected_result": row[12],
+        "actual_result": row[13],
+        "created_by": row[14],
+        "created_at": row[15],
+        "updated_at": row[16]
     }
 
 
