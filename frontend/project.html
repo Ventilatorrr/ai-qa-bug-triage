@@ -24,55 +24,77 @@
     </header>
 
     <main>
-        <section>
-            <h2 id="project-name"></h2>
+        <section class="members-section">
+            <div class="section-header">
+                <h2 id="project-name"></h2>
 
-            <h3>Project Members</h3>
+                <button
+                    id="toggle-members"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="members-content">
+                    Show Members
+                </button>
+            </div>
 
-            <p id="message"></p>
+            <div id="members-content" hidden>
+                <h3>Project Members</h3>
 
-            <div id="members"></div>
+                <p id="member-message" class="section-message"></p>
 
-            <div id="member-management" hidden>
-                <button id="show-member-form" type="button">Add Member</button>
+                <div id="members"></div>
 
-                <form id="member-form" hidden>
-                    <label for="member-email">Email:</label>
+                <div id="member-management" hidden>
+                    <button id="show-member-form" type="button">
+                        Add Member
+                    </button>
 
-                    <input
-                        type="email"
-                        id="member-email"
-                        class="form-input"
-                        name="member_email"
-                        placeholder="Enter member email"
-                        autocomplete="email"
-                        required>
+                    <form id="member-form" hidden>
+                        <label for="member-email">Email:</label>
 
-                    <label for="member-role">Role:</label>
+                        <input
+                            type="email"
+                            id="member-email"
+                            class="form-input"
+                            name="member_email"
+                            placeholder="Enter member email"
+                            autocomplete="email"
+                            required>
 
-                    <select
-                        id="member-role"
-                        class="form-input"
-                        name="member_role"
-                        required>
-                        <option value="QA Analyst">QA Analyst</option>
-                        <option value="Developer">Developer</option>
-                    </select>
+                        <label for="member-role">Role:</label>
 
-                    <div class="form-actions">
-                        <button type="submit">Add Member</button>
-                        <button id="cancel-member-form" type="button">Cancel</button>
-                    </div>
-                </form>
+                        <select
+                            id="member-role"
+                            class="form-input"
+                            name="member_role"
+                            required>
+                            <option value="QA Analyst">QA Analyst</option>
+                            <option value="Developer">Developer</option>
+                        </select>
+
+                        <div class="form-actions">
+                            <button type="submit">Add Member</button>
+                            <button
+                                id="cancel-member-form"
+                                type="button">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </section>
 
-        <section>
-            <h3>Bugs</h3>
+        <section class="bugs-section">
+            <div class="section-header">
+                <h3>Bugs</h3>
 
-            <div class="project-actions">
-                <button id="show-bug-form" type="button">New Bug</button>
+                <button id="show-bug-form" type="button">
+                    New Bug
+                </button>
             </div>
+
+            <p id="bug-message" class="section-message"></p>
 
             <form id="bug-form" hidden>
                 <label for="bug-title">Title:</label>
@@ -85,7 +107,9 @@
                     placeholder="Enter bug title"
                     required>
 
-                <label for="bug-affected-version">Affected Version:</label>
+                <label for="bug-affected-version">
+                    Affected Version:
+                </label>
 
                 <input
                     type="text"
@@ -98,15 +122,17 @@
 
                 <textarea
                     id="bug-description"
-                    class="form-input"
+                    class="form-input bug-textarea"
                     name="description"
                     placeholder="Describe the bug"></textarea>
 
-                <label for="bug-steps">Steps to Reproduce:</label>
+                <label for="bug-steps">
+                    Steps to Reproduce:
+                </label>
 
                 <textarea
                     id="bug-steps"
-                    class="form-input"
+                    class="form-input bug-textarea bug-steps-textarea"
                     name="steps_to_reproduce"
                     placeholder="Describe how to reproduce the bug"></textarea>
 
@@ -170,7 +196,12 @@
 
                 <div class="form-actions">
                     <button type="submit">Create Bug</button>
-                    <button id="cancel-bug-form" type="button">Cancel</button>
+
+                    <button
+                        id="cancel-bug-form"
+                        type="button">
+                        Cancel
+                    </button>
                 </div>
             </form>
 
@@ -188,3 +219,4 @@
     <script src="js/project.js"></script>
 </body>
 </html>
+
