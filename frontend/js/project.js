@@ -1,4 +1,5 @@
 const params = new URLSearchParams(window.location.search);
+
 const projectId = params.get("id");
 
 const projectName = document.querySelector("#project-name");
@@ -14,12 +15,14 @@ const memberManagement = document.querySelector("#member-management");
 const showMemberFormButton = document.querySelector("#show-member-form");
 const memberForm = document.querySelector("#member-form");
 const cancelMemberFormButton = document.querySelector("#cancel-member-form");
+
 const memberEmailInput = document.querySelector("#member-email");
 const memberRoleInput = document.querySelector("#member-role");
 
 const showBugFormButton = document.querySelector("#show-bug-form");
 const bugForm = document.querySelector("#bug-form");
 const cancelBugFormButton = document.querySelector("#cancel-bug-form");
+
 const bugsContainer = document.querySelector("#bugs");
 
 const bugTitleInput = document.querySelector("#bug-title");
@@ -118,6 +121,7 @@ async function loadMembers() {
             const removeButton = document.createElement("button");
 
             removeButton.textContent = "Remove";
+
             removeButton.type = "button";
 
             removeButton.addEventListener("click", function () {
@@ -130,14 +134,19 @@ async function loadMembers() {
         membersContainer.appendChild(memberElement);
     });
 
-    updateMembersToggle(data.length);
+    updateMembersToggle();
 
     return currentUser;
 }
 
 
-function updateMembersToggle(memberCount) {
-    toggleMembersButton.textContent = `Show Members (${memberCount})`;
+function updateMembersToggle() {
+    const isExpanded =
+        toggleMembersButton.getAttribute("aria-expanded") === "true";
+
+    toggleMembersButton.textContent = isExpanded
+        ? "Hide Members"
+        : "Show Members";
 }
 
 
@@ -151,10 +160,12 @@ async function addMember(event) {
 
     const response = await fetch(`/projects/${projectId}/members`, {
         method: "POST",
+
         headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + accessToken
         },
+
         body: JSON.stringify(member)
     });
 
@@ -162,13 +173,18 @@ async function addMember(event) {
 
     if (response.ok) {
         memberForm.reset();
+
         memberForm.hidden = true;
+
         showMemberFormButton.hidden = false;
 
-        memberMessage.textContent = "Member added successfully.";
+        memberMessage.textContent =
+            "Member added successfully.";
 
         await loadMembers();
+
         await loadBugs();
+
         await loadBugAssignees();
     } else {
         memberMessage.textContent = data.detail;
@@ -189,6 +205,7 @@ async function removeMember(member) {
         `/projects/${projectId}/members/${member.user_id}`,
         {
             method: "DELETE",
+
             headers: {
                 "Authorization": "Bearer " + accessToken
             }
@@ -198,10 +215,13 @@ async function removeMember(member) {
     const data = await response.json();
 
     if (response.ok) {
-        memberMessage.textContent = "Member removed successfully.";
+        memberMessage.textContent =
+            "Member removed successfully.";
 
         await loadMembers();
+
         await loadBugs();
+
         await loadBugAssignees();
     } else {
         memberMessage.textContent = data.detail;
@@ -228,6 +248,7 @@ async function loadBugAssignees() {
     const unassignedOption = document.createElement("option");
 
     unassignedOption.value = "";
+
     unassignedOption.textContent = "Unassigned";
 
     bugAssigneeInput.appendChild(unassignedOption);
@@ -240,7 +261,9 @@ async function loadBugAssignees() {
             const option = document.createElement("option");
 
             option.value = member.user_id;
-            option.textContent = `${member.email} (${member.role})`;
+
+            option.textContent =
+                `${member.email} (${member.role})`;
 
             bugAssigneeInput.appendChild(option);
         }
@@ -249,11 +272,14 @@ async function loadBugAssignees() {
 
 
 async function updateBugAssigneeVisibility() {
-    const membersResponse = await fetch(`/projects/${projectId}/members`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
+    const membersResponse = await fetch(
+        `/projects/${projectId}/members`,
+        {
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
         }
-    });
+    );
 
     const members = await membersResponse.json();
 
@@ -289,11 +315,14 @@ async function updateBugAssigneeVisibility() {
 
 
 async function loadBugs() {
-    const response = await fetch(`/projects/${projectId}/bugs`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
+    const response = await fetch(
+        `/projects/${projectId}/bugs`,
+        {
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
         }
-    });
+    );
 
     const data = await response.json();
 
@@ -308,7 +337,9 @@ async function loadBugs() {
         const emptyMessage = document.createElement("p");
 
         emptyMessage.className = "page-description";
-        emptyMessage.textContent = "No bugs in this project.";
+
+        emptyMessage.textContent =
+            "No bugs in this project.";
 
         bugsContainer.appendChild(emptyMessage);
 
@@ -320,6 +351,7 @@ async function loadBugs() {
     table.className = "bug-table";
 
     const thead = document.createElement("thead");
+
     const headerRow = document.createElement("tr");
 
     const headers = [
@@ -336,58 +368,115 @@ async function loadBugs() {
         const th = document.createElement("th");
 
         th.textContent = headerText;
+
         headerRow.appendChild(th);
     });
 
     thead.appendChild(headerRow);
+
     table.appendChild(thead);
+
 
     const tbody = document.createElement("tbody");
 
     data.forEach(function (bug) {
         const row = document.createElement("tr");
 
+
+        /* Bug ID */
+
         const bugIdCell = document.createElement("td");
+
         const bugLink = document.createElement("a");
 
-        bugLink.href = `/bugs.html?project_id=${projectId}&bug_id=${bug.id}`;
+        bugLink.href =
+            `/bugs.html?project_id=${projectId}&bug_id=${bug.id}`;
+
         bugLink.textContent = `BUG-${bug.id}`;
+
         bugLink.className = "bug-link";
 
         bugIdCell.appendChild(bugLink);
 
+
+        /* Title */
+
         const titleCell = document.createElement("td");
+
         titleCell.textContent = bug.title;
 
+
+        /* Severity */
+
         const severityCell = document.createElement("td");
+
         severityCell.textContent = bug.severity || "—";
 
+        if (bug.severity) {
+            severityCell.classList.add(
+                `bug-severity-${bug.severity.toLowerCase()}`
+            );
+        }
+
+
+        /* Priority */
+
         const priorityCell = document.createElement("td");
+
         priorityCell.textContent = bug.priority || "—";
 
+        if (bug.priority) {
+            priorityCell.classList.add(
+                `bug-priority-${bug.priority.toLowerCase()}`
+            );
+        }
+
+
+        /* Status */
+
         const statusCell = document.createElement("td");
+
         statusCell.textContent = bug.status;
 
+
+        /* Assignee */
+
         const assigneeCell = document.createElement("td");
+
         assigneeCell.textContent = bug.assignee_id
             ? `User ${bug.assignee_id}`
             : "Unassigned";
 
+
+        /* Last Updated */
+
         const updatedCell = document.createElement("td");
-        updatedCell.textContent = formatDateTime(bug.updated_at);
+
+        updatedCell.textContent =
+            formatDateTime(bug.updated_at);
+
+
+        /* Add cells */
 
         row.appendChild(bugIdCell);
+
         row.appendChild(titleCell);
+
         row.appendChild(severityCell);
+
         row.appendChild(priorityCell);
+
         row.appendChild(statusCell);
+
         row.appendChild(assigneeCell);
+
         row.appendChild(updatedCell);
 
         tbody.appendChild(row);
     });
 
     table.appendChild(tbody);
+
     bugsContainer.appendChild(table);
 }
 
@@ -403,8 +492,13 @@ function formatDateTime(value) {
 }
 
 
+/* =========================================================
+   Members Toggle
+   ========================================================= */
+
 toggleMembersButton.addEventListener("click", function () {
-    const isExpanded = toggleMembersButton.getAttribute("aria-expanded") === "true";
+    const isExpanded =
+        toggleMembersButton.getAttribute("aria-expanded") === "true";
 
     membersContent.hidden = isExpanded;
 
@@ -413,26 +507,28 @@ toggleMembersButton.addEventListener("click", function () {
         String(!isExpanded)
     );
 
-    const memberCount = membersContainer.children.length;
-
-    if (isExpanded) {
-        toggleMembersButton.textContent = `Show Members (${memberCount})`;
-    } else {
-        toggleMembersButton.textContent = `Hide Members (${memberCount})`;
-    }
+    updateMembersToggle();
 });
 
 
+/* =========================================================
+   Member Form
+   ========================================================= */
+
 showMemberFormButton.addEventListener("click", function () {
     memberForm.hidden = false;
+
     showMemberFormButton.hidden = true;
 });
 
 
 cancelMemberFormButton.addEventListener("click", function () {
     memberForm.reset();
+
     memberForm.hidden = true;
+
     showMemberFormButton.hidden = false;
+
     memberMessage.textContent = "";
 });
 
@@ -440,71 +536,116 @@ cancelMemberFormButton.addEventListener("click", function () {
 memberForm.addEventListener("submit", addMember);
 
 
-showBugFormButton.addEventListener("click", async function () {
-    bugForm.hidden = false;
-    showBugFormButton.hidden = true;
+/* =========================================================
+   Bug Form
+   ========================================================= */
 
-    await loadBugAssignees();
-    await updateBugAssigneeVisibility();
-});
+showBugFormButton.addEventListener(
+    "click",
+    async function () {
+        bugForm.hidden = false;
+
+        showBugFormButton.hidden = true;
+
+        await loadBugAssignees();
+
+        await updateBugAssigneeVisibility();
+    }
+);
 
 
 cancelBugFormButton.addEventListener("click", function () {
     bugForm.reset();
+
     bugForm.hidden = true;
+
     showBugFormButton.hidden = false;
+
     bugMessage.textContent = "";
 });
 
 
-bugForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
+bugForm.addEventListener(
+    "submit",
+    async function (event) {
+        event.preventDefault();
 
-    const bug = {
-        title: bugTitleInput.value,
-        affected_version: bugAffectedVersionInput.value || null,
-        description: bugDescriptionInput.value || null,
-        steps_to_reproduce: bugStepsInput.value || null,
-        expected_result: bugExpectedInput.value || null,
-        actual_result: bugActualInput.value || null,
-        severity: bugSeverityInput.value || null,
-        priority: bugPriorityInput.value || null,
-        assignee_id: bugAssigneeInput.value
-            ? Number(bugAssigneeInput.value)
-            : null,
-        fix_version: bugFixVersionInput.value || null
-    };
+        const bug = {
+            title: bugTitleInput.value,
 
-    const response = await fetch(`/projects/${projectId}/bugs`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken
-        },
-        body: JSON.stringify(bug)
-    });
+            affected_version:
+                bugAffectedVersionInput.value || null,
 
-    const data = await response.json();
+            description:
+                bugDescriptionInput.value || null,
 
-    if (response.ok) {
-        bugForm.reset();
-        bugForm.hidden = true;
-        showBugFormButton.hidden = false;
+            steps_to_reproduce:
+                bugStepsInput.value || null,
 
-        bugMessage.textContent = `Bug #${data.id} created successfully.`;
+            expected_result:
+                bugExpectedInput.value || null,
 
-        await loadBugs();
-    } else {
-        bugMessage.textContent = data.detail;
+            actual_result:
+                bugActualInput.value || null,
+
+            severity:
+                bugSeverityInput.value || null,
+
+            priority:
+                bugPriorityInput.value || null,
+
+            assignee_id: bugAssigneeInput.value
+                ? Number(bugAssigneeInput.value)
+                : null,
+
+            fix_version:
+                bugFixVersionInput.value || null
+        };
+
+        const response = await fetch(
+            `/projects/${projectId}/bugs`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + accessToken
+                },
+
+                body: JSON.stringify(bug)
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+            bugForm.reset();
+
+            bugForm.hidden = true;
+
+            showBugFormButton.hidden = false;
+
+            bugMessage.textContent =
+                `Bug #${data.id} created successfully.`;
+
+            await loadBugs();
+        } else {
+            bugMessage.textContent = data.detail;
+        }
     }
-});
+);
 
+
+/* =========================================================
+   Initial Load
+   ========================================================= */
 
 if (!accessToken) {
     window.location.href = "/login.html";
 } else {
     loadProject();
+
     loadMembers();
+
     loadBugs();
 }
-

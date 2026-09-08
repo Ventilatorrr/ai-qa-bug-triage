@@ -19,38 +19,56 @@
 
         <div class="header-right">
             <button id="logout-button" type="button">Logout</button>
-            <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
+
+            <button
+                id="theme-toggle"
+                type="button"
+                aria-label="Switch theme">
+                ☀
+            </button>
         </div>
     </header>
 
     <main>
-        <section class="members-section">
-            <div class="section-header">
-                <h2 id="project-name"></h2>
 
-                <button
-                    id="toggle-members"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="members-content">
-                    Show Members
-                </button>
-            </div>
+        <!-- Project Header -->
+
+        <section class="project-header">
+            <h2 id="project-name"></h2>
+
+            <button
+                id="toggle-members"
+                type="button"
+                aria-expanded="false"
+                aria-controls="members-content">
+                Show Members
+            </button>
+        </section>
+
+
+        <!-- Members -->
+
+        <section class="members-section">
 
             <div id="members-content" hidden>
-                <h3>Project Members</h3>
 
                 <p id="member-message" class="section-message"></p>
 
                 <div id="members"></div>
 
                 <div id="member-management" hidden>
-                    <button id="show-member-form" type="button">
+
+                    <button
+                        id="show-member-form"
+                        type="button">
                         Add Member
                     </button>
 
                     <form id="member-form" hidden>
-                        <label for="member-email">Email:</label>
+
+                        <label for="member-email">
+                            Email:
+                        </label>
 
                         <input
                             type="email"
@@ -61,43 +79,69 @@
                             autocomplete="email"
                             required>
 
-                        <label for="member-role">Role:</label>
+                        <label for="member-role">
+                            Role:
+                        </label>
 
                         <select
                             id="member-role"
                             class="form-input"
                             name="member_role"
                             required>
-                            <option value="QA Analyst">QA Analyst</option>
-                            <option value="Developer">Developer</option>
+                            <option value="QA Analyst">
+                                QA Analyst
+                            </option>
+
+                            <option value="Developer">
+                                Developer
+                            </option>
                         </select>
 
                         <div class="form-actions">
-                            <button type="submit">Add Member</button>
+
+                            <button type="submit">
+                                Add Member
+                            </button>
+
                             <button
                                 id="cancel-member-form"
                                 type="button">
                                 Cancel
                             </button>
+
                         </div>
+
                     </form>
+
                 </div>
+
             </div>
+
         </section>
 
-        <section class="bugs-section">
-            <div class="section-header">
-                <h3>Bugs</h3>
 
-                <button id="show-bug-form" type="button">
+        <!-- Bugs -->
+
+        <section class="bugs-section">
+
+            <div class="new-bug-action">
+
+                <button
+                    id="show-bug-form"
+                    type="button">
                     New Bug
                 </button>
+
             </div>
 
             <p id="bug-message" class="section-message"></p>
 
+
             <form id="bug-form" hidden>
-                <label for="bug-title">Title:</label>
+
+                <label for="bug-title">
+                    Title:
+                </label>
 
                 <input
                     type="text"
@@ -106,6 +150,7 @@
                     name="bug_title"
                     placeholder="Enter bug title"
                     required>
+
 
                 <label for="bug-affected-version">
                     Affected Version:
@@ -118,13 +163,17 @@
                     name="affected_version"
                     placeholder="e.g. 1.2.0">
 
-                <label for="bug-description">Description:</label>
+
+                <label for="bug-description">
+                    Description:
+                </label>
 
                 <textarea
                     id="bug-description"
                     class="form-input bug-textarea"
                     name="description"
                     placeholder="Describe the bug"></textarea>
+
 
                 <label for="bug-steps">
                     Steps to Reproduce:
@@ -136,7 +185,10 @@
                     name="steps_to_reproduce"
                     placeholder="Describe how to reproduce the bug"></textarea>
 
-                <label for="bug-expected">Expected Result:</label>
+
+                <label for="bug-expected">
+                    Expected Result:
+                </label>
 
                 <textarea
                     id="bug-expected"
@@ -144,7 +196,10 @@
                     name="expected_result"
                     placeholder="What should happen?"></textarea>
 
-                <label for="bug-actual">Actual Result:</label>
+
+                <label for="bug-actual">
+                    Actual Result:
+                </label>
 
                 <textarea
                     id="bug-actual"
@@ -152,40 +207,82 @@
                     name="actual_result"
                     placeholder="What actually happens?"></textarea>
 
-                <label for="bug-severity">Severity:</label>
+
+                <label for="bug-severity">
+                    Severity:
+                </label>
 
                 <select
                     id="bug-severity"
                     class="form-input"
                     name="severity">
-                    <option value="">Select severity</option>
-                    <option value="Blocker">Blocker</option>
-                    <option value="Major">Major</option>
-                    <option value="Minor">Minor</option>
+
+                    <option value="">
+                        Select severity
+                    </option>
+
+                    <option value="Blocker">
+                        Blocker
+                    </option>
+
+                    <option value="Major">
+                        Major
+                    </option>
+
+                    <option value="Minor">
+                        Minor
+                    </option>
+
                 </select>
 
-                <label for="bug-priority">Priority:</label>
+
+                <label for="bug-priority">
+                    Priority:
+                </label>
 
                 <select
                     id="bug-priority"
                     class="form-input"
                     name="priority">
-                    <option value="">Select priority</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
+
+                    <option value="">
+                        Select priority
+                    </option>
+
+                    <option value="High">
+                        High
+                    </option>
+
+                    <option value="Medium">
+                        Medium
+                    </option>
+
+                    <option value="Low">
+                        Low
+                    </option>
+
                 </select>
 
-                <label for="bug-assignee">Assignee:</label>
+
+                <label for="bug-assignee">
+                    Assignee:
+                </label>
 
                 <select
                     id="bug-assignee"
                     class="form-input"
                     name="assignee_id">
-                    <option value="">Unassigned</option>
+
+                    <option value="">
+                        Unassigned
+                    </option>
+
                 </select>
 
-                <label for="bug-fix-version">Fix Version:</label>
+
+                <label for="bug-fix-version">
+                    Fix Version:
+                </label>
 
                 <input
                     type="text"
@@ -194,29 +291,44 @@
                     name="fix_version"
                     placeholder="e.g. 1.3.0">
 
+
                 <div class="form-actions">
-                    <button type="submit">Create Bug</button>
+
+                    <button type="submit">
+                        Create Bug
+                    </button>
 
                     <button
                         id="cancel-bug-form"
                         type="button">
                         Cancel
                     </button>
+
                 </div>
+
             </form>
 
+
             <div id="bugs"></div>
+
         </section>
+
     </main>
 
+
     <footer>
-        <p><a href="/about.html">About</a></p>
-        <p>Copyright &copy; 2026 AI QA Assistant</p>
+        <p>
+            <a href="/about.html">About</a>
+        </p>
+
+        <p>
+            Copyright &copy; 2026 AI QA Assistant
+        </p>
     </footer>
+
 
     <script src="js/theme.js"></script>
     <script src="js/logout.js"></script>
     <script src="js/project.js"></script>
 </body>
 </html>
-
