@@ -152,12 +152,14 @@ The matrix is updated throughout development and testing.
 
 ### REQ-011 — Bug Creation
 
-| REQ     | US     | AC                                   | Automated Test                                      | Test Type        | Status  |
-| ------- | ------ | ------------------------------------ | --------------------------------------------------- | ---------------- | ------- |
-| REQ-011 | US-011 | AC-011.1 — Successful Bug Creation   | `test_project_member_can_create_bug`                | API              | Covered |
-| REQ-011 | US-011 | AC-011.2 — Missing Bug Title         | `test_bug_creation_rejected_without_title`          | API / Validation | Covered |
-| REQ-011 | US-011 | AC-011.3 — Unauthorized Bug Creation | `test_non_member_cannot_create_bug`                 | API / Security   | Covered |
-| REQ-011 | US-011 | AC-011.4 — Optional Bug Information  | `test_bug_can_be_created_with_optional_information` | API / Validation | Covered |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-011 | US-011 | AC-011.1 — Successful Bug Creation | `test_project_member_can_create_bug` | API | Covered |
+| REQ-011 | US-011 | AC-011.2 — Missing Bug Title | `test_bug_creation_rejected_without_title` | API / Validation | Covered |
+| REQ-011 | US-011 | AC-011.3 — Unauthorized Bug Creation | `test_non_member_cannot_create_bug` | API / Security | Covered |
+| REQ-011 | US-011 | AC-011.4 — Optional Bug Information | `test_bug_can_be_created_with_optional_information` | API / Validation | Covered |
+
+**Coverage note:** AC-011.4 includes the optional free-text Environment field. The automated creation test verifies that Environment can be supplied and returned correctly. Existing bug-creation tests that omit Environment also verify that the field remains optional.
 
 
 ### REQ-012 — Bug Access
@@ -167,88 +169,136 @@ The matrix is updated throughout development and testing.
 | REQ-012 | US-012 | AC-012.1 — View Bug List | `test_project_member_can_view_bug_list` | API | Covered |
 | REQ-012 | US-012 | AC-012.2 — Open Bug Report | `test_project_member_can_open_bug_report` | API | Covered |
 | REQ-012 | US-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Covered |
-| REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Covered |
+| REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Partial |
 | REQ-012 | US-012 | AC-012.4 — Sort Bug Reports | — | UI | Pending |
+
+**Coverage note:** AC-012.2 verifies Environment in the full bug-report response. AC-012.4 is Partial because the API verifies the default order of most recently updated first, while interactive browser sorting is still pending. Required classification sort order is Severity: Blocker, Critical, Major, Minor and Priority: Urgent, High, Medium, Low.
+
 
 ### REQ-013 — Bug Editing
 
-| REQ     | US     | AC                                  | Automated Test                                            | Test Type        | Status  |
-| ------- | ------ | ----------------------------------- | --------------------------------------------------------- | ---------------- | ------- |
-| REQ-013 | US-013 | AC-013.1 — Edit Bug Report          | `test_project_member_can_edit_bug_report`                 | API              | Covered |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-013 | US-013 | AC-013.1 — Edit Bug Report | `test_project_member_can_edit_bug_report` | API | Covered |
 | REQ-013 | US-013 | AC-013.2 — Optional Bug Information | `test_project_member_can_update_optional_bug_information` | API / Validation | Covered |
-| REQ-013 | US-013 | AC-013.3 — Unauthorized Bug Editing | `test_non_member_cannot_edit_bug_report`                  | API / Security   | Covered |
+| REQ-013 | US-013 | AC-013.3 — Unauthorized Bug Editing | `test_non_member_cannot_edit_bug_report` | API / Security | Covered |
+
+**Coverage note:** AC-013.2 includes updating the optional free-text Environment field.
+
 
 ### REQ-014 — Bug Deletion
 
-| REQ     | US     | AC                                      | Automated Test                               | Test Type      | Status  |
-| ------- | ------ | --------------------------------------- | -------------------------------------------- | -------------- | ------- |
-| REQ-014 | US-014 | AC-014.1 — Successful Bug Deletion      | `test_authorized_member_can_delete_bug`      | API            | Covered |
-| REQ-014 | US-014 | AC-014.1 — Delete Confirmation Required | —                                            | UI             | Pending |
-| REQ-014 | US-014 | AC-014.2 — Unauthorized Bug Deletion    | `test_unauthorized_member_cannot_delete_bug` | API / Security | Covered |
+| REQ | US | AC | Automated Test | Test Type | Status |
+|---|---|---|---|---|---|
+| REQ-014 | US-014 | AC-014.1 — Successful Bug Deletion | `test_authorized_member_can_delete_bug` | API | Partial |
+| REQ-014 | US-014 | AC-014.1 — Delete Confirmation Required | — | UI | Pending |
+| REQ-014 | US-014 | AC-014.2 — Unauthorized Bug Deletion | `test_unauthorized_member_cannot_delete_bug` | API / Security | Covered |
+
+**Coverage note:** AC-014.1 is Partial because bug deletion is automated through the API, while the required browser confirmation remains pending.
+
 
 ### REQ-015 — Bug Assignment
 
 | REQ | US | AC | Automated Test | Test Type | Status |
 |---|---|---|---|---|---|
-| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_assign_bug` | API | Covered |
-| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_unassign_bug` | API | Covered |
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_assign_bug` | API | Partial |
+| REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_unassign_bug` | API | Partial |
 | REQ-015 | US-015 | AC-015.1 — Assign and Unassign Bugs | — | UI | Pending |
 | REQ-015 | US-015 | AC-015.2 — Invalid Assignment | `test_bug_cannot_be_assigned_to_invalid_member` | API / Validation | Covered |
 | REQ-015 | US-015 | AC-015.3 — Unauthorized Bug Assignment | `test_non_member_cannot_assign_bug` | API / Security | Covered |
 | REQ-015 | US-015 | AC-015.4 — Change Bug Assignee | `test_authorized_member_can_reassign_bug` | API | Covered |
 
+**Coverage note:** AC-015.1 is Partial until assignment and unassignment are also covered through the browser UI.
+
+
 ### REQ-016 — Bug Classification
 
 | REQ | US | AC | Automated Test | Test Type | Status |
 |---|---|---|---|---|---|
-| REQ-016 | US-016 | AC-016.1 — Set Bug Severity | `test_project_member_can_set_bug_severity` | API | Covered |
+| REQ-016 | US-016 | AC-016.1 — Set Bug Severity | `test_project_member_can_set_bug_severity` | API | Partial |
 | REQ-016 | US-016 | AC-016.1 — Set Bug Severity | — | UI | Pending |
-| REQ-016 | US-016 | AC-016.2 — Set Bug Priority | `test_project_member_can_set_bug_priority` | API | Covered |
+| REQ-016 | US-016 | AC-016.2 — Set Bug Priority | `test_project_member_can_set_bug_priority` | API | Partial |
 | REQ-016 | US-016 | AC-016.2 — Set Bug Priority | — | UI | Pending |
-| REQ-016 | US-016 | AC-016.3 — Update Bug Classification | `test_project_member_can_update_bug_classification` | API | Covered |
+| REQ-016 | US-016 | AC-016.3 — Update Bug Classification | `test_project_member_can_update_bug_classification` | API | Partial |
 | REQ-016 | US-016 | AC-016.3 — Update Bug Classification | — | UI | Pending |
 | REQ-016 | US-016 | AC-016.4 — Unauthorized Bug Classification | `test_non_member_cannot_update_bug_classification` | API / Security | Covered |
 | REQ-016 | US-016 | — | `test_bug_rejects_invalid_severity` | API / Validation | Covered |
 | REQ-016 | US-016 | — | `test_bug_rejects_invalid_priority` | API / Validation | Covered |
 
+**Coverage note:** `test_project_member_can_set_bug_severity` is parameterized across Project Owner, QA Analyst, and Developer roles and all supported severity values: Blocker, Critical, Major, and Minor.
+
+`test_project_member_can_set_bug_priority` is parameterized across the same roles and all supported priority values: Urgent, High, Medium, and Low.
+
+The validation tests also verify that unsupported values and values belonging to the opposite classification category are rejected.
+
+
 ### REQ-017 — Bug Lifecycle
 
 | REQ | US | AC | Automated Test | Test Type | Status |
 |---|---|---|---|---|---|
-| REQ-017 | US-017 | AC-017.1 — Bug Status | `test_new_bug_starts_in_triage` | API | Covered |
+| REQ-017 | US-017 | AC-017.1 — Bug Status | `test_new_bug_starts_in_triage` | API | Partial |
 | REQ-017 | US-017 | AC-017.1 — Bug Status | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_project_owner_or_qa_can_move_bug_from_triage_to_open` | API | Covered |
-| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_developer_cannot_move_bug_from_triage_to_open` | API / Security | Covered |
-| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_bug_without_assignee_cannot_move_from_triage_to_open` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_project_owner_or_qa_can_move_bug_from_triage_to_open` | API | Partial |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_developer_cannot_move_bug_from_triage_to_open` | API / Security | Partial |
+| REQ-017 | US-017 | AC-017.2 — Triage to Open | `test_bug_without_assignee_cannot_move_from_triage_to_open` | API / Validation | Partial |
 | REQ-017 | US-017 | AC-017.2 — Triage to Open | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_assigned_developer_can_move_bug_from_open_to_development` | API | Covered |
-| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_qa_analyst_cannot_move_bug_from_open_to_development` | API / Security | Covered |
-| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_non_assigned_developer_cannot_move_bug_from_open_to_development` | API / Security | Covered |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_assigned_developer_can_move_bug_from_open_to_development` | API | Partial |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_project_owner_can_move_bug_from_open_to_development` | API | Partial |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_qa_analyst_cannot_move_bug_from_open_to_development` | API / Security | Partial |
+| REQ-017 | US-017 | AC-017.3 — Open to Development | `test_non_assigned_developer_cannot_move_bug_from_open_to_development` | API / Security | Partial |
 | REQ-017 | US-017 | AC-017.3 — Open to Development | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_assigned_developer_can_move_bug_from_development_to_testing` | API | Covered |
-| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_non_assigned_developer_cannot_move_bug_from_development_to_testing` | API / Security | Covered |
-| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_bug_cannot_move_to_testing_with_developer_assignee` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_assigned_developer_can_move_bug_from_development_to_testing` | API | Partial |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_project_owner_can_move_bug_from_development_to_testing` | API | Partial |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_non_assigned_developer_cannot_move_bug_from_development_to_testing` | API / Security | Partial |
+| REQ-017 | US-017 | AC-017.4 — Development to Testing | `test_bug_cannot_move_to_testing_with_developer_assignee` | API / Validation | Partial |
 | REQ-017 | US-017 | AC-017.4 — Development to Testing | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_pass_bug_and_close_it` | API | Covered |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_fail_bug_and_return_it_to_development` | API | Covered |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_non_assigned_qa_cannot_record_testing_outcome` | API / Security | Covered |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_testing_outcome_is_required` | API / Validation | Covered |
-| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_invalid_testing_outcome_is_rejected` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_pass_bug_and_close_it` | API | Partial |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_project_owner_can_pass_bug_and_close_it` | API | Partial |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_fail_bug_and_return_it_to_development` | API | Partial |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_project_owner_can_fail_bug_and_return_it_to_development` | API | Partial |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_non_assigned_qa_cannot_record_testing_outcome` | API / Security | Partial |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_testing_outcome_is_required` | API / Validation | Partial |
+| REQ-017 | US-017 | AC-017.5 — Testing Outcome | `test_invalid_testing_outcome_is_rejected` | API / Validation | Partial |
 | REQ-017 | US-017 | AC-017.5 — Testing Outcome | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Covered |
-| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Covered |
-| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_bug_cannot_be_closed_without_resolution` | API / Validation | Covered |
-| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_fixed_resolution_cannot_be_manually_selected_when_closing_bug` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Partial |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Partial |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_bug_cannot_be_closed_without_resolution` | API / Validation | Partial |
+| REQ-017 | US-017 | AC-017.6 — Close Without Fixing | `test_fixed_resolution_cannot_be_manually_selected_when_closing_bug` | API / Validation | Partial |
 | REQ-017 | US-017 | AC-017.6 — Close Without Fixing | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.7 — Closed Bugs | `test_closed_bug_cannot_be_moved_to_another_status` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.7 — Closed Bugs | `test_closed_bug_cannot_be_moved_to_another_status` | API / Validation | Partial |
 | REQ-017 | US-017 | AC-017.7 — Closed Bugs | — | UI | Pending |
-| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_triage_to_development` | API / Validation | Covered |
-| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_open_to_testing` | API / Validation | Covered |
-| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_development_back_to_open` | API / Validation | Covered |
-| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_open` | API / Validation | Covered |
-| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_triage` | API / Validation | Covered |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_triage_to_development` | API / Validation | Partial |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_open_to_testing` | API / Validation | Partial |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_development_back_to_open` | API / Validation | Partial |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_open` | API / Validation | Partial |
+| REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_triage` | API / Validation | Partial |
 | REQ-017 | US-017 | AC-017.8 — Invalid Status Transitions | — | UI | Pending |
 | REQ-017 | US-017 | AC-017.9 — Status Update Timestamp | `test_changing_bug_status_updates_last_updated_timestamp` | API | Covered |
+
+**Coverage note:** Project Owner lifecycle authority is now covered at the API layer for:
+
+- Open → Development
+- Development → Testing
+- Testing → Closed after a Passed testing outcome
+- Testing → Development after a Failed testing outcome
+- Development → Closed without fixing
+
+Project Owner authority does not bypass lifecycle or assignee requirements. Development still requires a Developer assignee, Testing still requires a QA Analyst assignee, and failed testing requires a Developer to be selected before the bug returns to Development.
+
+Supported non-fix resolutions are:
+
+- `Won't Fix`
+- `Duplicate`
+- `Cannot Reproduce`
+- `Not a Bug`
+
+The close-without-fixing tests are parameterized across all supported non-fix resolutions.
+
+`Fixed` cannot be selected manually. It is assigned automatically only when a bug in Testing receives a `Passed` testing outcome and moves to Closed.
+
+Closed remains a terminal status for all roles, including Project Owner.
+
+AC-017.1 through AC-017.8 remain Partial where required browser lifecycle behavior is still pending. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
 
 
 

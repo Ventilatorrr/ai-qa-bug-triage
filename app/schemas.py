@@ -28,6 +28,7 @@ class UserLogin(BaseModel):
 class BugCreate(BaseModel):
     title: str
     affected_version: str | None = None
+    environment: str | None = None
     description: str | None = None
     steps_to_reproduce: str | None = None
     expected_result: str | None = None
@@ -47,14 +48,14 @@ class BugCreate(BaseModel):
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, severity):
-        if severity is not None and severity not in ["Blocker", "Major", "Minor"]:
+        if severity is not None and severity not in ["Blocker", "Critical", "Major", "Minor"]:
             raise ValueError("Invalid severity.")
         return severity
 
     @field_validator("priority")
     @classmethod
     def validate_priority(cls, priority):
-        if priority is not None and priority not in ["High", "Medium", "Low"]:
+        if priority is not None and priority not in ["Urgent", "High", "Medium", "Low"]:
             raise ValueError("Invalid priority.")
         return priority
 
@@ -62,6 +63,7 @@ class BugCreate(BaseModel):
 class BugUpdate(BaseModel):
     title: str | None = None
     affected_version: str | None = None
+    environment: str | None = None
     description: str | None = None
     steps_to_reproduce: str | None = None
     expected_result: str | None = None
@@ -81,14 +83,14 @@ class BugUpdate(BaseModel):
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, severity):
-        if severity is not None and severity not in ["Blocker", "Major", "Minor"]:
+        if severity is not None and severity not in ["Blocker", "Critical", "Major", "Minor"]:
             raise ValueError("Invalid severity.")
         return severity
 
     @field_validator("priority")
     @classmethod
     def validate_priority(cls, priority):
-        if priority is not None and priority not in ["High", "Medium", "Low"]:
+        if priority is not None and priority not in ["Urgent", "High", "Medium", "Low"]:
             raise ValueError("Invalid priority.")
         return priority
 
@@ -97,7 +99,5 @@ class BugStatusUpdate(BaseModel):
     status: Literal["Triage", "Open", "Development", "Testing", "Closed"]
     assignee_id: int | None = None
     testing_outcome: Literal["Passed", "Failed"] | None = None
-    resolution: Literal["Won't Fix", "Duplicate", "Not a Bug"] | None = None
-
-
-
+    resolution: Literal["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"] | None = None
+    
