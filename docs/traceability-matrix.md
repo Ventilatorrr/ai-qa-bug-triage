@@ -114,12 +114,13 @@ The matrix is updated throughout development and testing.
 
 ### REQ-008 — Project Deletion
 
-| REQ     | US       | AC                                       | Automated Test                                  | Test Type      | Status  |
-| ------- | -------- | ---------------------------------------- | ----------------------------------------------- | -------------- | ------- |
-| REQ-008 | US-008.1 | AC-008.1 — Successful Project Deletion   | `test_delete_project`                           | API            | Partial |
-| REQ-008 | US-008.1 | AC-008.2 — Unauthorized Project Deletion | `test_user_cannot_delete_another_users_project` | API / Security | Covered |
+| REQ     | US       | AC                                        | Automated Test                                                   | Test Type                  | Status  |
+| ------- | -------- | ----------------------------------------- | ---------------------------------------------------------------- | -------------------------- | ------- |
+| REQ-008 | US-008.1 | AC-008.1 — Successful Project Deletion    | `test_delete_project`                                            | API                        | Partial |
+| REQ-008 | US-008.1 | AC-008.1 — Successful Project Deletion    | `test_new_project_owner_cannot_access_bugs_from_deleted_project` | API / Database / Security  | Partial |
+| REQ-008 | US-008.1 | AC-008.2 — Unauthorized Project Deletion  | `test_user_cannot_delete_another_users_project`                  | API / Security             | Covered |
 
-**Coverage note:** AC-008.1 is currently **Partial** because the API deletion is automated, while the required browser confirmation is currently tested manually. Playwright coverage will be added after Increment 1 is complete.
+**Coverage note:** AC-008.1 is currently **Partial** because project deletion and deletion-related data isolation are automated at the API/database level, while the required browser confirmation is currently tested manually. Playwright coverage will be added after Increment 1 is complete.
 
 ### REQ-009 — Project Member Management
 

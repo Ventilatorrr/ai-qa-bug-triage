@@ -287,6 +287,65 @@ def test_delete_project(test_client, authenticated_user_factory, project_factory
     assert get_response.status_code == 404
 
 
+# AC-008.1 — Successful Project Deletion
+def test_new_project_owner_cannot_access_bugs_from_deleted_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user1 = authenticated_user_factory(
+        email="deleted-project-owner@example.com",
+        password="Password1"
+    )
+    user2 = authenticated_user_factory(
+        email="new-project-owner@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user1["token"],
+        name="Project To Delete"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug from deleted project"
+        },
+        headers={
+            "Authorization": f"Bearer {user1['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    delete_response = test_client.delete(
+        f"/projects/{project['id']}",
+        headers={
+            "Authorization": f"Bearer {user1['token']}"
+        }
+    )
+
+    assert delete_response.status_code == 200
+
+    new_project = project_factory(
+        user2["token"],
+        name="New Owner Project"
+    )
+
+    assert new_project["id"] == project["id"]
+
+    response = test_client.get(
+        f"/projects/{new_project['id']}/bugs",
+        headers={
+            "Authorization": f"Bearer {user2['token']}"
+        }
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 # AC-008.2 — Unauthorized Project Deletion
 def test_user_cannot_delete_another_users_project(
     test_client,
