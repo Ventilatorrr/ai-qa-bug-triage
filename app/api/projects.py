@@ -268,6 +268,14 @@ def delete_project(
 
         conn.execute(
             """
+            DELETE FROM bugs
+            WHERE project_id = ?
+            """,
+            (project_id,)
+        )
+
+        conn.execute(
+            """
             DELETE FROM project_members
             WHERE project_id = ?
             """,
