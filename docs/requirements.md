@@ -317,7 +317,8 @@ As an authorized project member, I want to create a bug report with the informat
 
 #### AC-011.4 — Optional Bug Information
 
-* Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, Assignee, and Fix Version are optional when creating a bug report.
+* Description, Environment, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, Assignee, and Fix Version are optional when creating a bug report.
+* Environment is free-text information describing the context in which the bug occurred, such as operating system, browser and version, device type, or relevant user/account context.
 * Optional bug information can be provided when the bug is created or added or updated later.
 
 ---
@@ -352,8 +353,8 @@ As an authorized project member, I want to view and open bug reports in projects
 
 * An authorized project member can sort the bug list by all columns.
 * The default bug list order is most recently updated first.
-* Severity is ordered from highest to lowest impact: Blocker, Major, Minor.
-* Priority is ordered from highest to lowest: High, Medium, Low.
+* Severity is ordered from highest to lowest impact: Blocker, Critical, Major, Minor.
+* Priority is ordered from highest to lowest urgency: Urgent, High, Medium, Low.
 * Missing optional values are displayed last when sorting.
 
 ---
@@ -377,7 +378,7 @@ As an authorized project member, I want to edit bug report information so that I
 
 #### AC-013.2 — Optional Bug Information
 
-* A project member can add or update Title, Description, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Fix Version after the bug has been created.
+* A project member can add or update Title, Description, Environment, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Fix Version after the bug has been created.
 
 #### AC-013.3 — Unauthorized Bug Editing
 
@@ -459,13 +460,21 @@ As an authorized project member, I want to set and update a bug's severity and p
 #### AC-016.1 — Set Bug Severity
 
 * An authorized project member can set the severity of a bug report.
-* The supported severity values are `Blocker`, `Major`, and `Minor`.
+* The supported severity values are `Blocker`, `Critical`, `Major`, and `Minor`.
+* `Blocker` represents a failure of core functionality where no reasonable workaround is available.
+* `Critical` represents a severe failure of major functionality where a workaround is available.
+* `Major` represents a significant defect affecting non-critical functionality or functionality for which an easy workaround is available.
+* `Minor` represents a cosmetic or low-impact functional defect.
 * The selected severity is saved and displayed on the bug report.
 
 #### AC-016.2 — Set Bug Priority
 
 * An authorized project member can set the priority of a bug report.
-* The supported priority values are `High`, `Medium`, and `Low`.
+* The supported priority values are `Urgent`, `High`, `Medium`, and `Low`.
+* `Urgent` indicates that the bug requires immediate attention.
+* `High` indicates that the bug should be addressed very soon.
+* `Medium` indicates normal planned priority.
+* `Low` indicates that the bug can reasonably wait.
 * The selected priority is saved and displayed on the bug report.
 
 #### AC-016.3 — Update Bug Classification
@@ -495,6 +504,7 @@ As a project member with the appropriate permissions, I want bugs to progress th
 
 * A bug report has one of the following statuses: `Triage`, `Open`, `Development`, `Testing`, or `Closed`.
 * A newly created bug report has the status `Triage`.
+* A Project Owner can perform lifecycle actions available to a QA Analyst or Developer, while the same assignee and transition requirements still apply.
 
 #### AC-017.2 — Triage to Open
 
@@ -503,18 +513,18 @@ As a project member with the appropriate permissions, I want bugs to progress th
 
 #### AC-017.3 — Open to Development
 
-* An assigned Developer can move a bug from `Open` to `Development`.
+* An assigned Developer or Project Owner can move a bug from `Open` to `Development`.
 * A Developer must be assigned to the bug before it can be moved to `Development`.
 
 #### AC-017.4 — Development to Testing
 
-* An assigned Developer can move a bug from `Development` to `Testing` when the fix is ready for verification.
-* The Developer selects a QA Analyst who is a member of the project as part of the transition to `Testing`.
+* An assigned Developer or Project Owner can move a bug from `Development` to `Testing` when the fix is ready for verification.
+* A QA Analyst who is a member of the project must be selected as part of the transition to `Testing`.
 * The selected QA Analyst becomes the assignee of the bug.
 
 #### AC-017.5 — Testing Outcome
 
-- An assigned QA Analyst can select `Passed` or `Failed` as the testing outcome.
+- An assigned QA Analyst or Project Owner can select `Passed` or `Failed` as the testing outcome.
 - When testing is `Passed`, the bug status changes to `Closed` and the resolution is automatically set to `Fixed`.
 - When testing is `Failed`, the bug status changes to `Development`.
 - When testing is `Failed`, a Developer who is a member of the project must be assigned to the bug.
@@ -524,11 +534,13 @@ As a project member with the appropriate permissions, I want bugs to progress th
 
 * An assigned Developer or Project Owner can close a bug from `Development` without sending it through `Testing`.
 * When a bug is closed without being fixed, a resolution must be selected.
-* Supported resolutions are `Won't Fix`, `Duplicate`, and `Not a Bug`.
+* Supported non-fix resolutions are `Won't Fix`, `Duplicate`, `Cannot Reproduce`, and `Not a Bug`.
+* The `Fixed` resolution is assigned only when testing is `Passed`.
 
 #### AC-017.7 — Closed Bugs
 
 * A bug in `Closed` status cannot be moved to another status through the normal bug workflow.
+* A Project Owner cannot override the terminal `Closed` status.
 
 #### AC-017.8 — Invalid Status Transitions
 
@@ -540,4 +552,3 @@ As a project member with the appropriate permissions, I want bugs to progress th
 * Changing the bug status updates the bug's Last Updated date and time.
 
 ---
-

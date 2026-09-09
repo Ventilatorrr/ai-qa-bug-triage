@@ -52,6 +52,7 @@ def create_tables():
             project_id INTEGER NOT NULL,
             title VARCHAR(255) NOT NULL,
             affected_version VARCHAR(20),
+            environment TEXT,
             description TEXT,
             steps_to_reproduce TEXT,
             expected_result TEXT,
