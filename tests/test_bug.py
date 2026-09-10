@@ -536,6 +536,66 @@ def test_project_member_can_edit_bug_report(
     assert data["updated_at"] != original_updated_at
 
 
+# Additional validation regression — Null title during bug editing
+def test_bug_update_rejected_with_null_title(
+    test_client,
+    authenticated_user_factory,
+    project_factory
+):
+    user = authenticated_user_factory(
+        email="null-title-editor@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        user["token"],
+        name="Null Title Bug Editing Project"
+    )
+
+    create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Original bug title",
+            "description": "Original description."
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert create_response.status_code == 201
+
+    original_bug = create_response.json()
+    bug_id = original_bug["id"]
+
+    update_response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        json={
+            "title": None
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert update_response.status_code == 422
+
+    detail = update_response.json()["detail"]
+
+    assert detail[0]["loc"] == ["body", "title"]
+    assert "Bug title is required." in detail[0]["msg"]
+
+    get_response = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    assert get_response.json() == original_bug
+
+
 # AC-013.2 — Optional Bug Information
 def test_project_member_can_update_optional_bug_information(
     test_client,

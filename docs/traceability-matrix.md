@@ -182,8 +182,11 @@ The matrix is updated throughout development and testing.
 | REQ-013 | US-013 | AC-013.1 — Edit Bug Report | `test_project_member_can_edit_bug_report` | API | Covered |
 | REQ-013 | US-013 | AC-013.2 — Optional Bug Information | `test_project_member_can_update_optional_bug_information` | API / Validation | Covered |
 | REQ-013 | US-013 | AC-013.3 — Unauthorized Bug Editing | `test_non_member_cannot_edit_bug_report` | API / Security | Covered |
+| REQ-013 | US-013 | — | `test_bug_update_rejected_with_null_title` | API / Validation | Covered |
 
 **Coverage note:** AC-013.2 includes updating the optional free-text Environment field.
+
+**Additional regression coverage:** An explicit null title is rejected with HTTP 422 and “Bug title is required.” The test verifies through the API that the bug report remains unchanged. This covers API validation only; it does not establish UI coverage or completion of REQ-013.
 
 
 ### REQ-014 — Bug Deletion

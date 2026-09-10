@@ -26,15 +26,26 @@ const cancelBugFormButton = document.querySelector("#cancel-bug-form");
 const bugsContainer = document.querySelector("#bugs");
 
 const bugTitleInput = document.querySelector("#bug-title");
-const bugAffectedVersionInput = document.querySelector("#bug-affected-version");
-const bugDescriptionInput = document.querySelector("#bug-description");
-const bugStepsInput = document.querySelector("#bug-steps");
-const bugExpectedInput = document.querySelector("#bug-expected");
-const bugActualInput = document.querySelector("#bug-actual");
-const bugSeverityInput = document.querySelector("#bug-severity");
-const bugPriorityInput = document.querySelector("#bug-priority");
-const bugAssigneeInput = document.querySelector("#bug-assignee");
-const bugFixVersionInput = document.querySelector("#bug-fix-version");
+const bugAffectedVersionInput =
+    document.querySelector("#bug-affected-version");
+const bugEnvironmentInput =
+    document.querySelector("#bug-environment");
+const bugDescriptionInput =
+    document.querySelector("#bug-description");
+const bugStepsInput =
+    document.querySelector("#bug-steps");
+const bugExpectedInput =
+    document.querySelector("#bug-expected");
+const bugActualInput =
+    document.querySelector("#bug-actual");
+const bugSeverityInput =
+    document.querySelector("#bug-severity");
+const bugPriorityInput =
+    document.querySelector("#bug-priority");
+const bugAssigneeInput =
+    document.querySelector("#bug-assignee");
+const bugFixVersionInput =
+    document.querySelector("#bug-fix-version");
 
 const accessToken = localStorage.getItem("access_token");
 
@@ -51,11 +62,14 @@ function getCurrentUserId() {
 
 
 async function loadProject() {
-    const response = await fetch(`/projects/${projectId}`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
+    const response = await fetch(
+        `/projects/${projectId}`,
+        {
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
         }
-    });
+    );
 
     const data = await response.json();
 
@@ -68,11 +82,14 @@ async function loadProject() {
 
 
 async function loadMembers() {
-    const response = await fetch(`/projects/${projectId}/members`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
+    const response = await fetch(
+        `/projects/${projectId}/members`,
+        {
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
         }
-    });
+    );
 
     const data = await response.json();
 
@@ -89,24 +106,32 @@ async function loadMembers() {
         return member.user_id === currentUserId;
     });
 
-    if (currentUser && currentUser.role === "Project Owner") {
+    if (
+        currentUser &&
+        currentUser.role === "Project Owner"
+    ) {
         memberManagement.hidden = false;
     }
 
     data.forEach(function (member) {
-        const memberElement = document.createElement("div");
+        const memberElement =
+            document.createElement("div");
 
         memberElement.className = "project";
 
-        const memberInfo = document.createElement("div");
+        const memberInfo =
+            document.createElement("div");
 
-        const email = document.createElement("strong");
+        const email =
+            document.createElement("strong");
 
         email.textContent = member.email;
 
-        const role = document.createElement("span");
+        const role =
+            document.createElement("span");
 
-        role.textContent = ` (${member.role})`;
+        role.textContent =
+            ` (${member.role})`;
 
         memberInfo.appendChild(email);
         memberInfo.appendChild(role);
@@ -118,20 +143,26 @@ async function loadMembers() {
             currentUser.role === "Project Owner" &&
             member.role !== "Project Owner"
         ) {
-            const removeButton = document.createElement("button");
+            const removeButton =
+                document.createElement("button");
 
             removeButton.textContent = "Remove";
 
             removeButton.type = "button";
 
-            removeButton.addEventListener("click", function () {
-                removeMember(member);
-            });
+            removeButton.addEventListener(
+                "click",
+                function () {
+                    removeMember(member);
+                }
+            );
 
             memberElement.appendChild(removeButton);
         }
 
-        membersContainer.appendChild(memberElement);
+        membersContainer.appendChild(
+            memberElement
+        );
     });
 
     updateMembersToggle();
@@ -142,11 +173,14 @@ async function loadMembers() {
 
 function updateMembersToggle() {
     const isExpanded =
-        toggleMembersButton.getAttribute("aria-expanded") === "true";
+        toggleMembersButton.getAttribute(
+            "aria-expanded"
+        ) === "true";
 
-    toggleMembersButton.textContent = isExpanded
-        ? "Hide Members"
-        : "Show Members";
+    toggleMembersButton.textContent =
+        isExpanded
+            ? "Hide Members"
+            : "Show Members";
 }
 
 
@@ -158,16 +192,20 @@ async function addMember(event) {
         role: memberRoleInput.value
     };
 
-    const response = await fetch(`/projects/${projectId}/members`, {
-        method: "POST",
+    const response = await fetch(
+        `/projects/${projectId}/members`,
+        {
+            method: "POST",
 
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken
-        },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization":
+                    "Bearer " + accessToken
+            },
 
-        body: JSON.stringify(member)
-    });
+            body: JSON.stringify(member)
+        }
+    );
 
     const data = await response.json();
 
@@ -207,7 +245,8 @@ async function removeMember(member) {
             method: "DELETE",
 
             headers: {
-                "Authorization": "Bearer " + accessToken
+                "Authorization":
+                    "Bearer " + accessToken
             }
         }
     );
@@ -230,11 +269,15 @@ async function removeMember(member) {
 
 
 async function loadBugAssignees() {
-    const response = await fetch(`/projects/${projectId}/members`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
+    const response = await fetch(
+        `/projects/${projectId}/members`,
+        {
+            headers: {
+                "Authorization":
+                    "Bearer " + accessToken
+            }
         }
-    });
+    );
 
     const data = await response.json();
 
@@ -245,27 +288,34 @@ async function loadBugAssignees() {
 
     bugAssigneeInput.innerHTML = "";
 
-    const unassignedOption = document.createElement("option");
+    const unassignedOption =
+        document.createElement("option");
 
     unassignedOption.value = "";
 
-    unassignedOption.textContent = "Unassigned";
+    unassignedOption.textContent =
+        "Unassigned";
 
-    bugAssigneeInput.appendChild(unassignedOption);
+    bugAssigneeInput.appendChild(
+        unassignedOption
+    );
 
     data.forEach(function (member) {
         if (
             member.role === "QA Analyst" ||
             member.role === "Developer"
         ) {
-            const option = document.createElement("option");
+            const option =
+                document.createElement("option");
 
             option.value = member.user_id;
 
             option.textContent =
                 `${member.email} (${member.role})`;
 
-            bugAssigneeInput.appendChild(option);
+            bugAssigneeInput.appendChild(
+                option
+            );
         }
     });
 }
@@ -276,26 +326,33 @@ async function updateBugAssigneeVisibility() {
         `/projects/${projectId}/members`,
         {
             headers: {
-                "Authorization": "Bearer " + accessToken
+                "Authorization":
+                    "Bearer " + accessToken
             }
         }
     );
 
-    const members = await membersResponse.json();
+    const members =
+        await membersResponse.json();
 
     if (!membersResponse.ok) {
         return;
     }
 
-    const currentUserId = getCurrentUserId();
+    const currentUserId =
+        getCurrentUserId();
 
-    const currentUser = members.find(function (member) {
-        return member.user_id === currentUserId;
-    });
-
-    const assigneeLabel = document.querySelector(
-        'label[for="bug-assignee"]'
+    const currentUser = members.find(
+        function (member) {
+            return member.user_id ===
+                currentUserId;
+        }
     );
+
+    const assigneeLabel =
+        document.querySelector(
+            'label[for="bug-assignee"]'
+        );
 
     if (
         currentUser &&
@@ -319,7 +376,8 @@ async function loadBugs() {
         `/projects/${projectId}/bugs`,
         {
             headers: {
-                "Authorization": "Bearer " + accessToken
+                "Authorization":
+                    "Bearer " + accessToken
             }
         }
     );
@@ -334,25 +392,32 @@ async function loadBugs() {
     bugsContainer.innerHTML = "";
 
     if (data.length === 0) {
-        const emptyMessage = document.createElement("p");
+        const emptyMessage =
+            document.createElement("p");
 
-        emptyMessage.className = "page-description";
+        emptyMessage.className =
+            "page-description";
 
         emptyMessage.textContent =
             "No bugs in this project.";
 
-        bugsContainer.appendChild(emptyMessage);
+        bugsContainer.appendChild(
+            emptyMessage
+        );
 
         return;
     }
 
-    const table = document.createElement("table");
+    const table =
+        document.createElement("table");
 
     table.className = "bug-table";
 
-    const thead = document.createElement("thead");
+    const thead =
+        document.createElement("thead");
 
-    const headerRow = document.createElement("tr");
+    const headerRow =
+        document.createElement("tr");
 
     const headers = [
         "Bug ID",
@@ -365,7 +430,8 @@ async function loadBugs() {
     ];
 
     headers.forEach(function (headerText) {
-        const th = document.createElement("th");
+        const th =
+            document.createElement("th");
 
         th.textContent = headerText;
 
@@ -377,40 +443,49 @@ async function loadBugs() {
     table.appendChild(thead);
 
 
-    const tbody = document.createElement("tbody");
+    const tbody =
+        document.createElement("tbody");
 
     data.forEach(function (bug) {
-        const row = document.createElement("tr");
+        const row =
+            document.createElement("tr");
 
 
         /* Bug ID */
 
-        const bugIdCell = document.createElement("td");
+        const bugIdCell =
+            document.createElement("td");
 
-        const bugLink = document.createElement("a");
+        const bugLink =
+            document.createElement("a");
 
         bugLink.href =
             `/bugs.html?project_id=${projectId}&bug_id=${bug.id}`;
 
-        bugLink.textContent = `BUG-${bug.id}`;
+        bugLink.textContent =
+            `BUG-${bug.id}`;
 
-        bugLink.className = "bug-link";
+        bugLink.className =
+            "bug-link";
 
         bugIdCell.appendChild(bugLink);
 
 
         /* Title */
 
-        const titleCell = document.createElement("td");
+        const titleCell =
+            document.createElement("td");
 
         titleCell.textContent = bug.title;
 
 
         /* Severity */
 
-        const severityCell = document.createElement("td");
+        const severityCell =
+            document.createElement("td");
 
-        severityCell.textContent = bug.severity || "—";
+        severityCell.textContent =
+            bug.severity || "—";
 
         if (bug.severity) {
             severityCell.classList.add(
@@ -421,9 +496,11 @@ async function loadBugs() {
 
         /* Priority */
 
-        const priorityCell = document.createElement("td");
+        const priorityCell =
+            document.createElement("td");
 
-        priorityCell.textContent = bug.priority || "—";
+        priorityCell.textContent =
+            bug.priority || "—";
 
         if (bug.priority) {
             priorityCell.classList.add(
@@ -434,26 +511,33 @@ async function loadBugs() {
 
         /* Status */
 
-        const statusCell = document.createElement("td");
+        const statusCell =
+            document.createElement("td");
 
-        statusCell.textContent = bug.status;
+        statusCell.textContent =
+            bug.status;
 
 
         /* Assignee */
 
-        const assigneeCell = document.createElement("td");
+        const assigneeCell =
+            document.createElement("td");
 
-        assigneeCell.textContent = bug.assignee_id
-            ? `User ${bug.assignee_id}`
-            : "Unassigned";
+        assigneeCell.textContent =
+            bug.assignee_id
+                ? `User ${bug.assignee_id}`
+                : "Unassigned";
 
 
         /* Last Updated */
 
-        const updatedCell = document.createElement("td");
+        const updatedCell =
+            document.createElement("td");
 
         updatedCell.textContent =
-            formatDateTime(bug.updated_at);
+            formatDateTime(
+                bug.updated_at
+            );
 
 
         /* Add cells */
@@ -496,44 +580,59 @@ function formatDateTime(value) {
    Members Toggle
    ========================================================= */
 
-toggleMembersButton.addEventListener("click", function () {
-    const isExpanded =
-        toggleMembersButton.getAttribute("aria-expanded") === "true";
+toggleMembersButton.addEventListener(
+    "click",
+    function () {
+        const isExpanded =
+            toggleMembersButton.getAttribute(
+                "aria-expanded"
+            ) === "true";
 
-    membersContent.hidden = isExpanded;
+        membersContent.hidden =
+            isExpanded;
 
-    toggleMembersButton.setAttribute(
-        "aria-expanded",
-        String(!isExpanded)
-    );
+        toggleMembersButton.setAttribute(
+            "aria-expanded",
+            String(!isExpanded)
+        );
 
-    updateMembersToggle();
-});
+        updateMembersToggle();
+    }
+);
 
 
 /* =========================================================
    Member Form
    ========================================================= */
 
-showMemberFormButton.addEventListener("click", function () {
-    memberForm.hidden = false;
+showMemberFormButton.addEventListener(
+    "click",
+    function () {
+        memberForm.hidden = false;
 
-    showMemberFormButton.hidden = true;
-});
-
-
-cancelMemberFormButton.addEventListener("click", function () {
-    memberForm.reset();
-
-    memberForm.hidden = true;
-
-    showMemberFormButton.hidden = false;
-
-    memberMessage.textContent = "";
-});
+        showMemberFormButton.hidden = true;
+    }
+);
 
 
-memberForm.addEventListener("submit", addMember);
+cancelMemberFormButton.addEventListener(
+    "click",
+    function () {
+        memberForm.reset();
+
+        memberForm.hidden = true;
+
+        showMemberFormButton.hidden = false;
+
+        memberMessage.textContent = "";
+    }
+);
+
+
+memberForm.addEventListener(
+    "submit",
+    addMember
+);
 
 
 /* =========================================================
@@ -554,15 +653,18 @@ showBugFormButton.addEventListener(
 );
 
 
-cancelBugFormButton.addEventListener("click", function () {
-    bugForm.reset();
+cancelBugFormButton.addEventListener(
+    "click",
+    function () {
+        bugForm.reset();
 
-    bugForm.hidden = true;
+        bugForm.hidden = true;
 
-    showBugFormButton.hidden = false;
+        showBugFormButton.hidden = false;
 
-    bugMessage.textContent = "";
-});
+        bugMessage.textContent = "";
+    }
+);
 
 
 bugForm.addEventListener(
@@ -571,35 +673,51 @@ bugForm.addEventListener(
         event.preventDefault();
 
         const bug = {
-            title: bugTitleInput.value,
+            title:
+                bugTitleInput.value,
 
             affected_version:
-                bugAffectedVersionInput.value || null,
+                bugAffectedVersionInput.value ||
+                null,
+
+            environment:
+                bugEnvironmentInput.value ||
+                null,
 
             description:
-                bugDescriptionInput.value || null,
+                bugDescriptionInput.value ||
+                null,
 
             steps_to_reproduce:
-                bugStepsInput.value || null,
+                bugStepsInput.value ||
+                null,
 
             expected_result:
-                bugExpectedInput.value || null,
+                bugExpectedInput.value ||
+                null,
 
             actual_result:
-                bugActualInput.value || null,
+                bugActualInput.value ||
+                null,
 
             severity:
-                bugSeverityInput.value || null,
+                bugSeverityInput.value ||
+                null,
 
             priority:
-                bugPriorityInput.value || null,
+                bugPriorityInput.value ||
+                null,
 
-            assignee_id: bugAssigneeInput.value
-                ? Number(bugAssigneeInput.value)
-                : null,
+            assignee_id:
+                bugAssigneeInput.value
+                    ? Number(
+                        bugAssigneeInput.value
+                    )
+                    : null,
 
             fix_version:
-                bugFixVersionInput.value || null
+                bugFixVersionInput.value ||
+                null
         };
 
         const response = await fetch(
@@ -608,8 +726,11 @@ bugForm.addEventListener(
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + accessToken
+                    "Content-Type":
+                        "application/json",
+                    "Authorization":
+                        "Bearer " +
+                        accessToken
                 },
 
                 body: JSON.stringify(bug)
@@ -630,7 +751,8 @@ bugForm.addEventListener(
 
             await loadBugs();
         } else {
-            bugMessage.textContent = data.detail;
+            bugMessage.textContent =
+                data.detail;
         }
     }
 );
@@ -641,7 +763,8 @@ bugForm.addEventListener(
    ========================================================= */
 
 if (!accessToken) {
-    window.location.href = "/login.html";
+    window.location.href =
+        "/login.html";
 } else {
     loadProject();
 

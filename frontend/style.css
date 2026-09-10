@@ -38,11 +38,15 @@
 
     --white: #ffffff;
 
-    --severity-blocker: #ff6b6b;
-    --severity-major: #f0a35b;
+    --severity-blocker: #ff1744;
+    --severity-critical: #ff6b6b;
+    --severity-major: #f59e0b;
+    --severity-minor: #fde047;
 
+    --priority-urgent: #ff1744;
     --priority-high: #ff6b6b;
-    --priority-medium: #e7c45c;
+    --priority-medium: #f59e0b;
+    --priority-low: #fde047;
 }
 
 
@@ -86,11 +90,15 @@ body.light-theme {
 
     --white: #ffffff;
 
-    --severity-blocker: #dc2626;
-    --severity-major: #d97706;
+    --severity-blocker: #ff1744;
+    --severity-critical: #ff6b6b;
+    --severity-major: #f89f05;
+    --severity-minor: #ffd60a;
 
-    --priority-high: #dc2626;
-    --priority-medium: #b45309;
+    --priority-urgent: #ff1744;
+    --priority-high: #ff6b6b;
+    --priority-medium: #f89f05;
+    --priority-low: #ffd60a;
 }
 
 
@@ -716,8 +724,20 @@ button:disabled {
     font-weight: bold;
 }
 
+.bug-severity-critical {
+    color: var(--severity-critical) !important;
+
+    font-weight: bold;
+}
+
 .bug-severity-major {
     color: var(--severity-major) !important;
+
+    font-weight: bold;
+}
+
+.bug-severity-minor {
+    color: var(--severity-minor) !important;
 
     font-weight: bold;
 }
@@ -727,6 +747,12 @@ button:disabled {
    Priority Highlighting
    ========================================================= */
 
+.bug-priority-urgent {
+    color: var(--priority-urgent) !important;
+
+    font-weight: bold;
+}
+
 .bug-priority-high {
     color: var(--priority-high) !important;
 
@@ -735,6 +761,12 @@ button:disabled {
 
 .bug-priority-medium {
     color: var(--priority-medium) !important;
+
+    font-weight: bold;
+}
+
+.bug-priority-low {
+    color: var(--priority-low) !important;
 
     font-weight: bold;
 }
