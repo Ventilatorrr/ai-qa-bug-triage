@@ -4,19 +4,24 @@ const savedTheme = localStorage.getItem("theme");
 
 if (savedTheme === "light") {
     document.body.classList.add("light-theme");
-    themeToggle.textContent = "☾";
+
+    if (themeToggle) {
+        themeToggle.textContent = "☾";
+    }
 }
 
-themeToggle.addEventListener("click", function () {
-    document.body.classList.toggle("light-theme");
+if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+        document.body.classList.toggle("light-theme");
 
-    const isLightTheme = document.body.classList.contains("light-theme");
+        const isLightTheme = document.body.classList.contains("light-theme");
 
-    if (isLightTheme) {
-        localStorage.setItem("theme", "light");
-        themeToggle.textContent = "☾";
-    } else {
-        localStorage.setItem("theme", "dark");
-        themeToggle.textContent = "☀";
-    }
-});
+        if (isLightTheme) {
+            localStorage.setItem("theme", "light");
+            themeToggle.textContent = "☾";
+        } else {
+            localStorage.setItem("theme", "dark");
+            themeToggle.textContent = "☀";
+        }
+    });
+}

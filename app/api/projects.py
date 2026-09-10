@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Header
 
 from app.database import get_connection
@@ -16,7 +18,7 @@ def create_project(
 
     project_name = project.get("name")
 
-    if not project_name:
+    if not project_name or not project_name.strip():
         raise HTTPException(
             status_code=422,
             detail="Project name is required."
@@ -454,6 +456,17 @@ def remove_project_member(
                 status_code=404,
                 detail="Project member not found."
             )
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        conn.execute(
+            """
+            UPDATE bugs
+            SET assignee_id = NULL, updated_at = ?
+            WHERE project_id = ? AND assignee_id = ?
+            """,
+            (now, project_id, member_user_id)
+        )
 
         conn.execute(
             """

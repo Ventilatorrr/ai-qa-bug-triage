@@ -128,15 +128,11 @@ The system shall allow authenticated users to create a project.
 #### AC-005.1 — Successful Project Creation
 
 * An authenticated user can create a project by providing a valid project name.
-
-#### AC-005.1 — Successful Project Creation
-
-* An authenticated user can create a project by providing a valid project name.
 * The user becomes the Project Owner of the new project.
 
 #### AC-005.2 — Invalid Project Name
 
-* Project creation is rejected when the project name is empty.
+* Project creation is rejected when the project name is empty or contains only whitespace.
 * The user is informed that a valid project name is required.
 
 #### AC-005.3 — Unauthenticated User
@@ -227,6 +223,10 @@ As a Project Owner, I want to add and remove project members so that I can contr
 
 * A Project Owner can remove a member from a project.
 * A removed member can no longer access the project.
+* Bugs assigned to a removed member within the project become unassigned.
+* Automatically unassigned bugs retain their existing status and all other bug fields except Last Updated.
+* Automatically unassigned bugs have their Last Updated timestamp updated.
+* Removing a member does not affect bug assignments in other projects.
 
 #### AC-009.3 — Invalid Member
 
@@ -427,6 +427,7 @@ As a project member, I want to assign, reassign, or unassign bugs to QA Analysts
 - The assigned user is displayed on the bug report.
 - A bug report can have only one assignee at a time.
 - A bug report can be unassigned when permitted by the bug lifecycle.
+- Automatic unassignment on member removal follows AC-009.2, including preserving the current status; normal assignment and lifecycle-transition restrictions still apply to subsequent requests.
 - Assigning or unassigning a bug updates the bug's Last Updated date and time.
 
 #### AC-015.2 — Invalid Assignment
@@ -509,7 +510,7 @@ As a project member with the appropriate permissions, I want bugs to progress th
 #### AC-017.2 — Triage to Open
 
 * A Project Owner or QA Analyst can move a bug from `Triage` to `Open`.
-* A bug in `Open` status must have a QA Analyst or Developer assigned.
+* A bug must have a QA Analyst or Developer assigned to enter `Open`. Subsequent member removal may leave it unassigned under AC-009.2 without changing its status.
 
 #### AC-017.3 — Open to Development
 

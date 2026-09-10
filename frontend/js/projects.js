@@ -112,7 +112,7 @@ async function loadProjects() {
             projectsContainer.appendChild(projectElement);
         }
     } else {
-        message.textContent = data.detail;
+        message.textContent = formatApiError(data.detail);
     }
 }
 
@@ -146,11 +146,7 @@ async function editProject(project) {
     if (response.ok) {
         loadProjects();
     } else {
-        if (response.status === 422) {
-            message.textContent = "Project name can't be empty.";
-        } else {
-            message.textContent = data.detail;
-        }
+        message.textContent = formatApiError(data.detail);
     }
 }
 
@@ -176,7 +172,7 @@ async function deleteProject(project) {
     if (response.ok) {
         loadProjects();
     } else {
-        message.textContent = data.detail;
+        message.textContent = formatApiError(data.detail);
     }
 }
 
@@ -218,6 +214,6 @@ projectForm.addEventListener("submit", async function (event) {
         showProjectFormButton.hidden = false;
         loadProjects();
     } else {
-        message.textContent = data.detail;
+        message.textContent = formatApiError(data.detail);
     }
 });

@@ -359,7 +359,7 @@ Where appropriate, tests will be implemented alongside or shortly after the rela
 
 ## 14. Current Project Status
 
-At the time this strategy was created:
+Current working-tree status (10 September 2026):
 
 * Core authentication functionality has been implemented and tested.
 * Project management functionality has been implemented and tested.
@@ -368,8 +368,13 @@ At the time this strategy was created:
 * Automated API coverage is currently the strongest test layer.
 * Playwright UI automation has not yet been implemented.
 * Increment 2 has not yet been formally reviewed and completed.
-* Bug tracking and AI-assisted triage are planned for Increment 3.
+* Increment 2 bug-management APIs are implemented through REQ-017. Bug creation and listing are available on the project page; the individual Bug UI and interactive sorting remain pending.
+* AI-assisted triage is planned for Increment 3 and is not implemented.
 * Layered test coverage will be expanded as frontend and later AI functionality are implemented.
+* The latest full pytest run in this session passed 148 cases in 114.52 seconds, after the member-removal timestamp fix. This documentation review does not constitute a new test run.
+* Frontend validation-message formatting passed 38 temporary simulated JavaScript checks and syntax checks. Browser verification is still outstanding; these checks are not a persistent test suite.
+* Theme handling now tolerates a missing toggle; About and Bugs have theme and Logout controls. CSS uses viewport width and hidden horizontal overflow for the scrollbar-layout adjustment, without scrollbar-gutter. Cross-browser and narrow-screen verification remain outstanding.
+* Formal versioning has not started. No retrospective release, Affected Version, or Fix Version numbers are assigned.
 
 ---
 
