@@ -166,3 +166,21 @@ def test_password_is_not_stored_as_plain_text(test_client, user_factory):
         user["password"].encode("utf-8"),
         row[0].encode("utf-8")
     )
+
+# Regression Test — Registration rejects passwords over bcrypt's 72-byte limit
+def test_registration_rejects_password_over_bcrypt_limit(test_client):
+    response = test_client.post(
+        "/register",
+        json={
+            "email": "long-password@example.com",
+            "password": ("A" * 71) + "a1"
+        }
+    )
+
+    assert response.status_code == 422
+
+    detail = response.json()["detail"]
+
+    assert detail[0]["loc"] == ["body", "password"]
+    assert "Password must be 72 bytes or fewer." in detail[0]["msg"]
+

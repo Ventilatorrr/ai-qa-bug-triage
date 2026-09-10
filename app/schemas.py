@@ -11,6 +11,8 @@ class UserCreate(BaseModel):
     def validate_password(cls, password):
         if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long.")
+        if len(password.encode("utf-8")) > 72:
+            raise ValueError("Password must be 72 bytes or fewer.")
         if not any(char.isupper() for char in password):
             raise ValueError("Password must contain at least one uppercase letter.")
         if not any(char.islower() for char in password):
