@@ -61,7 +61,8 @@ The matrix is updated throughout development and testing.
 | REQ-001 | US-001.1 | AC-001.4 — Invalid Password        | `test_registration_without_lowercase_password`                  | API                 | Covered |
 | REQ-001 | US-001.1 | AC-001.4 — Invalid Password        | `test_registration_without_number_password`                     | API                 | Covered |
 | REQ-001 | US-001.1 | AC-001.5 — Password Security       | `test_password_is_not_stored_as_plain_text`                     | Database / Security | Covered |
-| —       | —        | —                                  | `test_registration_rejects_invalid_password_for_existing_email` | API / Validation    | Covered |
+| REQ-001 | US-001.1 | —                                  | `test_registration_rejects_invalid_password_for_existing_email` | API / Validation    | Covered |
+| REQ-001 | US-001.1 | —                                  | `test_registration_rejects_password_over_bcrypt_limit`          | API / Validation    | Covered |
 
 ### REQ-002 — User Login
 
@@ -133,7 +134,7 @@ The matrix is updated throughout development and testing.
 | REQ-009 | US-009.1 | AC-009.3 — Invalid Member       | `test_project_owner_cannot_add_user_who_does_not_have_an_account` | API / Validation | Covered |
 | REQ-009 | US-009.1 | AC-009.4 — Duplicate Member     | `test_project_owner_cannot_add_same_user_more_than_once`          | API / Validation | Covered |
 | REQ-009 | US-009.1 | AC-009.5 — View Project Members | `test_project_member_can_view_project_members`                    | API / Security   | Covered |
-| —       | —        | —                               | `test_project_owner_cannot_remove_themselves`                     | API / Security   | Covered |
+| REQ-009 | US-009.1 | —                               | `test_project_owner_cannot_remove_themselves`                     | API / Security   | Covered |
 
 ### REQ-010 — Project Roles and Permissions
 
