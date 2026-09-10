@@ -76,7 +76,7 @@ class BugUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, title):
-        if title is not None and not title.strip():
+        if title is None or not title.strip():
             raise ValueError("Bug title is required.")
         return title
 

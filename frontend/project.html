@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +19,9 @@
         <h1 class="site-title">AI QA Bug Triage</h1>
 
         <div class="header-right">
-            <button id="logout-button" type="button">Logout</button>
+            <button id="logout-button" type="button">
+                Logout
+            </button>
 
             <button
                 id="theme-toggle"
@@ -32,7 +35,6 @@
     <main>
 
         <!-- Project Header -->
-
         <section class="project-header">
             <h2 id="project-name"></h2>
 
@@ -47,9 +49,7 @@
 
 
         <!-- Members -->
-
         <section class="members-section">
-
             <div id="members-content" hidden>
 
                 <p id="member-message" class="section-message"></p>
@@ -88,6 +88,7 @@
                             class="form-input"
                             name="member_role"
                             required>
+
                             <option value="QA Analyst">
                                 QA Analyst
                             </option>
@@ -95,6 +96,7 @@
                             <option value="Developer">
                                 Developer
                             </option>
+
                         </select>
 
                         <div class="form-actions">
@@ -110,28 +112,21 @@
                             </button>
 
                         </div>
-
                     </form>
-
                 </div>
-
             </div>
-
         </section>
 
 
         <!-- Bugs -->
-
         <section class="bugs-section">
 
             <div class="new-bug-action">
-
                 <button
                     id="show-bug-form"
                     type="button">
                     New Bug
                 </button>
-
             </div>
 
             <p id="bug-message" class="section-message"></p>
@@ -162,6 +157,18 @@
                     class="form-input"
                     name="affected_version"
                     placeholder="e.g. 1.2.0">
+
+
+                <label for="bug-environment">
+                    Environment:
+                </label>
+
+                <input
+                    type="text"
+                    id="bug-environment"
+                    class="form-input"
+                    name="environment"
+                    placeholder="e.g. Windows 11, Chrome 152, Desktop">
 
 
                 <label for="bug-description">
@@ -225,6 +232,10 @@
                         Blocker
                     </option>
 
+                    <option value="Critical">
+                        Critical
+                    </option>
+
                     <option value="Major">
                         Major
                     </option>
@@ -247,6 +258,10 @@
 
                     <option value="">
                         Select priority
+                    </option>
+
+                    <option value="Urgent">
+                        Urgent
                     </option>
 
                     <option value="High">
@@ -305,14 +320,12 @@
                     </button>
 
                 </div>
-
             </form>
 
 
             <div id="bugs"></div>
 
         </section>
-
     </main>
 
 
@@ -330,5 +343,7 @@
     <script src="js/theme.js"></script>
     <script src="js/logout.js"></script>
     <script src="js/project.js"></script>
+
 </body>
+
 </html>
