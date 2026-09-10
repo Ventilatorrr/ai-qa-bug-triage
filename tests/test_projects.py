@@ -39,6 +39,30 @@ def test_create_project_with_empty_name(test_client, authenticated_user_factory)
     }
 
 
+# AC-005.2 — Invalid Project Name
+def test_project_creation_rejects_whitespace_only_name(
+    test_client,
+    authenticated_user_factory
+):
+    user = authenticated_user_factory(
+        email="whitespace-project@example.com",
+        password="Password1"
+    )
+
+    response = test_client.post(
+        "/projects",
+        json={
+            "name": "   "
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Project name is required."
+
+
 # AC-005.3 — Unauthenticated User
 def test_unauthenticated_user_cannot_create_project(test_client):
     response = test_client.post(
@@ -496,6 +520,93 @@ def test_owner_can_remove_project_member(
     )
 
     assert response.status_code == 200
+
+
+# AC-009.2 — Remove Member
+@pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
+def test_removing_member_unassigns_only_their_bugs_in_that_project(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    member_factory,
+    role
+):
+    owner = authenticated_user_factory(email="remove-assigned-owner@example.com")
+    member = authenticated_user_factory(email="remove-assigned-member@example.com")
+    other_member = authenticated_user_factory(email="remaining-member@example.com")
+    project = project_factory(owner["token"], name="Member Removal Project")
+    other_project = project_factory(owner["token"], name="Other Project")
+
+    for member_project in [project, other_project]:
+        member_factory(
+            owner["token"],
+            member_project["id"],
+            member["user"]["email"],
+            role
+        )
+
+    member_factory(
+        owner["token"],
+        project["id"],
+        other_member["user"]["email"],
+        role
+    )
+
+    bugs = []
+    for bug_project, assignee in [
+        (project, member),
+        (project, member),
+        (project, other_member),
+        (other_project, member)
+    ]:
+        response = test_client.post(
+            f"/projects/{bug_project['id']}/bugs",
+            json={
+                "title": "Assigned bug before member removal",
+                "assignee_id": assignee["user_id"],
+                "severity": "Major",
+                "priority": "High"
+            },
+            headers={"Authorization": f"Bearer {owner['token']}"}
+        )
+
+        assert response.status_code == 201
+        assert response.json()["assignee_id"] == assignee["user_id"]
+        bugs.append(response.json())
+
+    response = test_client.patch(
+        f"/projects/{project['id']}/bugs/{bugs[0]['id']}/status",
+        json={"status": "Open"},
+        headers={"Authorization": f"Bearer {owner['token']}"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "Open"
+    bugs[0] = response.json()
+
+    response = test_client.delete(
+        f"/projects/{project['id']}/members/{member['user_id']}",
+        headers={"Authorization": f"Bearer {owner['token']}"}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Project member removed successfully."}
+
+    for bug in bugs:
+        response = test_client.get(
+            f"/projects/{bug['project_id']}/bugs/{bug['id']}",
+            headers={"Authorization": f"Bearer {owner['token']}"}
+        )
+
+        assert response.status_code == 200
+        expected_bug = bug.copy()
+        if bug["project_id"] == project["id"] and bug["assignee_id"] == member["user_id"]:
+            assert response.json()["updated_at"] != bug["updated_at"]
+            expected_bug["assignee_id"] = None
+            expected_bug["updated_at"] = response.json()["updated_at"]
+
+        assert response.json()["status"] == bug["status"]
+        assert response.json() == expected_bug
 
 
 # AC-009.2 — Remove Member

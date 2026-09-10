@@ -27,10 +27,8 @@ form.addEventListener("submit", async function (event) {
         if (response.ok) {
             localStorage.setItem("access_token", data.access_token);
             window.location.href = "/projects.html";
-        } else if (response.status === 422) {
-            message.textContent = "Please enter a valid email address.";
         } else {
-            message.textContent = data.detail;
+            message.textContent = formatApiError(data.detail);
         }
     } catch (error) {
         message.textContent = "Unable to connect to the server. Please try again.";

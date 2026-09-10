@@ -76,7 +76,7 @@ async function loadProject() {
     if (response.ok) {
         projectName.textContent = data.name;
     } else {
-        bugMessage.textContent = data.detail;
+        bugMessage.textContent = formatApiError(data.detail);
     }
 }
 
@@ -94,7 +94,7 @@ async function loadMembers() {
     const data = await response.json();
 
     if (!response.ok) {
-        memberMessage.textContent = data.detail;
+        memberMessage.textContent = formatApiError(data.detail);
         return null;
     }
 
@@ -225,7 +225,7 @@ async function addMember(event) {
 
         await loadBugAssignees();
     } else {
-        memberMessage.textContent = data.detail;
+        memberMessage.textContent = formatApiError(data.detail);
     }
 }
 
@@ -263,7 +263,7 @@ async function removeMember(member) {
 
         await loadBugAssignees();
     } else {
-        memberMessage.textContent = data.detail;
+        memberMessage.textContent = formatApiError(data.detail);
     }
 }
 
@@ -282,7 +282,7 @@ async function loadBugAssignees() {
     const data = await response.json();
 
     if (!response.ok) {
-        bugMessage.textContent = data.detail;
+        bugMessage.textContent = formatApiError(data.detail);
         return;
     }
 
@@ -385,7 +385,7 @@ async function loadBugs() {
     const data = await response.json();
 
     if (!response.ok) {
-        bugMessage.textContent = data.detail;
+        bugMessage.textContent = formatApiError(data.detail);
         return;
     }
 
@@ -752,7 +752,7 @@ bugForm.addEventListener(
             await loadBugs();
         } else {
             bugMessage.textContent =
-                data.detail;
+                formatApiError(data.detail);
         }
     }
 );
