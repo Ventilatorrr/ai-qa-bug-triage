@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bugs - AI QA Bug Triage</title>
+    <title>Bug - AI QA Bug Triage</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -23,14 +23,100 @@
         </div>
     </header>
 
-    <main>
-        <section>
-            <h2>Bugs</h2>
+    <main id="bug-page">
+        <a id="back-to-project" class="back-link" href="/projects.html">
+            &larr; Back to project
+        </a>
 
-            <p class="page-description">
-                Bug management will be implemented here.
-            </p>
-        </section>
+        <p id="bug-message" class="section-message" role="status" aria-live="polite">
+            Loading bug report...
+        </p>
+
+        <article id="bug-details" class="bug-details" hidden>
+            <header class="bug-details-header">
+                <p id="bug-reference" class="bug-reference"></p>
+                <h2 id="bug-heading"></h2>
+                <span id="bug-status" class="bug-status"></span>
+            </header>
+
+            <dl class="bug-details-grid">
+                <div class="bug-detail-item bug-detail-wide">
+                    <dt>Title</dt>
+                    <dd id="bug-title"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-wide">
+                    <dt>Environment</dt>
+                    <dd id="bug-environment"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-wide">
+                    <dt>Description</dt>
+                    <dd id="bug-description"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-wide">
+                    <dt>Steps to Reproduce</dt>
+                    <dd id="bug-steps"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-wide">
+                    <dt>Actual Result</dt>
+                    <dd id="bug-actual-result"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-wide">
+                    <dt>Expected Result</dt>
+                    <dd id="bug-expected-result"></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Severity</dt>
+                    <dd id="bug-severity"></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Priority</dt>
+                    <dd id="bug-priority"></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Status</dt>
+                    <dd id="bug-status-detail"></dd>
+
+                    <dt id="bug-resolution-label" class="bug-detail-related-label" hidden>
+                        Resolution
+                    </dt>
+                    <dd id="bug-resolution" hidden></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Assignee</dt>
+                    <dd id="bug-assignee"></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Affected Version</dt>
+                    <dd id="bug-affected-version"></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Fix Version</dt>
+                    <dd id="bug-fix-version"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-final-row">
+                    <dt>Created</dt>
+                    <dd id="bug-created-at"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-final-row">
+                    <dt>Last Updated</dt>
+                    <dd id="bug-updated-at"></dd>
+                </div>
+
+            </dl>
+        </article>
     </main>
 
     <footer>
@@ -40,5 +126,7 @@
 
     <script src="js/theme.js"></script>
     <script src="js/logout.js"></script>
+    <script src="js/api-errors.js"></script>
+    <script src="js/bugs.js"></script>
 </body>
 </html>
