@@ -258,14 +258,14 @@ Where practical, test data should be created as part of test setup rather than r
 
 ## 9. Traceability
 
-Requirements, user stories, acceptance criteria, and tests will be connected through the project's Traceability Matrix.
+Requirements, acceptance criteria, test references, test layers, and coverage status are connected through the project's Traceability Matrix. User stories remain in the requirements specification.
 
 The current matrix structure is:
 
-| REQ | US | AC | Automated Test | Test Type | Status |
-| --- | -- | -- | -------------- | --------- | ------ |
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | -- | -------------- | ---------- | ------ |
 
-The `Test Type` field is used to identify the relevant testing layer and/or purpose, for example:
+The `Test Layer` field is used to identify the relevant testing layer and/or purpose, for example:
 
 * UI
 * API

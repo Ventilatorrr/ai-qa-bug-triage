@@ -53,8 +53,8 @@ Unless the user explicitly changes these checkpoints:
 
 - Acceptance Criteria are the primary specification format. Do not change requirements without approval.
 - Keep approximately five representative BDD examples separate from the main matrix. Do not add a BDD Scenario column.
-- Main matrix columns: REQ, US, AC, Automated Test, Test Type, Status.
-- Follow existing Test Type conventions, such as API, UI (Playwright), API / Security, UI / Security, Manual, or API + UI, as applicable.
+- Main matrix columns: REQ, AC, Test Reference, Test Layer, Status.
+- Follow existing Test Layer conventions, such as API, UI (Playwright), API / Security, UI / Security, Manual, or API + UI, as applicable.
 - Do not invent REQ/US/AC IDs. Use current repository numbering.
 - Keep detailed product specifications and current progress in requirements/project documentation and handoffs rather than duplicating them here.
 
