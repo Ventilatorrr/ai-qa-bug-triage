@@ -128,11 +128,13 @@ def test_non_member_cannot_create_bug(
 
 
 # AC-011.4 — Optional Bug Information
+@pytest.mark.parametrize("severity", ["Blocker", "Major", "Moderate", "Minor"])
 def test_bug_can_be_created_with_optional_information(
     test_client,
     authenticated_user_factory,
     project_factory,
-    member_factory
+    member_factory,
+    severity
 ):
     owner = authenticated_user_factory(
         email="optional-owner@example.com",
@@ -170,7 +172,7 @@ def test_bug_can_be_created_with_optional_information(
             ),
             "expected_result": "The user should be logged in.",
             "actual_result": "Nothing happens after clicking Login.",
-            "severity": "Blocker",
+            "severity": severity,
             "priority": "High",
             "assignee_id": developer_member["user_id"],
             "fix_version": "1.3.0"
@@ -195,7 +197,7 @@ def test_bug_can_be_created_with_optional_information(
     )
     assert data["expected_result"] == "The user should be logged in."
     assert data["actual_result"] == "Nothing happens after clicking Login."
-    assert data["severity"] == "Blocker"
+    assert data["severity"] == severity
     assert data["priority"] == "High"
     assert data["assignee_id"] == developer_member["user_id"]
     assert data["fix_version"] == "1.3.0"
@@ -1261,7 +1263,7 @@ def test_authorized_member_can_reassign_bug(
 )
 @pytest.mark.parametrize(
     "severity",
-    ["Blocker", "Critical", "Major", "Minor"]
+    ["Blocker", "Major", "Moderate", "Minor"]
 )
 def test_project_member_can_set_bug_severity(
     test_client,
@@ -1585,7 +1587,7 @@ def test_non_member_cannot_update_bug_classification(
 # Additional Validation Test
 @pytest.mark.parametrize(
     "severity",
-    ["High", "Urgent", "Invalid"]
+    ["High", "Urgent", "Invalid", "Critical"]
 )
 def test_bug_rejects_invalid_severity(
     test_client,
@@ -1603,6 +1605,22 @@ def test_bug_rejects_invalid_severity(
         user["token"],
         name=f"Invalid Severity {severity} Project"
     )
+
+    invalid_create_response = test_client.post(
+        f"/projects/{project['id']}/bugs",
+        json={
+            "title": "Bug with invalid severity",
+            "severity": severity
+        },
+        headers={
+            "Authorization": f"Bearer {user['token']}"
+        }
+    )
+
+    assert invalid_create_response.status_code == 422
+    create_detail = invalid_create_response.json()["detail"]
+    assert create_detail[0]["loc"] == ["body", "severity"]
+    assert "Invalid severity." in create_detail[0]["msg"]
 
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
@@ -1639,7 +1657,7 @@ def test_bug_rejects_invalid_severity(
 # Additional Validation Test
 @pytest.mark.parametrize(
     "priority",
-    ["Critical", "Blocker", "Invalid"]
+    ["Moderate", "Blocker", "Invalid"]
 )
 def test_bug_rejects_invalid_priority(
     test_client,
