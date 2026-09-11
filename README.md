@@ -1,7 +1,7 @@
 # ai-qa-bug-triage
 Bug triage application built as a QA portfolio project with FastAPI, SQLite, and a plain HTML/CSS/JavaScript frontend.
 
-Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The project page supports bug creation and listing. Individual bug management in the browser, interactive sorting, and Increment 3 AI-assisted triage remain pending.
+Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The project page supports bug creation, listing, and interactive sorting by all seven columns; browser verification of sorting remains outstanding. Individual bug management in the browser and Increment 3 AI-assisted triage remain pending.
 
 Current automated coverage uses pytest and FastAPI TestClient. BDD feature files are specification examples, not executable tests. Playwright, Postman, AI testing, and CI/CD are planned portfolio work; they are not established coverage in this repository.
 

@@ -353,9 +353,14 @@ As an authorized project member, I want to view and open bug reports in projects
 
 * An authorized project member can sort the bug list by all columns.
 * The default bug list order is most recently updated first.
+* Selecting a different column starts ascending; selecting the active column toggles direction. The active column and direction are indicated.
+* Bug ID sorts numerically, Title and the displayed Assignee value sort alphabetically without case sensitivity, and Last Updated sorts chronologically.
 * Severity is ordered from highest to lowest impact: Blocker, Major, Moderate, Minor.
 * Priority is ordered from highest to lowest urgency: Urgent, High, Medium, Low.
-* Missing optional values are displayed last when sorting.
+* Ascending Severity and Priority use low-to-high rank; descending uses high-to-low rank.
+* Ascending Status follows Triage, Open, Development, Testing, Closed; descending reverses that order.
+* Missing optional values, including Unassigned, are displayed last in both directions.
+* Sorting preserves displayed data and bug links without updating bug records. The active sort is retained when the list refreshes on the current page.
 
 ---
 

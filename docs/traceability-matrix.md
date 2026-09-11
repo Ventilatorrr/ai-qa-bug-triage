@@ -178,9 +178,11 @@ AC-009.2 has API coverage for member removal, loss of access, automatic unassign
 | REQ-012 | AC-012.2 — Open Bug Report | `test_project_member_can_open_bug_report` | API | Partial |
 | REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Covered |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Partial |
-| REQ-012 | AC-012.4 — Sort Bug Reports | — | UI | Pending |
+| REQ-012 | AC-012.4 — Sort Bug Reports | — | UI | Partial |
 
-**Coverage note:** AC-012.2 verifies Environment in the full bug-report response. AC-012.4 is Partial because the API verifies the default order of most recently updated first, while interactive browser sorting is still pending. Required classification sort order is Severity: Blocker, Major, Moderate, Minor and Priority: Urgent, High, Medium, Low.
+**Coverage note:** AC-012.2 verifies Environment in the full bug-report response. AC-012.4 sorting is implemented for all seven columns in the browser, with initial Last Updated descending and missing optional values last in both directions. Severity uses Blocker, Major, Moderate, Minor from high to low; Priority uses Urgent, High, Medium, Low; Status follows the lifecycle order.
+
+**Sorting verification:** The existing API default-order test passed (1 case). Temporary Node checks executed the actual page script with a simulated DOM and API response: initial order, all columns in both directions, case-insensitive text, null/undefined/empty values last, switching columns, indicators, focus restoration, unchanged rendered values and links, no sorting API requests or source-data mutation, refresh, and empty-list recovery passed. JavaScript syntax and diff checks passed. These checks are not a committed UI test suite or visual browser evidence. AC-012.4 remains Partial until browser verification covers mouse and keyboard interaction, both themes, layout, and navigation through the retained bug links. No manual test-case ID is assigned.
 
 
 ### REQ-013 — Bug Editing
