@@ -50,7 +50,7 @@ class BugCreate(BaseModel):
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, severity):
-        if severity is not None and severity not in ["Blocker", "Critical", "Major", "Minor"]:
+        if severity is not None and severity not in ["Blocker", "Major", "Moderate", "Minor"]:
             raise ValueError("Invalid severity.")
         return severity
 
@@ -85,7 +85,7 @@ class BugUpdate(BaseModel):
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, severity):
-        if severity is not None and severity not in ["Blocker", "Critical", "Major", "Minor"]:
+        if severity is not None and severity not in ["Blocker", "Major", "Moderate", "Minor"]:
             raise ValueError("Invalid severity.")
         return severity
 
