@@ -425,10 +425,23 @@ label {
     font-size: 16px;
 }
 
+input.form-input,
+textarea.form-input {
+    padding-left: 12px;
+}
+
 .form-input::placeholder {
     font-style: italic;
 
     color: var(--placeholder-text);
+}
+
+#bug-severity.select-prompt,
+#bug-priority.select-prompt,
+#bug-assignee.select-prompt {
+    color: var(--placeholder-text);
+
+    font-style: normal;
 }
 
 .form-input:focus {
@@ -490,6 +503,12 @@ form button {
     max-width: 950px;
 
     margin: 10px auto 20px;
+}
+
+#project-form > label,
+#member-form > label,
+#bug-form > label {
+    padding-left: 4px;
 }
 
 #bug-form textarea {
@@ -809,6 +828,124 @@ button:disabled {
 
 
 /* =========================================================
+   Bug Details
+   ========================================================= */
+
+#bug-page {
+    max-width: 900px;
+}
+
+.back-link {
+    display: inline-block;
+
+    margin-bottom: 16px;
+
+    color: var(--secondary-text);
+
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: var(--navigation-hover);
+}
+
+.bug-details {
+    overflow: hidden;
+
+    background-color: var(--surface-background);
+
+    border: 1px solid var(--border-color);
+
+    border-radius: 10px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.bug-details-header {
+    padding: 24px;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bug-details-header h2 {
+    margin: 4px 0 14px;
+
+    text-align: left;
+}
+
+.bug-reference {
+    margin: 0;
+
+    color: var(--muted-text);
+
+    font-weight: bold;
+}
+
+.bug-status {
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+
+    color: var(--secondary-text);
+}
+
+.bug-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    margin: 0;
+}
+
+.bug-detail-item {
+    min-width: 0;
+
+    padding: 18px 24px;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bug-detail-wide {
+    grid-column: 1 / -1;
+}
+
+.bug-detail-item dt.bug-detail-related-label {
+    margin-top: 16px;
+}
+
+.bug-detail-final-row {
+    border-bottom: none;
+}
+
+.bug-detail-item dt {
+    margin-bottom: 7px;
+
+    color: var(--muted-text);
+
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.bug-detail-item dd {
+    margin: 0;
+
+    overflow-wrap: anywhere;
+
+    color: var(--primary-text);
+
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.bug-detail-item dd.missing-value {
+    color: var(--muted-text);
+}
+
+
+/* =========================================================
    Footer
    ========================================================= */
 
@@ -948,6 +1085,19 @@ footer a:hover {
     .bug-table {
         min-width: 850px;
     }
+
+    .bug-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bug-detail-wide {
+        grid-column: auto;
+    }
+
+    .bug-detail-final-row:not(:last-child) {
+        border-bottom: 1px solid var(--border-color);
+    }
+
 }
 
 

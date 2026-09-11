@@ -318,6 +318,8 @@ async function loadBugAssignees() {
             );
         }
     });
+
+    updateSelectPromptStyle(bugAssigneeInput);
 }
 
 
@@ -707,6 +709,29 @@ memberForm.addEventListener(
    Bug Form
    ========================================================= */
 
+function updateSelectPromptStyle(selectInput) {
+    selectInput.classList.toggle(
+        "select-prompt",
+        selectInput.value === ""
+    );
+}
+
+
+bugSeverityInput.addEventListener("change", function () {
+    updateSelectPromptStyle(bugSeverityInput);
+});
+
+
+bugPriorityInput.addEventListener("change", function () {
+    updateSelectPromptStyle(bugPriorityInput);
+});
+
+
+bugAssigneeInput.addEventListener("change", function () {
+    updateSelectPromptStyle(bugAssigneeInput);
+});
+
+
 showBugFormButton.addEventListener(
     "click",
     async function () {
@@ -725,6 +750,9 @@ cancelBugFormButton.addEventListener(
     "click",
     function () {
         bugForm.reset();
+        updateSelectPromptStyle(bugSeverityInput);
+        updateSelectPromptStyle(bugPriorityInput);
+        updateSelectPromptStyle(bugAssigneeInput);
 
         bugForm.hidden = true;
 
@@ -809,6 +837,9 @@ bugForm.addEventListener(
 
         if (response.ok) {
             bugForm.reset();
+            updateSelectPromptStyle(bugSeverityInput);
+            updateSelectPromptStyle(bugPriorityInput);
+            updateSelectPromptStyle(bugAssigneeInput);
 
             bugForm.hidden = true;
 
