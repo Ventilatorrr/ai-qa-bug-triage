@@ -702,6 +702,26 @@ button:disabled {
     font-weight: bold;
 }
 
+.bug-sort-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.bug-sort-button:hover {
+    background: transparent;
+    color: inherit;
+    text-decoration: underline;
+}
+
+.bug-sort-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
 .bug-table td:nth-child(2) {
     min-width: 220px;
 

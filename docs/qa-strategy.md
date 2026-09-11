@@ -368,7 +368,7 @@ Current working-tree status (10 September 2026):
 * Automated API coverage is currently the strongest test layer.
 * Playwright UI automation has not yet been implemented.
 * Increment 2 has not yet been formally reviewed and completed.
-* Increment 2 bug-management APIs are implemented through REQ-017. Bug creation and listing are available on the project page; the individual Bug UI and interactive sorting remain pending.
+* Increment 2 bug-management APIs are implemented through REQ-017. Bug creation, listing, and interactive sorting are available on the project page; browser verification of sorting remains outstanding and the individual Bug UI remains pending.
 * AI-assisted triage is planned for Increment 3 and is not implemented.
 * Layered test coverage will be expanded as frontend and later AI functionality are implemented.
 * The latest full pytest run in this session passed 148 cases in 114.52 seconds, after the member-removal timestamp fix. This documentation review does not constitute a new test run.
