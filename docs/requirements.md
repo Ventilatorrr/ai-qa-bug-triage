@@ -353,7 +353,7 @@ As an authorized project member, I want to view and open bug reports in projects
 
 * An authorized project member can sort the bug list by all columns.
 * The default bug list order is most recently updated first.
-* Severity is ordered from highest to lowest impact: Blocker, Critical, Major, Minor.
+* Severity is ordered from highest to lowest impact: Blocker, Major, Moderate, Minor.
 * Priority is ordered from highest to lowest urgency: Urgent, High, Medium, Low.
 * Missing optional values are displayed last when sorting.
 
@@ -461,11 +461,11 @@ As an authorized project member, I want to set and update a bug's severity and p
 #### AC-016.1 — Set Bug Severity
 
 * An authorized project member can set the severity of a bug report.
-* The supported severity values are `Blocker`, `Critical`, `Major`, and `Minor`.
-* `Blocker` represents a failure of core functionality where no reasonable workaround is available.
-* `Critical` represents a severe failure of major functionality where a workaround is available.
-* `Major` represents a significant defect affecting non-critical functionality or functionality for which an easy workaround is available.
-* `Minor` represents a cosmetic or low-impact functional defect.
+* The supported severity values are `Blocker`, `Major`, `Moderate`, and `Minor`.
+* `Blocker`: Core functionality is unusable or meaningful use is prevented. No reasonable workaround exists.
+* `Major`: Significant functionality is broken or the defect has substantial user/data impact. A workaround may exist, but the impact is significant.
+* `Moderate`: Noticeable functional defect with limited impact or a reasonable/easy workaround. The affected functionality still remains usable.
+* `Minor`: Cosmetic issue or low-impact functional defect. Normal use is only slightly affected.
 * The selected severity is saved and displayed on the bug report.
 
 #### AC-016.2 — Set Bug Priority

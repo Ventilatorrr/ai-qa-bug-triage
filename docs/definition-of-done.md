@@ -14,7 +14,7 @@ The Definition of Done (DoD) applies to every product increment. An increment is
 - All acceptance criteria have been verified.
 - Relevant automated tests have been implemented or updated.
 - Relevant regression tests have been executed successfully.
-- No unresolved critical or high-severity defects remain.
+- No unresolved Major or Blocker defects remain.
 
 ## Integration and API Testing
 
