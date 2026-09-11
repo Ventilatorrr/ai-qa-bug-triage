@@ -371,6 +371,49 @@ async function updateBugAssigneeVisibility() {
 }
 
 
+let projectBugs = [];
+let bugSortColumn = "updated_at";
+let bugSortDirection = "descending";
+
+const severityOrder = ["Minor", "Moderate", "Major", "Blocker"];
+const priorityOrder = ["Low", "Medium", "High", "Urgent"];
+const statusOrder = ["Triage", "Open", "Development", "Testing", "Closed"];
+
+function compareBugs(first, second) {
+    let firstValue = first[bugSortColumn];
+    let secondValue = second[bugSortColumn];
+    const firstMissing = firstValue == null || firstValue === "";
+    const secondMissing = secondValue == null || secondValue === "";
+
+    // Missing values stay last regardless of the selected direction.
+    if (firstMissing && secondMissing) return 0;
+    if (firstMissing) return 1;
+    if (secondMissing) return -1;
+
+    if (bugSortColumn === "severity") {
+        firstValue = severityOrder.indexOf(firstValue);
+        secondValue = severityOrder.indexOf(secondValue);
+    } else if (bugSortColumn === "priority") {
+        firstValue = priorityOrder.indexOf(firstValue);
+        secondValue = priorityOrder.indexOf(secondValue);
+    } else if (bugSortColumn === "status") {
+        firstValue = statusOrder.indexOf(firstValue);
+        secondValue = statusOrder.indexOf(secondValue);
+    } else if (bugSortColumn === "updated_at") {
+        firstValue = new Date(firstValue).getTime();
+        secondValue = new Date(secondValue).getTime();
+    } else if (bugSortColumn === "assignee_id") {
+        firstValue = `User ${firstValue}`;
+        secondValue = `User ${secondValue}`;
+    }
+
+    const comparison = typeof firstValue === "string"
+        ? firstValue.toLowerCase().localeCompare(secondValue.toLowerCase())
+        : firstValue - secondValue;
+
+    return bugSortDirection === "ascending" ? comparison : -comparison;
+}
+
 async function loadBugs() {
     const response = await fetch(
         `/projects/${projectId}/bugs`,
@@ -389,6 +432,12 @@ async function loadBugs() {
         return;
     }
 
+    projectBugs = data;
+    renderBugs();
+}
+
+function renderBugs() {
+    const data = [...projectBugs].sort(compareBugs);
     bugsContainer.innerHTML = "";
 
     if (data.length === 0) {
@@ -420,20 +469,39 @@ async function loadBugs() {
         document.createElement("tr");
 
     const headers = [
-        "Bug ID",
-        "Title",
-        "Severity",
-        "Priority",
-        "Status",
-        "Assignee",
-        "Last Updated"
+        ["id", "Bug ID"],
+        ["title", "Title"],
+        ["severity", "Severity"],
+        ["priority", "Priority"],
+        ["status", "Status"],
+        ["assignee_id", "Assignee"],
+        ["updated_at", "Last Updated"]
     ];
 
-    headers.forEach(function (headerText) {
+    headers.forEach(function ([column, headerText]) {
         const th =
             document.createElement("th");
 
-        th.textContent = headerText;
+        th.scope = "col";
+        const active = column === bugSortColumn;
+        th.setAttribute("aria-sort", active ? bugSortDirection : "none");
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "bug-sort-button";
+        button.dataset.sortColumn = column;
+        button.textContent = headerText + (active
+            ? (bugSortDirection === "ascending" ? " ↑" : " ↓")
+            : "");
+        button.addEventListener("click", function () {
+            bugSortDirection = column === bugSortColumn && bugSortDirection === "ascending"
+                ? "descending"
+                : "ascending";
+            bugSortColumn = column;
+            renderBugs();
+            bugsContainer.querySelector(`[data-sort-column="${column}"]`).focus();
+        });
+        th.appendChild(button);
 
         headerRow.appendChild(th);
     });
