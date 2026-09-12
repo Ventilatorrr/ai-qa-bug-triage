@@ -72,14 +72,26 @@ function renderBug(bug) {
     setText("#bug-severity", bug.severity);
     setText("#bug-priority", bug.priority);
 
-    if (bug.severity) {
-        document.querySelector("#bug-severity").classList.add(
+    const severityElement = document.querySelector("#bug-severity");
+    const priorityElement = document.querySelector("#bug-priority");
+
+    severityElement.classList.remove(
+        "bug-severity-blocker", "bug-severity-major",
+        "bug-severity-moderate", "bug-severity-minor"
+    );
+    priorityElement.classList.remove(
+        "bug-priority-urgent", "bug-priority-high",
+        "bug-priority-medium", "bug-priority-low"
+    );
+
+    if (!isMissingValue(bug.severity)) {
+        severityElement.classList.add(
             `bug-severity-${bug.severity.toLowerCase()}`
         );
     }
 
-    if (bug.priority) {
-        document.querySelector("#bug-priority").classList.add(
+    if (!isMissingValue(bug.priority)) {
+        priorityElement.classList.add(
             `bug-priority-${bug.priority.toLowerCase()}`
         );
     }
@@ -115,6 +127,8 @@ function renderBug(bug) {
 
 
 async function loadBug() {
+    bugDetails.hidden = true;
+
     if (!accessToken) {
         window.location.href = "/login.html";
         return;
@@ -158,9 +172,20 @@ async function loadBug() {
 
         if (!response.ok) {
             bugMessage.textContent = formatApiError(
-                data.detail,
+                data?.detail,
                 "Unable to load this bug report."
             );
+            return;
+        }
+
+        if (
+            !data || typeof data !== "object" || Array.isArray(data) ||
+            !Number.isInteger(data.id) || String(data.id) !== bugId ||
+            !Number.isInteger(data.project_id) || String(data.project_id) !== projectId ||
+            typeof data.title !== "string" || !data.title.trim() ||
+            typeof data.status !== "string" || !data.status.trim()
+        ) {
+            bugMessage.textContent = "Unable to load this bug report. Invalid server response.";
             return;
         }
 
