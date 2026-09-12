@@ -37,6 +37,9 @@
                 <p id="bug-reference" class="bug-reference"></p>
                 <h2 id="bug-heading"></h2>
                 <span id="bug-status" class="bug-status"></span>
+                <div class="bug-details-actions">
+                    <button id="show-edit-bug-form" type="button">Edit Bug</button>
+                </div>
             </header>
 
             <dl class="bug-details-grid">
@@ -116,6 +119,161 @@
                 </div>
 
             </dl>
+
+            <form id="edit-bug-form" hidden novalidate>
+
+                <p id="edit-bug-message" class="section-message" role="alert" aria-live="polite"></p>
+
+                <label for="edit-bug-title">
+                    Title:
+                </label>
+
+                <input
+                    type="text"
+                    id="edit-bug-title"
+                    class="form-input"
+                    name="edit_bug_title"
+                    placeholder="Enter bug title"
+                    required>
+
+
+                <label for="edit-bug-environment">
+                    Environment:
+                </label>
+
+                <input
+                    type="text"
+                    id="edit-bug-environment"
+                    class="form-input"
+                    name="edit_environment"
+                    placeholder="e.g. Windows 11, Chrome 152, Desktop">
+
+
+                <label for="edit-bug-description">
+                    Description:
+                </label>
+
+                <textarea
+                    id="edit-bug-description"
+                    class="form-input edit-bug-textarea"
+                    name="edit_description"
+                    placeholder="Describe the bug"></textarea>
+
+
+                <label for="edit-bug-steps">
+                    Steps to Reproduce:
+                </label>
+
+                <textarea
+                    id="edit-bug-steps"
+                    class="form-input edit-bug-textarea edit-bug-steps-textarea"
+                    name="edit_steps_to_reproduce"
+                    placeholder="Describe how to reproduce the bug"></textarea>
+
+
+                <label for="edit-bug-actual">
+                    Actual Result:
+                </label>
+
+                <textarea
+                    id="edit-bug-actual"
+                    class="form-input edit-bug-textarea"
+                    name="edit_actual_result"
+                    placeholder="What actually happens?"></textarea>
+
+
+                <label for="edit-bug-expected">
+                    Expected Result:
+                </label>
+
+                <textarea
+                    id="edit-bug-expected"
+                    class="form-input edit-bug-textarea"
+                    name="edit_expected_result"
+                    placeholder="What should happen?"></textarea>
+
+
+                <label for="edit-bug-severity">
+                    Severity:
+                </label>
+
+                <select
+                    id="edit-bug-severity"
+                    class="form-input"
+                    name="edit_severity">
+
+                    <option value="">Select severity</option>
+                    <option value="Blocker">Blocker</option>
+                    <option value="Major">Major</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Minor">Minor</option>
+
+                </select>
+
+
+                <label for="edit-bug-priority">
+                    Priority:
+                </label>
+
+                <select
+                    id="edit-bug-priority"
+                    class="form-input"
+                    name="edit_priority">
+
+                    <option value="">Select priority</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+
+                </select>
+
+
+                <label id="edit-bug-assignee-label" for="edit-bug-assignee">
+                    Assignee:
+                </label>
+
+                <select
+                    id="edit-bug-assignee"
+                    class="form-input"
+                    name="edit_assignee_id">
+                </select>
+
+
+                <label for="edit-bug-affected-version">
+                    Affected Version:
+                </label>
+
+                <input
+                    type="text"
+                    id="edit-bug-affected-version"
+                    class="form-input"
+                    name="edit_affected_version"
+                    placeholder="e.g. 1.2.0">
+
+
+                <label for="edit-bug-fix-version">
+                    Fix Version:
+                </label>
+
+                <input
+                    type="text"
+                    id="edit-bug-fix-version"
+                    class="form-input"
+                    name="edit_fix_version"
+                    placeholder="e.g. 1.3.0">
+
+
+                <div class="form-actions">
+
+                    <button id="save-edit-button" type="submit">Save</button>
+
+                    <button id="cancel-edit-form" type="button">Cancel</button>
+
+                </div>
+
+            </form>
+
         </article>
     </main>
 
