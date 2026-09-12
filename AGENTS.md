@@ -1,82 +1,113 @@
 # AI QA Bug Triage — Agent Instructions
 
-## General and sources of truth
+## Purpose and sources
 
-- Keep implementation simple and portfolio-focused. Do not introduce unnecessary abstractions, libraries, frameworks, services, or infrastructure.
-- Preserve existing naming, API contracts, and product decisions unless a change is agreed first.
-- The repository is the source of truth for current code, not proof that current behavior is correct. Requirements and approved decisions define intended behavior.
-- Current explicit user instructions take precedence over older handoffs and these working defaults. Do not revive superseded decisions or requirement numbering.
-- Read the current requirements, relevant acceptance criteria, traceability entries, and nearby implementation/tests before proposing changes.
-- Report conflicts between code, documentation, and handoffs before changing behavior. Ask when an ambiguity affects implementation.
+This is a QA, QA Automation, and AI-QA portfolio and learning project.
+Favor simple, understandable implementations and meaningful QA evidence.
 
-## Before editing
+The repository shows the current implementation. Requirements and approved
+project decisions define intended behavior. Current user instructions override
+older handoffs and these defaults.
 
-- Inspect `git status`, `git diff`, `git diff --cached`, and `git log -5 --oneline`.
-- Preserve existing staged and unstaged changes. Do not discard, overwrite, or commit unrelated user work.
-- Confirm the requested scope. Work on one issue at a time; do not perform opportunistic cleanup or unrelated refactors.
-- Read-only inspection and reproduction in a disposable test database may proceed within the requested scope.
+If implementation, requirements, or approved decisions materially conflict,
+surface the conflict rather than silently choosing one.
 
-## Step-by-step approval workflow
+Use relevant sections of:
 
-Unless the user explicitly changes these checkpoints:
+- `docs/requirements.md` for behavior and acceptance criteria;
+- `docs/traceability-matrix.md` for coverage and test references;
+- `docs/qa-strategy.md` for testing approach;
+- `docs/definition-of-done.md` when assessing increment completion.
 
-1. Inspect and reproduce the issue. Explain its cause, proposed regression test or verification, and smallest likely fix. Wait for approval before editing files.
-2. After test approval, add or adjust only the focused test. Demonstrate failure for the expected reason when handling a regression defect. Show the change and result, then stop for review.
-3. Wait for approval to implement the fix. Apply the smallest coherent change, run focused tests and the appropriate wider/full regression suite, and show the diff and results. Stop for review.
-4. Propose the corresponding traceability/documentation update. Apply it after approval, using the existing format and accurate coverage by layer.
-5. Do not move to another issue or commit without explicit approval.
+Read only the context needed for the task. Reuse established context and refresh
+it when files change or assumptions need verification.
 
-- Follow existing test style, fixture patterns, naming, and assertions. Explain changes in plain language so the user can understand and review them.
-- If a test is not appropriate, explain the proposed verification instead of adding a test that merely mirrors implementation.
-- Do not change bug lifecycle status, classification, assignment, or closure unless explicitly delegated. The user manages these actions by default.
+## Scope and collaboration
 
-## Python environment and test data
+- Complete authorized work and proportionate verification without requesting
+  approval for every routine step.
+- Honor explicit review checkpoints, read-only requests, code-only requests,
+  and other task-specific limits.
+- Ask before expanding scope or making an unapproved product, requirement,
+  architecture, dependency, or API-contract decision.
+- Prefer focused changes and avoid bundling unrelated issues into one task.
+- Preserve staged and unstaged user work.
+- Avoid unrelated cleanup, speculative features, unnecessary abstractions,
+  and new dependencies without a concrete need.
+- Explain meaningful decisions and unfamiliar concepts clearly.
+- Report unrelated findings separately rather than silently fixing them.
 
-- Local repository: `D:\Portfolio\ai-qa-bug-triage`
-- Project Python: `D:\Portfolio\ai-qa-bug-triage\.venv\Scripts\python.exe`
-- From the repository root, use commands such as `.\.venv\Scripts\python.exe -m pytest`.
-- Do not assume global/system Python is correct. In another environment, inspect its configuration rather than treating the Windows path as available.
-- Reproduce defects and run automated tests only against disposable test databases. Confirm isolation before running database-writing checks.
-- Do not modify real application records, migrate the application database, or delete real projects without explicit authorization for that action.
-- Inspect the current test database setup before concurrent runs; do not run tests concurrently when they share a fixed database filename.
+## Data and authorization
 
-## Testing and traceability
+- Backend authorization is authoritative; UI visibility is not security.
+- Use disposable databases for automated tests and defect reproduction.
+- `tests/conftest.py` currently uses the fixed `test_bugtriage.db` filename;
+  do not run test suites concurrently against it.
+- Do not modify real application data or run migrations against the real
+  application database unless the task explicitly requires and authorizes it.
+- Do not manipulate real dogfooding bug records merely to test implementation;
+  use supported test fixtures or explicitly authorized workflows.
 
-- Prefer public API behavior tests. Use direct database assertions only for persistence/integrity behavior that cannot meaningfully be verified through the API.
-- Backend authorization is authoritative; hiding UI controls does not establish security.
-- Reuse existing fixtures and use pytest parameterization for the same behavior across roles or inputs. Avoid duplicate test names and redundant coverage.
-- Run relevant tests and report actual results, including limitations. A passing API suite does not prove UI completion.
-- Keep automated coverage traceable. Map tests to existing REQ/US/AC entries where applicable; record additional security/regression coverage explicitly without inventing or forcing an AC mapping.
-- Do not mark an AC fully Covered if required UI/manual behavior is still unverified. Preserve Partial/Pending distinctions by layer.
+## Verification and QA evidence
 
-## Requirements and documentation
+- Use the project virtual environment when running Python tests:
+  `.\.venv\Scripts\python.exe -m pytest`
+- Choose verification appropriate to the change and its risk.
+- For regression defects, demonstrate that focused coverage detects the
+  original failure when practical, then verify the correction.
+- Prefer public API tests. Use direct database assertions when persistence or
+  integrity cannot meaningfully be verified through the API.
+- Follow existing fixtures and test style.
+- Parameterize equivalent cases rather than duplicating tests.
+- Authorization tests must otherwise satisfy request prerequisites so another
+  validation failure does not mask the authorization behavior.
+- Assert ordering only when ordering is part of the requirement.
+- Report the evidence actually obtained.
+- Distinguish source inspection, automated execution, and browser/manual
+  verification.
+- Do not claim visual or theme behavior was verified unless it was actually
+  observed.
 
-- Acceptance Criteria are the primary specification format. Do not change requirements without approval.
-- Keep approximately five representative BDD examples separate from the main matrix. Do not add a BDD Scenario column.
-- Main matrix columns: REQ, AC, Test Reference, Test Layer, Status.
-- Follow existing Test Layer conventions, such as API, UI (Playwright), API / Security, UI / Security, Manual, or API + UI, as applicable.
-- Do not invent REQ/US/AC IDs. Use current repository numbering.
-- Keep detailed product specifications and current progress in requirements/project documentation and handoffs rather than duplicating them here.
+## Requirements and traceability
+
+- Acceptance criteria are the primary behavioral specification.
+- Keep BDD examples separate and representative; do not replace comprehensive
+  acceptance criteria with exhaustive BDD scenarios.
+- Preserve REQ, US, and AC identifiers and exact AC titles.
+- Do not silently rewrite requirements to match the implementation.
+- Keep affected implementation, tests, traceability, and documentation
+  consistent within the authorized task scope.
+- Traceability matrix columns are:
+  `REQ | AC | Test Reference | Test Layer | Status`.
+- Each automated test gets its own matrix row using its exact function name.
+- Additional security, technical, or edge-risk tests may use `AC —`.
+- Required UI or manual gaps prevent an AC from being marked fully `Covered`.
+- Do not assign artificial manual test-case IDs to automated tests.
+  Future formal manual cases may use identifiers such as `TC-PROJ-001`.
+- Passing automated tests or implementing a page does not establish increment
+  completion; use the Definition of Done.
+
+## Product boundaries
+
+- Use “bug report,” not “bug ticket.”
+- Preserve defects and findings as QA evidence.
+- Do not assign retrospective application versions.
+- Until formal versioning is introduced, leave version fields blank for newly
+  discovered self-bugs unless otherwise requested.
+- Comments and version-management features remain deferred unless requested.
+- AI suggestions remain visually and logically separate from authoritative bug
+  data until accepted.
+- If a user edits an AI suggestion before `Accept All`, the edited value must
+  be applied rather than the original suggestion.
+- Do not begin unrelated AI work during non-AI tasks.
 
 ## Git
 
-- No automatic commits. Show the diff and test evidence first; commit only when explicitly authorized.
-- Use Conventional Commits: `type: imperative lowercase description`, with no trailing period.
-- Common types: feat, fix, test, docs, refactor, ci, chore, style.
-- Prefer logical milestones rather than bundling unrelated changes.
+Do not commit, rewrite history, delete branches, or perform destructive Git
+operations unless explicitly authorized.
 
-## Product and scope rules
+When a commit is requested, use a small logical Conventional Commit:
 
-- Use “bug report”, not “bug ticket”. Do not turn the app into a generic issue tracker.
-- For self-discovered bugs, preserve the real process: discover → report → classify → assign → fix → test → close. This does not authorize automatic application-record or lifecycle changes.
-- Do not assign application versions retrospectively. Until versioning is introduced, leave Affected Version and Fix Version blank for newly discovered self-bugs.
-- Comments and version entities/version CRUD are postponed.
-- Mobile polish is lower priority than core desktop functionality.
-- Do not implement deferred ideas or fix unrelated known defects opportunistically.
+`type: imperative lowercase description`
 
-## AI-assisted triage
-
-- AI suggestions remain clearly distinct from authoritative bug data until accepted. Human QA review remains in control.
-- When this increment is selected, support per-suggestion Edit / Accept / Reject and bulk Accept All / Reject All.
-- If a user edits a suggestion, Accept All must apply the edited value, not overwrite it with the original AI suggestion.
-- Do not begin AI work during unrelated defect cleanup.
+No trailing period.
