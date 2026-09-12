@@ -36,6 +36,9 @@
 
     --focus-border: #22d3ee;
 
+    --success-text: #4ade80;
+    --error-text: #ff6b6b;
+
     --white: #ffffff;
 
     --severity-blocker: #ff1744;
@@ -87,6 +90,9 @@ body.light-theme {
     --navigation-hover: #2093b3;
 
     --focus-border: #0891b2;
+
+    --success-text: #15803d;
+    --error-text: #b42318;
 
     --white: #ffffff;
 
@@ -368,6 +374,14 @@ main h2 {
     display: none;
 }
 
+.section-message.message-success {
+    color: var(--success-text);
+}
+
+.section-message.message-error {
+    color: var(--error-text);
+}
+
 #message {
     margin-top: 20px;
 
@@ -438,7 +452,10 @@ textarea.form-input {
 
 #bug-severity.select-prompt,
 #bug-priority.select-prompt,
-#bug-assignee.select-prompt {
+#bug-assignee.select-prompt,
+#edit-bug-severity.select-prompt,
+#edit-bug-priority.select-prompt,
+#edit-bug-assignee.select-prompt {
     color: var(--placeholder-text);
 
     font-style: normal;
@@ -525,6 +542,42 @@ form button {
 
 #bug-form .bug-steps-textarea {
     min-height: 170px;
+}
+
+#edit-bug-form {
+    width: 100%;
+    max-width: 950px;
+
+    margin: 10px auto 20px;
+}
+
+#edit-bug-form textarea {
+    width: 100%;
+
+    min-height: 100px;
+
+    resize: vertical;
+}
+
+#edit-bug-form .edit-bug-textarea {
+    min-height: 130px;
+}
+
+#edit-bug-form .edit-bug-steps-textarea {
+    min-height: 170px;
+}
+
+#edit-bug-severity option,
+#edit-bug-priority option,
+#edit-bug-assignee option {
+    background-color: var(--input-background);
+    color: var(--primary-text);
+}
+
+#edit-bug-severity option[value=""],
+#edit-bug-priority option[value=""],
+#edit-bug-assignee option[value=""] {
+    color: var(--placeholder-text);
 }
 
 
@@ -861,6 +914,10 @@ button:disabled {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
+.bug-details [hidden] {
+    display: none !important;
+}
+
 .bug-details-header {
     padding: 24px;
 
@@ -913,6 +970,20 @@ button:disabled {
 
 .bug-detail-item dt.bug-detail-related-label {
     margin-top: 16px;
+}
+
+.bug-details-actions {
+    margin-top: 12px;
+}
+
+.bug-details-actions button {
+    display: inline-block;
+
+    margin: 0;
+
+    padding: 7px 16px;
+
+    font-size: 15px;
 }
 
 .bug-detail-final-row {
