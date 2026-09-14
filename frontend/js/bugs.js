@@ -10,6 +10,7 @@ const bugMessage = document.querySelector("#bug-message");
 const bugDetails = document.querySelector("#bug-details");
 const bugDetailsGrid = document.querySelector(".bug-details-grid");
 const showEditBugFormButton = document.querySelector("#show-edit-bug-form");
+const deleteBugButton = document.querySelector("#delete-bug-button");
 
 const editBugForm = document.querySelector("#edit-bug-form");
 const editBugMessage = document.querySelector("#edit-bug-message");
@@ -31,6 +32,7 @@ const editBugButtonText = showEditBugFormButton.textContent;
 
 let currentBug = null;
 let projectMembers = null;
+let deleteInProgress = false;
 
 function showMessage(element, message, type = "neutral") {
     element.classList.remove("message-success", "message-error");
@@ -48,6 +50,84 @@ function setEditBugButtonLoading(isLoading) {
     showEditBugFormButton.textContent = isLoading
         ? "Loading..."
         : editBugButtonText;
+}
+
+function getCurrentUserId() {
+    if (!accessToken) {
+        return null;
+    }
+
+    try {
+        const payload = accessToken.split(".")[1];
+        return JSON.parse(atob(payload)).user_id;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function updateDeleteBugVisibility() {
+    deleteBugButton.hidden = true;
+
+    try {
+        const response = await fetch(`/projects/${projectId}/members`, {
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
+        });
+
+        let data = {};
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        if (!response.ok) {
+            showMessage(
+                bugMessage,
+                formatApiError(data?.detail, "Unable to load deletion permissions."),
+                "error"
+            );
+            return;
+        }
+
+        if (!Array.isArray(data)) {
+            showMessage(
+                bugMessage,
+                "Unable to load deletion permissions. Invalid server response.",
+                "error"
+            );
+            return;
+        }
+
+        const currentUserId = getCurrentUserId();
+        const currentMember = data.find(function(member) {
+            return member.user_id === currentUserId;
+        });
+
+        if (!currentMember) {
+            showMessage(bugMessage, "Unable to determine deletion permissions.", "error");
+            return;
+        }
+
+        deleteBugButton.hidden = !(
+            currentMember.role === "Project Owner" ||
+            currentMember.role === "QA Analyst"
+        );
+    } catch (error) {
+        showMessage(
+            bugMessage,
+            "Unable to load deletion permissions. Please try again.",
+            "error"
+        );
+    }
 }
 
 function isValidId(value) {
@@ -231,6 +311,7 @@ async function loadBug() {
         renderBug(data);
         showMessage(bugMessage, "");
         bugDetails.hidden = false;
+        await updateDeleteBugVisibility();
     } catch (error) {
         showMessage(
             bugMessage,
@@ -239,6 +320,70 @@ async function loadBug() {
         );
     }
 }
+
+deleteBugButton.addEventListener("click", async function() {
+    if (deleteInProgress || !currentBug) {
+        return;
+    }
+
+    const confirmed = confirm(
+        `Are you sure you want to delete "${currentBug.title}"?`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    deleteInProgress = true;
+    deleteBugButton.disabled = true;
+    showMessage(bugMessage, "");
+
+    try {
+        const response = await fetch(
+            `/projects/${projectId}/bugs/${bugId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + accessToken
+                }
+            }
+        );
+
+        if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        if (response.status === 204) {
+            window.location.href = `/project.html?id=${projectId}`;
+            return;
+        }
+
+        let data = {};
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
+
+        showMessage(
+            bugMessage,
+            formatApiError(data?.detail, "Unable to delete this bug report."),
+            "error"
+        );
+    } catch (error) {
+        showMessage(
+            bugMessage,
+            "Unable to delete this bug report. Please try again.",
+            "error"
+        );
+    } finally {
+        deleteInProgress = false;
+        deleteBugButton.disabled = false;
+    }
+});
 
 function updateSelectPromptStyle(selectInput) {
     selectInput.classList.toggle(
