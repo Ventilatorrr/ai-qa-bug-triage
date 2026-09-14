@@ -524,7 +524,8 @@ form button {
 
 #project-form > label,
 #member-form > label,
-#bug-form > label {
+#bug-form > label,
+#edit-bug-form > label {
     padding-left: 4px;
 }
 
@@ -546,9 +547,16 @@ form button {
 
 #edit-bug-form {
     width: 100%;
-    max-width: 950px;
 
-    margin: 10px auto 20px;
+    margin: 0;
+    padding: 24px;
+
+    background-color: transparent;
+
+    border: none;
+    border-radius: 0;
+
+    box-shadow: none;
 }
 
 #edit-bug-form textarea {
@@ -567,6 +575,8 @@ form button {
     min-height: 170px;
 }
 
+#bug-severity option,
+#bug-priority option,
 #edit-bug-severity option,
 #edit-bug-priority option,
 #edit-bug-assignee option {
@@ -574,10 +584,92 @@ form button {
     color: var(--primary-text);
 }
 
+#bug-severity option[value=""],
+#bug-priority option[value=""],
 #edit-bug-severity option[value=""],
 #edit-bug-priority option[value=""],
 #edit-bug-assignee option[value=""] {
     color: var(--placeholder-text);
+}
+
+#bug-severity option[value="Blocker"],
+#edit-bug-severity option[value="Blocker"] {
+    color: var(--severity-blocker);
+}
+
+#bug-severity option[value="Major"],
+#edit-bug-severity option[value="Major"] {
+    color: var(--severity-major);
+}
+
+#bug-severity option[value="Moderate"],
+#edit-bug-severity option[value="Moderate"] {
+    color: var(--severity-moderate);
+}
+
+#bug-severity option[value="Minor"],
+#edit-bug-severity option[value="Minor"] {
+    color: var(--severity-minor);
+}
+
+#bug-priority option[value="Urgent"],
+#edit-bug-priority option[value="Urgent"] {
+    color: var(--priority-urgent);
+}
+
+#bug-priority option[value="High"],
+#edit-bug-priority option[value="High"] {
+    color: var(--priority-high);
+}
+
+#bug-priority option[value="Medium"],
+#edit-bug-priority option[value="Medium"] {
+    color: var(--priority-medium);
+}
+
+#bug-priority option[value="Low"],
+#edit-bug-priority option[value="Low"] {
+    color: var(--priority-low);
+}
+
+#bug-severity:has(option[value="Blocker"]:checked),
+#edit-bug-severity:has(option[value="Blocker"]:checked) {
+    color: var(--severity-blocker);
+}
+
+#bug-severity:has(option[value="Major"]:checked),
+#edit-bug-severity:has(option[value="Major"]:checked) {
+    color: var(--severity-major);
+}
+
+#bug-severity:has(option[value="Moderate"]:checked),
+#edit-bug-severity:has(option[value="Moderate"]:checked) {
+    color: var(--severity-moderate);
+}
+
+#bug-severity:has(option[value="Minor"]:checked),
+#edit-bug-severity:has(option[value="Minor"]:checked) {
+    color: var(--severity-minor);
+}
+
+#bug-priority:has(option[value="Urgent"]:checked),
+#edit-bug-priority:has(option[value="Urgent"]:checked) {
+    color: var(--priority-urgent);
+}
+
+#bug-priority:has(option[value="High"]:checked),
+#edit-bug-priority:has(option[value="High"]:checked) {
+    color: var(--priority-high);
+}
+
+#bug-priority:has(option[value="Medium"]:checked),
+#edit-bug-priority:has(option[value="Medium"]:checked) {
+    color: var(--priority-medium);
+}
+
+#bug-priority:has(option[value="Low"]:checked),
+#edit-bug-priority:has(option[value="Low"]:checked) {
+    color: var(--priority-low);
 }
 
 

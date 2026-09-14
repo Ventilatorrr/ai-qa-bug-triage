@@ -27,6 +27,7 @@ const editBugFixVersion = document.querySelector("#edit-bug-fix-version");
 const saveEditButton = document.querySelector("#save-edit-button");
 const cancelEditFormButton = document.querySelector("#cancel-edit-form");
 const editBugAssigneeLabel = document.querySelector("#edit-bug-assignee-label");
+const editBugButtonText = showEditBugFormButton.textContent;
 
 let currentBug = null;
 let projectMembers = null;
@@ -40,6 +41,13 @@ function showMessage(element, message, type = "neutral") {
     } else if (message && type === "error") {
         element.classList.add("message-error");
     }
+}
+
+function setEditBugButtonLoading(isLoading) {
+    showEditBugFormButton.disabled = isLoading;
+    showEditBugFormButton.textContent = isLoading
+        ? "Loading..."
+        : editBugButtonText;
 }
 
 function isValidId(value) {
@@ -337,9 +345,8 @@ function populateEditForm() {
 }
 
 showEditBugFormButton.addEventListener("click", async function() {
-    showEditBugFormButton.disabled = true;
+    setEditBugButtonLoading(true);
     showMessage(editBugMessage, "");
-    showMessage(bugMessage, "Loading...");
 
     let latestBug = null;
     try {
@@ -363,21 +370,21 @@ showEditBugFormButton.addEventListener("click", async function() {
                 formatApiError(data?.detail, "Unable to load this bug report."),
                 "error"
             );
-            showEditBugFormButton.disabled = false;
+            setEditBugButtonLoading(false);
             return;
         }
 
         if (!isValidBugResponse(data)) {
             bugDetails.hidden = true;
             showMessage(bugMessage, "Unable to load this bug report. Invalid server response.", "error");
-            showEditBugFormButton.disabled = false;
+            setEditBugButtonLoading(false);
             return;
         }
 
         latestBug = data;
     } catch (error) {
         showMessage(bugMessage, "Unable to load this bug report. Please try again.", "error");
-        showEditBugFormButton.disabled = false;
+        setEditBugButtonLoading(false);
         return;
     }
 
@@ -406,20 +413,20 @@ showEditBugFormButton.addEventListener("click", async function() {
                     formatApiError(data?.detail, "Unable to load project members."),
                     "error"
                 );
-                showEditBugFormButton.disabled = false;
+                setEditBugButtonLoading(false);
                 return;
             }
 
             if (!Array.isArray(data)) {
                 showMessage(bugMessage, "Unable to load project members. Invalid server response.", "error");
-                showEditBugFormButton.disabled = false;
+                setEditBugButtonLoading(false);
                 return;
             }
 
             membersData = data;
         } catch (error) {
             showMessage(bugMessage, "Unable to load project members. Please try again.", "error");
-            showEditBugFormButton.disabled = false;
+            setEditBugButtonLoading(false);
             return;
         }
     }
@@ -429,9 +436,9 @@ showEditBugFormButton.addEventListener("click", async function() {
     populateEditForm();
 
     bugDetailsGrid.hidden = true;
+    setEditBugButtonLoading(false);
     showEditBugFormButton.hidden = true;
     editBugForm.hidden = false;
-    showEditBugFormButton.disabled = false;
 });
 
 cancelEditFormButton.addEventListener("click", function() {
