@@ -1065,6 +1065,10 @@ button:disabled {
 }
 
 .bug-details-actions {
+    display: flex;
+
+    gap: 8px;
+
     margin-top: 12px;
 }
 
@@ -1076,6 +1080,14 @@ button:disabled {
     padding: 7px 16px;
 
     font-size: 15px;
+}
+
+#delete-bug-button {
+    background-color: var(--danger-button-background);
+}
+
+#delete-bug-button:hover {
+    background-color: var(--danger-button-hover);
 }
 
 .bug-detail-final-row {
