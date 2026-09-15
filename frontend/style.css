@@ -180,7 +180,8 @@ h3 {
 
 .header-left,
 .header-right {
-    flex: 1;
+    min-width: 0;
+    max-width: calc(50% - 180px);
 }
 
 .header-right {
@@ -189,6 +190,19 @@ h3 {
     align-items: center;
 
     gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 0;
+}
+
+.header-identity {
+    color: var(--muted-text);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+.site-header [hidden] {
+    display: none;
 }
 
 .site-title {
@@ -211,18 +225,33 @@ h3 {
     align-items: center;
 
     gap: 20px;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
 }
 
-.main-navigation a {
+.main-navigation a,
+#logout-button {
     color: var(--secondary-text);
 
+    font-family: Arial, sans-serif;
     text-decoration: none;
 
     font-size: 18px;
+    font-weight: 400;
+    line-height: 1.2;
 }
 
-.main-navigation a:hover {
+.main-navigation a:hover,
+#logout-button:hover {
     color: var(--navigation-hover);
+
+    background-color: transparent;
+}
+
+.main-navigation a:focus-visible,
+#logout-button:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
 }
 
 
@@ -308,11 +337,11 @@ main h2 {
     margin-bottom: 24px;
 
     padding-bottom: 24px;
-
-    border-bottom: 1px solid var(--border-color);
 }
 
 #members {
+    margin-top: 12px;
+
     margin-bottom: 20px;
 
     color: var(--secondary-text);
@@ -353,11 +382,6 @@ main h2 {
     margin-bottom: 12px;
 }
 
-#show-bug-form {
-    padding: 8px 16px;
-}
-
-
 /* =========================================================
    Section Messages
    ========================================================= */
@@ -381,15 +405,6 @@ main h2 {
 .section-message.message-error {
     color: var(--error-text);
 }
-
-#message {
-    margin-top: 20px;
-
-    color: var(--secondary-text);
-
-    text-align: center;
-}
-
 
 /* =========================================================
    Forms
@@ -455,7 +470,8 @@ textarea.form-input {
 #bug-assignee.select-prompt,
 #edit-bug-severity.select-prompt,
 #edit-bug-priority.select-prompt,
-#edit-bug-assignee.select-prompt {
+#edit-bug-assignee.select-prompt,
+#lifecycle-qa-assignee.select-prompt {
     color: var(--placeholder-text);
 
     font-style: normal;
@@ -579,7 +595,8 @@ form button {
 #bug-priority option,
 #edit-bug-severity option,
 #edit-bug-priority option,
-#edit-bug-assignee option {
+#edit-bug-assignee option,
+#lifecycle-qa-assignee option {
     background-color: var(--input-background);
     color: var(--primary-text);
 }
@@ -588,7 +605,8 @@ form button {
 #bug-priority option[value=""],
 #edit-bug-severity option[value=""],
 #edit-bug-priority option[value=""],
-#edit-bug-assignee option[value=""] {
+#edit-bug-assignee option[value=""],
+#lifecycle-qa-assignee option[value=""] {
     color: var(--placeholder-text);
 }
 
@@ -703,19 +721,22 @@ button:disabled {
     cursor: not-allowed;
 }
 
+.context-action-button {
+    padding: 7px 12px;
 
-/* =========================================================
-   Header Buttons
-   ========================================================= */
-
-#logout-button {
-    margin: 0;
-
-    background-color: var(--header-button-background);
+    font-size: 14px;
 }
 
-#logout-button:hover {
-    background-color: var(--header-button-hover);
+.equal-action-buttons .context-action-button {
+    width: 72px;
+}
+
+.secondary-action-button {
+    background-color: var(--secondary-button-background);
+}
+
+.secondary-action-button:hover {
+    background-color: var(--secondary-button-hover);
 }
 
 
@@ -740,6 +761,19 @@ button:disabled {
     background-color: var(--header-button-hover);
 }
 
+#logout-button {
+    margin: 0;
+
+    padding: 0;
+
+    background-color: transparent;
+
+    color: var(--secondary-text);
+
+    border: 0;
+    border-radius: 0;
+}
+
 
 /* =========================================================
    Projects
@@ -747,7 +781,7 @@ button:disabled {
 
 #projects {
     width: 100%;
-    max-width: 900px;
+    max-width: 540px;
 
     margin: 20px auto 0;
 }
@@ -768,10 +802,20 @@ button:disabled {
     background-color: var(--surface-background);
 }
 
+#projects .project {
+    padding: 12px 15px;
+}
+
+#members .project {
+    min-height: 61px;
+
+    box-sizing: border-box;
+}
+
 .project-name {
     color: var(--project-title-text);
 
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
 
     text-decoration: none;
@@ -799,26 +843,32 @@ button:disabled {
     gap: 8px;
 }
 
-.project-buttons button {
-    padding: 7px 12px;
-
-    font-size: 14px;
-}
-
-.project-buttons button:first-child {
+.project-buttons .project-edit-button,
+.project-buttons .project-cancel-button {
     background-color: var(--secondary-button-background);
 }
 
-.project-buttons button:first-child:hover {
+.project-buttons .project-edit-button:hover,
+.project-buttons .project-cancel-button:hover {
     background-color: var(--secondary-button-hover);
 }
 
-.project-buttons button:last-child {
+.project-buttons .project-delete-button {
     background-color: var(--danger-button-background);
 }
 
-.project-buttons button:last-child:hover {
+.project-buttons .project-delete-button:hover {
     background-color: var(--danger-button-hover);
+}
+
+.project-edit-input {
+    flex: 1;
+
+    margin: 0;
+}
+
+.project.project-editing {
+    gap: 12px;
 }
 
 
@@ -1076,10 +1126,6 @@ button:disabled {
     display: inline-block;
 
     margin: 0;
-
-    padding: 7px 16px;
-
-    font-size: 15px;
 }
 
 #delete-bug-button {
@@ -1088,6 +1134,49 @@ button:disabled {
 
 #delete-bug-button:hover {
     background-color: var(--danger-button-hover);
+}
+
+.bug-lifecycle-actions {
+    padding: 18px 24px 24px;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.bug-lifecycle-actions h3 {
+    margin-bottom: 12px;
+}
+
+.bug-lifecycle-controls {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+.bug-lifecycle-field {
+    flex: 1 1 280px;
+}
+
+.bug-lifecycle-field label {
+    display: block;
+
+    margin-bottom: 4px;
+    padding-left: 4px;
+}
+
+.bug-lifecycle-field .form-input {
+    margin-bottom: 0;
+}
+
+.bug-lifecycle-guidance {
+    margin: 10px 0 0;
+
+    color: var(--muted-text);
+}
+
+.bug-lifecycle-guidance:empty {
+    display: none;
 }
 
 .bug-detail-final-row {
@@ -1153,6 +1242,33 @@ footer a:hover {
    Responsive Layout
    ========================================================= */
 
+@media (max-width: 1200px) {
+    .site-header {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .site-title {
+        position: static;
+        transform: none;
+        order: -1;
+        width: 100%;
+        text-align: center;
+    }
+
+    .header-left,
+    .header-right {
+        max-width: 100%;
+    }
+
+    .header-right {
+        margin-left: auto;
+        padding: 0;
+    }
+}
+
 @media (max-width: 700px) {
 
     main {
@@ -1171,9 +1287,7 @@ footer a:hover {
 
         padding: 12px 16px;
 
-        display: grid;
-
-        grid-template-columns: auto 1fr auto;
+        display: flex;
 
         gap: 12px;
     }
@@ -1188,18 +1302,13 @@ footer a:hover {
         font-size: 22px;
     }
 
-    .main-navigation a {
+    .main-navigation a,
+    #logout-button {
         font-size: 16px;
     }
 
     .header-right {
         gap: 6px;
-    }
-
-    #logout-button {
-        padding: 8px 12px;
-
-        font-size: 14px;
     }
 
     #theme-toggle {
@@ -1253,6 +1362,13 @@ footer a:hover {
         gap: 12px;
     }
 
+    #members .project {
+        flex-direction: row;
+        align-items: center;
+
+        min-height: 74px;
+    }
+
     .project-buttons {
         justify-content: flex-end;
     }
@@ -1283,8 +1399,6 @@ footer a:hover {
 @media (max-width: 450px) {
 
     .site-header {
-        grid-template-columns: auto 1fr auto;
-
         padding: 10px 12px;
     }
 
@@ -1292,14 +1406,9 @@ footer a:hover {
         font-size: 18px;
     }
 
-    .main-navigation a {
-        font-size: 14px;
-    }
-
+    .main-navigation a,
     #logout-button {
-        padding: 8px 10px;
-
-        font-size: 13px;
+        font-size: 14px;
     }
 
     #theme-toggle {

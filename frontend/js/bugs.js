@@ -11,6 +11,11 @@ const bugDetails = document.querySelector("#bug-details");
 const bugDetailsGrid = document.querySelector(".bug-details-grid");
 const showEditBugFormButton = document.querySelector("#show-edit-bug-form");
 const deleteBugButton = document.querySelector("#delete-bug-button");
+const lifecycleActions = document.querySelector("#bug-lifecycle-actions");
+const lifecycleQaField = document.querySelector("#lifecycle-qa-field");
+const lifecycleQaAssignee = document.querySelector("#lifecycle-qa-assignee");
+const lifecycleActionButton = document.querySelector("#lifecycle-action-button");
+const lifecycleGuidance = document.querySelector("#lifecycle-guidance");
 
 const editBugForm = document.querySelector("#edit-bug-form");
 const editBugMessage = document.querySelector("#edit-bug-message");
@@ -28,11 +33,15 @@ const editBugFixVersion = document.querySelector("#edit-bug-fix-version");
 const saveEditButton = document.querySelector("#save-edit-button");
 const cancelEditFormButton = document.querySelector("#cancel-edit-form");
 const editBugAssigneeLabel = document.querySelector("#edit-bug-assignee-label");
-const editBugButtonText = showEditBugFormButton.textContent;
 
 let currentBug = null;
-let projectMembers = null;
+let projectMembers = [];
+let currentMember = null;
 let deleteInProgress = false;
+let editModeLoading = false;
+let lifecycleInProgress = false;
+let lifecycleTargetStatus = null;
+let lifecycleActionAllowed = false;
 
 function showMessage(element, message, type = "neutral") {
     element.classList.remove("message-success", "message-error");
@@ -43,13 +52,6 @@ function showMessage(element, message, type = "neutral") {
     } else if (message && type === "error") {
         element.classList.add("message-error");
     }
-}
-
-function setEditBugButtonLoading(isLoading) {
-    showEditBugFormButton.disabled = isLoading;
-    showEditBugFormButton.textContent = isLoading
-        ? "Loading..."
-        : editBugButtonText;
 }
 
 function getCurrentUserId() {
@@ -65,8 +67,19 @@ function getCurrentUserId() {
     }
 }
 
-async function updateDeleteBugVisibility() {
+function hideRoleSpecificActions() {
     deleteBugButton.hidden = true;
+    lifecycleActions.hidden = true;
+    lifecycleTargetStatus = null;
+}
+
+async function loadProjectMembers(preserveVisibleState = false) {
+    if (!preserveVisibleState) {
+        projectMembers = [];
+        currentMember = null;
+        document.querySelector("#header-identity").hidden = true;
+        hideRoleSpecificActions();
+    }
 
     try {
         const response = await fetch(`/projects/${projectId}/members`, {
@@ -86,48 +99,193 @@ async function updateDeleteBugVisibility() {
         if (response.status === 401) {
             localStorage.removeItem("access_token");
             window.location.href = "/login.html";
-            return;
+            return false;
         }
 
         if (!response.ok) {
             showMessage(
                 bugMessage,
-                formatApiError(data?.detail, "Unable to load deletion permissions."),
+                formatApiError(data?.detail, "Unable to load project members."),
                 "error"
             );
-            return;
+            return false;
         }
 
         if (!Array.isArray(data)) {
             showMessage(
                 bugMessage,
-                "Unable to load deletion permissions. Invalid server response.",
+                "Unable to load project members. Invalid server response.",
                 "error"
             );
-            return;
+            return false;
         }
 
+        projectMembers = data;
+
         const currentUserId = getCurrentUserId();
-        const currentMember = data.find(function(member) {
+        currentMember = projectMembers.find(function(member) {
             return member.user_id === currentUserId;
         });
 
         if (!currentMember) {
-            showMessage(bugMessage, "Unable to determine deletion permissions.", "error");
-            return;
+            showMessage(bugMessage, "Unable to determine project permissions.", "error");
+            return false;
         }
 
-        deleteBugButton.hidden = !(
-            currentMember.role === "Project Owner" ||
-            currentMember.role === "QA Analyst"
-        );
+        return true;
     } catch (error) {
         showMessage(
             bugMessage,
-            "Unable to load deletion permissions. Please try again.",
+            "Unable to load project members. Please try again.",
             "error"
         );
+
+        return false;
     }
+}
+
+function getProjectMember(userId) {
+    return projectMembers.find(function(member) {
+        return member.user_id === userId;
+    });
+}
+
+function resetLifecycleControls() {
+    lifecycleActions.hidden = true;
+    lifecycleQaField.hidden = true;
+    lifecycleQaAssignee.disabled = true;
+    lifecycleActionButton.disabled = true;
+    lifecycleActionButton.textContent = "";
+    lifecycleGuidance.textContent = "";
+    lifecycleTargetStatus = null;
+    lifecycleActionAllowed = false;
+}
+
+function populateLifecycleQaAnalysts() {
+    lifecycleQaAssignee.innerHTML = "";
+
+    const prompt = document.createElement("option");
+    prompt.value = "";
+    prompt.textContent = "Select QA Analyst";
+    prompt.disabled = true;
+    prompt.selected = true;
+    lifecycleQaAssignee.appendChild(prompt);
+
+    projectMembers.forEach(function(member) {
+        if (member.role === "QA Analyst") {
+            const option = document.createElement("option");
+            option.value = member.user_id;
+            option.textContent = `${member.email} (${member.role})`;
+            lifecycleQaAssignee.appendChild(option);
+        }
+    });
+
+    updateSelectPromptStyle(lifecycleQaAssignee);
+
+    return lifecycleQaAssignee.options.length - 1;
+}
+
+function renderLifecycleControls() {
+    resetLifecycleControls();
+
+    if (!currentBug || !currentMember || editBugForm.hidden === false) {
+        return;
+    }
+
+    const actorRole = currentMember.role;
+    const assignee = getProjectMember(currentBug.assignee_id);
+    const validTriageAssignee = assignee && (
+        assignee.role === "QA Analyst" || assignee.role === "Developer"
+    );
+    const validDeveloperAssignee = assignee && assignee.role === "Developer";
+
+    if (
+        currentBug.status === "Triage" &&
+        (actorRole === "Project Owner" || actorRole === "QA Analyst")
+    ) {
+        lifecycleActions.hidden = false;
+        lifecycleTargetStatus = "Open";
+        lifecycleActionButton.textContent = "Move to Open";
+        lifecycleActionAllowed = Boolean(validTriageAssignee);
+
+        if (!validTriageAssignee) {
+            lifecycleGuidance.textContent =
+                "Assign a QA Analyst or Developer through Edit Bug before moving to Open.";
+        }
+    } else if (
+        currentBug.status === "Open" &&
+        (actorRole === "Project Owner" || actorRole === "Developer")
+    ) {
+        lifecycleActions.hidden = false;
+        lifecycleTargetStatus = "Development";
+        lifecycleActionButton.textContent = "Start Development";
+
+        if (!validDeveloperAssignee) {
+            lifecycleGuidance.textContent =
+                "Assign a Developer through Edit Bug before starting development.";
+        } else if (
+            actorRole === "Developer" &&
+            currentBug.assignee_id !== currentMember.user_id
+        ) {
+            lifecycleGuidance.textContent =
+                "Only the assigned Developer can start development.";
+        } else {
+            lifecycleActionAllowed = true;
+        }
+    } else if (
+        currentBug.status === "Development" &&
+        (actorRole === "Project Owner" || actorRole === "Developer")
+    ) {
+        lifecycleActions.hidden = false;
+        lifecycleQaField.hidden = false;
+        lifecycleTargetStatus = "Testing";
+        lifecycleActionButton.textContent = "Send to Testing";
+
+        const qaCount = populateLifecycleQaAnalysts();
+
+        if (!validDeveloperAssignee) {
+            lifecycleGuidance.textContent =
+                "Assign a Developer through Edit Bug before sending to testing.";
+        } else if (
+            actorRole === "Developer" &&
+            currentBug.assignee_id !== currentMember.user_id
+        ) {
+            lifecycleGuidance.textContent =
+                "Only the assigned Developer can send this bug to testing.";
+        } else if (qaCount === 0) {
+            lifecycleGuidance.textContent =
+                "Add a QA Analyst to the project before sending this bug to testing.";
+        } else {
+            lifecycleActionAllowed = true;
+            lifecycleQaAssignee.disabled = false;
+            lifecycleGuidance.textContent = "Select a QA Analyst for testing.";
+        }
+    }
+
+    lifecycleActionButton.disabled = !lifecycleActionAllowed || (
+        lifecycleTargetStatus === "Testing" && !lifecycleQaAssignee.value
+    );
+}
+
+function renderRoleSpecificActions() {
+    const identity = document.querySelector("#header-identity");
+    identity.hidden = !currentMember;
+    identity.textContent = currentMember
+        ? `${currentMember.email} (${currentMember.role})`
+        : "";
+
+    if (currentBug) {
+        renderBugAssignee(currentBug);
+    }
+
+    deleteBugButton.hidden = !(
+        currentMember && (
+            currentMember.role === "Project Owner" ||
+            currentMember.role === "QA Analyst"
+        )
+    );
+
+    renderLifecycleControls();
 }
 
 function isValidId(value) {
@@ -169,6 +327,22 @@ function setText(selector, value, emptyValue) {
 
     element.textContent = displayValue(value, emptyValue);
     element.classList.toggle("missing-value", isMissingValue(value));
+}
+
+function renderBugAssignee(bug) {
+    if (bug.assignee_id === null || bug.assignee_id === undefined) {
+        setText("#bug-assignee", "Unassigned");
+        return;
+    }
+
+    const assignee = getProjectMember(bug.assignee_id);
+
+    setText(
+        "#bug-assignee",
+        assignee
+            ? `${assignee.email} (${assignee.role})`
+            : `User ${bug.assignee_id}`
+    );
 }
 
 function renderBug(bug) {
@@ -219,12 +393,7 @@ function renderBug(bug) {
     document.querySelector("#bug-resolution-label").hidden = !hasResolution;
     document.querySelector("#bug-resolution").hidden = !hasResolution;
 
-    setText(
-        "#bug-assignee",
-        bug.assignee_id === null || bug.assignee_id === undefined
-            ? "Unassigned"
-            : `User ${bug.assignee_id}`
-    );
+    renderBugAssignee(bug);
     setText("#bug-affected-version", bug.affected_version);
     setText("#bug-fix-version", bug.fix_version);
     setText(
@@ -252,19 +421,19 @@ async function loadBug() {
 
     if (!accessToken) {
         window.location.href = "/login.html";
-        return;
+        return false;
     }
 
     if (!isValidId(projectId)) {
         showMessage(bugMessage, "Invalid project ID.", "error");
-        return;
+        return false;
     }
 
     backToProjectLink.href = `/project.html?id=${projectId}`;
 
     if (!isValidId(bugId)) {
         showMessage(bugMessage, "Invalid bug ID.", "error");
-        return;
+        return false;
     }
 
     try {
@@ -299,30 +468,37 @@ async function loadBug() {
                 ),
                 "error"
             );
-            return;
+            return false;
         }
 
         if (!isValidBugResponse(data)) {
             showMessage(bugMessage, "Unable to load this bug report. Invalid server response.", "error");
-            return;
+            return false;
         }
 
         currentBug = data;
         renderBug(data);
         showMessage(bugMessage, "");
         bugDetails.hidden = false;
-        await updateDeleteBugVisibility();
+
+        if (await loadProjectMembers()) {
+            renderRoleSpecificActions();
+        }
+
+        return true;
     } catch (error) {
         showMessage(
             bugMessage,
             "Unable to load this bug report. Please try again.",
             "error"
         );
+
+        return false;
     }
 }
 
 deleteBugButton.addEventListener("click", async function() {
-    if (deleteInProgress || !currentBug) {
+    if (deleteInProgress || lifecycleInProgress || !currentBug) {
         return;
     }
 
@@ -356,6 +532,15 @@ deleteBugButton.addEventListener("click", async function() {
         }
 
         if (response.status === 204) {
+            try {
+                sessionStorage.setItem(
+                    "bug-deletion-feedback",
+                    `BUG-${currentBug.id} "${currentBug.title}" deleted successfully.`
+                );
+            } catch (error) {
+                // Continue to the project page if session storage is unavailable.
+            }
+
             window.location.href = `/project.html?id=${projectId}`;
             return;
         }
@@ -382,6 +567,154 @@ deleteBugButton.addEventListener("click", async function() {
     } finally {
         deleteInProgress = false;
         deleteBugButton.disabled = false;
+    }
+});
+
+lifecycleQaAssignee.addEventListener("change", function() {
+    updateSelectPromptStyle(lifecycleQaAssignee);
+
+    if (lifecycleTargetStatus === "Testing") {
+        lifecycleActionButton.disabled = !(
+            lifecycleActionAllowed && lifecycleQaAssignee.value
+        );
+        lifecycleGuidance.textContent = lifecycleQaAssignee.value
+            ? ""
+            : "Select a QA Analyst for testing.";
+    }
+});
+
+lifecycleActionButton.addEventListener("click", async function() {
+    if (
+        lifecycleInProgress || deleteInProgress ||
+        !currentBug || !lifecycleActionAllowed || !lifecycleTargetStatus
+    ) {
+        return;
+    }
+
+    const requestedStatus = lifecycleTargetStatus;
+    const payload = {
+        status: requestedStatus
+    };
+
+    if (requestedStatus === "Testing") {
+        const qaAssigneeId = Number(lifecycleQaAssignee.value);
+
+        if (!Number.isInteger(qaAssigneeId) || qaAssigneeId <= 0) {
+            lifecycleGuidance.textContent = "Select a QA Analyst for testing.";
+            lifecycleActionButton.disabled = true;
+            return;
+        }
+
+        payload.assignee_id = qaAssigneeId;
+    }
+
+    let lifecycleStateConfirmed = true;
+
+    lifecycleInProgress = true;
+    lifecycleActionButton.textContent = "Updating...";
+    lifecycleActionButton.disabled = true;
+    lifecycleQaAssignee.disabled = true;
+    showEditBugFormButton.disabled = true;
+    deleteBugButton.disabled = true;
+    showMessage(bugMessage, "");
+
+    try {
+        const response = await fetch(
+            `/projects/${projectId}/bugs/${bugId}/status`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Authorization": "Bearer " + accessToken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+
+        let data = {};
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        if (response.status === 404) {
+            currentBug = null;
+            bugDetails.hidden = true;
+            hideRoleSpecificActions();
+            showMessage(
+                bugMessage,
+                formatApiError(data?.detail, "This bug report is no longer available."),
+                "error"
+            );
+            return;
+        }
+
+        if (!response.ok) {
+            const errorMessage = formatApiError(
+                data?.detail,
+                "Unable to update this bug's status."
+            );
+
+            if (response.status === 403 || response.status === 422) {
+                if (await loadBug()) {
+                    showMessage(bugMessage, errorMessage, "error");
+                }
+            } else {
+                showMessage(bugMessage, errorMessage, "error");
+            }
+
+            return;
+        }
+
+        if (!isValidBugResponse(data)) {
+            const refreshed = await loadBug();
+
+            if (refreshed) {
+                showMessage(
+                    bugMessage,
+                    "Unable to confirm the transition response. The current bug state was refreshed.",
+                    "error"
+                );
+            }
+
+            return;
+        }
+
+        currentBug = data;
+        renderBug(currentBug);
+        renderRoleSpecificActions();
+
+        const successMessages = {
+            Open: "Bug moved to Open.",
+            Development: "Bug moved to Development.",
+            Testing: "Bug moved to Testing."
+        };
+
+        showMessage(bugMessage, successMessages[requestedStatus], "success");
+    } catch (error) {
+        lifecycleStateConfirmed = false;
+        lifecycleActionButton.textContent = "Refresh required";
+        showMessage(
+            bugMessage,
+            "Unable to confirm the status change. Refresh the page before trying again.",
+            "error"
+        );
+    } finally {
+        lifecycleInProgress = false;
+        showEditBugFormButton.disabled = false;
+        deleteBugButton.disabled = false;
+
+        if (lifecycleStateConfirmed && currentBug && !bugDetails.hidden) {
+            renderRoleSpecificActions();
+        }
     }
 });
 
@@ -490,10 +823,13 @@ function populateEditForm() {
 }
 
 showEditBugFormButton.addEventListener("click", async function() {
-    setEditBugButtonLoading(true);
+    if (editModeLoading) {
+        return;
+    }
+
+    editModeLoading = true;
     showMessage(editBugMessage, "");
 
-    let latestBug = null;
     try {
         const response = await fetch(`/projects/${projectId}/bugs/${bugId}`, {
             headers: { "Authorization": "Bearer " + accessToken }
@@ -509,81 +845,44 @@ showEditBugFormButton.addEventListener("click", async function() {
         }
 
         if (!response.ok) {
-            bugDetails.hidden = true;
+            if (response.status === 404) {
+                bugDetails.hidden = true;
+                hideRoleSpecificActions();
+            }
+
             showMessage(
                 bugMessage,
                 formatApiError(data?.detail, "Unable to load this bug report."),
                 "error"
             );
-            setEditBugButtonLoading(false);
             return;
         }
 
         if (!isValidBugResponse(data)) {
-            bugDetails.hidden = true;
             showMessage(bugMessage, "Unable to load this bug report. Invalid server response.", "error");
-            setEditBugButtonLoading(false);
             return;
         }
 
-        latestBug = data;
+        if (!await loadProjectMembers(true)) {
+            return;
+        }
+
+        currentBug = data;
+        renderBug(currentBug);
+        renderRoleSpecificActions();
+        showMessage(bugMessage, "");
+        populateEditForm();
+        editBugForm.insertBefore(editBugMessage, editBugForm.querySelector(".form-actions"));
+
+        bugDetailsGrid.hidden = true;
+        lifecycleActions.hidden = true;
+        showEditBugFormButton.hidden = true;
+        editBugForm.hidden = false;
     } catch (error) {
         showMessage(bugMessage, "Unable to load this bug report. Please try again.", "error");
-        setEditBugButtonLoading(false);
-        return;
+    } finally {
+        editModeLoading = false;
     }
-
-    currentBug = latestBug;
-    renderBug(currentBug);
-
-    let membersData = [];
-    if (currentBug.status !== "Closed") {
-        try {
-            const membersResponse = await fetch(`/projects/${projectId}/members`, {
-                headers: { "Authorization": "Bearer " + accessToken }
-            });
-
-            let data = {};
-            try { data = await membersResponse.json(); } catch (error) { data = {}; }
-
-            if (membersResponse.status === 401) {
-                localStorage.removeItem("access_token");
-                window.location.href = "/login.html";
-                return;
-            }
-
-            if (!membersResponse.ok) {
-                showMessage(
-                    bugMessage,
-                    formatApiError(data?.detail, "Unable to load project members."),
-                    "error"
-                );
-                setEditBugButtonLoading(false);
-                return;
-            }
-
-            if (!Array.isArray(data)) {
-                showMessage(bugMessage, "Unable to load project members. Invalid server response.", "error");
-                setEditBugButtonLoading(false);
-                return;
-            }
-
-            membersData = data;
-        } catch (error) {
-            showMessage(bugMessage, "Unable to load project members. Please try again.", "error");
-            setEditBugButtonLoading(false);
-            return;
-        }
-    }
-
-    projectMembers = membersData;
-    showMessage(bugMessage, "");
-    populateEditForm();
-
-    bugDetailsGrid.hidden = true;
-    setEditBugButtonLoading(false);
-    showEditBugFormButton.hidden = true;
-    editBugForm.hidden = false;
 });
 
 cancelEditFormButton.addEventListener("click", function() {
@@ -592,6 +891,7 @@ cancelEditFormButton.addEventListener("click", function() {
 
     bugDetailsGrid.hidden = false;
     showEditBugFormButton.hidden = false;
+    renderRoleSpecificActions();
 });
 
 editBugForm.addEventListener("submit", async function(event) {
@@ -600,7 +900,7 @@ editBugForm.addEventListener("submit", async function(event) {
     const trimmedTitle = editBugTitle.value.trim();
     if (!trimmedTitle) {
         showMessage(editBugMessage, "Title is required and cannot be blank.", "error");
-        editBugTitle.focus();
+        editBugTitle.focus({ preventScroll: true });
         return;
     }
 
@@ -657,6 +957,7 @@ editBugForm.addEventListener("submit", async function(event) {
         editBugForm.hidden = true;
         bugDetailsGrid.hidden = false;
         showEditBugFormButton.hidden = false;
+        renderRoleSpecificActions();
         return;
     }
 
@@ -708,8 +1009,10 @@ editBugForm.addEventListener("submit", async function(event) {
         editBugForm.hidden = true;
         bugDetailsGrid.hidden = false;
         showEditBugFormButton.hidden = false;
+        renderRoleSpecificActions();
 
-        showMessage(bugMessage, "Bug report updated successfully.", "success");
+        bugDetails.after(editBugMessage);
+        showMessage(editBugMessage, "Bug report updated successfully.", "success");
     } catch (error) {
         showMessage(
             editBugMessage,
@@ -721,4 +1024,34 @@ editBugForm.addEventListener("submit", async function(event) {
     }
 });
 
-loadBug();
+async function loadProjectNavigation() {
+    try {
+        const response = await fetch(`/projects/${projectId}`, {
+            headers: { "Authorization": "Bearer " + accessToken }
+        });
+        if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        const data = await response.json();
+        if (!response.ok) {
+            showMessage(bugMessage, formatApiError(data?.detail, "Unable to load project name."), "error");
+            return;
+        }
+        if (typeof data.name !== "string" || !data.name.trim()) {
+            showMessage(bugMessage, "Unable to load project name. Invalid server response.", "error");
+            return;
+        }
+
+        backToProjectLink.textContent = data.name;
+        backToProjectLink.hidden = false;
+    } catch (error) {
+        showMessage(bugMessage, "Unable to load project name. Please refresh the page.", "error");
+    }
+}
+
+loadBug().then(function(loaded) {
+    if (loaded) loadProjectNavigation();
+});
