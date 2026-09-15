@@ -10,24 +10,21 @@
 <body>
     <header class="site-header">
         <div class="header-left">
-            <nav class="main-navigation">
+            <nav class="main-navigation" aria-label="Main navigation">
                 <a href="/projects.html">Projects</a>
+                <a id="back-to-project" href="/projects.html" hidden></a>
+                <a href="/about.html">About</a>
             </nav>
         </div>
-
         <h1 class="site-title">AI QA Bug Triage</h1>
-
         <div class="header-right">
+            <span id="header-identity" class="header-identity" hidden></span>
             <button id="logout-button" type="button">Logout</button>
             <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
         </div>
     </header>
 
     <main id="bug-page">
-        <a id="back-to-project" class="back-link" href="/projects.html">
-            &larr; Back to project
-        </a>
-
         <p id="bug-message" class="section-message" role="status" aria-live="polite">
             Loading bug report...
         </p>
@@ -38,8 +35,7 @@
                 <h2 id="bug-heading"></h2>
                 <span id="bug-status" class="bug-status"></span>
                 <div class="bug-details-actions">
-                    <button id="show-edit-bug-form" type="button">Edit Bug</button>
-                    <button id="delete-bug-button" type="button" hidden>Delete Bug</button>
+                    <button id="show-edit-bug-form" class="context-action-button secondary-action-button" type="button">Edit</button>
                 </div>
             </header>
 
@@ -121,9 +117,25 @@
 
             </dl>
 
+            <section id="bug-lifecycle-actions" class="bug-lifecycle-actions" hidden>
+                <h3>Lifecycle</h3>
+
+                <div class="bug-lifecycle-controls">
+                    <div id="lifecycle-qa-field" class="bug-lifecycle-field" hidden>
+                        <label for="lifecycle-qa-assignee">QA Analyst:</label>
+                        <select id="lifecycle-qa-assignee" class="form-input">
+                            <option value="" disabled selected>Select QA Analyst</option>
+                        </select>
+                    </div>
+
+                    <button id="lifecycle-action-button" type="button"></button>
+                </div>
+
+                <p id="lifecycle-guidance" class="bug-lifecycle-guidance"></p>
+            </section>
+
             <form id="edit-bug-form" hidden novalidate>
 
-                <p id="edit-bug-message" class="section-message" role="alert" aria-live="polite"></p>
 
                 <label for="edit-bug-title">
                     Title:
@@ -265,21 +277,24 @@
                     placeholder="e.g. 1.3.0">
 
 
-                <div class="form-actions">
+                <div class="form-actions equal-action-buttons">
 
-                    <button id="save-edit-button" type="submit">Save</button>
+                    <button id="save-edit-button" class="context-action-button" type="submit">Save</button>
 
-                    <button id="cancel-edit-form" type="button">Cancel</button>
+                    <button id="cancel-edit-form" class="context-action-button secondary-action-button" type="button">Cancel</button>
+
+                    <button id="delete-bug-button" class="context-action-button" type="button" hidden>Delete</button>
 
                 </div>
 
             </form>
 
         </article>
+
+        <p id="edit-bug-message" class="section-message" role="alert" aria-live="polite"></p>
     </main>
 
     <footer>
-        <p><a href="/about.html">About</a></p>
         <p>Copyright &copy; 2026 AI QA Assistant</p>
     </footer>
 

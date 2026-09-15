@@ -10,15 +10,16 @@
 <body>
     <header class="site-header">
         <div class="header-left">
-            <nav class="main-navigation">
-                <a href="/projects.html">Projects</a>
+            <nav class="main-navigation" aria-label="Main navigation">
+                <a id="about-projects-link" href="/projects.html" hidden>Projects</a>
+                <a href="/about.html" aria-current="page">About</a>
             </nav>
         </div>
-
         <h1 class="site-title">AI QA Bug Triage</h1>
-
         <div class="header-right">
-            <button id="logout-button" type="button">Logout</button>
+
+            <nav class="main-navigation" id="guest-account-actions" aria-label="Account"><a href="/register.html">Register</a><a href="/login.html">Login</a></nav>
+            <button id="logout-button" type="button" hidden>Logout</button>
             <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
         </div>
     </header>
@@ -34,7 +35,6 @@
     </main>
 
     <footer>
-        <p><a href="/about.html">About</a></p>
         <p>Copyright &copy; 2026 AI QA Assistant</p>
     </footer>
 
