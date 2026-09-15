@@ -67,6 +67,11 @@ it when files change or assumptions need verification.
   verification.
 - Do not claim visual or theme behavior was verified unless it was actually
   observed.
+- Running existing automated tests with the project's virtual environment
+  against the disposable test database is pre-approved and expected when
+  relevant. Do not ask for permission before running focused or full existing
+  test suites unless the command would access real/non-test data or leave the
+  repository sandbox.
 
 ## Requirements and traceability
 
