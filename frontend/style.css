@@ -477,6 +477,11 @@ textarea.form-input {
     font-style: normal;
 }
 
+#lifecycle-qa-assignee {
+    text-align: center;
+    text-align-last: center;
+}
+
 .form-input:focus {
     outline: none;
 
@@ -725,6 +730,14 @@ button:disabled {
     padding: 7px 12px;
 
     font-size: 14px;
+}
+
+.creation-form-actions .creation-form-action-button {
+    width: 100px;
+
+    padding: 10px 20px;
+
+    font-size: 16px;
 }
 
 .equal-action-buttons .context-action-button {
@@ -1067,7 +1080,7 @@ button:disabled {
 }
 
 .bug-details-header h2 {
-    margin: 4px 0 14px;
+    margin: 4px 0 0;
 
     text-align: left;
 }
@@ -1078,17 +1091,6 @@ button:disabled {
     color: var(--muted-text);
 
     font-weight: bold;
-}
-
-.bug-status {
-    display: inline-block;
-
-    padding: 5px 10px;
-
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-
-    color: var(--secondary-text);
 }
 
 .bug-details-grid {
@@ -1114,18 +1116,39 @@ button:disabled {
     margin-top: 16px;
 }
 
-.bug-details-actions {
+.bug-actions {
     display: flex;
+    flex-direction: column;
+    align-items: center;
 
-    gap: 8px;
-
-    margin-top: 12px;
+    margin: 20px auto 0;
 }
 
-.bug-details-actions button {
+.bug-action-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+}
+
+.bug-actions button {
     display: inline-block;
 
     margin: 0;
+}
+
+.bug-action-group > #show-edit-bug-form,
+#lifecycle-action-button {
+    width: 180px;
+
+    box-sizing: border-box;
+}
+
+#bug-details[hidden] ~ .bug-actions,
+#bug-details:has(#edit-bug-form:not([hidden])) ~ .bug-actions {
+    display: none;
 }
 
 #delete-bug-button {
@@ -1137,25 +1160,29 @@ button:disabled {
 }
 
 .bug-lifecycle-actions {
-    padding: 18px 24px 24px;
-
-    border-top: 1px solid var(--border-color);
+    margin: 0;
 }
 
-.bug-lifecycle-actions h3 {
-    margin-bottom: 12px;
+.bug-lifecycle-actions:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 100%;
+    max-width: 900px;
 }
 
 .bug-lifecycle-controls {
     display: flex;
-    align-items: flex-end;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
 
     gap: 8px;
 }
 
 .bug-lifecycle-field {
-    flex: 1 1 280px;
+    width: 100%;
+    max-width: 320px;
 }
 
 .bug-lifecycle-field label {
@@ -1170,9 +1197,15 @@ button:disabled {
 }
 
 .bug-lifecycle-guidance {
-    margin: 10px 0 0;
+    width: 100%;
 
-    color: var(--muted-text);
+    margin: 6px 0 0;
+
+    color: var(--secondary-text);
+
+    font-size: 16px;
+
+    text-align: center;
 }
 
 .bug-lifecycle-guidance:empty {
@@ -1220,7 +1253,7 @@ footer {
 
     color: var(--muted-text);
 
-    font-size: 16px;
+    font-size: 14px;
 
     text-align: center;
 }
@@ -1438,5 +1471,9 @@ footer a:hover {
 
     .project-buttons button {
         flex: 1;
+    }
+
+    .project-buttons.equal-action-buttons button {
+        flex: 0 0 72px;
     }
 }

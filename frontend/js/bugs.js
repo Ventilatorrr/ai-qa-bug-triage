@@ -166,7 +166,7 @@ function populateLifecycleQaAnalysts() {
 
     const prompt = document.createElement("option");
     prompt.value = "";
-    prompt.textContent = "Select QA Analyst";
+    prompt.textContent = "Select a QA Analyst";
     prompt.disabled = true;
     prompt.selected = true;
     lifecycleQaAssignee.appendChild(prompt);
@@ -210,7 +210,7 @@ function renderLifecycleControls() {
 
         if (!validTriageAssignee) {
             lifecycleGuidance.textContent =
-                "Assign a QA Analyst or Developer through Edit Bug before moving to Open.";
+                "Assign a QA Analyst or Developer through Edit before moving to Open.";
         }
     } else if (
         currentBug.status === "Open" &&
@@ -222,7 +222,7 @@ function renderLifecycleControls() {
 
         if (!validDeveloperAssignee) {
             lifecycleGuidance.textContent =
-                "Assign a Developer through Edit Bug before starting development.";
+                "Assign a Developer through Edit before starting development.";
         } else if (
             actorRole === "Developer" &&
             currentBug.assignee_id !== currentMember.user_id
@@ -245,7 +245,7 @@ function renderLifecycleControls() {
 
         if (!validDeveloperAssignee) {
             lifecycleGuidance.textContent =
-                "Assign a Developer through Edit Bug before sending to testing.";
+                "Assign a Developer through Edit before sending to testing.";
         } else if (
             actorRole === "Developer" &&
             currentBug.assignee_id !== currentMember.user_id
@@ -258,7 +258,6 @@ function renderLifecycleControls() {
         } else {
             lifecycleActionAllowed = true;
             lifecycleQaAssignee.disabled = false;
-            lifecycleGuidance.textContent = "Select a QA Analyst for testing.";
         }
     }
 
@@ -350,9 +349,7 @@ function renderBug(bug) {
 
     setText("#bug-reference", `BUG-${bug.id}`);
     setText("#bug-heading", bug.title);
-    setText("#bug-status", bug.status);
 
-    setText("#bug-title", bug.title);
     setText("#bug-environment", bug.environment);
     setText("#bug-description", bug.description);
     setText("#bug-steps", bug.steps_to_reproduce);
@@ -577,9 +574,7 @@ lifecycleQaAssignee.addEventListener("change", function() {
         lifecycleActionButton.disabled = !(
             lifecycleActionAllowed && lifecycleQaAssignee.value
         );
-        lifecycleGuidance.textContent = lifecycleQaAssignee.value
-            ? ""
-            : "Select a QA Analyst for testing.";
+        lifecycleGuidance.textContent = "";
     }
 });
 
@@ -600,7 +595,8 @@ lifecycleActionButton.addEventListener("click", async function() {
         const qaAssigneeId = Number(lifecycleQaAssignee.value);
 
         if (!Number.isInteger(qaAssigneeId) || qaAssigneeId <= 0) {
-            lifecycleGuidance.textContent = "Select a QA Analyst for testing.";
+            lifecycleGuidance.textContent =
+                "Select a QA Analyst before sending to Testing.";
             lifecycleActionButton.disabled = true;
             return;
         }

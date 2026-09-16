@@ -128,7 +128,7 @@ function renderProjectView(projectElement, project, role) {
         });
 
         const projectButtons = document.createElement("div");
-        projectButtons.className = "project-buttons";
+        projectButtons.className = "project-buttons equal-action-buttons";
         projectButtons.appendChild(editButton);
 
         projectElement.appendChild(projectButtons);
