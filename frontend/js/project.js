@@ -47,8 +47,46 @@ const bugAssigneeInput =
 const bugFixVersionInput =
     document.querySelector("#bug-fix-version");
 
-const accessToken = localStorage.getItem("access_token");
 let projectMembers = [];
+
+function redirectToLogin() {
+    localStorage.removeItem("access_token");
+    window.location.replace("/login.html");
+}
+
+function getCurrentAccessToken() {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        redirectToLogin();
+        return null;
+    }
+
+    return token;
+}
+
+async function authenticatedFetch(url, options = {}) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    if (response.status === 401) {
+        redirectToLogin();
+        return null;
+    }
+
+    return response;
+}
 
 function showMemberMessage(text, type = "neutral") {
     memberMessage.classList.remove("message-success", "message-error");
@@ -62,47 +100,51 @@ function showMemberMessage(text, type = "neutral") {
 }
 
 function getCurrentUserId() {
-    if (!accessToken) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
         return null;
     }
 
-    const payload = accessToken.split(".")[1];
+    const payload = token.split(".")[1];
 
     return JSON.parse(atob(payload)).user_id;
 }
 
 
 async function loadProject() {
-    const response = await fetch(
-        `/projects/${projectId}`,
-        {
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            }
-        }
-    );
+    const response = await authenticatedFetch(`/projects/${projectId}`);
+
+    if (!response) {
+        return false;
+    }
 
     const data = await response.json();
 
     if (response.ok) {
         projectName.textContent = data.name;
+        return true;
+    } else if (response.status === 404) {
+        window.location.replace("/projects.html");
+        return false;
     } else {
         bugMessage.textContent = formatApiError(data.detail);
+        return false;
     }
 }
 
 
-async function loadMembers() {
-    projectMembers = [];
-    document.querySelector("#header-identity").hidden = true;
-    const response = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            }
-        }
-    );
+async function loadMembers(preserveVisibleState = false) {
+    if (!preserveVisibleState) {
+        projectMembers = [];
+        document.querySelector("#header-identity").hidden = true;
+    }
+
+    const response = await authenticatedFetch(`/projects/${projectId}/members`);
+
+    if (!response) {
+        return null;
+    }
 
     const data = await response.json();
 
@@ -217,20 +259,22 @@ async function addMember(event) {
     let data = {};
 
     try {
-        response = await fetch(
+        response = await authenticatedFetch(
             `/projects/${projectId}/members`,
             {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization":
-                        "Bearer " + accessToken
+                    "Content-Type": "application/json"
                 },
 
                 body: JSON.stringify(member)
             }
         );
+
+        if (!response) {
+            return;
+        }
 
         try {
             data = await response.json();
@@ -282,17 +326,16 @@ async function removeMember(member) {
     let data = {};
 
     try {
-        response = await fetch(
+        response = await authenticatedFetch(
             `/projects/${projectId}/members/${member.user_id}`,
             {
-                method: "DELETE",
-
-                headers: {
-                    "Authorization":
-                        "Bearer " + accessToken
-                }
+                method: "DELETE"
             }
         );
+
+        if (!response) {
+            return;
+        }
 
         try {
             data = await response.json();
@@ -323,15 +366,11 @@ async function removeMember(member) {
 
 
 async function loadBugAssignees() {
-    const response = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
-            }
-        }
-    );
+    const response = await authenticatedFetch(`/projects/${projectId}/members`);
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -378,15 +417,11 @@ async function loadBugAssignees() {
 
 
 async function updateBugAssigneeVisibility() {
-    const membersResponse = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
-            }
-        }
-    );
+    const membersResponse = await authenticatedFetch(`/projects/${projectId}/members`);
+
+    if (!membersResponse) {
+        return;
+    }
 
     const members =
         await membersResponse.json();
@@ -505,15 +540,11 @@ function compareBugs(first, second) {
 }
 
 async function loadBugs() {
-    const response = await fetch(
-        `/projects/${projectId}/bugs`,
-        {
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
-            }
-        }
-    );
+    const response = await authenticatedFetch(`/projects/${projectId}/bugs`);
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -524,6 +555,14 @@ async function loadBugs() {
 
     projectBugs = data;
     renderBugs();
+}
+
+async function refreshProjectMemberAndBugData(preserveVisibleState = false) {
+    try {
+        await loadMembers(preserveVisibleState);
+    } finally {
+        await loadBugs();
+    }
 }
 
 function renderBugs() {
@@ -902,22 +941,23 @@ bugForm.addEventListener(
                 null
         };
 
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `/projects/${projectId}/bugs`,
             {
                 method: "POST",
 
                 headers: {
                     "Content-Type":
-                        "application/json",
-                    "Authorization":
-                        "Bearer " +
-                        accessToken
+                        "application/json"
                 },
 
                 body: JSON.stringify(bug)
             }
         );
+
+        if (!response) {
+            return;
+        }
 
         const data = await response.json();
 
@@ -948,14 +988,37 @@ bugForm.addEventListener(
    Initial Load
    ========================================================= */
 
-if (!accessToken) {
-    window.location.href =
-        "/login.html";
+if (!localStorage.getItem("access_token")) {
+    redirectToLogin();
 } else {
     showBugDeletionFeedback();
     loadProject();
 
-    loadMembers().catch(function() {
+    refreshProjectMemberAndBugData().catch(function() {
         showMemberMessage("Unable to load project members. Please refresh the page.", "error");
-    }).then(loadBugs);
+    });
+
+    window.addEventListener("pageshow", async function(event) {
+        if (!localStorage.getItem("access_token")) {
+            redirectToLogin();
+            return;
+        }
+
+        if (!event.persisted) {
+            return;
+        }
+
+        showMemberMessage("");
+        showBugMessage("");
+
+        try {
+            const projectExists = await loadProject();
+
+            if (projectExists) {
+                await refreshProjectMemberAndBugData(true);
+            }
+        } catch (error) {
+            showBugMessage("Unable to refresh this project. Please refresh the page.", "error");
+        }
+    });
 }
