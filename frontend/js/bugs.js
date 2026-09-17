@@ -3,8 +3,6 @@ const params = new URLSearchParams(window.location.search);
 const projectId = params.get("project_id");
 const bugId = params.get("bug_id");
 
-const accessToken = localStorage.getItem("access_token");
-
 const backToProjectLink = document.querySelector("#back-to-project");
 const bugMessage = document.querySelector("#bug-message");
 const bugDetails = document.querySelector("#bug-details");
@@ -42,6 +40,47 @@ let editModeLoading = false;
 let lifecycleInProgress = false;
 let lifecycleTargetStatus = null;
 let lifecycleActionAllowed = false;
+const qaSelectionValidationMessage =
+    "Select a QA Analyst before sending to Testing.";
+
+function redirectToLogin() {
+    localStorage.removeItem("access_token");
+    window.location.replace("/login.html");
+}
+
+function getCurrentAccessToken() {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        redirectToLogin();
+        return null;
+    }
+
+    return token;
+}
+
+async function authenticatedFetch(url, options = {}) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    if (response.status === 401) {
+        redirectToLogin();
+        return null;
+    }
+
+    return response;
+}
 
 function showMessage(element, message, type = "neutral") {
     element.classList.remove("message-success", "message-error");
@@ -55,12 +94,14 @@ function showMessage(element, message, type = "neutral") {
 }
 
 function getCurrentUserId() {
-    if (!accessToken) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
         return null;
     }
 
     try {
-        const payload = accessToken.split(".")[1];
+        const payload = token.split(".")[1];
         return JSON.parse(atob(payload)).user_id;
     } catch (error) {
         return null;
@@ -82,11 +123,11 @@ async function loadProjectMembers(preserveVisibleState = false) {
     }
 
     try {
-        const response = await fetch(`/projects/${projectId}/members`, {
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            }
-        });
+        const response = await authenticatedFetch(`/projects/${projectId}/members`);
+
+        if (!response) {
+            return false;
+        }
 
         let data = {};
 
@@ -94,12 +135,6 @@ async function loadProjectMembers(preserveVisibleState = false) {
             data = await response.json();
         } catch (error) {
             data = {};
-        }
-
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
-            return false;
         }
 
         if (!response.ok) {
@@ -413,11 +448,13 @@ function isValidBugResponse(data) {
     );
 }
 
-async function loadBug() {
-    bugDetails.hidden = true;
+async function loadBug(preserveVisibleState = false) {
+    if (!preserveVisibleState) {
+        bugDetails.hidden = true;
+    }
 
-    if (!accessToken) {
-        window.location.href = "/login.html";
+    if (!localStorage.getItem("access_token")) {
+        redirectToLogin();
         return false;
     }
 
@@ -434,14 +471,13 @@ async function loadBug() {
     }
 
     try {
-        const response = await fetch(
-            `/projects/${projectId}/bugs/${bugId}`,
-            {
-                headers: {
-                    "Authorization": "Bearer " + accessToken
-                }
-            }
+        const response = await authenticatedFetch(
+            `/projects/${projectId}/bugs/${bugId}`
         );
+
+        if (!response) {
+            return false;
+        }
 
         let data = {};
         try {
@@ -450,10 +486,9 @@ async function loadBug() {
             data = {};
         }
 
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
-            return;
+        if (response.status === 404) {
+            window.location.replace(`/project.html?id=${projectId}`);
+            return false;
         }
 
         if (!response.ok) {
@@ -478,7 +513,7 @@ async function loadBug() {
         showMessage(bugMessage, "");
         bugDetails.hidden = false;
 
-        if (await loadProjectMembers()) {
+        if (await loadProjectMembers(preserveVisibleState)) {
             renderRoleSpecificActions();
         }
 
@@ -512,19 +547,14 @@ deleteBugButton.addEventListener("click", async function() {
     showMessage(bugMessage, "");
 
     try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `/projects/${projectId}/bugs/${bugId}`,
             {
-                method: "DELETE",
-                headers: {
-                    "Authorization": "Bearer " + accessToken
-                }
+                method: "DELETE"
             }
         );
 
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
+        if (!response) {
             return;
         }
 
@@ -538,7 +568,7 @@ deleteBugButton.addEventListener("click", async function() {
                 // Continue to the project page if session storage is unavailable.
             }
 
-            window.location.href = `/project.html?id=${projectId}`;
+            window.location.replace(`/project.html?id=${projectId}`);
             return;
         }
 
@@ -596,7 +626,7 @@ lifecycleActionButton.addEventListener("click", async function() {
 
         if (!Number.isInteger(qaAssigneeId) || qaAssigneeId <= 0) {
             lifecycleGuidance.textContent =
-                "Select a QA Analyst before sending to Testing.";
+                qaSelectionValidationMessage;
             lifecycleActionButton.disabled = true;
             return;
         }
@@ -615,17 +645,21 @@ lifecycleActionButton.addEventListener("click", async function() {
     showMessage(bugMessage, "");
 
     try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `/projects/${projectId}/bugs/${bugId}/status`,
             {
                 method: "PATCH",
                 headers: {
-                    "Authorization": "Bearer " + accessToken,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload)
             }
         );
+
+        if (!response) {
+            lifecycleStateConfirmed = false;
+            return;
+        }
 
         let data = {};
 
@@ -633,12 +667,6 @@ lifecycleActionButton.addEventListener("click", async function() {
             data = await response.json();
         } catch (error) {
             data = {};
-        }
-
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
-            return;
         }
 
         if (response.status === 404) {
@@ -827,18 +855,16 @@ showEditBugFormButton.addEventListener("click", async function() {
     showMessage(editBugMessage, "");
 
     try {
-        const response = await fetch(`/projects/${projectId}/bugs/${bugId}`, {
-            headers: { "Authorization": "Bearer " + accessToken }
-        });
+        const response = await authenticatedFetch(
+            `/projects/${projectId}/bugs/${bugId}`
+        );
+
+        if (!response) {
+            return;
+        }
 
         let data = {};
         try { data = await response.json(); } catch (error) { data = {}; }
-
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
-            return;
-        }
 
         if (!response.ok) {
             if (response.status === 404) {
@@ -961,23 +987,20 @@ editBugForm.addEventListener("submit", async function(event) {
     showMessage(editBugMessage, "");
 
     try {
-        const response = await fetch(`/projects/${projectId}/bugs/${bugId}`, {
+        const response = await authenticatedFetch(`/projects/${projectId}/bugs/${bugId}`, {
             method: "PATCH",
             headers: {
-                "Authorization": "Bearer " + accessToken,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(payload)
         });
 
-        let data = {};
-        try { data = await response.json(); } catch (error) { data = {}; }
-
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
+        if (!response) {
             return;
         }
+
+        let data = {};
+        try { data = await response.json(); } catch (error) { data = {}; }
 
         if (!response.ok) {
             showMessage(
@@ -1022,12 +1045,9 @@ editBugForm.addEventListener("submit", async function(event) {
 
 async function loadProjectNavigation() {
     try {
-        const response = await fetch(`/projects/${projectId}`, {
-            headers: { "Authorization": "Bearer " + accessToken }
-        });
-        if (response.status === 401) {
-            localStorage.removeItem("access_token");
-            window.location.href = "/login.html";
+        const response = await authenticatedFetch(`/projects/${projectId}`);
+
+        if (!response) {
             return;
         }
 
@@ -1050,4 +1070,22 @@ async function loadProjectNavigation() {
 
 loadBug().then(function(loaded) {
     if (loaded) loadProjectNavigation();
+});
+
+window.addEventListener("pageshow", async function(event) {
+    if (!localStorage.getItem("access_token")) {
+        redirectToLogin();
+        return;
+    }
+
+    if (event.persisted) {
+        showMessage(bugMessage, "");
+        showMessage(editBugMessage, "");
+
+        if (lifecycleGuidance.textContent === qaSelectionValidationMessage) {
+            lifecycleGuidance.textContent = "";
+        }
+
+        await loadBug(true);
+    }
 });

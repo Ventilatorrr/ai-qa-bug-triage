@@ -2,15 +2,52 @@ const projectsContainer = document.querySelector("#projects");
 const message = document.querySelector("#message");
 const projectForm = document.querySelector("#project-form");
 
-const accessToken = localStorage.getItem("access_token");
-
 const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
 let editingProjectId = null;
 
 
-if (!accessToken) {
-    window.location.href = "/login.html";
+function redirectToLogin() {
+    localStorage.removeItem("access_token");
+    window.location.replace("/login.html");
+}
+
+function getCurrentAccessToken() {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        redirectToLogin();
+        return null;
+    }
+
+    return token;
+}
+
+async function authenticatedFetch(url, options = {}) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    if (response.status === 401) {
+        redirectToLogin();
+        return null;
+    }
+
+    return response;
+}
+
+if (!localStorage.getItem("access_token")) {
+    redirectToLogin();
 }
 
 function showProjectMessage(text, type = "neutral") {
@@ -25,22 +62,22 @@ function showProjectMessage(text, type = "neutral") {
 }
 
 function getCurrentUserId() {
-    const payload = accessToken.split(".")[1];
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const payload = token.split(".")[1];
 
     return JSON.parse(atob(payload)).user_id;
 }
 
 
 async function getProjectRole(projectId) {
-    const response = await fetch(`/projects/${projectId}/members`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
-        }
-    });
+    const response = await authenticatedFetch(`/projects/${projectId}/members`);
 
-    if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login.html";
+    if (!response) {
         return null;
     }
 
@@ -68,15 +105,9 @@ async function getProjectRole(projectId) {
 
 
 async function loadProjects() {
-    const response = await fetch("/projects", {
-        headers: {
-            "Authorization": "Bearer " + accessToken
-        }
-    });
+    const response = await authenticatedFetch("/projects");
 
-    if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login.html";
+    if (!response) {
         return;
     }
 
@@ -105,6 +136,17 @@ async function loadProjects() {
 
 
 loadProjects();
+
+window.addEventListener("pageshow", function(event) {
+    if (!localStorage.getItem("access_token")) {
+        redirectToLogin();
+        return;
+    }
+
+    if (event.persisted) {
+        showProjectMessage("");
+    }
+});
 
 
 function renderProjectView(projectElement, project, role) {
@@ -193,16 +235,19 @@ function cancelProjectEdit(project, projectElement) {
 async function saveProjectEdit(project, projectNameInput, projectElement) {
     const newName = projectNameInput.value;
 
-    const response = await fetch(`/projects/${project.id}`, {
+    const response = await authenticatedFetch(`/projects/${project.id}`, {
         method: "PUT",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             name: newName
         })
     });
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -224,12 +269,13 @@ async function deleteProject(project, projectElement) {
         return;
     }
 
-    const response = await fetch(`/projects/${project.id}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + accessToken
-        }
+    const response = await authenticatedFetch(`/projects/${project.id}`, {
+        method: "DELETE"
     });
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -264,16 +310,19 @@ projectForm.addEventListener("submit", async function (event) {
 
     const projectName = document.querySelector("#project-name").value;
 
-    const response = await fetch("/projects", {
+    const response = await authenticatedFetch("/projects", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             name: projectName
         })
     });
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
