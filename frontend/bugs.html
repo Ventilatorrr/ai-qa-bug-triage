@@ -25,10 +25,6 @@
     </header>
 
     <main id="bug-page">
-        <p id="bug-message" class="section-message" role="status" aria-live="polite">
-            Loading bug report...
-        </p>
-
         <article id="bug-details" class="bug-details" hidden>
             <header class="bug-details-header">
                 <p id="bug-reference" class="bug-reference"></p>
@@ -251,6 +247,8 @@
                     placeholder="e.g. 1.3.0">
 
 
+                <p id="edit-bug-message" class="section-message" role="alert" aria-live="polite"></p>
+
                 <div class="form-actions creation-form-actions">
 
                     <button id="save-edit-button" class="creation-form-action-button" type="submit">Save</button>
@@ -265,12 +263,25 @@
 
         </article>
 
+        <p id="bug-message" class="section-message" role="status" aria-live="polite">
+            Loading bug report...
+        </p>
+
         <section class="bug-actions" aria-label="Bug actions">
             <div class="bug-action-group">
                 <button id="show-edit-bug-form" class="secondary-action-button" type="button">Edit</button>
 
                 <div id="bug-lifecycle-actions" class="bug-lifecycle-actions" hidden>
-                    <div class="bug-lifecycle-controls">
+                    <div id="lifecycle-standard-actions" class="bug-lifecycle-control-group" hidden>
+                        <div id="lifecycle-assignee-field" class="bug-lifecycle-field" hidden>
+                            <select
+                                id="lifecycle-assignee"
+                                class="form-input"
+                                aria-label="Assignee for lifecycle transition">
+                                <option value="" disabled selected>Select a QA or a Dev</option>
+                            </select>
+                        </div>
+
                         <div id="lifecycle-qa-field" class="bug-lifecycle-field" hidden>
                             <select
                                 id="lifecycle-qa-assignee"
@@ -280,7 +291,43 @@
                             </select>
                         </div>
 
-                        <button id="lifecycle-action-button" type="button"></button>
+                        <button id="lifecycle-action-button" class="bug-lifecycle-button" type="button"></button>
+                    </div>
+
+                    <div id="lifecycle-testing-actions" class="bug-lifecycle-groups" hidden>
+                        <div class="bug-lifecycle-control-group">
+                            <button id="lifecycle-pass-button" class="bug-lifecycle-button" type="button">Passed</button>
+                        </div>
+
+                        <div class="bug-lifecycle-control-group">
+                            <div id="lifecycle-developer-field" class="bug-lifecycle-field">
+                                <select
+                                    id="lifecycle-developer-assignee"
+                                    class="form-input"
+                                    aria-label="Developer for failed testing">
+                                    <option value="" disabled selected>Select a Developer</option>
+                                </select>
+                            </div>
+
+                            <button id="lifecycle-fail-button" class="bug-lifecycle-button" type="button">Failed</button>
+                        </div>
+                    </div>
+
+                    <div id="lifecycle-close-actions" class="bug-lifecycle-control-group" hidden>
+                        <div id="lifecycle-resolution-field" class="bug-lifecycle-field">
+                            <select
+                                id="lifecycle-resolution"
+                                class="form-input"
+                                aria-label="Resolution for closing without fixing">
+                                <option value="" disabled selected>Select a resolution</option>
+                                <option value="Won't Fix">Won't Fix</option>
+                                <option value="Duplicate">Duplicate</option>
+                                <option value="Cannot Reproduce">Cannot Reproduce</option>
+                                <option value="Not a Bug">Not a Bug</option>
+                            </select>
+                        </div>
+
+                        <button id="lifecycle-close-button" class="bug-lifecycle-button" type="button">Close</button>
                     </div>
 
                     <p id="lifecycle-guidance" class="bug-lifecycle-guidance"></p>
@@ -288,7 +335,6 @@
             </div>
         </section>
 
-        <p id="edit-bug-message" class="section-message" role="alert" aria-live="polite"></p>
     </main>
 
     <footer>

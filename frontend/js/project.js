@@ -504,6 +504,14 @@ function displayBugAssignee(assigneeId) {
     return member ? `${member.email} (${member.role})` : `User ${assigneeId}`;
 }
 
+function displayBugStatus(bug) {
+    if (bug.status === "Closed" && bug.resolution) {
+        return `Closed [${bug.resolution}]`;
+    }
+
+    return bug.status;
+}
+
 function compareBugs(first, second) {
     let firstValue = first[bugSortColumn];
     let secondValue = second[bugSortColumn];
@@ -712,7 +720,7 @@ function renderBugs() {
             document.createElement("td");
 
         statusCell.textContent =
-            bug.status;
+            displayBugStatus(bug);
 
 
         /* Assignee */

@@ -471,13 +471,19 @@ textarea.form-input {
 #edit-bug-severity.select-prompt,
 #edit-bug-priority.select-prompt,
 #edit-bug-assignee.select-prompt,
-#lifecycle-qa-assignee.select-prompt {
+#lifecycle-assignee.select-prompt,
+#lifecycle-qa-assignee.select-prompt,
+#lifecycle-developer-assignee.select-prompt,
+#lifecycle-resolution.select-prompt {
     color: var(--placeholder-text);
 
     font-style: normal;
 }
 
-#lifecycle-qa-assignee {
+#lifecycle-assignee,
+#lifecycle-qa-assignee,
+#lifecycle-developer-assignee,
+#lifecycle-resolution {
     text-align: center;
     text-align-last: center;
 }
@@ -601,7 +607,10 @@ form button {
 #edit-bug-severity option,
 #edit-bug-priority option,
 #edit-bug-assignee option,
-#lifecycle-qa-assignee option {
+#lifecycle-assignee option,
+#lifecycle-qa-assignee option,
+#lifecycle-developer-assignee option,
+#lifecycle-resolution option {
     background-color: var(--input-background);
     color: var(--primary-text);
 }
@@ -611,7 +620,10 @@ form button {
 #edit-bug-severity option[value=""],
 #edit-bug-priority option[value=""],
 #edit-bug-assignee option[value=""],
-#lifecycle-qa-assignee option[value=""] {
+#lifecycle-assignee option[value=""],
+#lifecycle-qa-assignee option[value=""],
+#lifecycle-developer-assignee option[value=""],
+#lifecycle-resolution option[value=""] {
     color: var(--placeholder-text);
 }
 
@@ -1140,8 +1152,8 @@ button:disabled {
 }
 
 .bug-action-group > #show-edit-bug-form,
-#lifecycle-action-button {
-    width: 180px;
+.bug-lifecycle-button {
+    width: 200px;
 
     box-sizing: border-box;
 }
@@ -1170,9 +1182,12 @@ button:disabled {
 
     width: 100%;
     max-width: 900px;
+
+    gap: 14px;
 }
 
-.bug-lifecycle-controls {
+.bug-lifecycle-groups:not([hidden]),
+.bug-lifecycle-control-group:not([hidden]) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1180,9 +1195,13 @@ button:disabled {
     gap: 8px;
 }
 
+.bug-lifecycle-groups:not([hidden]) {
+    gap: 16px;
+}
+
 .bug-lifecycle-field {
-    width: 100%;
-    max-width: 320px;
+    width: 200px;
+    max-width: 100%;
 }
 
 .bug-lifecycle-field label {
@@ -1193,6 +1212,10 @@ button:disabled {
 }
 
 .bug-lifecycle-field .form-input {
+    width: 100%;
+
+    box-sizing: border-box;
+
     margin-bottom: 0;
 }
 
