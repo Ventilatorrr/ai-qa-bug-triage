@@ -10,9 +10,19 @@ const bugDetailsGrid = document.querySelector(".bug-details-grid");
 const showEditBugFormButton = document.querySelector("#show-edit-bug-form");
 const deleteBugButton = document.querySelector("#delete-bug-button");
 const lifecycleActions = document.querySelector("#bug-lifecycle-actions");
+const lifecycleStandardActions = document.querySelector("#lifecycle-standard-actions");
+const lifecycleAssigneeField = document.querySelector("#lifecycle-assignee-field");
+const lifecycleAssignee = document.querySelector("#lifecycle-assignee");
 const lifecycleQaField = document.querySelector("#lifecycle-qa-field");
 const lifecycleQaAssignee = document.querySelector("#lifecycle-qa-assignee");
 const lifecycleActionButton = document.querySelector("#lifecycle-action-button");
+const lifecycleTestingActions = document.querySelector("#lifecycle-testing-actions");
+const lifecyclePassButton = document.querySelector("#lifecycle-pass-button");
+const lifecycleDeveloperAssignee = document.querySelector("#lifecycle-developer-assignee");
+const lifecycleFailButton = document.querySelector("#lifecycle-fail-button");
+const lifecycleCloseActions = document.querySelector("#lifecycle-close-actions");
+const lifecycleResolution = document.querySelector("#lifecycle-resolution");
+const lifecycleCloseButton = document.querySelector("#lifecycle-close-button");
 const lifecycleGuidance = document.querySelector("#lifecycle-guidance");
 
 const editBugForm = document.querySelector("#edit-bug-form");
@@ -40,8 +50,24 @@ let editModeLoading = false;
 let lifecycleInProgress = false;
 let lifecycleTargetStatus = null;
 let lifecycleActionAllowed = false;
+let testingOutcomeAllowed = false;
+let closeWithoutFixAllowed = false;
 const qaSelectionValidationMessage =
     "Select a QA Analyst before sending to Testing.";
+const openSelectionValidationMessage =
+    "Select a QA Analyst or Developer before moving to Open.";
+const developmentSelectionValidationMessage =
+    "Select a Developer before moving to Development.";
+const developerSelectionValidationMessage =
+    "Select a Developer before returning to Development.";
+const resolutionSelectionValidationMessage =
+    "Select a resolution before closing this bug report.";
+const nonFixResolutions = [
+    "Won't Fix",
+    "Duplicate",
+    "Cannot Reproduce",
+    "Not a Bug"
+];
 
 function redirectToLogin() {
     localStorage.removeItem("access_token");
@@ -110,8 +136,7 @@ function getCurrentUserId() {
 
 function hideRoleSpecificActions() {
     deleteBugButton.hidden = true;
-    lifecycleActions.hidden = true;
-    lifecycleTargetStatus = null;
+    resetLifecycleControls();
 }
 
 async function loadProjectMembers(preserveVisibleState = false) {
@@ -187,13 +212,59 @@ function getProjectMember(userId) {
 
 function resetLifecycleControls() {
     lifecycleActions.hidden = true;
+    lifecycleStandardActions.hidden = true;
+    lifecycleTestingActions.hidden = true;
+    lifecycleCloseActions.hidden = true;
+    lifecycleAssigneeField.hidden = true;
     lifecycleQaField.hidden = true;
+    lifecycleAssignee.disabled = true;
     lifecycleQaAssignee.disabled = true;
+    lifecycleDeveloperAssignee.disabled = true;
+    lifecycleResolution.disabled = true;
     lifecycleActionButton.disabled = true;
+    lifecyclePassButton.disabled = true;
+    lifecycleFailButton.disabled = true;
+    lifecycleCloseButton.disabled = true;
     lifecycleActionButton.textContent = "";
+    lifecyclePassButton.textContent = "Passed";
+    lifecycleFailButton.textContent = "Failed";
+    lifecycleCloseButton.textContent = "Close";
     lifecycleGuidance.textContent = "";
     lifecycleTargetStatus = null;
     lifecycleActionAllowed = false;
+    testingOutcomeAllowed = false;
+    closeWithoutFixAllowed = false;
+
+    lifecycleAssignee.value = "";
+    updateSelectPromptStyle(lifecycleAssignee);
+    lifecycleResolution.value = "";
+    updateSelectPromptStyle(lifecycleResolution);
+}
+
+function populateLifecycleAssignees(roles, placeholder, includeRole) {
+    lifecycleAssignee.innerHTML = "";
+
+    const prompt = document.createElement("option");
+    prompt.value = "";
+    prompt.textContent = placeholder;
+    prompt.disabled = true;
+    prompt.selected = true;
+    lifecycleAssignee.appendChild(prompt);
+
+    projectMembers.forEach(function(member) {
+        if (roles.includes(member.role)) {
+            const option = document.createElement("option");
+            option.value = member.user_id;
+            option.textContent = includeRole
+                ? `${member.email} (${member.role})`
+                : member.email;
+            lifecycleAssignee.appendChild(option);
+        }
+    });
+
+    updateSelectPromptStyle(lifecycleAssignee);
+
+    return lifecycleAssignee.options.length - 1;
 }
 
 function populateLifecycleQaAnalysts() {
@@ -210,7 +281,7 @@ function populateLifecycleQaAnalysts() {
         if (member.role === "QA Analyst") {
             const option = document.createElement("option");
             option.value = member.user_id;
-            option.textContent = `${member.email} (${member.role})`;
+            option.textContent = member.email;
             lifecycleQaAssignee.appendChild(option);
         }
     });
@@ -218,6 +289,30 @@ function populateLifecycleQaAnalysts() {
     updateSelectPromptStyle(lifecycleQaAssignee);
 
     return lifecycleQaAssignee.options.length - 1;
+}
+
+function populateLifecycleDevelopers() {
+    lifecycleDeveloperAssignee.innerHTML = "";
+
+    const prompt = document.createElement("option");
+    prompt.value = "";
+    prompt.textContent = "Select a Developer";
+    prompt.disabled = true;
+    prompt.selected = true;
+    lifecycleDeveloperAssignee.appendChild(prompt);
+
+    projectMembers.forEach(function(member) {
+        if (member.role === "Developer") {
+            const option = document.createElement("option");
+            option.value = member.user_id;
+            option.textContent = member.email;
+            lifecycleDeveloperAssignee.appendChild(option);
+        }
+    });
+
+    updateSelectPromptStyle(lifecycleDeveloperAssignee);
+
+    return lifecycleDeveloperAssignee.options.length - 1;
 }
 
 function renderLifecycleControls() {
@@ -229,49 +324,68 @@ function renderLifecycleControls() {
 
     const actorRole = currentMember.role;
     const assignee = getProjectMember(currentBug.assignee_id);
-    const validTriageAssignee = assignee && (
-        assignee.role === "QA Analyst" || assignee.role === "Developer"
-    );
     const validDeveloperAssignee = assignee && assignee.role === "Developer";
+    const validQaAssignee = assignee && assignee.role === "QA Analyst";
 
     if (
         currentBug.status === "Triage" &&
         (actorRole === "Project Owner" || actorRole === "QA Analyst")
     ) {
         lifecycleActions.hidden = false;
+        lifecycleStandardActions.hidden = false;
+        lifecycleAssigneeField.hidden = false;
         lifecycleTargetStatus = "Open";
         lifecycleActionButton.textContent = "Move to Open";
-        lifecycleActionAllowed = Boolean(validTriageAssignee);
+        const eligibleAssigneeCount = populateLifecycleAssignees(
+            ["QA Analyst", "Developer"],
+            "Select a QA or a Dev",
+            true
+        );
 
-        if (!validTriageAssignee) {
+        if (eligibleAssigneeCount === 0) {
             lifecycleGuidance.textContent =
-                "Assign a QA Analyst or Developer through Edit before moving to Open.";
+                "Add a QA Analyst or Developer to the project before moving this bug to Open.";
+        } else {
+            lifecycleActionAllowed = true;
+            lifecycleAssignee.disabled = false;
         }
     } else if (
         currentBug.status === "Open" &&
         (actorRole === "Project Owner" || actorRole === "Developer")
     ) {
         lifecycleActions.hidden = false;
+        lifecycleStandardActions.hidden = false;
+        lifecycleAssigneeField.hidden = false;
         lifecycleTargetStatus = "Development";
-        lifecycleActionButton.textContent = "Start Development";
+        lifecycleActionButton.textContent = "Move to Development";
+        const developerCount = populateLifecycleAssignees(
+            ["Developer"],
+            "Select a Developer",
+            false
+        );
 
-        if (!validDeveloperAssignee) {
-            lifecycleGuidance.textContent =
-                "Assign a Developer through Edit before starting development.";
-        } else if (
+        if (
             actorRole === "Developer" &&
-            currentBug.assignee_id !== currentMember.user_id
+            (
+                !validDeveloperAssignee ||
+                currentBug.assignee_id !== currentMember.user_id
+            )
         ) {
             lifecycleGuidance.textContent =
-                "Only the assigned Developer can start development.";
+                "Only the assigned Developer can move this bug to Development.";
+        } else if (developerCount === 0) {
+            lifecycleGuidance.textContent =
+                "Add a Developer to the project before moving this bug to Development.";
         } else {
             lifecycleActionAllowed = true;
+            lifecycleAssignee.disabled = false;
         }
     } else if (
         currentBug.status === "Development" &&
         (actorRole === "Project Owner" || actorRole === "Developer")
     ) {
         lifecycleActions.hidden = false;
+        lifecycleStandardActions.hidden = false;
         lifecycleQaField.hidden = false;
         lifecycleTargetStatus = "Testing";
         lifecycleActionButton.textContent = "Send to Testing";
@@ -294,10 +408,65 @@ function renderLifecycleControls() {
             lifecycleActionAllowed = true;
             lifecycleQaAssignee.disabled = false;
         }
+
+        closeWithoutFixAllowed = actorRole === "Project Owner" || (
+            actorRole === "Developer" &&
+            currentBug.assignee_id === currentMember.user_id
+        );
+
+        if (closeWithoutFixAllowed) {
+            lifecycleCloseActions.hidden = false;
+            lifecycleResolution.disabled = false;
+        }
+    } else if (
+        currentBug.status === "Testing" &&
+        (
+            actorRole === "Project Owner" ||
+            (
+                actorRole === "QA Analyst" &&
+                currentBug.assignee_id === currentMember.user_id
+            )
+        )
+    ) {
+        lifecycleActions.hidden = false;
+        lifecycleTestingActions.hidden = false;
+
+        const developerCount = populateLifecycleDevelopers();
+
+        if (!validQaAssignee) {
+            lifecycleGuidance.textContent =
+                "Assign a QA Analyst through Edit before recording the testing outcome.";
+        } else {
+            testingOutcomeAllowed = true;
+            lifecyclePassButton.disabled = false;
+
+            if (developerCount > 0) {
+                lifecycleDeveloperAssignee.disabled = false;
+            } else {
+                lifecycleGuidance.textContent =
+                    "Add a Developer to the project before returning this bug to Development.";
+            }
+        }
+    } else if (
+        currentBug.status === "Closed" &&
+        actorRole === "Project Owner"
+    ) {
+        lifecycleActions.hidden = false;
+        lifecycleStandardActions.hidden = false;
+        lifecycleTargetStatus = "Triage";
+        lifecycleActionButton.textContent = "Move to Triage";
+        lifecycleActionAllowed = true;
     }
 
     lifecycleActionButton.disabled = !lifecycleActionAllowed || (
         lifecycleTargetStatus === "Testing" && !lifecycleQaAssignee.value
+    );
+
+    lifecycleFailButton.disabled = !(
+        testingOutcomeAllowed && lifecycleDeveloperAssignee.value
+    );
+    lifecycleCloseButton.disabled = !(
+        closeWithoutFixAllowed && lifecycleResolution.value
     );
 }
 
@@ -597,6 +766,21 @@ deleteBugButton.addEventListener("click", async function() {
     }
 });
 
+lifecycleAssignee.addEventListener("change", function() {
+    updateSelectPromptStyle(lifecycleAssignee);
+
+    if (["Open", "Development"].includes(lifecycleTargetStatus)) {
+        lifecycleActionButton.disabled = !lifecycleActionAllowed;
+
+        if (
+            lifecycleGuidance.textContent === openSelectionValidationMessage ||
+            lifecycleGuidance.textContent === developmentSelectionValidationMessage
+        ) {
+            lifecycleGuidance.textContent = "";
+        }
+    }
+});
+
 lifecycleQaAssignee.addEventListener("change", function() {
     updateSelectPromptStyle(lifecycleQaAssignee);
 
@@ -608,38 +792,23 @@ lifecycleQaAssignee.addEventListener("change", function() {
     }
 });
 
-lifecycleActionButton.addEventListener("click", async function() {
-    if (
-        lifecycleInProgress || deleteInProgress ||
-        !currentBug || !lifecycleActionAllowed || !lifecycleTargetStatus
-    ) {
-        return;
-    }
+function disableLifecycleControls() {
+    lifecycleActionButton.disabled = true;
+    lifecyclePassButton.disabled = true;
+    lifecycleFailButton.disabled = true;
+    lifecycleCloseButton.disabled = true;
+    lifecycleAssignee.disabled = true;
+    lifecycleQaAssignee.disabled = true;
+    lifecycleDeveloperAssignee.disabled = true;
+    lifecycleResolution.disabled = true;
+}
 
-    const requestedStatus = lifecycleTargetStatus;
-    const payload = {
-        status: requestedStatus
-    };
-
-    if (requestedStatus === "Testing") {
-        const qaAssigneeId = Number(lifecycleQaAssignee.value);
-
-        if (!Number.isInteger(qaAssigneeId) || qaAssigneeId <= 0) {
-            lifecycleGuidance.textContent =
-                qaSelectionValidationMessage;
-            lifecycleActionButton.disabled = true;
-            return;
-        }
-
-        payload.assignee_id = qaAssigneeId;
-    }
-
+async function submitLifecycleTransition(payload, successMessage, actionButton) {
     let lifecycleStateConfirmed = true;
 
     lifecycleInProgress = true;
-    lifecycleActionButton.textContent = "Updating...";
-    lifecycleActionButton.disabled = true;
-    lifecycleQaAssignee.disabled = true;
+    actionButton.textContent = "Updating...";
+    disableLifecycleControls();
     showEditBugFormButton.disabled = true;
     deleteBugButton.disabled = true;
     showMessage(bugMessage, "");
@@ -688,7 +857,10 @@ lifecycleActionButton.addEventListener("click", async function() {
             );
 
             if (response.status === 403 || response.status === 422) {
-                if (await loadBug()) {
+                const refreshed = await loadBug(true);
+                lifecycleStateConfirmed = refreshed;
+
+                if (refreshed) {
                     showMessage(bugMessage, errorMessage, "error");
                 }
             } else {
@@ -699,7 +871,8 @@ lifecycleActionButton.addEventListener("click", async function() {
         }
 
         if (!isValidBugResponse(data)) {
-            const refreshed = await loadBug();
+            const refreshed = await loadBug(true);
+            lifecycleStateConfirmed = refreshed;
 
             if (refreshed) {
                 showMessage(
@@ -712,20 +885,18 @@ lifecycleActionButton.addEventListener("click", async function() {
             return;
         }
 
-        currentBug = data;
-        renderBug(currentBug);
-        renderRoleSpecificActions();
+        const refreshed = await loadBug(true);
 
-        const successMessages = {
-            Open: "Bug moved to Open.",
-            Development: "Bug moved to Development.",
-            Testing: "Bug moved to Testing."
-        };
+        if (!refreshed) {
+            lifecycleStateConfirmed = false;
+            actionButton.textContent = "Refresh required";
+            return;
+        }
 
-        showMessage(bugMessage, successMessages[requestedStatus], "success");
+        showMessage(bugMessage, successMessage, "success");
     } catch (error) {
         lifecycleStateConfirmed = false;
-        lifecycleActionButton.textContent = "Refresh required";
+        actionButton.textContent = "Refresh required";
         showMessage(
             bugMessage,
             "Unable to confirm the status change. Refresh the page before trying again.",
@@ -740,6 +911,156 @@ lifecycleActionButton.addEventListener("click", async function() {
             renderRoleSpecificActions();
         }
     }
+}
+
+lifecycleDeveloperAssignee.addEventListener("change", function() {
+    updateSelectPromptStyle(lifecycleDeveloperAssignee);
+    lifecycleFailButton.disabled = !(
+        testingOutcomeAllowed && lifecycleDeveloperAssignee.value
+    );
+
+    if (lifecycleGuidance.textContent === developerSelectionValidationMessage) {
+        lifecycleGuidance.textContent = "";
+    }
+});
+
+lifecycleResolution.addEventListener("change", function() {
+    updateSelectPromptStyle(lifecycleResolution);
+    lifecycleCloseButton.disabled = !(
+        closeWithoutFixAllowed && lifecycleResolution.value
+    );
+
+    if (lifecycleGuidance.textContent === resolutionSelectionValidationMessage) {
+        lifecycleGuidance.textContent = "";
+    }
+});
+
+lifecycleActionButton.addEventListener("click", async function() {
+    if (
+        lifecycleInProgress || deleteInProgress ||
+        !currentBug || !lifecycleActionAllowed || !lifecycleTargetStatus
+    ) {
+        return;
+    }
+
+    const requestedStatus = lifecycleTargetStatus;
+    const payload = {
+        status: requestedStatus
+    };
+
+    if (["Open", "Development"].includes(requestedStatus)) {
+        const assigneeId = Number(lifecycleAssignee.value);
+        const selectedAssignee = getProjectMember(assigneeId);
+        const validRole = requestedStatus === "Open"
+            ? ["QA Analyst", "Developer"].includes(selectedAssignee?.role)
+            : selectedAssignee?.role === "Developer";
+
+        if (!selectedAssignee || !validRole) {
+            lifecycleGuidance.textContent = requestedStatus === "Open"
+                ? openSelectionValidationMessage
+                : developmentSelectionValidationMessage;
+            lifecycleActionButton.disabled = true;
+            return;
+        }
+
+        payload.assignee_id = assigneeId;
+    } else if (requestedStatus === "Testing") {
+        const qaAssigneeId = Number(lifecycleQaAssignee.value);
+        const selectedQa = getProjectMember(qaAssigneeId);
+
+        if (!selectedQa || selectedQa.role !== "QA Analyst") {
+            lifecycleGuidance.textContent = qaSelectionValidationMessage;
+            lifecycleActionButton.disabled = true;
+            return;
+        }
+
+        payload.assignee_id = qaAssigneeId;
+    }
+
+    const successMessages = {
+        Triage: "Bug moved to Triage.",
+        Open: "Bug moved to Open.",
+        Development: "Bug moved to Development.",
+        Testing: "Bug moved to Testing."
+    };
+
+    await submitLifecycleTransition(
+        payload,
+        successMessages[requestedStatus],
+        lifecycleActionButton
+    );
+});
+
+lifecyclePassButton.addEventListener("click", async function() {
+    if (
+        lifecycleInProgress || deleteInProgress ||
+        !currentBug || !testingOutcomeAllowed
+    ) {
+        return;
+    }
+
+    await submitLifecycleTransition(
+        {
+            status: "Closed",
+            testing_outcome: "Passed"
+        },
+        "Testing passed. Bug closed as Fixed.",
+        lifecyclePassButton
+    );
+});
+
+lifecycleFailButton.addEventListener("click", async function() {
+    if (
+        lifecycleInProgress || deleteInProgress ||
+        !currentBug || !testingOutcomeAllowed
+    ) {
+        return;
+    }
+
+    const developerId = Number(lifecycleDeveloperAssignee.value);
+    const selectedDeveloper = getProjectMember(developerId);
+
+    if (!selectedDeveloper || selectedDeveloper.role !== "Developer") {
+        lifecycleGuidance.textContent = developerSelectionValidationMessage;
+        lifecycleFailButton.disabled = true;
+        return;
+    }
+
+    await submitLifecycleTransition(
+        {
+            status: "Development",
+            testing_outcome: "Failed",
+            assignee_id: developerId
+        },
+        "Testing failed. Bug returned to Development.",
+        lifecycleFailButton
+    );
+});
+
+lifecycleCloseButton.addEventListener("click", async function() {
+    if (
+        lifecycleInProgress || deleteInProgress ||
+        !currentBug || !closeWithoutFixAllowed
+    ) {
+        return;
+    }
+
+    const resolution = lifecycleResolution.value;
+
+    if (!nonFixResolutions.includes(resolution)) {
+        lifecycleGuidance.textContent = resolutionSelectionValidationMessage;
+        lifecycleCloseButton.disabled = true;
+        return;
+    }
+
+    await submitLifecycleTransition(
+        {
+            status: "Closed",
+            resolution: resolution
+        },
+        `Bug closed as ${resolution}.`,
+        lifecycleCloseButton
+    );
 });
 
 function updateSelectPromptStyle(selectInput) {
@@ -894,7 +1215,6 @@ showEditBugFormButton.addEventListener("click", async function() {
         renderRoleSpecificActions();
         showMessage(bugMessage, "");
         populateEditForm();
-        editBugForm.insertBefore(editBugMessage, editBugForm.querySelector(".form-actions"));
 
         bugDetailsGrid.hidden = true;
         lifecycleActions.hidden = true;
@@ -1030,8 +1350,8 @@ editBugForm.addEventListener("submit", async function(event) {
         showEditBugFormButton.hidden = false;
         renderRoleSpecificActions();
 
-        bugDetails.after(editBugMessage);
-        showMessage(editBugMessage, "Bug report updated successfully.", "success");
+        showMessage(editBugMessage, "");
+        showMessage(bugMessage, "Bug report updated successfully.", "success");
     } catch (error) {
         showMessage(
             editBugMessage,
@@ -1082,7 +1402,13 @@ window.addEventListener("pageshow", async function(event) {
         showMessage(bugMessage, "");
         showMessage(editBugMessage, "");
 
-        if (lifecycleGuidance.textContent === qaSelectionValidationMessage) {
+        if (
+            lifecycleGuidance.textContent === openSelectionValidationMessage ||
+            lifecycleGuidance.textContent === developmentSelectionValidationMessage ||
+            lifecycleGuidance.textContent === qaSelectionValidationMessage ||
+            lifecycleGuidance.textContent === developerSelectionValidationMessage ||
+            lifecycleGuidance.textContent === resolutionSelectionValidationMessage
+        ) {
             lifecycleGuidance.textContent = "";
         }
 
