@@ -374,7 +374,7 @@ Current working-tree status (10 September 2026):
 * The latest full pytest run in this session passed 148 cases in 114.52 seconds, after the member-removal timestamp fix. This documentation review does not constitute a new test run.
 * Frontend validation-message formatting passed 38 temporary simulated JavaScript checks and syntax checks. Browser verification is still outstanding; these checks are not a persistent test suite.
 * Theme handling now tolerates a missing toggle; About and Bugs have theme and Logout controls. CSS uses viewport width and hidden horizontal overflow for the scrollbar-layout adjustment, without scrollbar-gutter. Cross-browser and narrow-screen verification remain outstanding.
-* Formal versioning has not started. No retrospective release, Affected Version, or Fix Version numbers are assigned.
+* The application release version is 0.1.0 and appears in API metadata and on the About page. Release management is not implemented. No retrospective Affected Version or Fix Version numbers are assigned.
 
 ---
 
