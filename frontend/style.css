@@ -158,6 +158,13 @@ h3 {
     text-align: center;
 }
 
+.about-version {
+    color: var(--muted-text);
+
+    font-size: 14px;
+    text-align: center;
+}
+
 
 /* =========================================================
    Header
