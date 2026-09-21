@@ -252,11 +252,13 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.1 — Bug Status | `test_new_bug_starts_in_triage` | API | Partial |
 | REQ-017 | AC-017.1 — Bug Status | — | UI | Pending |
 | REQ-017 | AC-017.2 — Triage to Open | `test_project_owner_or_qa_can_move_bug_from_triage_to_open` | API | Partial |
+| REQ-017 | AC-017.2 — Triage to Open | `test_triage_to_open_can_assign_eligible_project_member` | API | Partial |
+| REQ-017 | AC-017.2 — Triage to Open | `test_triage_to_open_rejects_ineligible_assignee` | API / Validation | Partial |
 | REQ-017 | AC-017.2 — Triage to Open | `test_developer_cannot_move_bug_from_triage_to_open` | API / Security | Partial |
 | REQ-017 | AC-017.2 — Triage to Open | `test_bug_without_assignee_cannot_move_from_triage_to_open` | API / Validation | Partial |
 | REQ-017 | AC-017.2 — Triage to Open | — | UI | Pending |
-| REQ-017 | AC-017.3 — Open to Development | `test_assigned_developer_can_move_bug_from_development_to_testing` | API | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_project_owner_can_move_bug_from_open_to_development` | API | Partial |
+| REQ-017 | AC-017.3 — Open to Development | `test_open_to_development_requires_valid_developer_assignee` | API / Validation | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_qa_analyst_cannot_move_bug_from_open_to_development` | API / Security | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_non_assigned_developer_cannot_move_bug_from_open_to_development` | API / Security | Partial |
 | REQ-017 | AC-017.3 — Open to Development | — | UI | Pending |
@@ -269,16 +271,22 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.5 — Testing Outcome | `test_project_owner_can_pass_bug_and_close_it` | API | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_fail_bug_and_return_it_to_development` | API | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_project_owner_can_fail_bug_and_return_it_to_development` | API | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_failed_testing_requires_valid_developer_assignee` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_non_assigned_qa_cannot_record_testing_outcome` | API / Security | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_testing_outcome_is_required` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_invalid_testing_outcome_is_rejected` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | — | UI | Pending |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Partial |
+| REQ-017 | AC-017.6 — Close Without Fixing | `test_non_assigned_developer_cannot_close_bug_without_fixing` | API / Security | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_bug_cannot_be_closed_without_resolution` | API / Validation | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_fixed_resolution_cannot_be_manually_selected_when_closing_bug` | API / Validation | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | — | UI | Pending |
-| REQ-017 | AC-017.7 — Closed Bugs | `test_closed_bug_cannot_be_moved_to_another_status` | API / Validation | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_project_owner_can_move_closed_bug_to_triage` | API | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_project_owner_can_move_unassigned_closed_bug_to_triage` | API | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_unauthorized_user_cannot_move_closed_bug_to_triage` | API / Security | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_closed_bug_rejects_invalid_direct_transition` | API / Validation | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_closed_to_triage_rejects_extra_transition_data` | API / Validation | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | — | UI | Pending |
 | REQ-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_triage_to_development` | API / Validation | Partial |
 | REQ-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_skip_from_open_to_testing` | API / Validation | Partial |
@@ -309,9 +317,11 @@ The close-without-fixing tests are parameterized across all supported non-fix re
 
 `Fixed` cannot be selected manually. It is assigned automatically only when a bug in Testing receives a `Passed` testing outcome and moves to Closed.
 
-Closed remains a terminal status for all roles, including Project Owner.
+Closed has no normal forward lifecycle transition. A Project Owner may return a Closed bug to Triage; the transition clears its resolution, preserves its assignee, and restores the normal lifecycle and assignment rules.
 
-AC-017.1 through AC-017.8 remain Partial where required browser lifecycle behavior is still pending. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
+The Project Owner Closed-to-Triage test also verifies that Last Updated changes during the transition.
+
+AC-017.1 through AC-017.8 remain Partial because browser verification and automated UI coverage are still pending. The lifecycle UI includes closure outcomes and the Project Owner's return-to-Triage action, but the project does not yet have a frontend browser-test framework. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
 
 
 
@@ -322,7 +332,6 @@ AC-017.1 through AC-017.8 remain Partial where required browser lifecycle behavi
 
 ## Coverage limitations from the pre-commit review
 
-- Each automated test has its own row. The Open to Development mapping uses `test_assigned_developer_can_move_bug_from_development_to_testing`, whose setup explicitly verifies the assigned Developer transition; the previously listed standalone test does not exist.
 - User Stories remain in requirements.md. The previously noted missing REQ-005 user-story heading remains a specification follow-up; the matrix no longer contains US references, and no new ID is introduced here.
 - Registration feedback, project-name display, member management, bug creation/list/detail/editing, and reassignment remain Partial where required browser verification is outstanding. Existing Manual entries record earlier manual verification, not automated UI coverage. AC-009.5 also lacks an explicit test of alphabetical ordering within a role.
 - AC-003.3 is Partial: invalid-token coverage exists, but dedicated expired-token coverage is missing.

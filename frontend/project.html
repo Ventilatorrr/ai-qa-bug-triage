@@ -11,24 +11,16 @@
 <body>
     <header class="site-header">
         <div class="header-left">
-            <nav class="main-navigation">
+            <nav class="main-navigation" aria-label="Main navigation">
                 <a href="/projects.html">Projects</a>
+                <a href="/about.html">About</a>
             </nav>
         </div>
-
         <h1 class="site-title">AI QA Bug Triage</h1>
-
         <div class="header-right">
-            <button id="logout-button" type="button">
-                Logout
-            </button>
-
-            <button
-                id="theme-toggle"
-                type="button"
-                aria-label="Switch theme">
-                ☀
-            </button>
+            <span id="header-identity" class="header-identity" hidden></span>
+            <button id="logout-button" type="button">Logout</button>
+            <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
         </div>
     </header>
 
@@ -51,10 +43,6 @@
         <!-- Members -->
         <section class="members-section">
             <div id="members-content" hidden>
-
-                <p id="member-message" class="section-message"></p>
-
-                <div id="members"></div>
 
                 <div id="member-management" hidden>
 
@@ -99,14 +87,15 @@
 
                         </select>
 
-                        <div class="form-actions">
+                        <div class="form-actions creation-form-actions">
 
-                            <button type="submit">
-                                Add Member
+                            <button class="creation-form-action-button" type="submit">
+                                Add
                             </button>
 
                             <button
                                 id="cancel-member-form"
+                                class="creation-form-action-button secondary-action-button"
                                 type="button">
                                 Cancel
                             </button>
@@ -114,6 +103,10 @@
                         </div>
                     </form>
                 </div>
+
+                <p id="member-message" class="section-message"></p>
+
+                <div id="members"></div>
             </div>
         </section>
 
@@ -221,7 +214,7 @@
 
                 <select
                     id="bug-severity"
-                    class="form-input"
+                    class="form-input select-prompt"
                     name="severity">
 
                     <option value="">
@@ -253,7 +246,7 @@
 
                 <select
                     id="bug-priority"
-                    class="form-input"
+                    class="form-input select-prompt"
                     name="priority">
 
                     <option value="">
@@ -285,7 +278,7 @@
 
                 <select
                     id="bug-assignee"
-                    class="form-input"
+                    class="form-input select-prompt"
                     name="assignee_id">
 
                     <option value="">
@@ -307,14 +300,15 @@
                     placeholder="e.g. 1.3.0">
 
 
-                <div class="form-actions">
+                <div class="form-actions creation-form-actions">
 
-                    <button type="submit">
-                        Create Bug
+                    <button class="creation-form-action-button" type="submit">
+                        Create
                     </button>
 
                     <button
                         id="cancel-bug-form"
+                        class="creation-form-action-button secondary-action-button"
                         type="button">
                         Cancel
                     </button>
@@ -330,9 +324,6 @@
 
 
     <footer>
-        <p>
-            <a href="/about.html">About</a>
-        </p>
 
         <p>
             Copyright &copy; 2026 AI QA Assistant

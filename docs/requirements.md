@@ -545,8 +545,12 @@ As a project member with the appropriate permissions, I want bugs to progress th
 
 #### AC-017.7 — Closed Bugs
 
-* A bug in `Closed` status cannot be moved to another status through the normal bug workflow.
-* A Project Owner cannot override the terminal `Closed` status.
+* A bug in `Closed` status has no normal forward lifecycle transition.
+* A Project Owner can move a `Closed` bug back to `Triage` to correct or reconsider its closure.
+* Moving a bug from `Closed` to `Triage` clears its resolution and preserves its existing assignee.
+* No other project role can move a bug out of `Closed`.
+* A `Closed` bug cannot transition directly to `Open`, `Development`, or `Testing`.
+* After returning to `Triage`, the normal lifecycle and assignment requirements apply again.
 
 #### AC-017.8 — Invalid Status Transitions
 

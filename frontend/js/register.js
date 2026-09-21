@@ -3,10 +3,27 @@ const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
 const message = document.querySelector("#message");
 
+function showRegisterMessage(text, type = "neutral") {
+    message.classList.remove("message-success", "message-error");
+    message.textContent = text;
+
+    if (text && type === "success") {
+        message.classList.add("message-success");
+    } else if (text && type === "error") {
+        message.classList.add("message-error");
+    }
+}
+
+window.addEventListener("pageshow", function(event) {
+    if (event.persisted) {
+        showRegisterMessage("");
+    }
+});
+
 form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    message.textContent = "";
+    showRegisterMessage("");
 
     const user = {
         email: emailInput.value,
@@ -25,18 +42,24 @@ form.addEventListener("submit", async function (event) {
         const data = await response.json();
 
         if (response.ok) {
-            message.textContent = data.message;
+            showRegisterMessage(data.message, "success");
 
             setTimeout(function () {
                 window.location.href = "/login.html";
             }, 1000);
         } else {
-            message.textContent = formatApiError(
-                data.detail,
-                "Registration failed. Please try again."
+            showRegisterMessage(
+                formatApiError(
+                    data.detail,
+                    "Registration failed. Please try again."
+                ),
+                "error"
             );
         }
     } catch (error) {
-        message.textContent = "Unable to connect to the server. Please try again.";
+        showRegisterMessage(
+            "Unable to connect to the server. Please try again.",
+            "error"
+        );
     }
 });

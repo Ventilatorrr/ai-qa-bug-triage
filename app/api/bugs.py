@@ -170,6 +170,7 @@ def get_bugs(
                 b.severity,
                 b.priority,
                 b.status,
+                b.resolution,
                 b.assignee_id,
                 b.updated_at
             FROM bugs b
@@ -189,8 +190,9 @@ def get_bugs(
             "severity": row[2],
             "priority": row[3],
             "status": row[4],
-            "assignee_id": row[5],
-            "updated_at": row[6]
+            "resolution": row[5],
+            "assignee_id": row[6],
+            "updated_at": row[7]
         }
         for row in rows
     ]
@@ -535,14 +537,35 @@ def update_bug_status(
         testing_outcome = status_update.testing_outcome
         requested_resolution = status_update.resolution
 
+        # Closed -> Triage
         if current_status == "Closed":
-            raise HTTPException(
-                status_code=422,
-                detail="Closed bugs cannot be moved to another status."
-            )
+            if requested_status != "Triage":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid bug status transition."
+                )
+
+            if membership[0] != "Project Owner":
+                raise HTTPException(
+                    status_code=403,
+                    detail="Only a Project Owner can move a bug from Closed to Triage."
+                )
+
+            if {
+                "assignee_id",
+                "testing_outcome",
+                "resolution"
+            } & status_update.model_fields_set:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid status update data."
+                )
+
+            new_assignee_id = current_assignee_id
+            new_resolution = None
 
         # Triage -> Open
-        if current_status == "Triage":
+        elif current_status == "Triage":
             if requested_status != "Open":
                 raise HTTPException(
                     status_code=422,
@@ -555,7 +578,13 @@ def update_bug_status(
                     detail="You are not authorized to move bugs from Triage to Open."
                 )
 
-            if current_assignee_id is None:
+            transition_assignee_id = (
+                requested_assignee_id
+                if requested_assignee_id is not None
+                else current_assignee_id
+            )
+
+            if transition_assignee_id is None:
                 raise HTTPException(
                     status_code=422,
                     detail="Bug must have a QA Analyst or Developer assigned before it can be moved to Open."
@@ -568,7 +597,7 @@ def update_bug_status(
                 WHERE project_id = ?
                 AND user_id = ?
                 """,
-                (project_id, current_assignee_id)
+                (project_id, transition_assignee_id)
             ).fetchone()
 
             if assignee is None or assignee[0] not in ["QA Analyst", "Developer"]:
@@ -578,8 +607,7 @@ def update_bug_status(
                 )
 
             if (
-                requested_assignee_id is not None
-                or testing_outcome is not None
+                testing_outcome is not None
                 or requested_resolution is not None
             ):
                 raise HTTPException(
@@ -587,7 +615,7 @@ def update_bug_status(
                     detail="Invalid status update data."
                 )
 
-            new_assignee_id = current_assignee_id
+            new_assignee_id = transition_assignee_id
             new_resolution = current_resolution
 
         # Open -> Development
@@ -611,6 +639,12 @@ def update_bug_status(
                     detail="Only the assigned Developer or Project Owner can move a bug from Open to Development."
                 )
 
+            transition_assignee_id = (
+                requested_assignee_id
+                if requested_assignee_id is not None
+                else current_assignee_id
+            )
+
             assignee = conn.execute(
                 """
                 SELECT role
@@ -618,7 +652,7 @@ def update_bug_status(
                 WHERE project_id = ?
                 AND user_id = ?
                 """,
-                (project_id, current_assignee_id)
+                (project_id, transition_assignee_id)
             ).fetchone()
 
             if assignee is None or assignee[0] != "Developer":
@@ -628,8 +662,7 @@ def update_bug_status(
                 )
 
             if (
-                requested_assignee_id is not None
-                or testing_outcome is not None
+                testing_outcome is not None
                 or requested_resolution is not None
             ):
                 raise HTTPException(
@@ -637,7 +670,7 @@ def update_bug_status(
                     detail="Invalid status update data."
                 )
 
-            new_assignee_id = current_assignee_id
+            new_assignee_id = transition_assignee_id
             new_resolution = current_resolution
 
         # Development -> Testing / Closed

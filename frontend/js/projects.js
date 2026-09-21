@@ -2,34 +2,82 @@ const projectsContainer = document.querySelector("#projects");
 const message = document.querySelector("#message");
 const projectForm = document.querySelector("#project-form");
 
-const accessToken = localStorage.getItem("access_token");
-
 const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
+let editingProjectId = null;
 
 
-if (!accessToken) {
-    window.location.href = "/login.html";
+function redirectToLogin() {
+    localStorage.removeItem("access_token");
+    window.location.replace("/login.html");
 }
 
+function getCurrentAccessToken() {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        redirectToLogin();
+        return null;
+    }
+
+    return token;
+}
+
+async function authenticatedFetch(url, options = {}) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    if (response.status === 401) {
+        redirectToLogin();
+        return null;
+    }
+
+    return response;
+}
+
+if (!localStorage.getItem("access_token")) {
+    redirectToLogin();
+}
+
+function showProjectMessage(text, type = "neutral") {
+    message.classList.remove("message-success", "message-error");
+    message.textContent = text;
+
+    if (text && type === "success") {
+        message.classList.add("message-success");
+    } else if (text && type === "error") {
+        message.classList.add("message-error");
+    }
+}
 
 function getCurrentUserId() {
-    const payload = accessToken.split(".")[1];
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const payload = token.split(".")[1];
 
     return JSON.parse(atob(payload)).user_id;
 }
 
 
 async function getProjectRole(projectId) {
-    const response = await fetch(`/projects/${projectId}/members`, {
-        headers: {
-            "Authorization": "Bearer " + accessToken
-        }
-    });
+    const response = await authenticatedFetch(`/projects/${projectId}/members`);
 
-    if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login.html";
+    if (!response) {
         return null;
     }
 
@@ -48,20 +96,18 @@ async function getProjectRole(projectId) {
         return null;
     }
 
+    const identity = document.querySelector("#header-identity");
+    identity.textContent = currentUser.email;
+    identity.hidden = false;
+
     return currentUser.role;
 }
 
 
 async function loadProjects() {
-    const response = await fetch("/projects", {
-        headers: {
-            "Authorization": "Bearer " + accessToken
-        }
-    });
+    const response = await authenticatedFetch("/projects");
 
-    if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login.html";
+    if (!response) {
         return;
     }
 
@@ -74,84 +120,147 @@ async function loadProjects() {
             const role = await getProjectRole(project.id);
 
             const projectElement = document.createElement("div");
-            projectElement.className = "project";
 
-            const projectLink = document.createElement("a");
-            projectLink.textContent = project.name;
-            projectLink.className = "project-name";
-            projectLink.href = `/project.html?id=${project.id}`;
-
-            projectElement.appendChild(projectLink);
-
-            if (role === "Project Owner") {
-                const editButton = document.createElement("button");
-                editButton.textContent = "Edit";
-                editButton.type = "button";
-
-                editButton.addEventListener("click", function () {
-                    editProject(project);
-                });
-
-                const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Delete";
-                deleteButton.type = "button";
-
-                deleteButton.addEventListener("click", function () {
-                    deleteProject(project);
-                });
-
-                const projectButtons = document.createElement("div");
-                projectButtons.className = "project-buttons";
-
-                projectButtons.appendChild(editButton);
-                projectButtons.appendChild(deleteButton);
-
-                projectElement.appendChild(projectButtons);
+            if (editingProjectId === project.id && role === "Project Owner") {
+                renderProjectEdit(projectElement, project);
+            } else {
+                renderProjectView(projectElement, project, role);
             }
 
             projectsContainer.appendChild(projectElement);
         }
     } else {
-        message.textContent = formatApiError(data.detail);
+        showProjectMessage(formatApiError(data.detail), "error");
     }
 }
 
 
 loadProjects();
 
-
-async function editProject(project) {
-    const newName = prompt(
-        "Enter the new project name:",
-        project.name
-    );
-
-    if (newName === null) {
+window.addEventListener("pageshow", function(event) {
+    if (!localStorage.getItem("access_token")) {
+        redirectToLogin();
         return;
     }
 
-    const response = await fetch(`/projects/${project.id}`, {
+    if (event.persisted) {
+        showProjectMessage("");
+    }
+});
+
+
+function renderProjectView(projectElement, project, role) {
+    projectElement.className = "project";
+    projectElement.innerHTML = "";
+
+    const projectLink = document.createElement("a");
+    projectLink.textContent = project.name;
+    projectLink.className = "project-name";
+    projectLink.href = `/project.html?id=${project.id}`;
+
+    projectElement.appendChild(projectLink);
+
+    if (role === "Project Owner") {
+        const editButton = document.createElement("button");
+        editButton.textContent = "Edit";
+        editButton.type = "button";
+        editButton.className = "project-edit-button context-action-button";
+        editButton.addEventListener("click", function () {
+            startProjectEdit(project, projectElement);
+        });
+
+        const projectButtons = document.createElement("div");
+        projectButtons.className = "project-buttons equal-action-buttons";
+        projectButtons.appendChild(editButton);
+
+        projectElement.appendChild(projectButtons);
+    }
+}
+
+
+function renderProjectEdit(projectElement, project) {
+    projectElement.className = "project project-editing";
+    projectElement.innerHTML = "";
+
+    const projectNameInput = document.createElement("input");
+    projectNameInput.type = "text";
+    projectNameInput.className = "form-input project-edit-input";
+    projectNameInput.value = project.name;
+    projectNameInput.setAttribute("aria-label", "Project name");
+
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Save";
+    saveButton.type = "button";
+    saveButton.className = "project-save-button context-action-button";
+    saveButton.addEventListener("click", function () {
+        saveProjectEdit(project, projectNameInput, projectElement);
+    });
+
+    const cancelButton = document.createElement("button");
+    cancelButton.textContent = "Cancel";
+    cancelButton.type = "button";
+    cancelButton.className = "project-cancel-button context-action-button";
+    cancelButton.addEventListener("click", function () {
+        cancelProjectEdit(project, projectElement);
+    });
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete";
+    deleteButton.type = "button";
+    deleteButton.className = "project-delete-button context-action-button";
+    deleteButton.addEventListener("click", function () {
+        deleteProject(project, projectElement);
+    });
+
+    const projectButtons = document.createElement("div");
+    projectButtons.className = "project-buttons equal-action-buttons";
+    projectButtons.append(deleteButton, cancelButton, saveButton);
+
+    projectElement.append(projectNameInput, projectButtons);
+}
+
+
+function startProjectEdit(project, projectElement) {
+    editingProjectId = project.id;
+    renderProjectEdit(projectElement, project);
+}
+
+
+function cancelProjectEdit(project, projectElement) {
+    editingProjectId = null;
+    renderProjectView(projectElement, project, "Project Owner");
+}
+
+
+async function saveProjectEdit(project, projectNameInput, projectElement) {
+    const newName = projectNameInput.value;
+
+    const response = await authenticatedFetch(`/projects/${project.id}`, {
         method: "PUT",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             name: newName
         })
     });
 
+    if (!response) {
+        return;
+    }
+
     const data = await response.json();
 
     if (response.ok) {
-        loadProjects();
+        editingProjectId = null;
+        renderProjectView(projectElement, data, "Project Owner");
     } else {
-        message.textContent = formatApiError(data.detail);
+        showProjectMessage(formatApiError(data.detail), "error");
     }
 }
 
 
-async function deleteProject(project) {
+async function deleteProject(project, projectElement) {
     const confirmed = confirm(
         `Are you sure you want to delete "${project.name}"?`
     );
@@ -160,19 +269,25 @@ async function deleteProject(project) {
         return;
     }
 
-    const response = await fetch(`/projects/${project.id}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + accessToken
-        }
+    const response = await authenticatedFetch(`/projects/${project.id}`, {
+        method: "DELETE"
     });
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
     if (response.ok) {
-        loadProjects();
+        editingProjectId = null;
+        projectElement.remove();
+        showProjectMessage(
+            `Project "${project.name}" deleted successfully.`,
+            "success"
+        );
     } else {
-        message.textContent = formatApiError(data.detail);
+        showProjectMessage(formatApiError(data.detail), "error");
     }
 }
 
@@ -195,16 +310,19 @@ projectForm.addEventListener("submit", async function (event) {
 
     const projectName = document.querySelector("#project-name").value;
 
-    const response = await fetch("/projects", {
+    const response = await authenticatedFetch("/projects", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             name: projectName
         })
     });
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -212,8 +330,12 @@ projectForm.addEventListener("submit", async function (event) {
         projectForm.reset();
         projectForm.hidden = true;
         showProjectFormButton.hidden = false;
+        showProjectMessage(
+            `Project "${data.name}" created successfully.`,
+            "success"
+        );
         loadProjects();
     } else {
-        message.textContent = formatApiError(data.detail);
+        showProjectMessage(formatApiError(data.detail), "error");
     }
 });
