@@ -47,64 +47,126 @@ const bugAssigneeInput =
 const bugFixVersionInput =
     document.querySelector("#bug-fix-version");
 
-const accessToken = localStorage.getItem("access_token");
+let projectMembers = [];
 
+function redirectToLogin() {
+    localStorage.removeItem("access_token");
+    window.location.replace("/login.html");
+}
 
-function getCurrentUserId() {
-    if (!accessToken) {
+function getCurrentAccessToken() {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        redirectToLogin();
         return null;
     }
 
-    const payload = accessToken.split(".")[1];
+    return token;
+}
+
+async function authenticatedFetch(url, options = {}) {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    if (response.status === 401) {
+        redirectToLogin();
+        return null;
+    }
+
+    return response;
+}
+
+function showMemberMessage(text, type = "neutral") {
+    memberMessage.classList.remove("message-success", "message-error");
+    memberMessage.textContent = text;
+
+    if (text && type === "success") {
+        memberMessage.classList.add("message-success");
+    } else if (text && type === "error") {
+        memberMessage.classList.add("message-error");
+    }
+}
+
+function getCurrentUserId() {
+    const token = getCurrentAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const payload = token.split(".")[1];
 
     return JSON.parse(atob(payload)).user_id;
 }
 
 
 async function loadProject() {
-    const response = await fetch(
-        `/projects/${projectId}`,
-        {
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            }
-        }
-    );
+    const response = await authenticatedFetch(`/projects/${projectId}`);
+
+    if (!response) {
+        return false;
+    }
 
     const data = await response.json();
 
     if (response.ok) {
         projectName.textContent = data.name;
+        return true;
+    } else if (response.status === 404) {
+        window.location.replace("/projects.html");
+        return false;
     } else {
         bugMessage.textContent = formatApiError(data.detail);
+        return false;
     }
 }
 
 
-async function loadMembers() {
-    const response = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            }
-        }
-    );
+async function loadMembers(preserveVisibleState = false) {
+    if (!preserveVisibleState) {
+        projectMembers = [];
+        document.querySelector("#header-identity").hidden = true;
+    }
+
+    const response = await authenticatedFetch(`/projects/${projectId}/members`);
+
+    if (!response) {
+        return null;
+    }
 
     const data = await response.json();
 
     if (!response.ok) {
-        memberMessage.textContent = formatApiError(data.detail);
+        showMemberMessage(formatApiError(data.detail), "error");
         return null;
     }
 
     membersContainer.innerHTML = "";
+    projectMembers = data;
 
     const currentUserId = getCurrentUserId();
 
     const currentUser = data.find(function (member) {
         return member.user_id === currentUserId;
     });
+
+    if (currentUser) {
+        const identity = document.querySelector("#header-identity");
+        identity.textContent = `${currentUser.email} (${currentUser.role})`;
+        identity.hidden = false;
+    }
 
     if (
         currentUser &&
@@ -149,6 +211,7 @@ async function loadMembers() {
             removeButton.textContent = "Remove";
 
             removeButton.type = "button";
+            removeButton.className = "context-action-button";
 
             removeButton.addEventListener(
                 "click",
@@ -192,41 +255,61 @@ async function addMember(event) {
         role: memberRoleInput.value
     };
 
-    const response = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            method: "POST",
+    let response;
+    let data = {};
 
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization":
-                    "Bearer " + accessToken
-            },
+    try {
+        response = await authenticatedFetch(
+            `/projects/${projectId}/members`,
+            {
+                method: "POST",
 
-            body: JSON.stringify(member)
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(member)
+            }
+        );
+
+        if (!response) {
+            return;
         }
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
+    } catch (error) {
+        showMemberMessage("Unable to add member. Please try again.", "error");
+        return;
+    }
+
+    if (!response.ok) {
+        showMemberMessage(formatApiError(data.detail), "error");
+        return;
+    }
+
+    memberForm.reset();
+
+    memberForm.hidden = true;
+
+    showMemberFormButton.hidden = false;
+
+    const addedEmail = typeof data.email === "string" ? data.email : member.email;
+    const addedRole = typeof data.role === "string" ? data.role : member.role;
+
+    showMemberMessage(
+        `Member "${addedEmail}" (${addedRole}) added successfully.`,
+        "success"
     );
 
-    const data = await response.json();
+    await loadMembers();
 
-    if (response.ok) {
-        memberForm.reset();
+    await loadBugs();
 
-        memberForm.hidden = true;
-
-        showMemberFormButton.hidden = false;
-
-        memberMessage.textContent =
-            "Member added successfully.";
-
-        await loadMembers();
-
-        await loadBugs();
-
-        await loadBugAssignees();
-    } else {
-        memberMessage.textContent = formatApiError(data.detail);
-    }
+    await loadBugAssignees();
 }
 
 
@@ -239,45 +322,55 @@ async function removeMember(member) {
         return;
     }
 
-    const response = await fetch(
-        `/projects/${projectId}/members/${member.user_id}`,
-        {
-            method: "DELETE",
+    let response;
+    let data = {};
 
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
+    try {
+        response = await authenticatedFetch(
+            `/projects/${projectId}/members/${member.user_id}`,
+            {
+                method: "DELETE"
             }
+        );
+
+        if (!response) {
+            return;
         }
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
+    } catch (error) {
+        showMemberMessage("Unable to remove member. Please try again.", "error");
+        return;
+    }
+
+    if (!response.ok) {
+        showMemberMessage(formatApiError(data.detail), "error");
+        return;
+    }
+
+    showMemberMessage(
+        `Member "${member.email}" (${member.role}) removed successfully.`,
+        "success"
     );
 
-    const data = await response.json();
+    await loadMembers();
 
-    if (response.ok) {
-        memberMessage.textContent =
-            "Member removed successfully.";
+    await loadBugs();
 
-        await loadMembers();
-
-        await loadBugs();
-
-        await loadBugAssignees();
-    } else {
-        memberMessage.textContent = formatApiError(data.detail);
-    }
+    await loadBugAssignees();
 }
 
 
 async function loadBugAssignees() {
-    const response = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
-            }
-        }
-    );
+    const response = await authenticatedFetch(`/projects/${projectId}/members`);
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -318,19 +411,17 @@ async function loadBugAssignees() {
             );
         }
     });
+
+    updateSelectPromptStyle(bugAssigneeInput);
 }
 
 
 async function updateBugAssigneeVisibility() {
-    const membersResponse = await fetch(
-        `/projects/${projectId}/members`,
-        {
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
-            }
-        }
-    );
+    const membersResponse = await authenticatedFetch(`/projects/${projectId}/members`);
+
+    if (!membersResponse) {
+        return;
+    }
 
     const members =
         await membersResponse.json();
@@ -375,9 +466,51 @@ let projectBugs = [];
 let bugSortColumn = "updated_at";
 let bugSortDirection = "descending";
 
+function showBugMessage(text, type = "neutral") {
+    bugMessage.classList.remove("message-success", "message-error");
+    bugMessage.textContent = text;
+
+    if (text && type === "success") {
+        bugMessage.classList.add("message-success");
+    } else if (text && type === "error") {
+        bugMessage.classList.add("message-error");
+    }
+}
+
+function showBugDeletionFeedback() {
+    try {
+        const feedback = sessionStorage.getItem("bug-deletion-feedback");
+
+        if (feedback) {
+            sessionStorage.removeItem("bug-deletion-feedback");
+            showBugMessage(feedback, "success");
+        }
+    } catch (error) {
+        // The project page still works if session storage is unavailable.
+    }
+}
+
 const severityOrder = ["Minor", "Moderate", "Major", "Blocker"];
 const priorityOrder = ["Low", "Medium", "High", "Urgent"];
 const statusOrder = ["Triage", "Open", "Development", "Testing", "Closed"];
+
+function displayBugAssignee(assigneeId) {
+    if (assigneeId == null || assigneeId === "") return "Unassigned";
+
+    const member = projectMembers.find(function(member) {
+        return member.user_id === assigneeId;
+    });
+
+    return member ? `${member.email} (${member.role})` : `User ${assigneeId}`;
+}
+
+function displayBugStatus(bug) {
+    if (bug.status === "Closed" && bug.resolution) {
+        return `Closed [${bug.resolution}]`;
+    }
+
+    return bug.status;
+}
 
 function compareBugs(first, second) {
     let firstValue = first[bugSortColumn];
@@ -403,8 +536,8 @@ function compareBugs(first, second) {
         firstValue = new Date(firstValue).getTime();
         secondValue = new Date(secondValue).getTime();
     } else if (bugSortColumn === "assignee_id") {
-        firstValue = `User ${firstValue}`;
-        secondValue = `User ${secondValue}`;
+        firstValue = displayBugAssignee(firstValue);
+        secondValue = displayBugAssignee(secondValue);
     }
 
     const comparison = typeof firstValue === "string"
@@ -415,15 +548,11 @@ function compareBugs(first, second) {
 }
 
 async function loadBugs() {
-    const response = await fetch(
-        `/projects/${projectId}/bugs`,
-        {
-            headers: {
-                "Authorization":
-                    "Bearer " + accessToken
-            }
-        }
-    );
+    const response = await authenticatedFetch(`/projects/${projectId}/bugs`);
+
+    if (!response) {
+        return;
+    }
 
     const data = await response.json();
 
@@ -434,6 +563,14 @@ async function loadBugs() {
 
     projectBugs = data;
     renderBugs();
+}
+
+async function refreshProjectMemberAndBugData(preserveVisibleState = false) {
+    try {
+        await loadMembers(preserveVisibleState);
+    } finally {
+        await loadBugs();
+    }
 }
 
 function renderBugs() {
@@ -583,7 +720,7 @@ function renderBugs() {
             document.createElement("td");
 
         statusCell.textContent =
-            bug.status;
+            displayBugStatus(bug);
 
 
         /* Assignee */
@@ -592,9 +729,7 @@ function renderBugs() {
             document.createElement("td");
 
         assigneeCell.textContent =
-            bug.assignee_id
-                ? `User ${bug.assignee_id}`
-                : "Unassigned";
+            displayBugAssignee(bug.assignee_id);
 
 
         /* Last Updated */
@@ -692,7 +827,7 @@ cancelMemberFormButton.addEventListener(
 
         showMemberFormButton.hidden = false;
 
-        memberMessage.textContent = "";
+        showMemberMessage("");
     }
 );
 
@@ -706,6 +841,29 @@ memberForm.addEventListener(
 /* =========================================================
    Bug Form
    ========================================================= */
+
+function updateSelectPromptStyle(selectInput) {
+    selectInput.classList.toggle(
+        "select-prompt",
+        selectInput.value === ""
+    );
+}
+
+
+bugSeverityInput.addEventListener("change", function () {
+    updateSelectPromptStyle(bugSeverityInput);
+});
+
+
+bugPriorityInput.addEventListener("change", function () {
+    updateSelectPromptStyle(bugPriorityInput);
+});
+
+
+bugAssigneeInput.addEventListener("change", function () {
+    updateSelectPromptStyle(bugAssigneeInput);
+});
+
 
 showBugFormButton.addEventListener(
     "click",
@@ -725,6 +883,9 @@ cancelBugFormButton.addEventListener(
     "click",
     function () {
         bugForm.reset();
+        updateSelectPromptStyle(bugSeverityInput);
+        updateSelectPromptStyle(bugPriorityInput);
+        updateSelectPromptStyle(bugAssigneeInput);
 
         bugForm.hidden = true;
 
@@ -788,39 +949,44 @@ bugForm.addEventListener(
                 null
         };
 
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `/projects/${projectId}/bugs`,
             {
                 method: "POST",
 
                 headers: {
                     "Content-Type":
-                        "application/json",
-                    "Authorization":
-                        "Bearer " +
-                        accessToken
+                        "application/json"
                 },
 
                 body: JSON.stringify(bug)
             }
         );
 
+        if (!response) {
+            return;
+        }
+
         const data = await response.json();
 
         if (response.ok) {
             bugForm.reset();
+            updateSelectPromptStyle(bugSeverityInput);
+            updateSelectPromptStyle(bugPriorityInput);
+            updateSelectPromptStyle(bugAssigneeInput);
 
             bugForm.hidden = true;
 
             showBugFormButton.hidden = false;
 
-            bugMessage.textContent =
-                `Bug #${data.id} created successfully.`;
+            showBugMessage(
+                `BUG-${data.id} "${data.title}" created successfully.`,
+                "success"
+            );
 
             await loadBugs();
         } else {
-            bugMessage.textContent =
-                formatApiError(data.detail);
+            showBugMessage(formatApiError(data.detail), "error");
         }
     }
 );
@@ -830,13 +996,37 @@ bugForm.addEventListener(
    Initial Load
    ========================================================= */
 
-if (!accessToken) {
-    window.location.href =
-        "/login.html";
+if (!localStorage.getItem("access_token")) {
+    redirectToLogin();
 } else {
+    showBugDeletionFeedback();
     loadProject();
 
-    loadMembers();
+    refreshProjectMemberAndBugData().catch(function() {
+        showMemberMessage("Unable to load project members. Please refresh the page.", "error");
+    });
 
-    loadBugs();
+    window.addEventListener("pageshow", async function(event) {
+        if (!localStorage.getItem("access_token")) {
+            redirectToLogin();
+            return;
+        }
+
+        if (!event.persisted) {
+            return;
+        }
+
+        showMemberMessage("");
+        showBugMessage("");
+
+        try {
+            const projectExists = await loadProject();
+
+            if (projectExists) {
+                await refreshProjectMemberAndBugData(true);
+            }
+        } catch (error) {
+            showBugMessage("Unable to refresh this project. Please refresh the page.", "error");
+        }
+    });
 }
