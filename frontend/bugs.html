@@ -32,7 +32,12 @@
             </header>
 
             <dl class="bug-details-grid">
-                <div class="bug-detail-item bug-detail-wide">
+                <div class="bug-detail-item">
+                    <dt>Affected Version</dt>
+                    <dd id="bug-affected-version"></dd>
+                </div>
+
+                <div class="bug-detail-item">
                     <dt>Environment</dt>
                     <dd id="bug-environment"></dd>
                 </div>
@@ -47,14 +52,14 @@
                     <dd id="bug-steps"></dd>
                 </div>
 
-                <div class="bug-detail-item bug-detail-wide">
-                    <dt>Actual Result</dt>
-                    <dd id="bug-actual-result"></dd>
-                </div>
-
-                <div class="bug-detail-item bug-detail-wide">
+                <div class="bug-detail-item">
                     <dt>Expected Result</dt>
                     <dd id="bug-expected-result"></dd>
+                </div>
+
+                <div class="bug-detail-item">
+                    <dt>Actual Result</dt>
+                    <dd id="bug-actual-result"></dd>
                 </div>
 
                 <div class="bug-detail-item">
@@ -68,28 +73,23 @@
                 </div>
 
                 <div class="bug-detail-item">
-                    <dt>Status</dt>
-                    <dd id="bug-status-detail"></dd>
-
-                    <dt id="bug-resolution-label" class="bug-detail-related-label" hidden>
-                        Resolution
-                    </dt>
-                    <dd id="bug-resolution" hidden></dd>
-                </div>
-
-                <div class="bug-detail-item">
                     <dt>Assignee</dt>
                     <dd id="bug-assignee"></dd>
                 </div>
 
                 <div class="bug-detail-item">
-                    <dt>Affected Version</dt>
-                    <dd id="bug-affected-version"></dd>
+                    <dt>Fix Version</dt>
+                    <dd id="bug-fix-version"></dd>
                 </div>
 
                 <div class="bug-detail-item">
-                    <dt>Fix Version</dt>
-                    <dd id="bug-fix-version"></dd>
+                    <dt>Status</dt>
+                    <dd id="bug-status-detail"></dd>
+                </div>
+
+                <div class="bug-detail-item bug-detail-resolution">
+                    <dt id="bug-resolution-label" hidden>Resolution</dt>
+                    <dd id="bug-resolution" hidden></dd>
                 </div>
 
                 <div class="bug-detail-item bug-detail-final-row">
@@ -98,7 +98,7 @@
                 </div>
 
                 <div class="bug-detail-item bug-detail-final-row">
-                    <dt>Last Updated</dt>
+                    <dt>Updated</dt>
                     <dd id="bug-updated-at"></dd>
                 </div>
 
@@ -118,6 +118,18 @@
                     name="edit_bug_title"
                     placeholder="Enter bug title"
                     required>
+
+
+                <label for="edit-bug-affected-version">
+                    Affected Version:
+                </label>
+
+                <input
+                    type="text"
+                    id="edit-bug-affected-version"
+                    class="form-input"
+                    name="edit_affected_version"
+                    placeholder="e.g. 1.2.0">
 
 
                 <label for="edit-bug-environment">
@@ -154,17 +166,6 @@
                     placeholder="Describe how to reproduce the bug"></textarea>
 
 
-                <label for="edit-bug-actual">
-                    Actual Result:
-                </label>
-
-                <textarea
-                    id="edit-bug-actual"
-                    class="form-input edit-bug-textarea"
-                    name="edit_actual_result"
-                    placeholder="What actually happens?"></textarea>
-
-
                 <label for="edit-bug-expected">
                     Expected Result:
                 </label>
@@ -174,6 +175,17 @@
                     class="form-input edit-bug-textarea"
                     name="edit_expected_result"
                     placeholder="What should happen?"></textarea>
+
+
+                <label for="edit-bug-actual">
+                    Actual Result:
+                </label>
+
+                <textarea
+                    id="edit-bug-actual"
+                    class="form-input edit-bug-textarea"
+                    name="edit_actual_result"
+                    placeholder="What actually happens?"></textarea>
 
 
                 <label for="edit-bug-severity">
@@ -221,18 +233,6 @@
                     class="form-input"
                     name="edit_assignee_id">
                 </select>
-
-
-                <label for="edit-bug-affected-version">
-                    Affected Version:
-                </label>
-
-                <input
-                    type="text"
-                    id="edit-bug-affected-version"
-                    class="form-input"
-                    name="edit_affected_version"
-                    placeholder="e.g. 1.2.0">
 
 
                 <label for="edit-bug-fix-version">
