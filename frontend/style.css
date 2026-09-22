@@ -1131,10 +1131,6 @@ button:disabled {
     grid-column: 1 / -1;
 }
 
-.bug-detail-item dt.bug-detail-related-label {
-    margin-top: 16px;
-}
-
 .bug-actions {
     display: flex;
     flex-direction: column;
@@ -1446,6 +1442,10 @@ footer a:hover {
 
     .bug-detail-wide {
         grid-column: auto;
+    }
+
+    .bug-detail-resolution:has(dd[hidden]) {
+        display: none;
     }
 
     .bug-detail-final-row:not(:last-child) {
