@@ -323,6 +323,18 @@ The Project Owner Closed-to-Triage test also verifies that Last Updated changes 
 
 AC-017.1 through AC-017.8 remain Partial because browser verification and automated UI coverage are still pending. The lifecycle UI includes closure outcomes and the Project Owner's return-to-Triage action, but the project does not yet have a frontend browser-test framework. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
 
+## REQ-018 — Request AI-Assisted Triage
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-018 | AC-018.1 — Access AI Triage | — | UI | Partial |
+| REQ-018 | AC-018.1 — Access AI Triage | — | API / Security | Pending |
+| REQ-018 | AC-018.2 — Explicit Request | — | UI | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | — | API+UI | Pending |
+| REQ-018 | AC-018.4 — Request Outcome | — | API+UI | Pending |
+
+AI Assist visibility was manually checked in the browser for Project Owner, QA Analyst, Developer, empty New Bug, Triage and non-Triage Edit Bug, and a Closed bug returned to Triage. Automated UI coverage is pending. There is no AI request endpoint yet, so backend authorization remains Pending. Opening either form does not start AI behavior, and activation currently shows an availability notice. Actual requests, loading state, and simultaneous-request prevention remain Pending for AC-018.2.
+
 
 
 

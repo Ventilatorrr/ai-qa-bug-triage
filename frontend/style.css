@@ -759,6 +759,17 @@ button:disabled {
     font-size: 16px;
 }
 
+#new-bug-ai-assist,
+#edit-bug-ai-assist {
+    width: auto;
+    white-space: nowrap;
+}
+
+#new-bug-ai-assist[hidden],
+#edit-bug-ai-assist[hidden] {
+    display: none;
+}
+
 .equal-action-buttons .context-action-button {
     width: 72px;
 }
