@@ -889,7 +889,10 @@ showBugFormButton.addEventListener(
 );
 
 newBugAiAssistButton.addEventListener("click", function () {
-    newBugAiMessage.textContent = "AI assistance is not available yet.";
+    submitAiAssist(
+        bugForm, "bug-", `/projects/${projectId}/ai-assist`,
+        newBugAiAssistButton, newBugAiMessage, authenticatedFetch
+    );
 });
 
 
