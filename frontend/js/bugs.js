@@ -1237,7 +1237,10 @@ showEditBugFormButton.addEventListener("click", async function() {
 });
 
 editBugAiAssistButton.addEventListener("click", function() {
-    editBugAiMessage.textContent = "AI assistance is not available yet.";
+    submitAiAssist(
+        editBugForm, "edit-bug-", `/projects/${projectId}/bugs/${bugId}/ai-assist`,
+        editBugAiAssistButton, editBugAiMessage, authenticatedFetch
+    );
 });
 
 cancelEditFormButton.addEventListener("click", function() {

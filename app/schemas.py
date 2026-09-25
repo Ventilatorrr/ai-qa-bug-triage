@@ -1,5 +1,5 @@
 from typing import Literal
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class UserCreate(BaseModel):
@@ -102,4 +102,21 @@ class BugStatusUpdate(BaseModel):
     assignee_id: int | None = None
     testing_outcome: Literal["Passed", "Failed"] | None = None
     resolution: Literal["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"] | None = None
+
+
+class AiAssistRequest(BaseModel):
+    """Complete current form snapshot; empty text is intentional, not omitted data."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    title: str
+    affected_version: str
+    environment: str
+    description: str
+    steps_to_reproduce: str
+    expected_result: str
+    actual_result: str
+    severity: Literal["", "Blocker", "Major", "Moderate", "Minor"]
+    priority: Literal["", "Urgent", "High", "Medium", "Low"]
+    assignee_id: int | None
     
