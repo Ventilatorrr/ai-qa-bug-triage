@@ -27,6 +27,8 @@ const lifecycleGuidance = document.querySelector("#lifecycle-guidance");
 
 const editBugForm = document.querySelector("#edit-bug-form");
 const editBugMessage = document.querySelector("#edit-bug-message");
+const editBugAiAssistButton = document.querySelector("#edit-bug-ai-assist");
+const editBugAiMessage = document.querySelector("#edit-bug-ai-message");
 const editBugTitle = document.querySelector("#edit-bug-title");
 const editBugEnvironment = document.querySelector("#edit-bug-environment");
 const editBugDescription = document.querySelector("#edit-bug-description");
@@ -136,6 +138,7 @@ function getCurrentUserId() {
 
 function hideRoleSpecificActions() {
     deleteBugButton.hidden = true;
+    editBugAiAssistButton.hidden = true;
     resetLifecycleControls();
 }
 
@@ -486,6 +489,11 @@ function renderRoleSpecificActions() {
             currentMember.role === "Project Owner" ||
             currentMember.role === "QA Analyst"
         )
+    );
+
+    editBugAiAssistButton.hidden = !(
+        currentMember && currentBug && currentBug.status === "Triage" &&
+        (currentMember.role === "Project Owner" || currentMember.role === "QA Analyst")
     );
 
     renderLifecycleControls();
@@ -1174,6 +1182,7 @@ showEditBugFormButton.addEventListener("click", async function() {
 
     editModeLoading = true;
     showMessage(editBugMessage, "");
+    editBugAiMessage.textContent = "";
 
     try {
         const response = await authenticatedFetch(
@@ -1227,9 +1236,17 @@ showEditBugFormButton.addEventListener("click", async function() {
     }
 });
 
+editBugAiAssistButton.addEventListener("click", function() {
+    submitAiAssist(
+        editBugForm, "edit-bug-", `/projects/${projectId}/bugs/${bugId}/ai-assist`,
+        editBugAiAssistButton, editBugAiMessage, authenticatedFetch
+    );
+});
+
 cancelEditFormButton.addEventListener("click", function() {
     editBugForm.hidden = true;
     showMessage(editBugMessage, "");
+    editBugAiMessage.textContent = "";
 
     bugDetailsGrid.hidden = false;
     showEditBugFormButton.hidden = false;
