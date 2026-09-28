@@ -180,41 +180,29 @@ No trailing period.
 For implementation, testing, documentation, or refactoring tasks, do not commit
 unless explicitly instructed.
 
-At the end of each task, provide a complete handoff suitable for copying into
-another ChatGPT conversation.
+At the end of each task, provide a concise handoff containing:
 
-Include:
-
-1. A concise summary of what was implemented.
+1. A summary of what was implemented.
 2. Every file changed, added, or deleted.
-3. Tests and verification commands run, with their results.
+3. Tests and verification commands run, with exact results.
 4. Bugs or issues discovered during the task.
 5. Decisions, assumptions, and intentionally deferred work.
-6. Output of `git status --short`.
-7. Output of `git diff --stat HEAD`.
-8. The complete final tracked diff from:
-   `git --no-pager diff HEAD`
+6. Relevant requirement/traceability status when applicable.
+7. Output of `git status --short`.
+8. Output of `git diff --stat HEAD`.
+9. Whether the work is a clean commit-sized slice.
 
-A normal Git diff does not include untracked files. For every new untracked
-file, list its path and include its complete contents in the handoff.
+Do NOT include the complete Git diff or complete contents of changed/untracked
+files unless explicitly requested. The user will generate the complete handoff
+locally when needed.
 
-Do not summarize or silently omit portions of the diff when it is reasonably
-sized.
+Do not stage files merely to produce the handoff.
 
-If the complete handoff cannot fit safely in one response:
-
-- state explicitly that some diff content could not fit;
-- identify every file whose complete diff or contents were omitted;
-- provide a detailed per-file summary;
-- include complete diffs for substantive logic changes where possible;
-- split the handoff into consecutive parts when supported.
-
-Do not stage files merely to make them appear in a Git diff.
-
-If the task explicitly requires staging after review, provide additionally:
+If the task explicitly requires staging after review, additionally provide:
 
 - `git status --short`;
 - `git diff --cached --stat`;
-- `git --no-pager diff --cached`.
+- confirmation that all intended files are staged and no unrelated files are
+  staged.
 
 Do not commit unless explicitly authorized.
