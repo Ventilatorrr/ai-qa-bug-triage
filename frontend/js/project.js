@@ -22,6 +22,8 @@ const memberRoleInput = document.querySelector("#member-role");
 const showBugFormButton = document.querySelector("#show-bug-form");
 const bugForm = document.querySelector("#bug-form");
 const cancelBugFormButton = document.querySelector("#cancel-bug-form");
+const newBugAiAssistButton = document.querySelector("#new-bug-ai-assist");
+const newBugAiMessage = document.querySelector("#new-bug-ai-message");
 
 const bugsContainer = document.querySelector("#bugs");
 
@@ -417,6 +419,7 @@ async function loadBugAssignees() {
 
 
 async function updateBugAssigneeVisibility() {
+    newBugAiAssistButton.hidden = true;
     const membersResponse = await authenticatedFetch(`/projects/${projectId}/members`);
 
     if (!membersResponse) {
@@ -438,6 +441,11 @@ async function updateBugAssigneeVisibility() {
             return member.user_id ===
                 currentUserId;
         }
+    );
+
+    newBugAiAssistButton.hidden = !(
+        currentUser &&
+        (currentUser.role === "Project Owner" || currentUser.role === "QA Analyst")
     );
 
     const assigneeLabel =
@@ -868,6 +876,8 @@ bugAssigneeInput.addEventListener("change", function () {
 showBugFormButton.addEventListener(
     "click",
     async function () {
+        newBugAiAssistButton.hidden = true;
+        newBugAiMessage.textContent = "";
         bugForm.hidden = false;
 
         showBugFormButton.hidden = true;
@@ -877,6 +887,13 @@ showBugFormButton.addEventListener(
         await updateBugAssigneeVisibility();
     }
 );
+
+newBugAiAssistButton.addEventListener("click", function () {
+    submitAiAssist(
+        bugForm, "bug-", `/projects/${projectId}/ai-assist`,
+        newBugAiAssistButton, newBugAiMessage, authenticatedFetch
+    );
+});
 
 
 cancelBugFormButton.addEventListener(
@@ -892,6 +909,7 @@ cancelBugFormButton.addEventListener(
         showBugFormButton.hidden = false;
 
         bugMessage.textContent = "";
+        newBugAiMessage.textContent = "";
     }
 );
 

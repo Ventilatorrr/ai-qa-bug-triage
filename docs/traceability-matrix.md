@@ -323,6 +323,32 @@ The Project Owner Closed-to-Triage test also verifies that Last Updated changes 
 
 AC-017.1 through AC-017.8 remain Partial because browser verification and automated UI coverage are still pending. The lifecycle UI includes closure outcomes and the Project Owner's return-to-Triage action, but the project does not yet have a frontend browser-test framework. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
 
+## REQ-018 — Request AI-Assisted Triage
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-018 | AC-018.1 — Access AI Triage | — | UI | Partial |
+| REQ-018 | AC-018.1 — Access AI Triage | `test_ai_assist_requires_authorized_project_role` | API / Security | Partial |
+| REQ-018 | AC-018.1 — Access AI Triage | `test_ai_assist_requires_authentication` | API / Security | Partial |
+| REQ-018 | AC-018.1 — Access AI Triage | `test_ai_assist_checks_current_bug_status` | API / Security | Partial |
+| REQ-018 | AC-018.1 — Access AI Triage | `test_ai_assist_rechecks_membership` | API / Security | Partial |
+| REQ-018 | AC-018.1 — Access AI Triage | `test_ai_assist_rejects_bug_outside_project` | API / Security | Partial |
+| REQ-018 | AC-018.2 — Explicit Request | — | UI | Partial |
+| REQ-018 | AC-018.2 — Explicit Request | `test_submit_ai_context_limits_requests_and_reports_unavailable` | Unit (JavaScript) | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | `test_ai_assist_preserves_current_form_without_saving` | API | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | `test_ai_assist_rejects_invalid_context` | API / Validation | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | `test_ai_assist_requires_complete_snapshot` | API / Validation | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | `test_collect_ai_context_preserves_blank_and_unsaved_values` | Unit (JavaScript) | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | — | UI | Pending |
+| REQ-018 | AC-018.4 — Request Outcome | — | API+UI | Pending |
+| REQ-018 | AC — | `test_submit_ai_context_recovers_from_network_failure` | Unit (JavaScript) | Partial |
+
+AI Assist visibility was manually checked in the first slice for Project Owner, QA Analyst, Developer, empty New Bug, Triage and non-Triage Edit Bug, and a Closed bug returned to Triage. Browser verification of the second slice's form transport, loading state, and duplicate-request guard remains pending; JavaScript unit tests do not establish browser coverage.
+
+The second slice adds POST `/projects/{project_id}/ai-assist` and POST `/projects/{project_id}/bugs/{bug_id}/ai-assist`. Both accept a complete ten-field current-form snapshot, including empty text and a nullable assignee ID, without saving bug data. Edit requests never fill missing fields from stored bug values. Authorization checks current membership, role, and (for Edit) the bug's project and current Triage status before the service boundary is called. Tests observe that boundary while retaining its real unavailable behavior; authorized requests currently receive HTTP 503 with `AI assistance is not configured yet.` No provider or generated suggestions exist. AC-018.1 through AC-018.3 remain Partial, and real generation outcomes under AC-018.4 remain Pending.
+
+API tests are in `tests/test_ai_assist.py`. Dependency-free JavaScript unit tests run with `node --test tests/frontend/ai-assist.test.cjs` and exercise form collection and request transport using small form/control substitutes. Provider selection/configuration and a real generation response contract are deferred to the next slice.
+
 
 
 

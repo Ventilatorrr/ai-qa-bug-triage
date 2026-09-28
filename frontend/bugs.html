@@ -251,6 +251,8 @@
 
                 <div class="form-actions creation-form-actions">
 
+                    <button id="edit-bug-ai-assist" class="creation-form-action-button secondary-action-button" type="button" hidden>AI Assist</button>
+
                     <button id="save-edit-button" class="creation-form-action-button" type="submit">Save</button>
 
                     <button id="cancel-edit-form" class="creation-form-action-button secondary-action-button" type="button">Cancel</button>
@@ -258,6 +260,7 @@
                     <button id="delete-bug-button" class="creation-form-action-button" type="button" hidden>Delete</button>
 
                 </div>
+                <p id="edit-bug-ai-message" class="section-message" role="status" aria-live="polite"></p>
 
             </form>
 
@@ -344,6 +347,7 @@
     <script src="js/theme.js"></script>
     <script src="js/logout.js"></script>
     <script src="js/api-errors.js"></script>
+    <script src="js/ai-assist.js"></script>
     <script src="js/bugs.js"></script>
 </body>
 </html>

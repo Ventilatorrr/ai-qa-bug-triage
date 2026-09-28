@@ -5,6 +5,7 @@ from app.database import create_tables
 from app.api.auth import router as auth_router
 from app.api.projects import router as projects_router
 from app.api.bugs import router as bugs_router
+from app.api.ai_assist import router as ai_assist_router
 from app.version import APP_VERSION
 
 
@@ -15,6 +16,7 @@ create_tables()
 app.include_router(auth_router)
 app.include_router(projects_router)
 app.include_router(bugs_router)
+app.include_router(ai_assist_router)
 
 
 @app.get("/version")
