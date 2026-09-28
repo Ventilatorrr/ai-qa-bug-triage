@@ -350,11 +350,30 @@ The second slice adds POST `/projects/{project_id}/ai-assist` and POST `/project
 API tests are in `tests/test_ai_assist.py`. Dependency-free JavaScript unit tests run with `node --test tests/frontend/ai-assist.test.cjs` and exercise form collection and request transport using small form/control substitutes. Provider selection/configuration and a real generation response contract are deferred to the next slice.
 
 
+## REQ-019 — Validated AI Suggestions
 
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_suggestions_accept_all_supported_fields` | Unit / Validation | Partial |
+| REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_suggestions_exclude_unsupported_or_unmapped_fields` | Unit / Validation | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | — | API+UI | Pending |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_non_string_text_without_losing_valid_field` | Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_invalid_classification_without_losing_valid_field` | Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_accept_classification_matching_bug_validation` | Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_ineligible_or_non_integer_assignee` | Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_use_current_assignable_project_member_context` | API + Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_conflicting_duplicate_field` | Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_collapse_identical_duplicates_and_ignore_blank_entries` | Unit / Validation | Partial |
+| REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_accept_partial_set_without_mutating_input` | Unit / Validation | Partial |
+| REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_omit_blank_values_without_clearing_fields` | Unit / Validation | Partial |
+| REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_report_malformed_structure_as_error` | Unit / Validation | Partial |
+| REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_report_no_usable_suggestions_for_valid_structure` | Unit / Validation | Partial |
 
+The first REQ-019 slice adds a pure validator in `app/ai_suggestions.py`. Its internal application contract is `{"suggestions": [{"field": "title", "value": "Suggested title"}]}`, using existing bug field keys (including `assignee_id`). The envelope contains only `suggestions`; each entry has a string `field` and an optional `value`, with no extra entry keys. Uninterpretable structures raise `MalformedSuggestionResponse`. Unsupported fields and invalid values are excluded independently. Missing/null/blank values are omitted, not clearing instructions. Nonblank text is preserved exactly; identical duplicates collapse, while conflicting nonblank values exclude that field. Providers must preserve duplicate entries before validation.
 
+The result contains only usable field/value pairs and an outcome of `suggestions` or `no_usable_suggestions`. The caller must supply the IDs of current same-project members who are eligible for assignment under the existing assignment rules. QA Analysts and Developers are assignable, while Project Owners are not. An API-backed context test verifies this eligibility, excludes members from other projects, and rechecks eligibility after member removal. The validator itself performs no database access or persistence.
 
-
+AC-019.1, AC-019.3, and AC-019.4 remain Partial: validation is tested, but provider adaptation, endpoint integration, presentation, and browser verification are not implemented by this slice. AC-019.2 remains Pending; form/project-context generation and historical bug retrieval are not implemented. REQ-018 endpoints retain their existing unavailable response; no fake suggestions are returned. Tests are in `tests/test_ai_suggestions.py`.
 
 ## Coverage limitations from the pre-commit review
 
