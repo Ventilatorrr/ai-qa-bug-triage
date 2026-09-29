@@ -356,7 +356,11 @@ API tests are in `tests/test_ai_assist.py`. Dependency-free JavaScript unit test
 | --- | --- | --- | --- | --- |
 | REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_suggestions_accept_all_supported_fields` | Unit / Validation | Partial |
 | REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_suggestions_exclude_unsupported_or_unmapped_fields` | Unit / Validation | Partial |
-| REQ-019 | AC-019.2 — Use Bug and Project Context | — | API+UI | Pending |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_preserves_submitted_form_and_persisted_bugs` | API / Context | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_retrieves_bounded_deterministic_same_project_history` | API / Database / Context | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_includes_only_current_assignable_project_members` | API / Context | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_supports_empty_project_history_and_assignees` | API / Context | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_is_not_constructed_for_rejected_requests` | API / Security | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_non_string_text_without_losing_valid_field` | Unit / Validation | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_invalid_classification_without_losing_valid_field` | Unit / Validation | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_accept_classification_matching_bug_validation` | Unit / Validation | Partial |
@@ -373,7 +377,11 @@ The first REQ-019 slice adds a pure validator in `app/ai_suggestions.py`. Its in
 
 The result contains only usable field/value pairs and an outcome of `suggestions` or `no_usable_suggestions`. The caller must supply the IDs of current same-project members who are eligible for assignment under the existing assignment rules. QA Analysts and Developers are assignable, while Project Owners are not. An API-backed context test verifies this eligibility, excludes members from other projects, and rechecks eligibility after member removal. The validator itself performs no database access or persistence.
 
-AC-019.1, AC-019.3, and AC-019.4 remain Partial: validation is tested, but provider adaptation, endpoint integration, presentation, and browser verification are not implemented by this slice. AC-019.2 remains Pending; form/project-context generation and historical bug retrieval are not implemented. REQ-018 endpoints retain their existing unavailable response; no fake suggestions are returned. Tests are in `tests/test_ai_suggestions.py`.
+AC-019.1, AC-019.3, and AC-019.4 remain Partial: validation is tested, but provider adaptation, suggestion-validation endpoint integration, presentation, and browser verification remain outstanding. REQ-018 endpoints retain their existing unavailable response; no fake suggestions are returned. Validation tests are in `tests/test_ai_suggestions.py`.
+
+The second REQ-019 slice adds `app/ai_context.py`, with separate `current_form`, `recent_bugs`, and `eligible_assignees` context sections. The submitted ten-field snapshot is copied exactly, including blanks and unsaved Edit values; history never fills or overwrites it. Project-scoped SQL retrieves at most five supporting bug reports, ordered by `updated_at DESC, id DESC`, excluding the current Edit bug before applying the limit. History contains only the ten suggestion-supported fields plus source bug ID; it is not verified fact for the current report. Assignee context contains only current same-project QA Analyst/Developer user IDs, emails, and roles. Owners, other-project members, and removed members are excluded; `eligible_assignee_ids` can be passed directly to the existing validator. No credentials, authentication tokens, or other user-account fields are queried into context.
+
+Context construction runs after existing AI Assist authorization and before the unconfigured provider boundary. Both endpoints still return HTTP 503 with `AI assistance is not configured yet.` Context retrieval performs no writes. Tests in `tests/test_ai_context.py` verify transport to that boundary without simulating a provider, current-form preservation, project isolation, bounded deterministic history, member eligibility/removal, empty context, authorization-before-retrieval, and unchanged persisted bugs. AC-019.2 is now Partial: permitted context construction is implemented and API-tested; real generation using that context, factual-support behavior, provider integration, and browser verification remain pending.
 
 ## Coverage limitations from the pre-commit review
 
