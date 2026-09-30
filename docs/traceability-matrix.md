@@ -356,11 +356,14 @@ API tests are in `tests/test_ai_assist.py`. Dependency-free JavaScript unit test
 | --- | --- | --- | --- | --- |
 | REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_suggestions_accept_all_supported_fields` | Unit / Validation | Partial |
 | REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_suggestions_exclude_unsupported_or_unmapped_fields` | Unit / Validation | Partial |
+| REQ-019 | AC-019.1 — Supported Suggestion Fields | `test_ai_generation_defines_only_supported_output_fields` | Unit / Generation Contract | Partial |
 | REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_preserves_submitted_form_and_persisted_bugs` | API / Context | Partial |
 | REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_retrieves_bounded_deterministic_same_project_history` | API / Database / Context | Partial |
 | REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_includes_only_current_assignable_project_members` | API / Context | Partial |
 | REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_supports_empty_project_history_and_assignees` | API / Context | Partial |
 | REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_context_is_not_constructed_for_rejected_requests` | API / Security | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_generation_preserves_separate_context_without_mutation` | Unit / Generation Contract | Partial |
+| REQ-019 | AC-019.2 — Use Bug and Project Context | `test_ai_generation_instructions_define_context_and_safety_boundaries` | Unit / Generation Contract | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_non_string_text_without_losing_valid_field` | Unit / Validation | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_invalid_classification_without_losing_valid_field` | Unit / Validation | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_accept_classification_matching_bug_validation` | Unit / Validation | Partial |
@@ -368,10 +371,14 @@ API tests are in `tests/test_ai_assist.py`. Dependency-free JavaScript unit test
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_use_current_assignable_project_member_context` | API + Unit / Validation | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_exclude_conflicting_duplicate_field` | Unit / Validation | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_suggestions_collapse_identical_duplicates_and_ignore_blank_entries` | Unit / Validation | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_generation_classification_rules_match_application` | Unit / Generation Contract | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_generation_limits_assignees_to_supplied_eligible_context` | Unit / Generation Contract | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_accept_partial_set_without_mutating_input` | Unit / Validation | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_omit_blank_values_without_clearing_fields` | Unit / Validation | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_report_malformed_structure_as_error` | Unit / Validation | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_report_no_usable_suggestions_for_valid_structure` | Unit / Validation | Partial |
+| REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions` | Unit / Generation Contract | Partial |
+| REQ-019 | AC — | `test_ai_generation_does_not_introduce_account_information_or_secrets` | Unit / Security | Partial |
 
 The first REQ-019 slice adds a pure validator in `app/ai_suggestions.py`. Its internal application contract is `{"suggestions": [{"field": "title", "value": "Suggested title"}]}`, using existing bug field keys (including `assignee_id`). The envelope contains only `suggestions`; each entry has a string `field` and an optional `value`, with no extra entry keys. Uninterpretable structures raise `MalformedSuggestionResponse`. Unsupported fields and invalid values are excluded independently. Missing/null/blank values are omitted, not clearing instructions. Nonblank text is preserved exactly; identical duplicates collapse, while conflicting nonblank values exclude that field. Providers must preserve duplicate entries before validation.
 
@@ -382,6 +389,10 @@ AC-019.1, AC-019.3, and AC-019.4 remain Partial: validation is tested, but provi
 The second REQ-019 slice adds `app/ai_context.py`, with separate `current_form`, `recent_bugs`, and `eligible_assignees` context sections. The submitted ten-field snapshot is copied exactly, including blanks and unsaved Edit values; history never fills or overwrites it. Project-scoped SQL retrieves at most five supporting bug reports, ordered by `updated_at DESC, id DESC`, excluding the current Edit bug before applying the limit. History contains only the ten suggestion-supported fields plus source bug ID; it is not verified fact for the current report. Assignee context contains only current same-project QA Analyst/Developer user IDs, emails, and roles. Owners, other-project members, and removed members are excluded; `eligible_assignee_ids` can be passed directly to the existing validator. No credentials, authentication tokens, or other user-account fields are queried into context.
 
 Context construction runs after existing AI Assist authorization and before the unconfigured provider boundary. Both endpoints still return HTTP 503 with `AI assistance is not configured yet.` Context retrieval performs no writes. Tests in `tests/test_ai_context.py` verify transport to that boundary without simulating a provider, current-form preservation, project isolation, bounded deterministic history, member eligibility/removal, empty context, authorization-before-retrieval, and unchanged persisted bugs. AC-019.2 is now Partial: permitted context construction is implemented and API-tested; real generation using that context, factual-support behavior, provider integration, and browser verification remain pending.
+
+The third REQ-019 slice adds the pure `build_generation_input(context)` function in `app/ai_generation.py`. It returns application-owned instructions, the three separate serialized context sections, and an output contract comprising the existing `suggestions` envelope schema plus field-specific value rules. Supported fields and classification values are reused from the validator; allowed assignee IDs come only from the supplied eligible members. Instructions identify the current form as primary, history as supporting/unverified, prohibit fabricated filler and application actions, allow zero suggestions, and require omission of unjustified fields. Context content remains untrusted data, separate from the instructions. The schema describes envelope structure; field rules and instructions guide generation, while the existing validator remains authoritative for all raw output.
+
+Tests in `tests/test_ai_generation.py` verify context preservation/serialization, no mutation or database queries by the builder, supported fields, classification and assignee constraints, instruction boundaries, empty output, and no added account/configuration secrets. The builder does not select or invoke a provider and is not wired into the unavailable stub by this slice; endpoints retain their existing behavior. All REQ-019 ACs remain Partial because instruction tests do not establish provider compliance, real generated output, factual correctness, or browser coverage.
 
 ## Coverage limitations from the pre-commit review
 
