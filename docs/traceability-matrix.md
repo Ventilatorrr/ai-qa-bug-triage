@@ -384,6 +384,7 @@ API tests are in `tests/test_ai_assist.py` and `tests/test_ai_triage.py`. Depend
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_response_preserves_conflicting_duplicate_behavior` | Unit / Response Processing | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions` | API / Mocked Provider Integration | Partial |
 | REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_triage_revalidates_current_member_eligibility` | API / Mocked Provider Integration | Partial |
+| REQ-019 | AC-019.3 — Validate Suggested Values | `test_ai_triage_excludes_assignee_removed_during_generation` | API / Mocked Provider Integration | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_accept_partial_set_without_mutating_input` | Unit / Validation | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_omit_blank_values_without_clearing_fields` | Unit / Validation | Partial |
 | REQ-019 | AC-019.4 — Partial and Empty Suggestions | `test_ai_suggestions_report_malformed_structure_as_error` | Unit / Validation | Partial |
@@ -407,6 +408,7 @@ API tests are in `tests/test_ai_assist.py` and `tests/test_ai_triage.py`. Depend
 | REQ-019 | AC — | `test_ai_triage_unconfigured_requests_keep_503_without_provider_work` | API / Configuration | Partial |
 | REQ-019 | AC — | `test_ai_triage_configuration_is_checked_on_each_request` | API / Configuration | Partial |
 | REQ-019 | AC — | `test_ai_triage_client_factory_disables_retries_without_reading_credentials` | Unit / Configuration | Partial |
+| REQ-019 | AC — | `test_ai_triage_timeout_is_safe_without_retries_or_persistence` | API / Mocked Provider Integration | Partial |
 
 The first REQ-019 slice adds a pure validator in `app/ai_suggestions.py`. Its internal application contract is `{"suggestions": [{"field": "title", "value": "Suggested title"}]}`, using existing bug field keys (including `assignee_id`). The envelope contains only `suggestions`; each entry has a string `field` and an optional `value`, with no extra entry keys. Uninterpretable structures raise `MalformedSuggestionResponse`. Unsupported fields and invalid values are excluded independently. Missing/null/blank values are omitted, not clearing instructions. Nonblank text is preserved exactly; identical duplicates collapse, while conflicting nonblank values exclude that field. Providers must preserve duplicate entries before validation.
 
@@ -431,6 +433,8 @@ Tests in `tests/test_ai_openai.py` use fake responses and an SDK client backed b
 The sixth REQ-019 slice wires authorized New/Edit AI Assist requests through context, generation input, the OpenAI adapter, response processing, and the existing authoritative validator. `OPENAI_API_KEY` is read and trimmed per request; missing/blank configuration retains HTTP 503 with `AI assistance is not configured yet.` The SDK is loaded only for configured requests, clients are closed after each call, and automatic SDK retries are disabled. HTTP 200 returns only `SuggestionResult` semantics: `{"outcome": "suggestions", "suggestions": {"title": "..."}}` or `{"outcome": "no_usable_suggestions", "suggestions": {}}`. Provider/client failures and malformed suggestion structures return fixed safe HTTP 502 errors, never raw SDK details or empty-success results. Full REQ-023 timeout/recovery behavior remains deferred.
 
 Tests in `tests/test_ai_triage.py` exercise this endpoint pipeline through the real SDK/adapter with in-memory HTTP transport, not live OpenAI calls. They cover authorization before pipeline work, exact current/unsaved form transport, QA/Developer eligibility and member removal, validator rejection of invalid/unsupported/conflicting fields, distinct empty outcomes, sanitized failures, unchanged persisted data, request-time configuration, and client cleanup. Existing unconfigured tests explicitly clear the key so a developer's environment cannot enable live requests in those tests. The existing JavaScript request/duplicate guard is unchanged and remains unit-tested. No REQ-020 UI has been added; successful suggestion presentation, real-model factual quality, and manual/browser verification remain pending. All REQ-019 statuses remain Partial.
+
+Assignee eligibility is refreshed after generation and before authoritative validation, without changing the context already sent to the provider. New/Edit regression tests remove a QA Analyst or Developer during the simulated provider request and verify that the final suggestions exclude that assignee while retaining other valid fields. An offline SDK transport timeout test verifies safe HTTP 502 feedback, no exposed private details or application writes, one attempt with retries disabled, and client cleanup. Coverage statuses remain Partial; this does not implement full REQ-023 recovery.
 
 ## Coverage limitations from the pre-commit review
 
