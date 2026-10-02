@@ -14,3 +14,18 @@ For the existing configured Windows environment, run from the repository root:
 ```
 
 Open http://127.0.0.1:8000/login.html. A reproducible dependency manifest and clean-machine setup instructions remain outstanding; the command above assumes the existing virtual environment. Tests use a fixed disposable test_bugtriage.db filename and must not run concurrently. Formal versioning has not started.
+
+The AI Assist backend uses OpenAI GPT-6 Luna only when `OPENAI_API_KEY` is set in
+the server environment. Install its optional SDK dependency with
+`.\.venv\Scripts\python.exe -m pip install -r requirements-ai.txt`. No key or a
+blank key retains HTTP 503: `AI assistance is not configured yet.` Configuration
+is checked per request; no provider-switching variable or dotenv loader is used.
+Keep keys outside repository files. Provider failures return a fixed HTTP 502
+message without SDK details; clients are closed after use and automatic SDK
+retries are disabled. Full REQ-023 recovery remains pending.
+
+Configured requests return `{"outcome": "suggestions", "suggestions": {"title": "..."}}`
+or `{"outcome": "no_usable_suggestions", "suggestions": {}}` after application
+validation. They never save a bug. REQ-020 review/use UI is not implemented yet;
+the current frontend does not display successful suggestion responses. Automated
+tests mock provider calls and require no real API key.
