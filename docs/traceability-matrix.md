@@ -75,6 +75,10 @@ The matrix is updated throughout development and testing.
 | REQ-002 | AC-002.1 — Successful Login    | —                                    | UI        | Manual  |
 | REQ-002 | AC-002.2 — Invalid Credentials | `test_login_with_incorrect_password` | API       | Covered |
 | REQ-002 | AC-002.2 — Invalid Credentials | `test_login_with_unknown_email`      | API       | Covered |
+| REQ-002 | AC-002.1 — Successful Login | `test_login_and_access_with_configured_secret` | API / Security | Partial |
+| REQ-002 | — | `test_token_signed_with_configured_secret` | API / Security | Covered |
+| REQ-002 | — | `test_missing_or_blank_jwt_secret_key_rejects_authentication` | API / Security | Covered |
+| REQ-002 | — | `test_secret_not_in_login_response` | API / Security | Covered |
 
 ### REQ-003 — Protected Access
 
@@ -84,6 +88,9 @@ The matrix is updated throughout development and testing.
 | REQ-003 | AC-003.2 — Unauthenticated Access | `test_unauthenticated_user_cannot_access_protected_endpoint` | API / Security | Covered |
 | REQ-003 | AC-003.2 — Unauthenticated Access | —                                                            | UI             | Manual  |
 | REQ-003 | AC-003.3 — Invalid Authentication | `test_invalid_token_cannot_access_protected_endpoint`        | API / Security | Partial |
+| REQ-003 | AC-003.3 — Invalid Authentication | `test_forged_token_with_old_secret_is_rejected` | API / Security | Partial |
+| REQ-003 | — | `test_secret_not_in_protected_response` | API / Security | Covered |
+| REQ-003 | — | `test_secret_not_in_error_response` | API / Security | Covered |
 
 ### REQ-004 — User Logout
 
