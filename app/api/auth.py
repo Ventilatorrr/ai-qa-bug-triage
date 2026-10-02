@@ -20,9 +20,9 @@ ALGORITHM = "HS256"
 def _get_secret_key():
     secret = os.environ.get("JWT_SECRET_KEY")
 
-    if not secret:
+    if not secret or not secret.strip():
         raise RuntimeError(
-            "JWT_SECRET_KEY environment variable is not set. "
+            "JWT_SECRET_KEY environment variable is not set or is blank. "
             "The application cannot sign or verify tokens without it."
         )
 
@@ -160,4 +160,3 @@ def protected(authorization: str | None = Header(default=None)):
         "message": "You are authenticated.",
         "user_id": user_id
     }
-    
