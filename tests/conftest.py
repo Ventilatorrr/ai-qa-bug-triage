@@ -15,9 +15,6 @@ def test_client(monkeypatch):
     monkeypatch.setenv("JWT_SECRET_KEY", TEST_JWT_SECRET)
 
     from app.main import app
-    from app.database import create_tables
-
-    create_tables()
 
     with TestClient(app) as client:
         yield client
