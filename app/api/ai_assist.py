@@ -37,9 +37,12 @@ def authorize_ai_assist(project_id, bug_id, authorization):
 def request_authorized_triage(project_id, bug_id, form, authorization):
     authorize_ai_assist(project_id, bug_id, authorization)
     try:
-        return ai_triage.request_triage(project_id, bug_id, form)
+        result = ai_triage.request_triage(project_id, bug_id, form)
+        return {"outcome": result.outcome, "suggestions": result.suggestions}
     except ai_triage.AiTriageUnavailable as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except ai_triage.AiTriageFailed as error:
+        raise HTTPException(status_code=502, detail=str(error)) from None
 
 
 @router.post("/projects/{project_id}/ai-assist")

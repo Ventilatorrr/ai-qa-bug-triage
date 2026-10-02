@@ -31,6 +31,7 @@ def ai_project(test_client, authenticated_user_factory, project_factory, member_
 
 @pytest.fixture
 def service_calls(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     from app import ai_triage
 
     calls = []
