@@ -6,11 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 TEST_DATABASE = "test_bugtriage.db"
+TEST_JWT_SECRET = "test-only-jwt-secret-not-for-production"
 
 
 @pytest.fixture
 def test_client(monkeypatch):
     monkeypatch.setenv("DATABASE_NAME", TEST_DATABASE)
+    monkeypatch.setenv("JWT_SECRET_KEY", TEST_JWT_SECRET)
 
     from app.main import app
     from app.database import create_tables
