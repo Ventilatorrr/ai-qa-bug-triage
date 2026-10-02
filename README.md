@@ -10,8 +10,14 @@ See [requirements](docs/requirements.md), [traceability](docs/traceability-matri
 For the existing configured Windows environment, run from the repository root:
 
 ```powershell
+$env:JWT_SECRET_KEY = "your-secure-random-secret"
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+
+`JWT_SECRET_KEY` is required. The application will refuse to sign or verify
+tokens without it. Use a long, random value and do not commit it to the
+repository. Changing the secret invalidates all existing tokens; users must
+log in again.
 
 Open http://127.0.0.1:8000/login.html. A reproducible dependency manifest and clean-machine setup instructions remain outstanding; the command above assumes the existing virtual environment. Tests use a fixed disposable test_bugtriage.db filename and must not run concurrently. Formal versioning has not started.
 

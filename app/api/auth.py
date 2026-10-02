@@ -1,3 +1,4 @@
+import os
 import sqlite3
 
 from datetime import datetime, timedelta, timezone
@@ -13,8 +14,19 @@ from app.schemas import UserCreate, UserLogin
 
 router = APIRouter(tags=["Authentication"])
 
-SECRET_KEY = "dev-secret-key-for-local-testing-only"
 ALGORITHM = "HS256"
+
+
+def _get_secret_key():
+    secret = os.environ.get("JWT_SECRET_KEY")
+
+    if not secret:
+        raise RuntimeError(
+            "JWT_SECRET_KEY environment variable is not set. "
+            "The application cannot sign or verify tokens without it."
+        )
+
+    return secret
 
 
 def create_access_token(user_id):
@@ -26,7 +38,7 @@ def create_access_token(user_id):
 
     return jwt.encode(
         payload,
-        key=SECRET_KEY,
+        key=_get_secret_key(),
         algorithm=ALGORITHM
     )
 
@@ -35,7 +47,7 @@ def verify_access_token(token):
     try:
         payload = jwt.decode(
             token,
-            key=SECRET_KEY,
+            key=_get_secret_key(),
             algorithms=[ALGORITHM]
         )
 
