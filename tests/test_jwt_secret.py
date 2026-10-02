@@ -1,12 +1,19 @@
+import os
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+from textwrap import dedent
+from datetime import datetime, timedelta, timezone
+
 import jwt
 import pytest
-
-from datetime import datetime, timedelta, timezone
 
 from tests.conftest import TEST_JWT_SECRET
 
 
 OLD_REPO_SECRET = "dev-secret-key-for-local-testing-only"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
 # --- Normal auth flow uses configured secret ---
@@ -30,10 +37,12 @@ def test_login_and_access_with_configured_secret(
     assert response.json()["user_id"] == auth["user_id"]
 
 
+@pytest.mark.parametrize("secret", [TEST_JWT_SECRET, f"  {TEST_JWT_SECRET}  "])
 def test_token_signed_with_configured_secret(
-    test_client, authenticated_user_factory
+    test_client, authenticated_user_factory, monkeypatch, secret
 ):
-    """Tokens returned by login are verifiable with the test secret."""
+    """Signing preserves the exact configured secret, including padding."""
+    monkeypatch.setenv("JWT_SECRET_KEY", secret)
     auth = authenticated_user_factory(
         email="verify@example.com",
         password="Password1"
@@ -41,7 +50,7 @@ def test_token_signed_with_configured_secret(
 
     payload = jwt.decode(
         auth["token"],
-        key=TEST_JWT_SECRET,
+        key=secret,
         algorithms=["HS256"]
     )
 
@@ -75,67 +84,62 @@ def test_forged_token_with_old_secret_is_rejected(test_client, user_factory):
 
 # --- Missing configuration fails securely ---
 
-def test_missing_jwt_secret_key_raises_on_login(monkeypatch, tmp_path):
-    """When JWT_SECRET_KEY is not set, login must fail with a clear
-    RuntimeError rather than silently using a default."""
-    db_path = str(tmp_path / "jwt_missing.db")
+@pytest.mark.parametrize(
+    "secret", [None, "", " " * 32, "\t\r\n" * 12],
+    ids=["missing", "empty", "spaces", "mixed-whitespace"],
+)
+@pytest.mark.parametrize("endpoint", ["/login", "/protected"])
+def test_missing_or_blank_jwt_secret_key_rejects_authentication(
+    tmp_path, secret, endpoint
+):
+    """Configuration failures cannot cache database settings in the suite."""
+    # Isolate imports as well as files: app.database caches DATABASE_NAME.
+    # TemporaryDirectory removes the database even when the assertion fails.
+    with TemporaryDirectory(dir=tmp_path) as directory:
+        environment = os.environ.copy()
+        environment["DATABASE_NAME"] = str(Path(directory) / "jwt.db")
+        if secret is None:
+            environment.pop("JWT_SECRET_KEY", None)
+        else:
+            environment["JWT_SECRET_KEY"] = secret
 
-    monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
+        result = subprocess.run(
+            [sys.executable, "-c", dedent("""
+                import sys
+                import jwt
+                import pytest
+                from fastapi.testclient import TestClient
+                from tests.conftest import TEST_JWT_SECRET
+                from app.main import app
 
-    from app.main import app
-
-    monkeypatch.setattr("app.database.DATABASE_NAME", db_path)
-
-    from fastapi.testclient import TestClient
-
-    with TestClient(app) as client:
-        client.post(
-            "/register",
-            json={
-                "email": "missing-secret@example.com",
-                "password": "Password1"
-            }
+                with TestClient(app) as client:
+                    user = {
+                        "email": "invalid-secret@example.com",
+                        "password": "Password1",
+                    }
+                    response = client.post("/register", json=user)
+                    assert response.status_code == 201, response.text
+                    token = jwt.encode(
+                        {"user_id": 1}, TEST_JWT_SECRET, algorithm="HS256"
+                    )
+                    with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
+                        if sys.argv[1] == "/login":
+                            client.post("/login", json=user)
+                        else:
+                            client.get(
+                                "/protected",
+                                headers={"Authorization": f"Bearer {token}"},
+                            )
+            """), endpoint],
+            cwd=REPOSITORY_ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
+        assert result.returncode == 0, result.stdout + result.stderr
 
-        with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
-            client.post(
-                "/login",
-                json={
-                    "email": "missing-secret@example.com",
-                    "password": "Password1"
-                }
-            )
-
-
-def test_empty_jwt_secret_key_raises_on_login(monkeypatch, tmp_path):
-    """An empty JWT_SECRET_KEY must be treated as missing."""
-    db_path = str(tmp_path / "jwt_empty.db")
-
-    monkeypatch.setenv("JWT_SECRET_KEY", "")
-
-    from app.main import app
-
-    monkeypatch.setattr("app.database.DATABASE_NAME", db_path)
-
-    from fastapi.testclient import TestClient
-
-    with TestClient(app) as client:
-        client.post(
-            "/register",
-            json={
-                "email": "empty-secret@example.com",
-                "password": "Password1"
-            }
-        )
-
-        with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
-            client.post(
-                "/login",
-                json={
-                    "email": "empty-secret@example.com",
-                    "password": "Password1"
-                }
-            )
+    assert list(tmp_path.iterdir()) == []
 
 
 # --- Secret not exposed in HTTP responses ---
