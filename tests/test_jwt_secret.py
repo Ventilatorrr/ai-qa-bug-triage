@@ -83,10 +83,8 @@ def test_missing_jwt_secret_key_raises_on_login(monkeypatch, tmp_path):
     monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
 
     from app.main import app
-    from app.database import create_tables
 
     monkeypatch.setattr("app.database.DATABASE_NAME", db_path)
-    create_tables()
 
     from fastapi.testclient import TestClient
 
@@ -116,10 +114,8 @@ def test_empty_jwt_secret_key_raises_on_login(monkeypatch, tmp_path):
     monkeypatch.setenv("JWT_SECRET_KEY", "")
 
     from app.main import app
-    from app.database import create_tables
 
     monkeypatch.setattr("app.database.DATABASE_NAME", db_path)
-    create_tables()
 
     from fastapi.testclient import TestClient
 

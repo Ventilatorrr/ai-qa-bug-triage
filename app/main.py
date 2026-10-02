@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -9,9 +11,13 @@ from app.api.ai_assist import router as ai_assist_router
 from app.version import APP_VERSION
 
 
-app = FastAPI(version=APP_VERSION)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_tables()
+    yield
 
-create_tables()
+
+app = FastAPI(version=APP_VERSION, lifespan=lifespan)
 
 app.include_router(auth_router)
 app.include_router(projects_router)
