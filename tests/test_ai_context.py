@@ -42,9 +42,9 @@ def captured_contexts(monkeypatch, disposable_database):
     contexts = []
     original = ai_triage.request_suggestions
 
-    def record(context):
+    def record(context, **kwargs):
         contexts.append(context)
-        return original(context)
+        return original(context, **kwargs)
 
     monkeypatch.setattr(ai_triage, "request_suggestions", record)
     return contexts

@@ -61,6 +61,19 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
             """,
             (project_id, bug_id, bug_id, RECENT_BUG_LIMIT),
         ).fetchall()
+    finally:
+        conn.close()
+    return AiTriageContext(
+        current_form=form.model_copy(deep=True),
+        recent_bugs=[HistoricalBugContext(**dict(zip(fields, row))) for row in bug_rows],
+        eligible_assignees=load_eligible_assignees(project_id),
+    )
+
+
+def load_eligible_assignees(project_id: int) -> list[AssignableMemberContext]:
+    """Read current same-project assignment eligibility without changing data."""
+    conn = get_connection()
+    try:
         member_rows = conn.execute(
             """
             SELECT pm.user_id, u.email, pm.role
@@ -73,11 +86,7 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
         ).fetchall()
     finally:
         conn.close()
-    return AiTriageContext(
-        current_form=form.model_copy(deep=True),
-        recent_bugs=[HistoricalBugContext(**dict(zip(fields, row))) for row in bug_rows],
-        eligible_assignees=[
-            AssignableMemberContext(user_id=user_id, email=email, role=role)
-            for user_id, email, role in member_rows
-        ],
-    )
+    return [
+        AssignableMemberContext(user_id=user_id, email=email, role=role)
+        for user_id, email, role in member_rows
+    ]

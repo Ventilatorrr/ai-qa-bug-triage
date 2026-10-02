@@ -21,6 +21,10 @@ def offline_provider(test_client, monkeypatch):
         state["requests"].append(json.loads(request.content))
         assert request.method == "POST"
         assert request.url.path == "/v1/responses"
+        if "on_request" in state:
+            state["on_request"]()
+        if "timeout_error" in state:
+            raise httpx2.ReadTimeout(state["timeout_error"], request=request)
         if "error" in state:
             return httpx2.Response(500, json={"error": {"message": state["error"], "type": "server_error"}})
         return httpx2.Response(200, json={
@@ -165,6 +169,38 @@ def test_ai_triage_revalidates_current_member_eligibility(
         assert context["eligible_assignees"] == []
 
 
+@pytest.mark.parametrize("edit", [False, True])
+@pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
+def test_ai_triage_excludes_assignee_removed_during_generation(
+    test_client, ai_project, blank_form, offline_provider,
+    authenticated_user_factory, member_factory, edit, role,
+):
+    owner, developer, project, _, base = ai_project
+    assignee = developer
+    if role == "QA Analyst":
+        assignee = authenticated_user_factory(email="qa@example.com")
+        member_factory(owner["token"], project["id"], assignee["user"]["email"], role)
+    offline_provider["raw"] = {"suggestions": [
+        {"field": "assignee_id", "value": assignee["user_id"]},
+        {"field": "title", "value": "Suggested title"},
+    ]}
+    after_removal = []
+
+    def remove_assignee():
+        response = test_client.delete(f"{base}/members/{assignee['user_id']}", headers=headers(owner))
+        assert response.status_code == 200
+        after_removal.append(persisted_state(test_client, ai_project))
+
+    offline_provider["on_request"] = remove_assignee
+    response = test_client.post(request_url(ai_project, edit), headers=headers(owner), json=blank_form)
+    assert response.status_code == 200
+    assert response.json() == {"outcome": "suggestions", "suggestions": {"title": "Suggested title"}}
+    assert len(offline_provider["requests"]) == 1
+    sent_context = json.loads(offline_provider["requests"][0]["input"][0]["content"])
+    assert assignee["user_id"] in {member["user_id"] for member in sent_context["eligible_assignees"]}
+    assert persisted_state(test_client, ai_project) == after_removal[0]
+
+
 @pytest.mark.parametrize("rejection,status", [("missing_auth", 401), ("developer", 403), ("non_member", 404), ("non_triage", 409)])
 def test_ai_triage_configured_requests_authorize_before_any_pipeline_work(
     test_client, ai_project, blank_form, offline_provider, monkeypatch, authenticated_user_factory, rejection, status,
@@ -218,6 +254,23 @@ def test_ai_triage_failures_are_safe_errors_without_persistence(
     assert "Private current draft" not in response.text + caplog.text
     assert persisted_state(test_client, ai_project) == before
     assert len(offline_provider["requests"]) == (0 if failure == "client" else 1)
+
+
+@pytest.mark.parametrize("edit", [False, True])
+def test_ai_triage_timeout_is_safe_without_retries_or_persistence(
+    test_client, ai_project, blank_form, offline_provider, caplog, edit,
+):
+    offline_provider["timeout_error"] = "integration-test-key Private current draft timeout details"
+    before = persisted_state(test_client, ai_project)
+    response = test_client.post(request_url(ai_project, edit), headers=headers(ai_project[0]), json=blank_form)
+    assert response.status_code == 502
+    assert response.json() == {"detail": "AI assistance could not generate suggestions. Please try again."}
+    for private_text in ("integration-test-key", "Private current draft", "timeout details"):
+        assert private_text not in response.text + caplog.text
+    assert persisted_state(test_client, ai_project) == before
+    assert len(offline_provider["requests"]) == len(offline_provider["clients"]) == 1
+    assert offline_provider["clients"][0].max_retries == 0
+    assert offline_provider["clients"][0].is_closed()
 
 
 def test_ai_triage_configuration_is_checked_on_each_request(test_client, ai_project, blank_form, offline_provider, monkeypatch):
