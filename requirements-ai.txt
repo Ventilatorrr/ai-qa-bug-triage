@@ -1,0 +1,2 @@
+# Optional OpenAI adapter dependency; does not enable live AI Assist endpoints.
+openai==3.23.0
