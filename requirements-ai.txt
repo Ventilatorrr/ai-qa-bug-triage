@@ -1,2 +1,2 @@
-# Optional OpenAI adapter dependency; does not enable live AI Assist endpoints.
+# Optional AI dependency; endpoints use it only when OPENAI_API_KEY is configured.
 openai==3.23.0

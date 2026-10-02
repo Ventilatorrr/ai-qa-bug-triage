@@ -13,7 +13,8 @@ def blank_snapshot():
 
 
 @pytest.fixture
-def disposable_database(test_client):
+def disposable_database(test_client, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     from app.database import DATABASE_NAME
 
     assert DATABASE_NAME == "test_bugtriage.db"
