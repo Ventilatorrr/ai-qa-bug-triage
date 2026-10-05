@@ -610,6 +610,101 @@ source inspection, and the existing browser smoke. Broader browser automation,
 cross-browser/accessibility work, and Increment 3 completion remain separate;
 this status does not change REQ-020 coverage or claim the increment is done.
 
+## REQ-022 — AI Authorization and Data Protection
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_assist_requires_authentication` | API / Security | Covered |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_assist_requires_authorized_project_role` | API / Security | Covered |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_assist_checks_current_bug_status` | API / Security | Covered |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_assist_rechecks_membership` | API / Security | Covered |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_assist_rejects_bug_outside_project` | API / Security | Covered |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_triage_configured_requests_authorize_before_any_pipeline_work` | API / Security / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_ai_triage_rechecks_changed_role_before_provider_invocation` | API / Security / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_context_preserves_submitted_form_and_persisted_bugs` | API / Context | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_context_retrieves_bounded_deterministic_same_project_history` | API / Database / Context | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_context_includes_only_current_assignable_project_members` | API / Context | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_generation_preserves_separate_context_without_mutation` | Unit / Generation Contract | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_generation_does_not_introduce_account_information_or_secrets` | Unit / Security | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database` | Unit / Mocked Provider Adapter | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions` | API / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_triage_revalidates_current_member_eligibility` | API / Context / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions` | API / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_triage_instruction_like_content_and_output_cannot_perform_actions` | API / Security / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_generation_instructions_define_context_and_safety_boundaries` | Unit / Generation Contract | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_response_delegates_to_validator_and_returns_its_result` | Unit / Response Processing | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_response_has_no_mutation_database_or_provider_side_effects` | Unit / Response Processing | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_response_propagates_malformed_response` | Unit / Response Processing | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_exclude_unsupported_or_unmapped_fields` | Unit / Validation | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_exclude_non_string_text_without_losing_valid_field` | Unit / Validation | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_exclude_invalid_classification_without_losing_valid_field` | Unit / Validation | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_exclude_ineligible_or_non_integer_assignee` | Unit / Validation | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_report_malformed_structure_as_error` | Unit / Validation | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_review_separates_values_and_follows_form_order` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_use_all_maps_every_supported_field_without_persistence` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | New/Edit script-like suggestions render as literal text; review/use does not persist until normal Create/Save (REQ-020 smoke evidence above, 5 October 2026) | Manual / Browser + Database Smoke | Covered |
+
+### Audit and scope
+
+The REQ-022 audit found the implementation already present in REQ-018/019 and
+the REQ-020 review UI. No production code changed. The missing evidence was
+limited to a role change between requests and instruction-like content/output
+through the complete pipeline; dedicated REQ-022 traceability was also missing.
+
+AC-022.1: both routes call `authorize_ai_assist` before `request_triage`. The
+backend verifies the token, queries current project membership/role, and checks
+the Edit bug's project and current Triage status on each request. Existing tests
+cover membership removal, status changes, roles, authentication, and wrong-project
+bugs before the service boundary. The configured rejection test now also covers
+New Bug; the new role-change test uses the same token after QA Analyst membership
+is removed and re-added as Developer, then restored to QA Analyst. Rejection
+cannot reach context construction or the provider. Frontend visibility is not the
+authorization boundary.
+
+AC-022.2: the data path is `AiAssistRequest` to `build_triage_context`, then
+`build_generation_input`, then `request_openai_suggestions`. Context preserves
+the current form and selects at most five same-project history records, excluding
+the edited bug. Member context includes only current same-project QA Analysts
+and Developers, projected to user ID, email, and role; it does not select account
+password hashes. History and form models likewise expose only approved fields.
+Generation serializes these three context collections; the adapter sends that
+JSON as user data, separately from trusted instructions. Authorization headers
+never enter these models. `OPENAI_API_KEY` is used only to configure the transport
+client, and `JWT_SECRET_KEY` stays in authentication. Structural context tests,
+exact adapter payload assertions, and actual mocked SDK request inspection
+jointly establish this path. The existing generation secret test now explicitly
+covers both configuration key names as well as its prior secret/token sentinels.
+This does not claim detection or redaction of secrets a user manually types into
+otherwise permitted bug content.
+
+AC-022.3: the provider receives no application tools or action capability. Raw
+output passes through `process_provider_response` and the authoritative validator;
+unsupported fields cannot grant roles, change lifecycle state, or execute actions.
+The new New/Edit integration test sends instruction-like form content and receives
+script-like suggestion text plus role/status/action fields. It verifies literal
+text survives as data, unsupported/ineligible values are excluded, persisted
+project/member/bug state is unchanged, and a Developer remains unauthorized.
+Frontend source uses `textContent`, stores pending values separately, and only
+Use/Use All copies them into editable controls. These actions do not submit or
+persist; normal user-triggered Create/Save remains the persistence boundary.
+Frontend unit evidence uses DOM substitutes; relevant browser/database evidence
+is reused from the recorded REQ-020 smoke, with no new browser run claimed.
+
+All three ACs are Covered for their defined capability and data boundaries using
+the evidence above. Real-provider instruction compliance/quality, broader browser
+automation/accessibility, and REQ-023 recovery remain outside this audit. This
+does not change earlier requirements' coverage or establish Increment 3 completion.
+
+Verification on 5 October 2026, run serially against the disposable test database:
+
+- `.\.venv\Scripts\python.exe -m pytest tests/test_ai_assist.py tests/test_ai_triage.py -q` — **69 passed in 65.33 seconds**.
+- `.\.venv\Scripts\python.exe -m pytest tests/test_ai_context.py tests/test_ai_generation.py tests/test_ai_openai.py tests/test_ai_response.py tests/test_ai_suggestions.py -q` — **172 passed in 22.58 seconds**.
+- `node --test tests/frontend/ai-assist.test.cjs tests/frontend/form-session.test.cjs` — **34 passed, 0 failures**.
+- `.\.venv\Scripts\python.exe -m py_compile tests/test_ai_triage.py tests/test_ai_generation.py` and `git diff --check` — passed.
+
+No full pytest run was needed for these test/documentation changes. Provider calls
+were mocked; no real provider, application database, or dogfooding records were used.
+
 ## Coverage limitations from the pre-commit review
 
 - User Stories remain in requirements.md. The previously noted missing REQ-005 user-story heading remains a specification follow-up; the matrix no longer contains US references, and no new ID is introduced here.
