@@ -355,12 +355,14 @@ AC-017.1 through AC-017.8 remain Partial because browser verification and automa
 
 AI Assist visibility was manually checked in the first slice for Project Owner, QA Analyst, Developer, empty New Bug, Triage and non-Triage Edit Bug, and a Closed bug returned to Triage. Browser verification of the second slice's form transport, loading state, and duplicate-request guard remains pending; JavaScript unit tests do not establish browser coverage.
 
-The second slice adds POST `/projects/{project_id}/ai-assist` and POST `/projects/{project_id}/bugs/{bug_id}/ai-assist`. Both accept a complete ten-field current-form snapshot, including empty text and a nullable assignee ID, without saving bug data. Edit requests never fill missing fields from stored bug values. Authorization checks current membership, role, and (for Edit) the bug's project and current Triage status before the service boundary is called. Its original tests retain the unconfigured HTTP 503 behavior. The sixth REQ-019 slice integrates configured backend results and safe provider errors with offline API tests. AC-018.1 through AC-018.4 remain Partial overall; presenting generated outcomes in the browser remains pending.
+The second slice adds POST `/projects/{project_id}/ai-assist` and POST `/projects/{project_id}/bugs/{bug_id}/ai-assist`. Both accept a complete ten-field current-form snapshot, including empty text and a nullable assignee ID, without saving bug data. Edit requests never fill missing fields from stored bug values. Authorization checks current membership, role, and (for Edit) the bug's project and current Triage status before the service boundary is called. Its original tests retain the unconfigured HTTP 503 behavior. The sixth REQ-019 slice integrates configured backend results and safe provider errors with offline API tests. AC-018.1 through AC-018.4 remain Partial overall; REQ-020 now presents generated outcomes with unit and browser smoke evidence recorded below.
 
-API tests are in `tests/test_ai_assist.py` and `tests/test_ai_triage.py`. Dependency-free JavaScript unit tests run with `node --test tests/frontend/ai-assist.test.cjs` and exercise form collection and request transport using small form/control substitutes. REQ-020 suggestion presentation/use UI and real-model evaluation remain deferred.
+API tests are in `tests/test_ai_assist.py` and `tests/test_ai_triage.py`. Dependency-free JavaScript unit tests run with `node --test tests/frontend/ai-assist.test.cjs` and exercise form collection, request transport, and the REQ-020 review workflow using small DOM/control substitutes. The REQ-020 section records current browser smoke evidence separately. Real-model evaluation remains deferred.
 
 
 ## REQ-019 — Validated AI Suggestions
+
+The slice notes below describe the implementation and evidence at each earlier checkpoint. REQ-020 review/use presentation is now implemented; its current evidence and remaining gaps are recorded in the REQ-020 section. Real-model compliance and factual-quality evaluation remain outstanding.
 
 | REQ | AC | Test Reference | Test Layer | Status |
 | --- | --- | --- | --- | --- |
@@ -442,6 +444,135 @@ The sixth REQ-019 slice wires authorized New/Edit AI Assist requests through con
 Tests in `tests/test_ai_triage.py` exercise this endpoint pipeline through the real SDK/adapter with in-memory HTTP transport, not live OpenAI calls. They cover authorization before pipeline work, exact current/unsaved form transport, QA/Developer eligibility and member removal, validator rejection of invalid/unsupported/conflicting fields, distinct empty outcomes, sanitized failures, unchanged persisted data, request-time configuration, and client cleanup. Existing unconfigured tests explicitly clear the key so a developer's environment cannot enable live requests in those tests. The existing JavaScript request/duplicate guard is unchanged and remains unit-tested. No REQ-020 UI has been added; successful suggestion presentation, real-model factual quality, and manual/browser verification remain pending. All REQ-019 statuses remain Partial.
 
 Assignee eligibility is refreshed after generation and before authoritative validation, without changing the context already sent to the provider. New/Edit regression tests remove a QA Analyst or Developer during the simulated provider request and verify that the final suggestions exclude that assignee while retaining other valid fields. An offline SDK transport timeout test verifies safe HTTP 502 feedback, no exposed private details or application writes, one attempt with retries disabled, and client cleanup. Coverage statuses remain Partial; this does not implement full REQ-023 recovery.
+
+## REQ-020 — Review and Use AI Suggestions
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-020 | AC-020.1 — Review Suggestions | `test_ai_suggestions_review_separates_values_and_follows_form_order` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.1 — Review Suggestions | `test_ai_review_tracks_current_values_after_manual_edits` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.2 — Use an Individual Suggestion | `test_ai_use_replaces_value_removes_pending_and_remains_editable` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.2 — Use an Individual Suggestion | `test_ai_validated_assignee_missing_from_dropdown_is_reviewable_and_usable` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.3 — Dismiss an Individual Suggestion | `test_ai_dismiss_preserves_form_and_excludes_field_from_use_all` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.4 — Use All Pending Suggestions | `test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.5 — Dismiss All Pending Suggestions | `test_ai_dismiss_all_preserves_used_and_other_form_values` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.6 — Repeat AI Assist Requests | `test_ai_repeat_request_waits_for_resolution_and_uses_latest_form` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | `test_ai_use_all_maps_every_supported_field_without_persistence` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_ai_cancel_discards_pending_and_detached_actions_cannot_apply` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_ai_late_success_or_error_cannot_populate_reopened_session` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_ai_late_json_cannot_replace_later_results` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_ai_results_do_not_populate_hidden_or_disconnected_forms` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_ai_sessions_are_isolated_between_new_and_edit_forms` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC — | `test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC — | `test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry` | Unit (JavaScript / DOM substitutes) | Partial |
+| REQ-020 | AC-020.1 — Review Suggestions | New/Edit field comparisons, field order, separate values, and review controls | Manual / Browser Smoke | Partial |
+| REQ-020 | AC-020.2 — Use an Individual Suggestion | New/Edit replacement and subsequent normal editing | Manual / Browser Smoke | Partial |
+| REQ-020 | AC-020.3 — Dismiss an Individual Suggestion | New Bug dismissal followed by Use All preserves the dismissed field | Manual / Browser Smoke | Partial |
+| REQ-020 | AC-020.4 — Use All Pending Suggestions | New/Edit bulk use; New Bug preserves revised used values and dismissed fields | Manual / Browser Smoke | Partial |
+| REQ-020 | AC-020.5 — Dismiss All Pending Suggestions | New/Edit bulk dismissal preserves previously used values | Manual / Browser Smoke | Partial |
+| REQ-020 | AC-020.6 — Repeat AI Assist Requests | Disabled AI Assist until resolution; repeat requests after bulk resolution | Manual / Browser Smoke | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | Disposable database check before Create; Create, Save, Edit Cancel, unchanged Save, and blank-title Edit validation | Manual / Browser + Database Smoke | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | New/Edit delayed success after Cancel/reopen; Edit reload and navigation discard pending review | Manual / Browser Smoke | Partial |
+
+REQ-020 is implemented in the shared `frontend/js/ai-assist.js` helper and wired into both pages. Pending values are held only in a form-session WeakMap, displayed with their current form values in form order, and rendered with `textContent` so suggested markup is literal text. Only the ten supported fields can be mapped to the form. Use replaces an ordinary field value and removes the pending entry; bulk actions iterate only the remaining entries. No suggestion action calls a persistence endpoint or stores pending values in browser storage. AI Assist remains disabled until the set is resolved. Empty successes and errors leave normal form values unchanged and allow retry. Session identity and request IDs guard both response arrival and asynchronous JSON processing; cancellation, successful form completion (including unchanged Edit Save), and `pagehide` invalidate the session. A cached-page `pageshow` starts a fresh review session without restoring pending values. Existing backend authorization and validation are unchanged.
+
+Verification on 5 October 2026: `node --test tests/frontend/ai-assist.test.cjs` passed all 19 tests (the original three request/context tests plus 16 review tests); the complete serial `.\.venv\Scripts\python.exe -m pytest` run passed 425 cases in 238.67 seconds. A temporary Node check against the original helper from HEAD reproduced the successful-response error before correction. Unit tests use DOM substitutes and do not establish full browser workflows or real persistence. No browser-test framework or dependency was introduced.
+
+A backend-validated Assignee ID missing from the form's older dropdown is displayed as `User <ID>` and added as a selectable option only when used. This avoids discarding a valid response or silently clearing the select if membership changes after the form opens. Create/Save still revalidates assignment through the unchanged backend. This final edge case is unit-tested in both form modes; it was added after the browser smoke run and has no separate browser evidence.
+
+Manual/browser smoke verification used the Codex in-app browser, an isolated local server, disposable `req020_browser_test.db`, and mocked AI output processed by the existing validator. No real provider calls, migrations against application data, or dogfooding records were used. Project Owner and QA Analyst paths were exercised. New/Edit checks covered success, empty success, safe failure, retry, ordinary editing, and a delayed response after cancellation/reopening. New Bug review/use actions left the database with only the original report until normal Create; Create then displayed the revised used title. Edit Cancel restored stored values; Save persisted the revised title while dismissed fields retained their stored values. Edit Save with no changes discarded pending suggestions; ordinary blank-title validation remained active after Use All. Pending Edit suggestions were discarded on reload and navigation. Script-like and multiline suggestions displayed as literal text. The panel was visually checked at the browser's narrow viewport in dark and light themes, with visible keyboard focus; a low-contrast issue in the new dark panel was corrected and rechecked. No unrelated application defects were discovered. The temporary verification server/scripts/database were removed after testing.
+
+All REQ-020 ACs remain Partial for coverage: there is no committed automated browser suite, desktop/cross-browser verification and a full accessibility review remain outstanding, and the browser's cached-page restoration branch was not independently forced. Browser smoke evidence is separate from JavaScript automation. Real-provider factual quality and full REQ-023 recovery remain outside this slice. This does not establish Increment 3 completion under the Definition of Done.
+
+The same panel implements AC-021.1 — Identify Pending AI Suggestions: the labelled AI Suggestions area and separation are unit-tested and browser-smoke checked above. This records the necessary REQ-020 presentation overlap without claiming completion of a separate increment or expanding backend AI scope.
+
+## REQ-020 logged defect corrections — 5 October 2026
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-020 | AC-020.2 — Use an Individual Suggestion | `test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all` | Unit (JavaScript / input sanitization model) | Partial |
+| REQ-020 | AC-020.4 — Use All Pending Suggestions | `test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all` | Unit (JavaScript / input sanitization model) | Partial |
+| REQ-020 | AC — | `test_ai_all_native_input_mismatches_allow_manual_work_and_retry` | Unit (JavaScript / input sanitization model) | Partial |
+| REQ-020 | AC-020.2 — Use an Individual Suggestion | `test_ai_native_input_browser_review_and_apply_consistency` | Browser (native controls; manually triggered assertions) | Partial |
+| REQ-020 | AC-020.4 — Use All Pending Suggestions | `test_ai_native_input_browser_review_and_apply_consistency` | Browser (native controls; manually triggered assertions) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_new_create_late_success_preserves_reopened_form_and_ai` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_edit_save_late_success_preserves_reopened_form_and_ai` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | `test_new_create_current_success_closes_form_and_discards_ai` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | `test_edit_save_current_success_closes_form_and_discards_ai` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_new_create_late_error_does_not_overwrite_reopened_messages` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_edit_save_late_error_does_not_overwrite_reopened_messages` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_new_create_late_json_preserves_newer_pending_submission` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_edit_save_late_json_preserves_newer_pending_submission` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC — | `test_edit_save_late_rejection_preserves_newer_session` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_new_create_stale_list_refresh_failure_preserves_newer_feedback` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | `test_new_create_current_list_refresh_failure_shows_error` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_new_create_delayed_list_refresh_response_preserves_newer_session` | Unit (actual page handlers / DOM substitutes) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_new_create_delayed_list_refresh_json_preserves_newer_session` | Unit (actual page handlers / DOM substitutes) | Partial |
+
+REQ-019 continues to preserve backend-valid nonblank text exactly. Before review,
+the frontend assigns each text suggestion to a detached clone of its actual form
+control. It excludes values that native sanitization would change; usable values
+from the same response remain reviewable. All excluded values produce the normal
+no-usable-suggestions notice and permit retry. This changes neither backend
+validation nor authoritative bug persistence, and adds no multiline form fields.
+
+Create and Save now capture separate form-session and submission identities.
+Cancel, reopen, and page departure invalidate authority over later forms. Stale
+Create success still refreshes the bug list; stale Save success fetches current
+server details without changing an open edit form's values, comparison baseline,
+AI session, visibility, messages, or newer Save's disabled state. Current-session
+success keeps the existing normal cleanup and persistence behavior.
+
+Create's list refresh captures feedback ownership after successful cleanup
+advances the form session. The actual `loadBugs()` function rechecks that ownership
+immediately before writing an error, after both response and JSON completion.
+Already-stale submissions stay silent; current refresh errors are still reported
+when no newer session has opened. Other `loadBugs()` callers retain their normal
+feedback behavior, and successful refreshes still update surrounding list data.
+The two delayed-refresh regressions use the actual Create handler, `loadBugs()`,
+and feedback function with controlled responses. Both failed before the production
+fix because older refresh errors replaced newer validation feedback; the existing
+32 tests passed. After correction, both response and JSON delay cases preserve
+newer form values, validation feedback, AI feedback, pending suggestions, and
+visibility. They also verify normal Create cleanup and successful list refreshes.
+The earlier stale/current refresh tests now exercise the actual refresh function
+rather than an immediate refresh substitute. This is Node execution with DOM
+substitutes, not additional browser verification.
+
+Before correction, the regression run had 6 failures among 27 Node tests: both
+native-input-model regressions and the New/Edit stale success/error regressions.
+After correction and additional delayed-JSON/rejection coverage,
+`node --test tests/frontend/ai-assist.test.cjs tests/frontend/form-session.test.cjs`
+passed all 34 tests (21 AI-helper tests, 13 form/page-session tests). The full serial
+`.\.venv\Scripts\python.exe -m pytest` run passed **425 tests in 226.83 seconds (3m 46s)**
+after the delayed-refresh ownership fix.
+JavaScript syntax checks and `git diff --check` passed.
+
+The committed static browser runner (`node tests/frontend/native-input-server.cjs`,
+then open `http://127.0.0.1:8128/`) passed all 12 native cases using actual New/Edit
+form markup: Use/Use All with LF, CR, and CRLF suggestions for Title, Affected
+Version, and Environment. Unrepresentable suggestions were excluded before
+review; the remaining textarea value matched the reviewed value when applied,
+and excluded fields were unchanged.
+
+Focused full-page browser verification used the Codex in-app browser, a disposable
+`req020_fix_browser_test.db`, and mocked AI responses processed by the unchanged
+validator. Delayed New Create followed by Cancel/reopen preserved newer values,
+pending suggestions, and form visibility while the persisted report appeared in
+the refreshed list. Delayed Edit Save followed by Cancel/reopen likewise preserved
+newer title/environment values, pending suggestions, form visibility, and enabled
+Save. Holding the HTTP PATCH open serializes the browser's same-URL reopen GET;
+the Edit harness therefore delayed JavaScript completion after the actual PATCH
+persisted to exercise the specified sequence. Current Create and Save then
+persisted the newer values normally; individual Use and Use All preserved reviewed
+textarea content. No real records or provider calls were used. Temporary server
+and database files were removed after verification.
+
+No additional application defect was confirmed. REQ-020 coverage remains Partial:
+the native assertions cover this defect, not complete automated browser workflows.
+Cross-browser, full accessibility, and independently forced cached-page restoration
+verification remain outstanding. No requirements, API contract, provider, or UI
+design decisions changed. This slice does not establish Increment 3 completion.
 
 ## Coverage limitations from the pre-commit review
 

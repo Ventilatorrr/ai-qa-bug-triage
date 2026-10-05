@@ -29,6 +29,22 @@ const editBugForm = document.querySelector("#edit-bug-form");
 const editBugMessage = document.querySelector("#edit-bug-message");
 const editBugAiAssistButton = document.querySelector("#edit-bug-ai-assist");
 const editBugAiMessage = document.querySelector("#edit-bug-ai-message");
+const editBugAiSuggestions = document.querySelector("#edit-bug-ai-suggestions");
+
+let editFormSession = 0;
+let editSubmitRequest = 0;
+
+window.addEventListener("pagehide", () => {
+    ++editFormSession;
+    endAiAssistSession(editBugForm);
+});
+window.addEventListener("pageshow", event => {
+    if (event.persisted && !editBugForm.hidden) {
+        ++editFormSession;
+        saveEditButton.disabled = false;
+        beginAiAssistSession(editBugForm, "edit-bug-", editBugAiAssistButton, editBugAiMessage, editBugAiSuggestions);
+    }
+});
 const editBugTitle = document.querySelector("#edit-bug-title");
 const editBugEnvironment = document.querySelector("#edit-bug-environment");
 const editBugDescription = document.querySelector("#edit-bug-description");
@@ -137,6 +153,7 @@ function getCurrentUserId() {
 }
 
 function hideRoleSpecificActions() {
+    endAiAssistSession(editBugForm);
     deleteBugButton.hidden = true;
     editBugAiAssistButton.hidden = true;
     resetLifecycleControls();
@@ -495,6 +512,7 @@ function renderRoleSpecificActions() {
         currentMember && currentBug && currentBug.status === "Triage" &&
         (currentMember.role === "Project Owner" || currentMember.role === "QA Analyst")
     );
+    if (editBugAiAssistButton.hidden) endAiAssistSession(editBugForm);
 
     renderLifecycleControls();
 }
@@ -1229,6 +1247,9 @@ showEditBugFormButton.addEventListener("click", async function() {
         lifecycleActions.hidden = true;
         showEditBugFormButton.hidden = true;
         editBugForm.hidden = false;
+        ++editFormSession;
+        saveEditButton.disabled = false;
+        beginAiAssistSession(editBugForm, "edit-bug-", editBugAiAssistButton, editBugAiMessage, editBugAiSuggestions);
     } catch (error) {
         showMessage(bugMessage, "Unable to load this bug report. Please try again.", "error");
     } finally {
@@ -1244,6 +1265,9 @@ editBugAiAssistButton.addEventListener("click", function() {
 });
 
 cancelEditFormButton.addEventListener("click", function() {
+    ++editFormSession;
+    saveEditButton.disabled = false;
+    endAiAssistSession(editBugForm);
     editBugForm.hidden = true;
     showMessage(editBugMessage, "");
     editBugAiMessage.textContent = "";
@@ -1255,6 +1279,11 @@ cancelEditFormButton.addEventListener("click", function() {
 
 editBugForm.addEventListener("submit", async function(event) {
     event.preventDefault();
+
+    const session = editFormSession;
+    const request = ++editSubmitRequest;
+    const isCurrentSubmission = () => session === editFormSession &&
+        request === editSubmitRequest && editBugForm.isConnected && !editBugForm.hidden;
 
     const trimmedTitle = editBugTitle.value.trim();
     if (!trimmedTitle) {
@@ -1313,6 +1342,8 @@ editBugForm.addEventListener("submit", async function(event) {
     }
 
     if (Object.keys(payload).length === 0) {
+        ++editFormSession;
+        endAiAssistSession(editBugForm);
         editBugForm.hidden = true;
         bugDetailsGrid.hidden = false;
         showEditBugFormButton.hidden = false;
@@ -1339,6 +1370,22 @@ editBugForm.addEventListener("submit", async function(event) {
         let data = {};
         try { data = await response.json(); } catch (error) { data = {}; }
 
+        if (!isCurrentSubmission()) {
+            if (response.ok) {
+                // Refresh persisted details from the server, keeping the newer
+                // edit form, its comparison baseline, and AI review untouched.
+                const refreshed = await authenticatedFetch(`/projects/${projectId}/bugs/${bugId}`);
+                if (refreshed?.ok) {
+                    const latest = await refreshed.json();
+                    if (isValidBugResponse(latest)) {
+                        renderBug(latest);
+                        if (editBugForm.hidden) currentBug = latest;
+                    }
+                }
+            }
+            return;
+        }
+
         if (!response.ok) {
             showMessage(
                 editBugMessage,
@@ -1362,6 +1409,7 @@ editBugForm.addEventListener("submit", async function(event) {
         currentBug = data;
         renderBug(currentBug);
 
+        endAiAssistSession(editBugForm);
         editBugForm.hidden = true;
         bugDetailsGrid.hidden = false;
         showEditBugFormButton.hidden = false;
@@ -1370,13 +1418,13 @@ editBugForm.addEventListener("submit", async function(event) {
         showMessage(editBugMessage, "");
         showMessage(bugMessage, "Bug report updated successfully.", "success");
     } catch (error) {
-        showMessage(
+        if (isCurrentSubmission()) showMessage(
             editBugMessage,
             "An error occurred while saving. Please try again.",
             "error"
         );
     } finally {
-        saveEditButton.disabled = false;
+        if (session === editFormSession && request === editSubmitRequest) saveEditButton.disabled = false;
     }
 });
 

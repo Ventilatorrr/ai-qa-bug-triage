@@ -24,6 +24,21 @@ const bugForm = document.querySelector("#bug-form");
 const cancelBugFormButton = document.querySelector("#cancel-bug-form");
 const newBugAiAssistButton = document.querySelector("#new-bug-ai-assist");
 const newBugAiMessage = document.querySelector("#new-bug-ai-message");
+const newBugAiSuggestions = document.querySelector("#new-bug-ai-suggestions");
+
+let bugFormSession = 0;
+let bugSubmitRequest = 0;
+
+window.addEventListener("pagehide", () => {
+    ++bugFormSession;
+    endAiAssistSession(bugForm);
+});
+window.addEventListener("pageshow", event => {
+    if (event.persisted && !bugForm.hidden) {
+        ++bugFormSession;
+        beginAiAssistSession(bugForm, "bug-", newBugAiAssistButton, newBugAiMessage, newBugAiSuggestions);
+    }
+});
 
 const bugsContainer = document.querySelector("#bugs");
 
@@ -555,7 +570,7 @@ function compareBugs(first, second) {
     return bugSortDirection === "ascending" ? comparison : -comparison;
 }
 
-async function loadBugs() {
+async function loadBugs({ silent = false, feedbackSession = null } = {}) {
     const response = await authenticatedFetch(`/projects/${projectId}/bugs`);
 
     if (!response) {
@@ -565,7 +580,9 @@ async function loadBugs() {
     const data = await response.json();
 
     if (!response.ok) {
-        bugMessage.textContent = formatApiError(data.detail);
+        if (!silent && (feedbackSession === null || feedbackSession === bugFormSession)) {
+            bugMessage.textContent = formatApiError(data.detail);
+        }
         return;
     }
 
@@ -876,9 +893,11 @@ bugAssigneeInput.addEventListener("change", function () {
 showBugFormButton.addEventListener(
     "click",
     async function () {
+        ++bugFormSession;
         newBugAiAssistButton.hidden = true;
         newBugAiMessage.textContent = "";
         bugForm.hidden = false;
+        beginAiAssistSession(bugForm, "bug-", newBugAiAssistButton, newBugAiMessage, newBugAiSuggestions);
 
         showBugFormButton.hidden = true;
 
@@ -899,6 +918,8 @@ newBugAiAssistButton.addEventListener("click", function () {
 cancelBugFormButton.addEventListener(
     "click",
     function () {
+        ++bugFormSession;
+        endAiAssistSession(bugForm);
         bugForm.reset();
         updateSelectPromptStyle(bugSeverityInput);
         updateSelectPromptStyle(bugPriorityInput);
@@ -918,6 +939,11 @@ bugForm.addEventListener(
     "submit",
     async function (event) {
         event.preventDefault();
+
+        const session = bugFormSession;
+        const request = ++bugSubmitRequest;
+        const isCurrentSubmission = () => session === bugFormSession &&
+            request === bugSubmitRequest && bugForm.isConnected && !bugForm.hidden;
 
         const bug = {
             title:
@@ -988,22 +1014,28 @@ bugForm.addEventListener(
         const data = await response.json();
 
         if (response.ok) {
-            bugForm.reset();
-            updateSelectPromptStyle(bugSeverityInput);
-            updateSelectPromptStyle(bugPriorityInput);
-            updateSelectPromptStyle(bugAssigneeInput);
+            const current = isCurrentSubmission();
 
-            bugForm.hidden = true;
+            if (current) {
+                ++bugFormSession;
+                endAiAssistSession(bugForm);
+                bugForm.reset();
+                updateSelectPromptStyle(bugSeverityInput);
+                updateSelectPromptStyle(bugPriorityInput);
+                updateSelectPromptStyle(bugAssigneeInput);
+                bugForm.hidden = true;
+                showBugFormButton.hidden = false;
+                showBugMessage(
+                    `BUG-${data.id} "${data.title}" created successfully.`,
+                    "success"
+                );
+            }
 
-            showBugFormButton.hidden = false;
-
-            showBugMessage(
-                `BUG-${data.id} "${data.title}" created successfully.`,
-                "success"
-            );
-
-            await loadBugs();
-        } else {
+            // A cancelled submission may still have persisted on the server.
+            // Capture ownership after cleanup advances the session. loadBugs
+            // rechecks it when writing feedback after its asynchronous work.
+            await loadBugs({ silent: !current, feedbackSession: bugFormSession });
+        } else if (isCurrentSubmission()) {
             showBugMessage(formatApiError(data.detail), "error");
         }
     }

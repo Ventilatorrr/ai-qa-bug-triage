@@ -32,6 +32,20 @@ retries are disabled. Full REQ-023 recovery remains pending.
 
 Configured requests return `{"outcome": "suggestions", "suggestions": {"title": "..."}}`
 or `{"outcome": "no_usable_suggestions", "suggestions": {}}` after application
-validation. They never save a bug. REQ-020 review/use UI is not implemented yet;
-the current frontend does not display successful suggestion responses. Automated
-tests mock provider calls and require no real API key.
+validation. They never save a bug. New Bug and eligible Edit Bug forms display
+pending values in an `AI Suggestions` area, with current-value comparisons and
+`Use`, `Dismiss`, `Use All`, and `Dismiss All` actions. Form values change only
+when a suggestion is used; normal `Create`/`Save` actions persist them. Resolve
+all pending suggestions before requesting AI Assist again. Cancelling, leaving,
+or reloading discards pending suggestions, and late results cannot populate a
+later form session. Empty successful outcomes provide feedback and permit retry.
+
+Run the dependency-free frontend unit tests with
+`node --test tests/frontend/ai-assist.test.cjs tests/frontend/form-session.test.cjs`.
+These use DOM substitutes, including CR/LF sanitization for text inputs, and
+execute the actual page event handlers. Run `node tests/frontend/native-input-server.cjs`,
+open `http://127.0.0.1:8128/`, and choose **Run native input regressions** to verify
+the actual form markup and native controls (12 New/Edit, Use/Use All, LF/CR/CRLF
+cases). This static test server uses no application database or provider and
+does not automate complete page workflows. Backend tests mock provider calls and require no
+real API key. See traceability for the REQ-020 browser checks and remaining gaps.

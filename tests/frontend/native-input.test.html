@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>REQ-020 native input regressions</title>
+<button id="run" type="button">Run native input regressions</button>
+<pre id="result" role="status">Ready</pre>
+<div id="fixtures"></div>
+<script src="/js/ai-assist.js"></script>
+<script>
+// Serve this file alongside frontend/ on an isolated local HTTP server.
+// Import actual form markup: native value sanitization is tested without substitutes.
+document.querySelector("#run").addEventListener("click", async function test_ai_native_input_browser_review_and_apply_consistency() {
+    const result = document.querySelector("#result");
+    const fixtures = document.querySelector("#fixtures");
+    let cases = 0;
+    const check = (condition, message) => { if (!condition) throw new Error(message); };
+    try {
+        for (const [page, selector, prefix] of [
+            ["/project.html", "#bug-form", "bug-"],
+            ["/bugs.html", "#edit-bug-form", "edit-bug-"]
+        ]) {
+            const source = new DOMParser().parseFromString(await (await fetch(page)).text(), "text/html");
+            for (const action of ["Use", "Use All"]) {
+                for (const newline of ["\n", "\r", "\r\n"]) {
+                    const form = document.importNode(source.querySelector(selector), true);
+                    form.hidden = false;
+                    const button = document.createElement("button"), message = document.createElement("p"), area = document.createElement("section");
+                    fixtures.replaceChildren(form, button, message, area);
+                    const input = form.querySelector(`#${prefix}environment`);
+                    input.value = `Windows 11${newline}Chrome 152`;
+                    check(input.value === "Windows 11Chrome 152", "Native input did not strip CR/LF as expected");
+                    input.value = "Keep environment";
+                    beginAiAssistSession(form, prefix, button, message, area);
+                    await submitAiAssist(form, prefix, "/unused", button, message, async () => ({
+                        ok: true, json: async () => ({outcome: "suggestions", suggestions: {
+                            title: `Bad${newline}title`, affected_version: `1${newline}2`,
+                            environment: `Windows 11${newline}Chrome 152`, description: "Usable\ntext"
+                        }})
+                    }));
+                    const cards = [...area.querySelectorAll("article")];
+                    check(cards.length === 1 && cards[0].querySelector("h4").textContent === "Description", `${prefix}${action}: mismatched values reached review`);
+                    const reviewed = cards[0].querySelectorAll("dd")[1].textContent;
+                    [...area.querySelectorAll("button")].find(control => control.textContent === action).click();
+                    check(form.querySelector(`#${prefix}description`).value === reviewed, "Reviewed/applied value mismatch");
+                    check(input.value === "Keep environment", "Excluded suggestion changed environment");
+                    check(form.querySelector(`#${prefix}title`).value === "", "Excluded suggestion changed title");
+                    check(form.querySelector(`#${prefix}affected-version`).value === "", "Excluded suggestion changed affected version");
+                    check(!button.disabled && area.hidden, "Review did not finish normally");
+                    endAiAssistSession(form);
+                    cases++;
+                }
+            }
+        }
+        fixtures.replaceChildren();
+        result.textContent = `PASS: ${cases} native cases (New/Edit × Use/Use All × LF/CR/CRLF)`;
+    } catch (error) {
+        result.textContent = `FAIL after ${cases} cases: ${error.message}`;
+    }
+});
+</script>
