@@ -770,6 +770,55 @@ button:disabled {
     display: none;
 }
 
+.ai-suggestions {
+    margin: 20px 0;
+    padding: 16px;
+    color: var(--primary-text);
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    border: 1px solid var(--focus-border);
+    border-radius: 8px;
+    background-color: var(--input-background);
+}
+
+.ai-suggestions[hidden] {
+    display: none;
+}
+
+.ai-suggestions h3 {
+    margin: 0 0 12px;
+    color: var(--title-text);
+}
+
+.ai-suggestions > p,
+.ai-suggestion dt {
+    color: var(--secondary-text);
+}
+
+.ai-suggestion {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--surface-background);
+}
+
+.ai-suggestion h4 {
+    margin: 0 0 12px;
+}
+
+.ai-suggestion dd {
+    margin: 4px 0 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.ai-suggestion-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .equal-action-buttons .context-action-button {
     width: 72px;
 }

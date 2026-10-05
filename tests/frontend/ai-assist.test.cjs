@@ -1,19 +1,46 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const vm = require("node:vm");
+const {fixture, success, deferred} = require("./helpers/ai-fixture.cjs");
 
-function fixture(prefix) {
-    const runtime = vm.createContext({formatApiError: (detail) => detail});
-    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/ai-assist.js"), "utf8"), runtime);
-    const inputs = Object.fromEntries([
-        "title", "affected-version", "environment", "description", "steps",
-        "expected", "actual", "severity", "priority", "assignee", "fix-version"
-    ].map(suffix => [`#${prefix}${suffix}`, {value: ""}]));
-    const form = {querySelector: selector => inputs[selector]};
-    return {runtime, inputs, form};
-}
+test("test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all", async function test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        for (const action of ["Use", "Use All"]) {
+            for (const newline of ["\n", "\r", "\r\n"]) {
+                const f = fixture(prefix);
+                const input = f.inputs[`#${prefix}environment`];
+                input.value = `Windows 11${newline}Chrome 152`;
+                assert.equal(input.value, "Windows 11Chrome 152", "fixture models native text input sanitization");
+                input.value = "Keep environment";
+                await f.submit(async () => success({
+                    title: `Bad${newline}title`, affected_version: `1${newline}2`,
+                    environment: `Windows 11${newline}Chrome 152`, description: "Usable\ntext"
+                }));
+                assert.deepEqual(f.area.all("h4").map(node => node.textContent), ["Description"]);
+                const reviewed = f.card("Description").all("dd")[1].textContent;
+                f.action(action, action === "Use" ? "Description" : undefined);
+                assert.equal(f.inputs[`#${prefix}description`].value, reviewed);
+                assert.equal(input.value, "Keep environment");
+                assert.equal(f.inputs[`#${prefix}title`].value, "");
+                assert.equal(f.inputs[`#${prefix}affected-version`].value, "");
+                assert.equal(f.button.disabled, false);
+            }
+        }
+    }
+});
+
+test("test_ai_all_native_input_mismatches_allow_manual_work_and_retry", async function test_ai_all_native_input_mismatches_allow_manual_work_and_retry() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        await f.submit(async () => success({environment: "Windows\nChrome"}));
+        assert.equal(f.area.hidden, true);
+        assert.match(f.message.textContent, /No usable AI suggestions/);
+        assert.equal(f.button.disabled, false);
+        await f.submit(async () => success({environment: "Windows / Chrome"}));
+        const reviewed = f.card("Environment").all("dd")[1].textContent;
+        f.action("Use", "Environment");
+        assert.equal(f.inputs[`#${prefix}environment`].value, reviewed);
+    }
+});
 
 test("test_collect_ai_context_preserves_blank_and_unsaved_values", function test_collect_ai_context_preserves_blank_and_unsaved_values() {
     for (const prefix of ["bug-", "edit-bug-"]) {
@@ -47,10 +74,8 @@ test("test_collect_ai_context_preserves_blank_and_unsaved_values", function test
 });
 
 test("test_submit_ai_context_limits_requests_and_reports_unavailable", async function test_submit_ai_context_limits_requests_and_reports_unavailable() {
-    const {runtime, inputs, form} = fixture("edit-bug-");
+    const {runtime, inputs, form, button, message} = fixture("edit-bug-");
     inputs["#edit-bug-title"].value = "Unsaved edit";
-    const button = {disabled: false};
-    const message = {textContent: ""};
     const requests = [];
     let finish;
     const send = (url, options) => {
@@ -77,12 +102,284 @@ test("test_submit_ai_context_limits_requests_and_reports_unavailable", async fun
 });
 
 test("test_submit_ai_context_recovers_from_network_failure", async function test_submit_ai_context_recovers_from_network_failure() {
-    const {runtime, form} = fixture("bug-");
-    const button = {disabled: false};
-    const message = {textContent: ""};
+    const {runtime, form, button, message} = fixture("bug-");
     await runtime.submitAiAssist(form, "bug-", "/projects/1/ai-assist", button, message, async () => {
         throw new Error("Offline");
     });
     assert.equal(button.disabled, false);
     assert.equal(message.textContent, "Unable to request AI assistance. Please try again.");
+});
+
+test("test_ai_suggestions_review_separates_values_and_follows_form_order", async function test_ai_suggestions_review_separates_values_and_follows_form_order() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        f.inputs[`#${prefix}title`].value = "Original title";
+        await f.submit(async () => success({assignee_id: 7, actual_result: "Failure", severity: "Major", title: "<script>bad()</script>"}));
+        assert.equal(f.inputs[`#${prefix}title`].value, "Original title");
+        assert.equal(f.inputs[`#${prefix}severity`].value, "");
+        assert.equal(f.area.hidden, false);
+        assert.equal(f.area.all("h3")[0].textContent, "AI Suggestions");
+        assert.deepEqual(f.area.all("h4").map(node => node.textContent), ["Title", "Actual Result", "Severity", "Assignee"]);
+        assert.deepEqual(f.card("Title").all("dd").map(node => node.textContent), ["Original title", "<script>bad()</script>"]);
+        assert.equal(f.card("Assignee").all("dd")[1].textContent, "qa@example.com (QA Analyst)");
+        assert.deepEqual(f.card("Title").all("button").map(node => node.textContent), ["Use", "Dismiss"]);
+        assert.equal(f.card("Title").all("button")[0].attributes["aria-label"], "Use Title suggestion");
+        assert.ok(f.area.all("button").every(button => button.type === "button"));
+        assert.equal(f.area.all("script").length, 0);
+        assert.equal(f.button.disabled, true);
+        assert.equal(f.requests.length, 1);
+    }
+});
+
+test("test_ai_review_tracks_current_values_after_manual_edits", async function test_ai_review_tracks_current_values_after_manual_edits() {
+    const f = fixture("bug-");
+    await f.submit();
+    f.inputs["#bug-title"].value = "Edited while pending";
+    f.inputs["#bug-title"].dispatchEvent({type: "input", bubbles: true});
+    assert.equal(f.card("Title").all("dd")[0].textContent, "Edited while pending");
+    assert.equal(f.card("Title").all("dd")[1].textContent, "Suggested title");
+});
+
+test("test_ai_use_replaces_value_removes_pending_and_remains_editable", async function test_ai_use_replaces_value_removes_pending_and_remains_editable() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        f.inputs[`#${prefix}title`].value = "Original";
+        await f.submit(async () => success({title: "Suggested title", severity: "Major"}));
+        f.action("Use", "Title");
+        assert.equal(f.inputs[`#${prefix}title`].value, "Suggested title");
+        assert.equal(f.card("Title"), undefined);
+        assert.ok(f.card("Severity"));
+        f.inputs[`#${prefix}title`].value = "My revision";
+        assert.equal(f.inputs[`#${prefix}title`].disabled, false);
+        f.action("Use", "Severity");
+        assert.equal(f.inputs[`#${prefix}title`].value, "My revision");
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.button.disabled, false);
+        assert.equal(f.requests.length, 1);
+    }
+});
+
+test("test_ai_dismiss_preserves_form_and_excludes_field_from_use_all", async function test_ai_dismiss_preserves_form_and_excludes_field_from_use_all() {
+    const f = fixture("bug-");
+    f.inputs["#bug-title"].value = "Keep this";
+    await f.submit(async () => success({title: "Discard this", severity: "Major"}));
+    f.action("Dismiss", "Title");
+    assert.equal(f.inputs["#bug-title"].value, "Keep this");
+    assert.equal(f.card("Title"), undefined);
+    f.action("Use All");
+    assert.equal(f.inputs["#bug-title"].value, "Keep this");
+    assert.equal(f.inputs["#bug-severity"].value, "Major");
+    assert.equal(f.area.hidden, true);
+});
+
+test("test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields", async function test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        f.inputs[`#${prefix}severity`].value = "Minor";
+        f.inputs[`#${prefix}environment`].value = "Keep environment";
+        await f.submit(async () => success({title: "AI title", environment: "Dismissed", severity: "Major", assignee_id: 7}));
+        f.action("Use", "Title");
+        f.inputs[`#${prefix}title`].value = "Revised after Use";
+        f.action("Dismiss", "Environment");
+        f.action("Use All");
+        assert.equal(f.inputs[`#${prefix}title`].value, "Revised after Use");
+        assert.equal(f.inputs[`#${prefix}environment`].value, "Keep environment");
+        assert.equal(f.inputs[`#${prefix}severity`].value, "Major");
+        assert.equal(f.inputs[`#${prefix}assignee`].value, "7");
+        f.inputs[`#${prefix}severity`].value = "Moderate";
+        assert.equal(f.inputs[`#${prefix}severity`].disabled, false);
+        assert.equal(f.area.all("article").length, 0);
+        assert.equal(f.button.disabled, false);
+        assert.equal(f.requests.length, 1);
+    }
+});
+
+test("test_ai_dismiss_all_preserves_used_and_other_form_values", async function test_ai_dismiss_all_preserves_used_and_other_form_values() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        f.inputs[`#${prefix}severity`].value = "Minor";
+        await f.submit(async () => success({title: "AI title", severity: "Major"}));
+        f.action("Use", "Title");
+        f.action("Dismiss All");
+        assert.equal(f.inputs[`#${prefix}title`].value, "AI title");
+        assert.equal(f.inputs[`#${prefix}severity`].value, "Minor");
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.button.disabled, false);
+        assert.equal(f.requests.length, 1);
+    }
+});
+
+test("test_ai_repeat_request_waits_for_resolution_and_uses_latest_form", async function test_ai_repeat_request_waits_for_resolution_and_uses_latest_form() {
+    const f = fixture("edit-bug-");
+    await f.submit(async () => success({title: "Same suggestion", severity: "Major"}));
+    await f.submit();
+    assert.equal(f.requests.length, 1);
+    f.action("Dismiss", "Title");
+    await f.submit();
+    assert.equal(f.requests.length, 1);
+    f.action("Use", "Severity");
+    f.inputs["#edit-bug-title"].value = "Latest unsaved title";
+    await f.submit(async () => success({title: "Same suggestion", severity: "Minor"}));
+    assert.equal(f.requests.length, 2);
+    assert.equal(JSON.parse(f.requests[1].options.body).title, "Latest unsaved title");
+    assert.equal(JSON.parse(f.requests[1].options.body).severity, "Major");
+    assert.equal(f.card("Title").all("dd")[1].textContent, "Same suggestion");
+    assert.ok(f.card("Severity"));
+});
+
+test("test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry", async function test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        f.inputs[`#${prefix}title`].value = "Keep title";
+        await f.submit(async () => ({ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {}})}));
+        assert.match(f.message.textContent, /No usable AI suggestions/);
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.button.disabled, false);
+        assert.equal(f.inputs[`#${prefix}title`].value, "Keep title");
+        await f.submit();
+        assert.equal(f.requests.length, 2);
+        assert.ok(f.card("Title"));
+    }
+});
+
+test("test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry", async function test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry() {
+    for (const send of [
+        async () => { throw new Error("Offline"); },
+        async () => ({ok: false, json: async () => ({detail: "Safe provider failure"})}),
+        async () => ({ok: true, json: async () => { throw new Error("Bad JSON"); }}),
+        async () => ({ok: true, json: async () => ({outcome: "unexpected", suggestions: {}})}),
+        async () => success({}),
+        async () => success({title: " "}),
+        async () => success({fix_version: "0.3"}),
+        async () => success({severity: "Invalid"}),
+        async () => success({assignee_id: "7"}),
+        async () => ({ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {title: "Inconsistent"}})})
+    ]) {
+        const f = fixture("edit-bug-");
+        f.inputs["#edit-bug-title"].value = "Keep unsaved title";
+        await f.submit(send);
+        assert.match(f.message.textContent, /Unable|Safe provider failure/);
+        assert.equal(f.inputs["#edit-bug-title"].value, "Keep unsaved title");
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.button.disabled, false);
+        await f.submit();
+        assert.equal(f.requests.length, 2);
+    }
+});
+
+test("test_ai_cancel_discards_pending_and_detached_actions_cannot_apply", async function test_ai_cancel_discards_pending_and_detached_actions_cannot_apply() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        await f.submit();
+        const abandonedUse = f.card("Title").all("button")[0];
+        f.runtime.endAiAssistSession(f.form);
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.area.children.length, 0);
+        assert.equal(f.message.textContent, "");
+        f.begin();
+        abandonedUse.click();
+        assert.equal(f.inputs[`#${prefix}title`].value, "");
+        await f.submit();
+        assert.ok(f.card("Title"));
+        assert.equal(f.form.listeners.input.size, 1);
+    }
+});
+
+test("test_ai_late_success_or_error_cannot_populate_reopened_session", async function test_ai_late_success_or_error_cannot_populate_reopened_session() {
+    for (const outcome of ["success", "error", "rejection"]) {
+        const f = fixture("bug-");
+        const old = deferred();
+        const abandoned = f.submit(() => old.promise);
+        f.runtime.endAiAssistSession(f.form);
+        f.begin();
+        const newer = deferred();
+        const pending = f.submit(() => newer.promise);
+        if (outcome === "rejection") old.reject(new Error("Late failure"));
+        else old.resolve(outcome === "success" ? success({title: "Old"}) : {ok: false, json: async () => ({detail: "Late error"})});
+        await abandoned;
+        assert.equal(f.message.textContent, "Requesting AI assistance...");
+        assert.equal(f.button.disabled, true);
+        newer.resolve(success({title: "New"}));
+        await pending;
+        assert.equal(f.card("Title").all("dd")[1].textContent, "New");
+    }
+});
+
+test("test_ai_late_json_cannot_replace_later_results", async function test_ai_late_json_cannot_replace_later_results() {
+    const f = fixture("edit-bug-");
+    const json = deferred(), reading = deferred();
+    const abandoned = f.submit(async () => ({ok: true, json: () => { reading.resolve(); return json.promise; }}));
+    await reading.promise;
+    f.runtime.endAiAssistSession(f.form);
+    f.begin();
+    await f.submit(async () => success({title: "Later result"}));
+    json.resolve({outcome: "suggestions", suggestions: {title: "Earlier result"}});
+    await abandoned;
+    assert.equal(f.card("Title").all("dd")[1].textContent, "Later result");
+    assert.equal(f.button.disabled, true);
+});
+
+test("test_ai_results_do_not_populate_hidden_or_disconnected_forms", async function test_ai_results_do_not_populate_hidden_or_disconnected_forms() {
+    for (const property of ["hidden", "isConnected"]) {
+        const f = fixture("bug-");
+        const response = deferred();
+        const pending = f.submit(() => response.promise);
+        f.form[property] = property === "hidden";
+        response.resolve(success({title: "Abandoned"}));
+        await pending;
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.inputs["#bug-title"].value, "");
+    }
+});
+
+test("test_ai_sessions_are_isolated_between_new_and_edit_forms", async function test_ai_sessions_are_isolated_between_new_and_edit_forms() {
+    const newBug = fixture("bug-"), editBug = fixture("edit-bug-", newBug.runtime);
+    const response = deferred();
+    const pending = newBug.submit(() => response.promise);
+    newBug.runtime.endAiAssistSession(newBug.form);
+    await editBug.submit(async () => success({title: "Edit suggestion"}));
+    response.resolve(success({title: "New suggestion"}));
+    await pending;
+    assert.equal(newBug.area.hidden, true);
+    assert.equal(editBug.card("Title").all("dd")[1].textContent, "Edit suggestion");
+});
+
+test("test_ai_use_all_maps_every_supported_field_without_persistence", async function test_ai_use_all_maps_every_supported_field_without_persistence() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        const suggestions = {
+            title: "Title", affected_version: "0.2", environment: "Windows",
+            description: "Description", steps_to_reproduce: "1. Start\n2. Submit",
+            expected_result: "Success", actual_result: "Failure",
+            severity: "Major", priority: "High", assignee_id: 7
+        };
+        f.inputs[`#${prefix}fix-version`].value = "Keep fix version";
+        let saves = 0;
+        f.form.addEventListener("submit", () => { saves += 1; });
+        assert.equal(f.requests.length, 0);
+        await f.submit(async () => success(suggestions));
+        f.action("Use All");
+        assert.deepEqual(JSON.parse(JSON.stringify(f.runtime.collectAiAssistContext(f.form, prefix))), suggestions);
+        assert.equal(f.inputs[`#${prefix}fix-version`].value, "Keep fix version");
+        assert.equal(f.requests.length, 1);
+        assert.equal(saves, 0);
+    }
+});
+
+test("test_ai_validated_assignee_missing_from_dropdown_is_reviewable_and_usable", async function test_ai_validated_assignee_missing_from_dropdown_is_reviewable_and_usable() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        const input = f.inputs[`#${prefix}assignee`];
+        input.value = "7";
+        await f.submit(async () => success({title: "Title", assignee_id: 8}));
+        assert.equal(input.value, "7");
+        assert.equal(input.options.length, 2);
+        assert.equal(f.card("Assignee").all("dd")[1].textContent, "User 8");
+        f.action("Use All");
+        assert.equal(input.value, "8");
+        assert.equal(input.options[2].value, "8");
+        assert.equal(input.options[2].textContent, "User 8");
+        assert.equal(f.inputs[`#${prefix}title`].value, "Title");
+        assert.equal(f.requests.length, 1);
+    }
 });
