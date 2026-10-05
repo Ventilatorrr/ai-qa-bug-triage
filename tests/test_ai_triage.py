@@ -142,11 +142,14 @@ def test_ai_triage_unconfigured_requests_keep_503_without_provider_work(
 @pytest.mark.parametrize("raw", [{"suggestions": []}, {"suggestions": [
     {"field": "title", "value": " "}, {"field": "priority", "value": "Invalid"},
 ]}])
-def test_ai_triage_returns_distinct_no_usable_suggestions(test_client, ai_project, blank_form, offline_provider, raw):
+@pytest.mark.parametrize("edit", [False, True])
+def test_ai_triage_returns_distinct_no_usable_suggestions(test_client, ai_project, blank_form, offline_provider, raw, edit):
     offline_provider["raw"] = raw
-    response = test_client.post(request_url(ai_project, False), headers=headers(ai_project[0]), json=blank_form)
+    before = persisted_state(test_client, ai_project)
+    response = test_client.post(request_url(ai_project, edit), headers=headers(ai_project[0]), json=blank_form)
     assert response.status_code == 200
     assert response.json() == {"outcome": "no_usable_suggestions", "suggestions": {}}
+    assert persisted_state(test_client, ai_project) == before
 
 
 def test_ai_triage_revalidates_current_member_eligibility(
@@ -306,8 +309,9 @@ def test_ai_triage_instruction_like_content_and_output_cannot_perform_actions(
 
 
 @pytest.mark.parametrize("failure", ["transport", "malformed", "client"])
+@pytest.mark.parametrize("edit", [False, True])
 def test_ai_triage_failures_are_safe_errors_without_persistence(
-    test_client, ai_project, blank_form, offline_provider, monkeypatch, caplog, failure,
+    test_client, ai_project, blank_form, offline_provider, monkeypatch, caplog, failure, edit,
 ):
     from app import ai_triage
 
@@ -322,7 +326,7 @@ def test_ai_triage_failures_are_safe_errors_without_persistence(
 
         monkeypatch.setattr(ai_triage, "create_openai_client", fail_client)
     before = persisted_state(test_client, ai_project)
-    response = test_client.post(request_url(ai_project, True), headers=headers(ai_project[0]), json=blank_form)
+    response = test_client.post(request_url(ai_project, edit), headers=headers(ai_project[0]), json=blank_form)
     assert response.status_code == 502
     expected = ("AI assistance returned an invalid suggestion response. Please try again."
                 if failure == "malformed" else "AI assistance could not generate suggestions. Please try again.")

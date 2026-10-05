@@ -87,6 +87,57 @@ async function check_late_success_preserves_reopened_form_and_ai(edit) {
 }
 
 
+async function check_manual_save_after_ai_failure_or_no_usable_outcome(edit) {
+    for (const outcome of ["http_failure", "network_failure", "no_usable"]) {
+        const f = pageFixture(edit), writes = [];
+        await f.open();
+        f.inputs[`#${f.prefix}title`].value = "Unsaved before AI";
+        f.inputs[`#${f.prefix}environment`].value = "Keep environment";
+        f.inputs[`#${f.prefix}description`].value = "Keep\nmanual description";
+        const before = Object.fromEntries(Object.entries(f.inputs).map(([id, input]) => [id, input.value]));
+        f.send = async (url, options) => {
+            writes.push({url, method: options.method, body: JSON.parse(options.body)});
+            return {ok: true, json: async () => ({...f.stored, title: "Saved manually after AI"})};
+        };
+        await f.submit(async () => {
+            if (outcome === "network_failure") throw new Error("Offline");
+            if (outcome === "http_failure") return {ok: false, json: async () => ({detail: "Safe AI failure"})};
+            return {ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {}})};
+        });
+        assert.equal(writes.length, 0, "AI completion must not invoke the page's Create/Save path");
+        assert.deepEqual(Object.fromEntries(Object.entries(f.inputs).map(([id, input]) => [id, input.value])), before);
+        assert.equal(f.form.hidden, false);
+        assert.equal(f.openButton.hidden, true);
+        assert.equal(f.area.hidden, true);
+        assert.equal(f.button.disabled, false);
+        assert.match(f.message.textContent, outcome === "no_usable" ? /No usable/ : /failure|Unable/);
+        if (edit) assert.equal(f.saveButton.disabled, false);
+
+        f.inputs[`#${f.prefix}title`].value = "Saved manually after AI";
+        f.inputs[`#${f.prefix}environment`].value = "Manually revised environment";
+        await f.save();
+        assert.equal(writes.length, 1);
+        assert.equal(writes[0].method, edit ? "PATCH" : "POST");
+        assert.equal(writes[0].url, edit ? "/projects/1/bugs/2" : "/projects/1/bugs");
+        assert.equal(writes[0].body.title, "Saved manually after AI");
+        assert.equal(writes[0].body.environment, "Manually revised environment");
+        assert.equal(writes[0].body.description, "Keep\nmanual description");
+        assert.equal(f.form.hidden, true);
+        assert.equal(f.openButton.hidden, false);
+        assert.ok(f.messages.some(([text]) => /successfully/.test(text)));
+        if (edit) assert.equal(f.saveButton.disabled, false);
+    }
+}
+
+test("test_new_create_after_ai_failure_or_no_usable_outcome", async function test_new_create_after_ai_failure_or_no_usable_outcome() {
+    await check_manual_save_after_ai_failure_or_no_usable_outcome(false);
+});
+
+test("test_edit_save_after_ai_failure_or_no_usable_outcome", async function test_edit_save_after_ai_failure_or_no_usable_outcome() {
+    await check_manual_save_after_ai_failure_or_no_usable_outcome(true);
+});
+
+
 async function check_current_success_closes_form_and_discards_ai(edit) {
     const f = pageFixture(edit);
     await f.open();

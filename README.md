@@ -28,7 +28,9 @@ blank key retains HTTP 503: `AI assistance is not configured yet.` Configuration
 is checked per request; no provider-switching variable or dotenv loader is used.
 Keep keys outside repository files. Provider failures return a fixed HTTP 502
 message without SDK details; clients are closed after use and automatic SDK
-retries are disabled. Full REQ-023 recovery remains pending.
+retries are disabled. Failed requests and outcomes with no usable suggestions
+preserve form values and permit manual Create/Save and explicit AI Assist retry.
+See traceability for REQ-023 evidence and remaining verification limits.
 
 Configured requests return `{"outcome": "suggestions", "suggestions": {"title": "..."}}`
 or `{"outcome": "no_usable_suggestions", "suggestions": {}}` after application
