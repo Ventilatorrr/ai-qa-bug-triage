@@ -2,6 +2,39 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {fixture, success, deferred} = require("./helpers/ai-fixture.cjs");
 
+function fillUnsavedForm(f, prefix) {
+    const values = {
+        title: "Keep unsaved title", "affected-version": "0.4", environment: "Keep environment",
+        description: "Keep\nunsaved description", steps: "1. Keep\n2. Retry", expected: "Keep expected",
+        actual: "Keep actual", severity: "Major", priority: "High", assignee: "7", "fix-version": "0.5"
+    };
+    for (const [suffix, value] of Object.entries(values)) f.inputs[`#${prefix}${suffix}`].value = value;
+    return Object.fromEntries(Object.entries(f.inputs).map(([id, input]) => [id, input.value]));
+}
+
+function assertFormValues(f, expected) {
+    assert.deepEqual(Object.fromEntries(Object.entries(f.inputs).map(([id, input]) => [id, input.value])), expected);
+}
+
+async function assertRetryUsesEditedValues(f, prefix) {
+    f.inputs[`#${prefix}title`].value = "Manually revised title";
+    f.inputs[`#${prefix}environment`].value = "Manually revised environment";
+    f.inputs[`#${prefix}description`].value = "Manually revised\ncontent";
+    const latest = JSON.parse(JSON.stringify(f.runtime.collectAiAssistContext(f.form, prefix)));
+    await f.submit(async () => success({title: "Fresh suggestion"}));
+    assert.equal(f.requests.length, 2);
+    const sent = JSON.parse(f.requests[1].options.body);
+    assert.deepEqual(sent, latest);
+    assert.equal(sent.title, "Manually revised title");
+    assert.equal(sent.environment, "Manually revised environment");
+    assert.equal(sent.description, "Manually revised\ncontent");
+    assert.equal(f.card("Title").all("dd")[0].textContent, "Manually revised title");
+    assert.equal(f.card("Title").all("dd")[1].textContent, "Fresh suggestion");
+    assert.equal(f.inputs[`#${prefix}title`].value, "Manually revised title");
+    assert.equal(f.button.disabled, true);
+    assert.match(f.message.textContent, /ready for review/);
+}
+
 test("test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all", async function test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         for (const action of ["Use", "Use All"]) {
@@ -230,21 +263,26 @@ test("test_ai_repeat_request_waits_for_resolution_and_uses_latest_form", async f
 test("test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry", async function test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
-        f.inputs[`#${prefix}title`].value = "Keep title";
+        const original = fillUnsavedForm(f, prefix);
+        let submits = 0;
+        f.form.addEventListener("submit", () => { submits++; });
         await f.submit(async () => ({ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {}})}));
         assert.match(f.message.textContent, /No usable AI suggestions/);
         assert.equal(f.area.hidden, true);
         assert.equal(f.button.disabled, false);
-        assert.equal(f.inputs[`#${prefix}title`].value, "Keep title");
-        await f.submit();
-        assert.equal(f.requests.length, 2);
-        assert.ok(f.card("Title"));
+        assertFormValues(f, original);
+        assert.equal(f.requests.length, 1);
+        assert.equal(submits, 0);
+        await assertRetryUsesEditedValues(f, prefix);
+        assert.equal(submits, 0);
     }
 });
 
 test("test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry", async function test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry() {
-    for (const send of [
+    const failures = [
         async () => { throw new Error("Offline"); },
+        async () => ({ok: false, status: 503, json: async () => ({detail: "AI assistance is not configured yet."})}),
+        async () => ({ok: false, status: 502, json: async () => ({detail: "AI assistance could not generate suggestions. Please try again."})}),
         async () => ({ok: false, json: async () => ({detail: "Safe provider failure"})}),
         async () => ({ok: true, json: async () => { throw new Error("Bad JSON"); }}),
         async () => ({ok: true, json: async () => ({outcome: "unexpected", suggestions: {}})}),
@@ -254,16 +292,31 @@ test("test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry", asyn
         async () => success({severity: "Invalid"}),
         async () => success({assignee_id: "7"}),
         async () => ({ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {title: "Inconsistent"}})})
-    ]) {
-        const f = fixture("edit-bug-");
-        f.inputs["#edit-bug-title"].value = "Keep unsaved title";
-        await f.submit(send);
-        assert.match(f.message.textContent, /Unable|Safe provider failure/);
-        assert.equal(f.inputs["#edit-bug-title"].value, "Keep unsaved title");
-        assert.equal(f.area.hidden, true);
-        assert.equal(f.button.disabled, false);
-        await f.submit();
-        assert.equal(f.requests.length, 2);
+    ];
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        for (const send of failures) {
+            const f = fixture(prefix);
+            const original = fillUnsavedForm(f, prefix);
+            let submits = 0;
+            f.form.addEventListener("submit", () => { submits++; });
+            const waiting = deferred();
+            const pending = f.submit(() => waiting.promise);
+            assert.equal(f.button.disabled, true);
+            assert.equal(f.message.textContent, "Requesting AI assistance...");
+            // Manual edits made while waiting must also survive completion.
+            f.inputs[`#${prefix}environment`].value = "Edited while waiting";
+            original[`#${prefix}environment`] = "Edited while waiting";
+            waiting.resolve(send());
+            await pending;
+            assert.match(f.message.textContent, /Unable|Safe provider failure|not configured|could not generate/);
+            assertFormValues(f, original);
+            assert.equal(f.area.hidden, true);
+            assert.equal(f.button.disabled, false);
+            assert.equal(f.requests.length, 1);
+            assert.equal(submits, 0);
+            await assertRetryUsesEditedValues(f, prefix);
+            assert.equal(submits, 0);
+        }
     }
 });
 
@@ -286,37 +339,47 @@ test("test_ai_cancel_discards_pending_and_detached_actions_cannot_apply", async 
 });
 
 test("test_ai_late_success_or_error_cannot_populate_reopened_session", async function test_ai_late_success_or_error_cannot_populate_reopened_session() {
-    for (const outcome of ["success", "error", "rejection"]) {
-        const f = fixture("bug-");
-        const old = deferred();
-        const abandoned = f.submit(() => old.promise);
-        f.runtime.endAiAssistSession(f.form);
-        f.begin();
-        const newer = deferred();
-        const pending = f.submit(() => newer.promise);
-        if (outcome === "rejection") old.reject(new Error("Late failure"));
-        else old.resolve(outcome === "success" ? success({title: "Old"}) : {ok: false, json: async () => ({detail: "Late error"})});
-        await abandoned;
-        assert.equal(f.message.textContent, "Requesting AI assistance...");
-        assert.equal(f.button.disabled, true);
-        newer.resolve(success({title: "New"}));
-        await pending;
-        assert.equal(f.card("Title").all("dd")[1].textContent, "New");
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        for (const outcome of ["success", "error", "rejection"]) {
+            const f = fixture(prefix);
+            const old = deferred();
+            const abandoned = f.submit(() => old.promise);
+            f.runtime.endAiAssistSession(f.form);
+            f.begin();
+            const newer = deferred();
+            const pending = f.submit(() => newer.promise);
+            if (outcome === "rejection") old.reject(new Error("Late failure"));
+            else old.resolve(outcome === "success" ? success({title: "Old"}) : {ok: false, json: async () => ({detail: "Late error"})});
+            await abandoned;
+            assert.equal(f.message.textContent, "Requesting AI assistance...");
+            assert.equal(f.button.disabled, true);
+            newer.resolve(success({title: "New"}));
+            await pending;
+            assert.equal(f.card("Title").all("dd")[1].textContent, "New");
+        }
     }
 });
 
 test("test_ai_late_json_cannot_replace_later_results", async function test_ai_late_json_cannot_replace_later_results() {
-    const f = fixture("edit-bug-");
-    const json = deferred(), reading = deferred();
-    const abandoned = f.submit(async () => ({ok: true, json: () => { reading.resolve(); return json.promise; }}));
-    await reading.promise;
-    f.runtime.endAiAssistSession(f.form);
-    f.begin();
-    await f.submit(async () => success({title: "Later result"}));
-    json.resolve({outcome: "suggestions", suggestions: {title: "Earlier result"}});
-    await abandoned;
-    assert.equal(f.card("Title").all("dd")[1].textContent, "Later result");
-    assert.equal(f.button.disabled, true);
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        for (const outcome of ["success", "error", "rejection"]) {
+            const f = fixture(prefix);
+            const json = deferred(), reading = deferred();
+            const abandoned = f.submit(async () => ({ok: outcome !== "error", json: () => { reading.resolve(); return json.promise; }}));
+            await reading.promise;
+            f.runtime.endAiAssistSession(f.form);
+            f.begin();
+            await f.submit(async () => success({title: "Later result"}));
+            if (outcome === "rejection") json.reject(new Error("Earlier JSON failure"));
+            else json.resolve(outcome === "success"
+                ? {outcome: "suggestions", suggestions: {title: "Earlier result"}}
+                : {detail: "Earlier error"});
+            await abandoned;
+            assert.equal(f.card("Title").all("dd")[1].textContent, "Later result");
+            assert.equal(f.button.disabled, true);
+            assert.match(f.message.textContent, /ready for review/);
+        }
+    }
 });
 
 test("test_ai_results_do_not_populate_hidden_or_disconnected_forms", async function test_ai_results_do_not_populate_hidden_or_disconnected_forms() {
