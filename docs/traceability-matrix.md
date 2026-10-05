@@ -705,6 +705,89 @@ Verification on 5 October 2026, run serially against the disposable test databas
 No full pytest run was needed for these test/documentation changes. Provider calls
 were mocked; no real provider, application database, or dogfooding records were used.
 
+## REQ-023 — AI Failure Handling
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_assist_preserves_current_form_without_saving` | API / Unconfigured Service | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_triage_unconfigured_requests_keep_503_without_provider_work` | API / Mocked Provider Integration | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_triage_failures_are_safe_errors_without_persistence` | API / Mocked Provider Integration | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_triage_timeout_is_safe_without_retries_or_persistence` | API / Mocked SDK Transport Timeout | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_openai_rejects_uncompleted_output` | Unit / Provider Adapter | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_openai_rejects_refusal_instead_of_returning_suggestions` | Unit / Provider Adapter | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_openai_rejects_missing_or_unparseable_json` | Unit / Provider Adapter | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_openai_propagates_request_failure_without_fake_suggestions` | Unit / Provider Adapter | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_response_propagates_malformed_response` | Unit / Response Processing | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_submit_ai_context_limits_requests_and_reports_unavailable` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_submit_ai_context_recovers_from_network_failure` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_late_success_or_error_cannot_populate_reopened_session` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_late_json_cannot_replace_later_results` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | New/Edit safe AI failure feedback and preserved editable values (REQ-020 smoke evidence above, 5 October 2026) | Manual / Browser Smoke | Covered |
+| REQ-023 | AC-023.2 — Continue Without AI | `test_ai_triage_returns_distinct_no_usable_suggestions` | API / Mocked Provider Integration | Covered |
+| REQ-023 | AC-023.2 — Continue Without AI | `test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.2 — Continue Without AI | `test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-023 | AC-023.2 — Continue Without AI | `test_new_create_after_ai_failure_or_no_usable_outcome` | Unit (actual page handlers / DOM substitutes) | Covered |
+| REQ-023 | AC-023.2 — Continue Without AI | `test_edit_save_after_ai_failure_or_no_usable_outcome` | Unit (actual page handlers / DOM substitutes) | Covered |
+| REQ-023 | AC-023.2 — Continue Without AI | New/Edit empty success, safe failure, retry, and ordinary editing (REQ-020 smoke evidence above, 5 October 2026) | Manual / Browser Smoke | Covered |
+
+### Audit and verification
+
+REQ-023 behavior was already implemented across the AI route/service and shared
+review helper. The audit found test and traceability gaps, with no production
+defect or production change. Earlier slice notes describing REQ-023 as deferred
+record those checkpoints; this section records the current evidence.
+
+AC-023.1: missing configuration returns safe HTTP 503. SDK transport/client
+failures, including provider timeouts, return fixed HTTP 502 feedback. Malformed
+provider output likewise returns a safe error rather than partial persistence or
+an empty-success substitute. Existing API tests inspect unchanged project,
+membership, and bug data; the transport/malformed/client cases now cover both
+New and Edit. The service's timeout remains 60 seconds with SDK retries disabled.
+
+In the frontend, failed HTTP responses, request rejection, JSON failure, and
+unprocessable responses use error feedback and current-request-only cleanup.
+The strengthened failure test covers both forms, all eleven editable fixture
+values (including Fix Version), and an additional manual edit made while waiting.
+It verifies loading feedback/button state, unchanged values, no form submission,
+no extra request, and explicit retry. Existing stale response/JSON tests now cover
+both forms with errors and rejections as well as success; an abandoned failure
+cannot overwrite newer loading feedback or pending suggestions.
+
+Timeout evidence is deliberately split: the backend test injects a read timeout
+through the real SDK's mocked HTTP transport and verifies safe feedback, one
+attempt, client cleanup, and no persistence. Frontend tests separately verify
+that the resulting safe HTTP failure ends loading and permits retry. This is
+not a browser timeout test, a wall-clock 60-second test, or an additional frontend
+timeout timer. No such new mechanism was needed for the defined requirement.
+
+AC-023.2: both failure and no-usable outcomes preserve values, re-enable AI Assist,
+and permit manual edits. The two existing helper tests now explicitly retry with
+new title/environment/description values and inspect the submitted snapshot and
+fresh review state. Two new page-handler tests cover New Create and Edit Save
+after HTTP failure, network rejection, or no usable suggestions. They verify no
+implicit Create/Save, then normal manually revised values reach exactly one
+explicit POST/PATCH and successful cleanup still works. Persistence calls in
+these Node tests are mocked: they prove form transport/control flow, not database
+writes. Backend data-safety assertions and the previously recorded REQ-020
+browser/database smoke remain distinct evidence.
+
+Both ACs are Covered for their defined failure/recovery behavior using direct
+API/unit coverage and reused browser smoke. No new browser run, full browser
+automation, real-provider evaluation, or Increment 3 completion is claimed.
+Authentication loss retains the existing login redirect and normal authorization
+rules; AI recovery does not bypass them. No error wording or UI design changed.
+
+Verification on 5 October 2026:
+
+- `.\.venv\Scripts\python.exe -m pytest tests/test_ai_assist.py tests/test_ai_triage.py tests/test_ai_openai.py tests/test_ai_response.py tests/test_ai_suggestions.py -q` — **222 passed in 71.36 seconds**, serially against the disposable database.
+- `node --test tests/frontend/ai-assist.test.cjs tests/frontend/form-session.test.cjs` — **36 passed, 0 failures** (21 AI-helper, 15 form/page-session tests).
+- `node --check tests/frontend/ai-assist.test.cjs`, `node --check tests/frontend/form-session.test.cjs`, and `.\.venv\Scripts\python.exe -m py_compile tests/test_ai_triage.py` — passed.
+- `git diff --check` — passed.
+
+Only tests/documentation changed, so no full pytest run was needed. No real
+application records, migrations, or live provider calls were used.
+
 ## Coverage limitations from the pre-commit review
 
 - User Stories remain in requirements.md. The previously noted missing REQ-005 user-story heading remains a specification follow-up; the matrix no longer contains US references, and no new ID is introduced here.
