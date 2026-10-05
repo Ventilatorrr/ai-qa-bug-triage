@@ -484,7 +484,7 @@ Manual/browser smoke verification used the Codex in-app browser, an isolated loc
 
 All REQ-020 ACs remain Partial for coverage: there is no committed automated browser suite, desktop/cross-browser verification and a full accessibility review remain outstanding, and the browser's cached-page restoration branch was not independently forced. Browser smoke evidence is separate from JavaScript automation. Real-provider factual quality and full REQ-023 recovery remain outside this slice. This does not establish Increment 3 completion under the Definition of Done.
 
-The same panel implements AC-021.1 — Identify Pending AI Suggestions: the labelled AI Suggestions area and separation are unit-tested and browser-smoke checked above. This records the necessary REQ-020 presentation overlap without claiming completion of a separate increment or expanding backend AI scope.
+The same panel implements AC-021.1 — Identify Pending AI Suggestions. Its dedicated REQ-021 traceability section below reuses this implementation and evidence without expanding backend AI scope.
 
 ## REQ-020 logged defect corrections — 5 October 2026
 
@@ -573,6 +573,42 @@ the native assertions cover this defect, not complete automated browser workflow
 Cross-browser, full accessibility, and independently forced cached-page restoration
 verification remain outstanding. No requirements, API contract, provider, or UI
 design decisions changed. This slice does not establish Increment 3 completion.
+
+## REQ-021 — Identify AI Suggestions
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_suggestions_review_separates_values_and_follows_form_order` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_replaces_value_removes_pending_and_remains_editable` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_all_maps_every_supported_field_without_persistence` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | New/Edit labelled review area, separate current/suggested values, and individual/bulk use (REQ-020 smoke evidence above, 5 October 2026) | Manual / Browser Smoke | Covered |
+
+REQ-021 was already implemented by the merged REQ-020 work. Both page forms
+provide a separate suggestion section; the shared helper renders the exact heading
+`AI Suggestions`, associates the section with that heading, and keeps pending
+values in review cards and session state. Rendering does not assign suggestions
+to editable controls. Only Use or Use All transfers them into ordinary fields;
+used or dismissed entries leave pending review. Suggested text uses `textContent`.
+No production change or duplicate automated test was needed for REQ-021.
+
+The existing review test directly asserts the visible area's exact heading,
+unchanged form values, and separate current/suggested displays in both form modes.
+The Use and bulk tests verify transfer into editable fields and pending removal.
+The ten-field bulk test also checks that review/use invokes no form submission or
+additional request in its fixture. These are DOM-substitute assertions, not proof
+of database persistence or complete browser workflows. Source inspection confirms
+that review rendering and actions contain no persistence call. The separately
+recorded REQ-020 browser smoke provides the relevant presentation evidence; no
+new browser run was performed for this documentation-only audit.
+
+Verification on 5 October 2026:
+`node --test tests/frontend/ai-assist.test.cjs tests/frontend/form-session.test.cjs`
+passed **34 tests (21 AI-helper, 13 form/page-session), with 0 failures**.
+AC-021.1 is Covered for its two narrow behaviors using direct automated evidence,
+source inspection, and the existing browser smoke. Broader browser automation,
+cross-browser/accessibility work, and Increment 3 completion remain separate;
+this status does not change REQ-020 coverage or claim the increment is done.
 
 ## Coverage limitations from the pre-commit review
 
