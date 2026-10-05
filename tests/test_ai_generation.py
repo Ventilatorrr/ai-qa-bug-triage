@@ -135,13 +135,19 @@ def test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions(ge
 
 
 def test_ai_generation_does_not_introduce_account_information_or_secrets(generation_context, monkeypatch):
-    monkeypatch.setenv("AI_API_KEY", "test-secret-not-for-context")
-    monkeypatch.setenv("ACCESS_TOKEN", "test-token-not-for-context")
+    secrets = {
+        "AI_API_KEY": "test-secret-not-for-context",
+        "ACCESS_TOKEN": "test-token-not-for-context",
+        "OPENAI_API_KEY": "test-provider-secret-not-for-context",
+        "JWT_SECRET_KEY": "test-signing-secret-not-for-context",
+    }
+    for name, value in secrets.items():
+        monkeypatch.setenv(name, value)
     result = build_generation_input(generation_context)
     assert set(result) == {"instructions", "context", "output_contract"}
     assert set(result["context"]["current_form"]) == set(AiAssistRequest.model_fields)
     assert all(set(member) == {"user_id", "email", "role"} for member in result["context"]["eligible_assignees"])
     assert all(set(bug) == {"id"} | set(AiAssistRequest.model_fields) for bug in result["context"]["recent_bugs"])
     serialized = json.dumps(result)
-    assert "test-secret-not-for-context" not in serialized
-    assert "test-token-not-for-context" not in serialized
+    for value in secrets.values():
+        assert value not in serialized
