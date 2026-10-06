@@ -550,6 +550,8 @@ As a project member with the appropriate permissions, I want bugs to progress th
 
 - An assigned QA Analyst or Project Owner can select `Passed` or `Failed` as the testing outcome.
 - When testing is `Passed`, the bug status changes to `Closed` and the resolution is automatically set to `Fixed`.
+- As part of the same `Passed` action, the user may optionally specify the released Fix Version. Fix Version is not required and may be left blank if the fix is unreleased.
+- Existing Fix Version entry during bug creation and editing remains available.
 - When testing is `Failed`, the bug status changes to `Development`.
 - When testing is `Failed`, a Developer who is a member of the project must be assigned to the bug.
 - The assigned Developer becomes the bug's assignee when testing fails.

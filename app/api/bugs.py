@@ -903,6 +903,17 @@ def update_bug_status(
                 detail="Invalid bug status transition."
             )
 
+        fix_version_supplied = "fix_version" in status_update.model_fields_set
+        if fix_version_supplied and not (
+            current_status == "Testing"
+            and requested_status == "Closed"
+            and testing_outcome == "Passed"
+        ):
+            raise HTTPException(
+                status_code=422,
+                detail="Fix Version can only be set when testing is Passed."
+            )
+
         now = datetime.now(timezone.utc).isoformat()
 
         conn.execute(
@@ -912,6 +923,7 @@ def update_bug_status(
                 status = ?,
                 assignee_id = ?,
                 resolution = ?,
+                fix_version = CASE WHEN ? THEN ? ELSE fix_version END,
                 updated_at = ?
             WHERE id = ? AND project_id = ?
             """,
@@ -919,6 +931,8 @@ def update_bug_status(
                 requested_status,
                 new_assignee_id,
                 new_resolution,
+                fix_version_supplied,
+                status_update.fix_version,
                 now,
                 bug_id,
                 project_id

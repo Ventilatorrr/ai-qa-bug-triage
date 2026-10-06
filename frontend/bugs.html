@@ -301,7 +301,15 @@
 
                     <div id="lifecycle-testing-actions" class="bug-lifecycle-groups" hidden>
                         <div class="bug-lifecycle-control-group">
-                            <button id="lifecycle-pass-button" class="bug-lifecycle-button" type="button">Passed</button>
+                            <div id="lifecycle-pass-fix-version-field" class="bug-lifecycle-field">
+                                <input
+                                    id="lifecycle-pass-fix-version"
+                                    class="form-input"
+                                    type="text"
+                                    placeholder="Fix Version (optional)"
+                                    aria-label="Fix Version (optional)">
+                            </div>
+                            <button id="lifecycle-pass-button" class="bug-lifecycle-button" type="button">Pass</button>
                         </div>
 
                         <div class="bug-lifecycle-control-group">
@@ -314,7 +322,7 @@
                                 </select>
                             </div>
 
-                            <button id="lifecycle-fail-button" class="bug-lifecycle-button" type="button">Failed</button>
+                            <button id="lifecycle-fail-button" class="bug-lifecycle-button" type="button">Fail</button>
                         </div>
                     </div>
 

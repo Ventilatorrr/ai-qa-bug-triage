@@ -18,6 +18,7 @@ const lifecycleQaAssignee = document.querySelector("#lifecycle-qa-assignee");
 const lifecycleActionButton = document.querySelector("#lifecycle-action-button");
 const lifecycleTestingActions = document.querySelector("#lifecycle-testing-actions");
 const lifecyclePassButton = document.querySelector("#lifecycle-pass-button");
+const lifecyclePassFixVersion = document.querySelector("#lifecycle-pass-fix-version");
 const lifecycleDeveloperAssignee = document.querySelector("#lifecycle-developer-assignee");
 const lifecycleFailButton = document.querySelector("#lifecycle-fail-button");
 const lifecycleCloseActions = document.querySelector("#lifecycle-close-actions");
@@ -231,6 +232,8 @@ function getProjectMember(userId) {
 }
 
 function resetLifecycleControls() {
+    lifecyclePassFixVersion.value = "";
+    lifecyclePassFixVersion.disabled = true;
     lifecycleActions.hidden = true;
     lifecycleStandardActions.hidden = true;
     lifecycleTestingActions.hidden = true;
@@ -246,8 +249,8 @@ function resetLifecycleControls() {
     lifecycleFailButton.disabled = true;
     lifecycleCloseButton.disabled = true;
     lifecycleActionButton.textContent = "";
-    lifecyclePassButton.textContent = "Passed";
-    lifecycleFailButton.textContent = "Failed";
+    lifecyclePassButton.textContent = "Pass";
+    lifecycleFailButton.textContent = "Fail";
     lifecycleCloseButton.textContent = "Close";
     lifecycleGuidance.textContent = "";
     lifecycleTargetStatus = null;
@@ -459,6 +462,8 @@ function renderLifecycleControls() {
         } else {
             testingOutcomeAllowed = true;
             lifecyclePassButton.disabled = false;
+            lifecyclePassFixVersion.disabled = false;
+            lifecyclePassFixVersion.value = currentBug.fix_version || "";
 
             if (developerCount > 0) {
                 lifecycleDeveloperAssignee.disabled = false;
@@ -819,6 +824,7 @@ lifecycleQaAssignee.addEventListener("change", function() {
 });
 
 function disableLifecycleControls() {
+    lifecyclePassFixVersion.disabled = true;
     lifecycleActionButton.disabled = true;
     lifecyclePassButton.disabled = true;
     lifecycleFailButton.disabled = true;
@@ -1028,7 +1034,8 @@ lifecyclePassButton.addEventListener("click", async function() {
     await submitLifecycleTransition(
         {
             status: "Closed",
-            testing_outcome: "Passed"
+            testing_outcome: "Passed",
+            fix_version: lifecyclePassFixVersion.value || null
         },
         "Testing passed. Bug closed as Fixed.",
         lifecyclePassButton
