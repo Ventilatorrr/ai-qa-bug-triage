@@ -466,6 +466,8 @@ The slice notes below describe the implementation and evidence at each earlier c
 | REQ-019 | AC — | `test_ai_triage_client_factory_disables_retries_without_reading_credentials` | Unit / Configuration | Partial |
 | REQ-019 | AC — | `test_ai_triage_timeout_is_safe_without_retries_or_persistence` | API / Mocked Provider Integration | Partial |
 
+**Technical coverage note:** `test_ai_triage_client_factory_disables_retries_without_reading_credentials` already has an exact-name entry above. It supports REQ-019's provider integration as configuration evidence: the factory passes the supplied key, a 60-second timeout, and disabled SDK retries to the constructor. No existing AC specifies those constructor settings, so the AC remains unassigned. This unit test does not establish end-to-end timeout handling or real-provider behavior.
+
 The first REQ-019 slice adds a pure validator in `app/ai_suggestions.py`. Its internal application contract is `{"suggestions": [{"field": "title", "value": "Suggested title"}]}`, using existing bug field keys (including `assignee_id`). The envelope contains only `suggestions`; each entry has a string `field` and an optional `value`, with no extra entry keys. Uninterpretable structures raise `MalformedSuggestionResponse`. Unsupported fields and invalid values are excluded independently. Missing/null/blank values are omitted, not clearing instructions. Nonblank text is preserved exactly; identical duplicates collapse, while conflicting nonblank values exclude that field. Providers must preserve duplicate entries before validation.
 
 The result contains only usable field/value pairs and an outcome of `suggestions` or `no_usable_suggestions`. The caller must supply the IDs of current same-project members who are eligible for assignment under the existing assignment rules. QA Analysts and Developers are assignable, while Project Owners are not. An API-backed context test verifies this eligibility, excludes members from other projects, and rechecks eligibility after member removal. The validator itself performs no database access or persistence.
@@ -842,12 +844,27 @@ Verification on 5 October 2026:
 Only tests/documentation changed, so no full pytest run was needed. No real
 application records, migrations, or live provider calls were used.
 
+## Technical and infrastructure evidence
+
+These tests protect implementation quality without a dedicated requirement or AC in `docs/requirements.md`. No new requirement is introduced, and the rows do not establish completion of any feature AC or increment.
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| — | AC — | `test_importing_application_does_not_create_database` | Subprocess / Database Lifecycle | Covered |
+| — | AC — | `test_application_lifespan_initializes_schema_before_requests` | Subprocess / API / Database Lifecycle | Covered |
+| — | AC — | `test_application_version_is_shared_by_openapi_and_endpoint` | API / Version Metadata | Covered |
+| — | AC — | `test_about_page_includes_application_version_loader` | API / Static HTML | Partial |
+
+The database-lifecycle tests verify that importing the application leaves its disposable database absent and that entering the application lifespan initializes the schema before a registration request. They are infrastructure evidence, not complete registration coverage.
+
+The version tests support the approved application-versioning convention (`APP_VERSION` as the source of truth), which has no dedicated requirement/AC. The API test verifies consistency between the version constant, OpenAPI metadata, and `/version`. The About-page test verifies only the HTML placeholder and script inclusion; browser execution and the displayed version are not verified by that test, so its evidence remains Partial.
+
 ## Coverage limitations from the pre-commit review
 
 - User Stories remain in requirements.md. The previously noted missing REQ-005 user-story heading remains a specification follow-up; the matrix no longer contains US references, and no new ID is introduced here.
 - Registration feedback, project-name display, member management, bug creation/list/detail/editing, and reassignment remain Partial where required browser verification is outstanding. Existing Manual entries record earlier manual verification, not automated UI coverage. AC-009.5 also lacks an explicit test of alphabetical ordering within a role.
 - AC-003.3 is Partial: invalid-token coverage exists, but dedicated expired-token coverage is missing.
-- Three function names are duplicated in test_projects.py: `test_non_owner_cannot_manage_project_members`, `test_non_owner_cannot_edit_project`, and `test_non_owner_cannot_delete_project`. Python collects only the last definition of each. The matrix inventories each collected name once; test cleanup is pending.
+- The earlier shadowed definitions of `test_non_owner_cannot_manage_project_members`, `test_non_owner_cannot_edit_project`, and `test_non_owner_cannot_delete_project` were identical to the later collected definitions, including decorators. Only those dead earlier copies were removed; the collected definitions and their existing matrix entries are unchanged.
 - The frontend validation helper was checked with 38 temporary simulated JavaScript handler/helper assertions, plus syntax checks. These checks are not a committed automated suite or visual browser evidence and do not complete UI coverage.
 
 ## BDD Specification Status
