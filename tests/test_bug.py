@@ -1948,7 +1948,7 @@ def test_developer_cannot_move_bug_from_triage_to_open(
         name="Protected Triage Project"
     )
 
-    member_factory(
+    developer_member = member_factory(
         owner["token"],
         project["id"],
         developer["user"]["email"],
@@ -1958,7 +1958,8 @@ def test_developer_cannot_move_bug_from_triage_to_open(
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
         json={
-            "title": "Developer cannot move this bug"
+            "title": "Developer cannot move this bug",
+            "assignee_id": developer_member["user_id"]
         },
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -1966,6 +1967,8 @@ def test_developer_cannot_move_bug_from_triage_to_open(
     )
 
     assert create_response.status_code == 201
+    assert create_response.json()["status"] == "Triage"
+    assert create_response.json()["assignee_id"] == developer_member["user_id"]
 
     bug_id = create_response.json()["id"]
 
@@ -2867,11 +2870,25 @@ def test_assigned_qa_can_pass_bug_and_close_it(
 
     data = pass_response.json()
 
+    # Passed is a transition input; the resulting state is Closed with resolution Fixed.
     assert data["status"] == "Closed"
-    assert data["testing_outcome"] == "Passed" if "testing_outcome" in data else True
     assert data["resolution"] == "Fixed"
     assert data["assignee_id"] == qa_member["user_id"]
     assert data["updated_at"] != original_updated_at
+
+    get_response = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_id}",
+        headers={
+            "Authorization": f"Bearer {qa['token']}"
+        }
+    )
+
+    assert get_response.status_code == 200
+    stored_bug = get_response.json()
+    assert stored_bug["status"] == "Closed"
+    assert stored_bug["resolution"] == "Fixed"
+    assert stored_bug["assignee_id"] == qa_member["user_id"]
+    assert stored_bug["updated_at"] == data["updated_at"]
 
     list_response = test_client.get(
         f"/projects/{project['id']}/bugs",
