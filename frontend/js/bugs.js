@@ -231,6 +231,13 @@ function getProjectMember(userId) {
     });
 }
 
+function hasValidLifecycleAssignee() {
+    const member = getProjectMember(Number(lifecycleAssignee.value));
+    return lifecycleTargetStatus === "Open"
+        ? ["QA Analyst", "Developer"].includes(member?.role)
+        : member?.role === "Developer";
+}
+
 function resetLifecycleControls() {
     lifecyclePassFixVersion.value = "";
     lifecyclePassFixVersion.disabled = true;
@@ -484,6 +491,8 @@ function renderLifecycleControls() {
     }
 
     lifecycleActionButton.disabled = !lifecycleActionAllowed || (
+        ["Open", "Development"].includes(lifecycleTargetStatus) && !hasValidLifecycleAssignee()
+    ) || (
         lifecycleTargetStatus === "Testing" && !lifecycleQaAssignee.value
     );
 
@@ -801,7 +810,7 @@ lifecycleAssignee.addEventListener("change", function() {
     updateSelectPromptStyle(lifecycleAssignee);
 
     if (["Open", "Development"].includes(lifecycleTargetStatus)) {
-        lifecycleActionButton.disabled = !lifecycleActionAllowed;
+        lifecycleActionButton.disabled = !(lifecycleActionAllowed && hasValidLifecycleAssignee());
 
         if (
             lifecycleGuidance.textContent === openSelectionValidationMessage ||
