@@ -117,6 +117,47 @@ def test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_sugg
     assert persisted_state(test_client, ai_project) == before
 
 
+def test_ai_valid_suggestion_cannot_modify_bug_without_user_save(
+    test_client, ai_project, blank_form, offline_provider, monkeypatch,
+):
+    """Mock GPT-6 Luna output proposes Minor -> Major; AI Assist cannot save it."""
+    owner, _, _, bug, base = ai_project
+    bug_url = f"{base}/bugs/{bug['id']}"
+    setup = test_client.patch(bug_url, headers=headers(owner), json={"severity": "Minor"})
+    assert setup.status_code == 200
+    stored = test_client.get(bug_url, headers=headers(owner))
+    assert stored.status_code == 200
+    before_bug = stored.json()
+    assert before_bug["severity"] == "Minor"
+    before = persisted_state(test_client, ai_project)
+    offline_provider["raw"] = {"suggestions": [{"field": "severity", "value": "Major"}]}
+
+    # Observe real application requests without replacing the PATCH/Save handler.
+    requests = []
+    original_request = test_client.request
+
+    def record_request(method, url, *args, **kwargs):
+        requests.append((method.upper(), str(url)))
+        return original_request(method, url, *args, **kwargs)
+
+    monkeypatch.setattr(test_client, "request", record_request)
+    response = test_client.post(
+        request_url(ai_project, True), headers=headers(owner),
+        json=blank_form | {"title": before_bug["title"], "severity": "Minor"},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"outcome": "suggestions", "suggestions": {"severity": "Major"}}
+    assert len(offline_provider["requests"]) == 1
+    assert offline_provider["requests"][0]["model"] == "gpt-6-luna"
+    after = test_client.get(bug_url, headers=headers(owner))
+    assert after.status_code == 200
+    assert after.json()["severity"] == "Minor"
+    assert after.json() == before_bug
+    assert persisted_state(test_client, ai_project) == before
+    assert requests[0] == ("POST", request_url(ai_project, True))
+    assert all(method == "GET" for method, _ in requests[1:])
+
+
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("key", [None, "", "   "])
 def test_ai_triage_unconfigured_requests_keep_503_without_provider_work(
