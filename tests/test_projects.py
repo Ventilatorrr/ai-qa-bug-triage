@@ -63,6 +63,38 @@ def test_project_creation_rejects_whitespace_only_name(
     assert response.json()["detail"] == "Project name is required."
 
 
+# AC-005.2 — Invalid Project Name
+@pytest.mark.parametrize("name", [123, True, ["QA"], {"name": "QA"}, None])
+def test_project_creation_rejects_non_string_name(
+    test_client, authenticated_user_factory, name
+):
+    user = authenticated_user_factory()
+    headers = {"Authorization": f"Bearer {user['token']}"}
+
+    response = test_client.post("/projects", json={"name": name}, headers=headers)
+    projects = test_client.get("/projects", headers=headers)
+
+    assert projects.status_code == 200
+    assert projects.json() == []
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Project name is required."}
+
+
+# AC-005.1 — Successful Project Creation
+def test_project_creation_preserves_padded_name(test_client, authenticated_user_factory):
+    user = authenticated_user_factory()
+    headers = {"Authorization": f"Bearer {user['token']}"}
+    name = "  QA Project  "
+
+    response = test_client.post("/projects", json={"name": name}, headers=headers)
+
+    assert response.status_code == 201
+    assert response.json()["name"] == name
+    stored = test_client.get(f"/projects/{response.json()['id']}", headers=headers)
+    assert stored.status_code == 200
+    assert stored.json()["name"] == name
+
+
 # AC-005.3 — Unauthenticated User
 def test_unauthenticated_user_cannot_create_project(test_client):
     response = test_client.post(
@@ -231,6 +263,66 @@ def test_edit_project_name(test_client, authenticated_user_factory, project_fact
 
     assert data["id"] == project["id"]
     assert data["name"] == "Updated Project"
+
+
+# AC-007.3 — Invalid Project Name Editing
+@pytest.mark.parametrize("name", ["", "   ", "\t\n"])
+def test_project_edit_rejects_empty_or_whitespace_only_name(
+    test_client, authenticated_user_factory, project_factory, name
+):
+    user = authenticated_user_factory()
+    project = project_factory(user["token"], name="Original Project")
+    headers = {"Authorization": f"Bearer {user['token']}"}
+
+    response = test_client.put(
+        f"/projects/{project['id']}", json={"name": name}, headers=headers
+    )
+    stored = test_client.get(f"/projects/{project['id']}", headers=headers)
+
+    assert stored.status_code == 200
+    assert stored.json()["name"] == "Original Project"
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Project name is required."}
+
+
+# AC-007.3 — Invalid Project Name Editing
+@pytest.mark.parametrize("name", [123, True, ["QA"], {"name": "QA"}, None])
+def test_project_edit_rejects_non_string_name(
+    test_client, authenticated_user_factory, project_factory, name
+):
+    user = authenticated_user_factory()
+    project = project_factory(user["token"], name="Original Project")
+    headers = {"Authorization": f"Bearer {user['token']}"}
+
+    response = test_client.put(
+        f"/projects/{project['id']}", json={"name": name}, headers=headers
+    )
+    stored = test_client.get(f"/projects/{project['id']}", headers=headers)
+
+    assert stored.status_code == 200
+    assert stored.json()["name"] == "Original Project"
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Project name is required."}
+
+
+# AC-007.1 — Successful Project Name Editing
+def test_project_edit_preserves_padded_name(
+    test_client, authenticated_user_factory, project_factory
+):
+    user = authenticated_user_factory()
+    project = project_factory(user["token"], name="Original Project")
+    headers = {"Authorization": f"Bearer {user['token']}"}
+    name = "  Updated Project  "
+
+    response = test_client.put(
+        f"/projects/{project['id']}", json={"name": name}, headers=headers
+    )
+
+    assert response.status_code == 200
+    assert response.json()["name"] == name
+    stored = test_client.get(f"/projects/{project['id']}", headers=headers)
+    assert stored.status_code == 200
+    assert stored.json()["name"] == name
 
 
 # AC-007.2 — Unauthorized Project Name Editing

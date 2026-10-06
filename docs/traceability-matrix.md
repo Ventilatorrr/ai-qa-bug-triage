@@ -104,9 +104,15 @@ The matrix is updated throughout development and testing.
 | REQ     | AC                                      | Test Reference                                         | Test Layer | Status  |
 | ------- | --------------------------------------- | ------------------------------------------------------ | --------- | ------- |
 | REQ-005 | AC-005.1 — Successful Project Creation  | `test_create_project`                                  | API       | Covered |
+| REQ-005 | AC-005.1 — Successful Project Creation | `test_project_creation_preserves_padded_name` | API | Covered |
+| REQ-005 | AC-005.1 — Successful Project Creation | `test_project_creation_submits_valid_name_unchanged` | Frontend unit | Partial |
 | REQ-005 | AC-005.2 — Invalid Project Name         | `test_create_project_with_empty_name`                  | API       | Partial |
 | REQ-005 | AC-005.2 — Invalid Project Name         | `test_project_creation_rejects_whitespace_only_name`     | API       | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_rejects_non_string_name` | API | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_blocks_blank_name_submission` | Frontend unit | Partial |
 | REQ-005 | AC-005.3 — Unauthenticated User         | `test_unauthenticated_user_cannot_create_project`      | API       | Covered |
+
+**Coverage note:** BUG-63 regression coverage rejects integer, boolean, array, object, and null names with HTTP 422 and no project creation. AC-005.2 remains Partial pending browser verification of validation feedback; frontend unit tests use DOM substitutes.
 
 ### REQ-006 — Project Access
 
@@ -122,7 +128,14 @@ The matrix is updated throughout development and testing.
 | REQ     | AC                                           | Test Reference                                     | Test Layer      | Status  |
 | ------- | -------------------------------------------- | -------------------------------------------------- | -------------- | ------- |
 | REQ-007 | AC-007.1 — Successful Project Name Editing   | `test_edit_project_name`                           | API            | Partial |
+| REQ-007 | AC-007.1 — Successful Project Name Editing | `test_project_edit_preserves_padded_name` | API | Partial |
+| REQ-007 | AC-007.1 — Successful Project Name Editing | `test_project_edit_submits_valid_name_unchanged` | Frontend unit | Partial |
 | REQ-007 | AC-007.2 — Unauthorized Project Name Editing | `test_user_cannot_edit_another_users_project_name` | API / Security | Covered |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_rejects_empty_or_whitespace_only_name` | API | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_rejects_non_string_name` | API | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_blocks_blank_name_submission` | Frontend unit | Partial |
+
+**Coverage note:** BUG-21 regression coverage rejects empty, spaces-only, and tab/newline names without changing the original name. Non-string names follow the same validation rule. AC-007.3 remains Partial pending browser verification of validation feedback; frontend unit tests verify blocked submissions and unchanged valid payloads. BUG-20 feedback lifetime remains intentionally unchanged.
 
 ### REQ-008 — Project Deletion
 

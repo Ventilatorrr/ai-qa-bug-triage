@@ -9,6 +9,15 @@ from app.api.auth import get_current_user_id
 router = APIRouter(tags=["Projects"])
 
 
+def validate_project_name(name):
+    if not isinstance(name, str) or not name.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Project name is required."
+        )
+    return name
+
+
 @router.post("/projects", status_code=201)
 def create_project(
     project: dict,
@@ -16,13 +25,7 @@ def create_project(
 ):
     user_id = get_current_user_id(authorization)
 
-    project_name = project.get("name")
-
-    if not project_name or not project_name.strip():
-        raise HTTPException(
-            status_code=422,
-            detail="Project name is required."
-        )
+    project_name = validate_project_name(project.get("name"))
 
     conn = get_connection()
 
@@ -189,13 +192,7 @@ def update_project(
 ):
     user_id = get_current_user_id(authorization)
 
-    project_name = project.get("name")
-
-    if not project_name:
-        raise HTTPException(
-            status_code=422,
-            detail="Project name is required."
-        )
+    project_name = validate_project_name(project.get("name"))
 
     conn = get_connection()
 
