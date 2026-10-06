@@ -1,0 +1,7 @@
+# The full Python test suite needs the runtime and optional OpenAI SDK.
+-r requirements.txt
+-r requirements-ai.txt
+
+pytest==9.1.1
+# Directly used by mocked SDK transport tests and FastAPI TestClient.
+httpx2==2.12.0
