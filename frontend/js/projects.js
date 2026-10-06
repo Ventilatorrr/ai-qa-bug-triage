@@ -235,6 +235,11 @@ function cancelProjectEdit(project, projectElement) {
 async function saveProjectEdit(project, projectNameInput, projectElement) {
     const newName = projectNameInput.value;
 
+    if (!newName.trim()) {
+        showProjectMessage("Project name is required.", "error");
+        return;
+    }
+
     const response = await authenticatedFetch(`/projects/${project.id}`, {
         method: "PUT",
         headers: {
@@ -309,6 +314,11 @@ projectForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const projectName = document.querySelector("#project-name").value;
+
+    if (!projectName.trim()) {
+        showProjectMessage("Project name is required.", "error");
+        return;
+    }
 
     const response = await authenticatedFetch("/projects", {
         method: "POST",

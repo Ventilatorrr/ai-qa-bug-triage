@@ -129,10 +129,11 @@ The system shall allow authenticated users to create a project.
 
 - An authenticated user can create a project by providing a valid project name.
 - The user becomes the Project Owner of the new project.
+- Valid project names are preserved as supplied, including surrounding whitespace.
 
 #### AC-005.2 — Invalid Project Name
 
-- Project creation is rejected when the project name is empty or contains only whitespace.
+- Project creation is rejected when the project name is not a string, is empty, or contains only whitespace.
 - The user is informed that a valid project name is required.
 
 #### AC-005.3 — Unauthenticated User
@@ -179,10 +180,17 @@ As a Project Owner, I want to change a project's name so that I can keep project
 
 - A Project Owner can change the name of a project they own.
 - The new project name is saved and displayed after the change.
+- Valid project names are preserved as supplied, including surrounding whitespace.
 
 #### AC-007.2 — Unauthorized Project Name Editing
 
 - A user cannot edit a project they do not own.
+
+#### AC-007.3 — Invalid Project Name Editing
+
+- Project name editing is rejected when the new name is not a string, is empty, or contains only whitespace.
+- The original project name remains unchanged when validation fails.
+- The user is informed that a valid project name is required.
 
 ---
 
