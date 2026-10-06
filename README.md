@@ -49,7 +49,14 @@ python -m pytest
 
 Tests configure their own temporary JWT secret, mock provider calls, and require
 no real API key. They use a fixed disposable `test_bugtriage.db` filename and must
-not run concurrently. Formal versioning has not started.
+not run concurrently.
+
+Formal versioning is active. `APP_VERSION = "0.1.0"` is the source of truth,
+exposed in FastAPI metadata and `/version`, and displayed on the About page.
+The annotated Git tag `v0.1.0` and published GitHub Release `v0.1.0` mark this
+release. The planned workflow is development -> release candidates when
+appropriate -> stable release; `v1.0.0` is intended for the requirements-complete
+release.
 
 Python dependency installation does not install Node; the separate frontend
 test commands below require it.

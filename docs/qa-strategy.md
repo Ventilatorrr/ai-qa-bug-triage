@@ -374,7 +374,9 @@ Current working-tree status (10 September 2026):
 * The latest full pytest run in this session passed 148 cases in 114.52 seconds, after the member-removal timestamp fix. This documentation review does not constitute a new test run.
 * Frontend validation-message formatting passed 38 temporary simulated JavaScript checks and syntax checks. Browser verification is still outstanding; these checks are not a persistent test suite.
 * Theme handling now tolerates a missing toggle; About and Bugs have theme and Logout controls. CSS uses viewport width and hidden horizontal overflow for the scrollbar-layout adjustment, without scrollbar-gutter. Cross-browser and narrow-screen verification remain outstanding.
-* The application release version is 0.1.0 and appears in API metadata and on the About page. Release management is not implemented. No retrospective Affected Version or Fix Version numbers are assigned.
+* Versioning update: formal versioning is active. `APP_VERSION = "0.1.0"` is the source of truth, exposed in FastAPI metadata and `/version`, and displayed on the About page. The annotated tag `v0.1.0` exists, and GitHub Release `v0.1.0` has been published.
+* The planned release workflow is development -> release candidates when appropriate -> stable release. `v1.0.0` is intended for the requirements-complete release.
+* Affected Version identifies the version where a defect was observed or reproduced, not necessarily where it was introduced. Fix Version identifies the actual released version containing the fix. Leave these fields blank when no appropriate observed or released version is known; do not assign planned release numbers to fixes or released versions to defects found only in unreleased feature work.
 
 ---
 
