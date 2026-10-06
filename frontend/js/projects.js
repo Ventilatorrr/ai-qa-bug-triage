@@ -5,6 +5,7 @@ const projectForm = document.querySelector("#project-form");
 const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
 let editingProjectId = null;
+let projectFormFeedback = null;
 
 
 function redirectToLogin() {
@@ -50,7 +51,8 @@ if (!localStorage.getItem("access_token")) {
     redirectToLogin();
 }
 
-function showProjectMessage(text, type = "neutral") {
+function showProjectMessage(text, type = "neutral", formFeedback = null) {
+    projectFormFeedback = text ? formFeedback : null;
     message.classList.remove("message-success", "message-error");
     message.textContent = text;
 
@@ -58,6 +60,20 @@ function showProjectMessage(text, type = "neutral") {
         message.classList.add("message-success");
     } else if (text && type === "error") {
         message.classList.add("message-error");
+    }
+}
+
+function clearProjectFormFeedback(context = null, nameValidationOnly = false) {
+    if (projectFormFeedback &&
+        (context === null || projectFormFeedback.context === context) &&
+        (!nameValidationOnly || projectFormFeedback.nameValidation)) {
+        showProjectMessage("");
+    }
+}
+
+function clearCorrectedProjectNameFeedback(input, context) {
+    if (input.value.trim()) {
+        clearProjectFormFeedback(context, true);
     }
 }
 
@@ -187,6 +203,9 @@ function renderProjectEdit(projectElement, project) {
     projectNameInput.className = "form-input project-edit-input";
     projectNameInput.value = project.name;
     projectNameInput.setAttribute("aria-label", "Project name");
+    projectNameInput.addEventListener("input", function () {
+        clearCorrectedProjectNameFeedback(projectNameInput, project.id);
+    });
 
     const saveButton = document.createElement("button");
     saveButton.textContent = "Save";
@@ -221,12 +240,14 @@ function renderProjectEdit(projectElement, project) {
 
 
 function startProjectEdit(project, projectElement) {
+    clearProjectFormFeedback();
     editingProjectId = project.id;
     renderProjectEdit(projectElement, project);
 }
 
 
 function cancelProjectEdit(project, projectElement) {
+    clearProjectFormFeedback(project.id);
     editingProjectId = null;
     renderProjectView(projectElement, project, "Project Owner");
 }
@@ -236,7 +257,9 @@ async function saveProjectEdit(project, projectNameInput, projectElement) {
     const newName = projectNameInput.value;
 
     if (!newName.trim()) {
-        showProjectMessage("Project name is required.", "error");
+        showProjectMessage("Project name is required.", "error", {
+            context: project.id, nameValidation: true
+        });
         return;
     }
 
@@ -257,10 +280,13 @@ async function saveProjectEdit(project, projectNameInput, projectElement) {
     const data = await response.json();
 
     if (response.ok) {
+        clearProjectFormFeedback(project.id);
         editingProjectId = null;
         renderProjectView(projectElement, data, "Project Owner");
     } else {
-        showProjectMessage(formatApiError(data.detail), "error");
+        showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
+            context: project.id, nameValidation: data.detail === "Project name is required."
+        } : null);
     }
 }
 
@@ -298,15 +324,21 @@ async function deleteProject(project, projectElement) {
 
 
 showProjectFormButton.addEventListener("click", function () {
+    clearProjectFormFeedback();
     projectForm.hidden = false;
     showProjectFormButton.hidden = true;
 });
 
 
 cancelProjectFormButton.addEventListener("click", function () {
+    clearProjectFormFeedback("create");
     projectForm.reset();
     projectForm.hidden = true;
     showProjectFormButton.hidden = false;
+});
+
+document.querySelector("#project-name").addEventListener("input", function (event) {
+    clearCorrectedProjectNameFeedback(event.target, "create");
 });
 
 
@@ -316,7 +348,9 @@ projectForm.addEventListener("submit", async function (event) {
     const projectName = document.querySelector("#project-name").value;
 
     if (!projectName.trim()) {
-        showProjectMessage("Project name is required.", "error");
+        showProjectMessage("Project name is required.", "error", {
+            context: "create", nameValidation: true
+        });
         return;
     }
 
@@ -342,10 +376,13 @@ projectForm.addEventListener("submit", async function (event) {
         showProjectFormButton.hidden = false;
         showProjectMessage(
             `Project "${data.name}" created successfully.`,
-            "success"
+            "success",
+            {context: "create"}
         );
         loadProjects();
     } else {
-        showProjectMessage(formatApiError(data.detail), "error");
+        showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
+            context: "create", nameValidation: data.detail === "Project name is required."
+        } : null);
     }
 });

@@ -135,6 +135,9 @@ The system shall allow authenticated users to create a project.
 
 - Project creation is rejected when the project name is not a string, is empty, or contains only whitespace.
 - The user is informed that a valid project name is required.
+- Name-validation feedback clears when the user corrects the name to a meaningful non-whitespace value; whitespace-only input retains the error.
+- Cancelling or starting a fresh Create/Edit interaction clears previous project-form feedback. Create success feedback may be shown immediately after creation but must not remain in a later form interaction.
+- Project-name correction and form lifecycle actions preserve unrelated page, network, authorization, and loading feedback.
 
 #### AC-005.3 — Unauthenticated User
 
@@ -191,6 +194,10 @@ As a Project Owner, I want to change a project's name so that I can keep project
 - Project name editing is rejected when the new name is not a string, is empty, or contains only whitespace.
 - The original project name remains unchanged when validation fails.
 - The user is informed that a valid project name is required.
+- Name-validation feedback clears when the user corrects the name to a meaningful non-whitespace value; whitespace-only input retains the error.
+- A successful Edit clears earlier validation feedback associated with that Edit interaction.
+- Cancelling or starting a fresh Create/Edit interaction clears previous project-form feedback.
+- Project-name correction and form lifecycle actions preserve unrelated page, network, authorization, and loading feedback.
 
 ---
 

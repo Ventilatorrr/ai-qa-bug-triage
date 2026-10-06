@@ -110,9 +110,18 @@ The matrix is updated throughout development and testing.
 | REQ-005 | AC-005.2 — Invalid Project Name         | `test_project_creation_rejects_whitespace_only_name`     | API       | Partial |
 | REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_rejects_non_string_name` | API | Partial |
 | REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_blocks_blank_name_submission` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_validation_feedback_tracks_input` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_cancel_clears_form_feedback` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_open_clears_previous_form_feedback` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_preserves_unrelated_feedback` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_creation_server_validation_feedback_clears_on_correction` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_name_input_preserves_other_form_feedback` | Frontend unit | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | BUG-20 Create feedback correction and form lifecycle (manual browser verification, 6 October 2026) | UI | Manual |
 | REQ-005 | AC-005.3 — Unauthenticated User         | `test_unauthenticated_user_cannot_create_project`      | API       | Covered |
 
-**Coverage note:** BUG-63 regression coverage rejects integer, boolean, array, object, and null names with HTTP 422 and no project creation. AC-005.2 remains Partial pending browser verification of validation feedback; frontend unit tests use DOM substitutes.
+**Coverage note:** BUG-63 regression coverage rejects integer, boolean, array, object, and null names with HTTP 422 and no project creation. AC-005.2 remains Partial: preservation of unrelated network, authorization, service, loading, and page-level feedback has frontend-unit coverage using DOM substitutes, but was not part of the completed BUG-20 manual browser check.
+
+BUG-20 manual browser verification reported by the user on 6 October 2026 passed: whitespace-only Create submission displays "Project name is required."; meaningful correction clears it without resubmission, while whitespace-only correction retains it; Cancel clears current form feedback; reopening New Project does not retain stale feedback; immediate Create success feedback does not remain when starting a fresh project-form interaction. Existing frontend-unit regression rows are preserved. Unrelated network, authorization, service, loading, and page-level feedback preservation remains frontend-unit-only evidence.
 
 ### REQ-006 — Project Access
 
@@ -134,8 +143,16 @@ The matrix is updated throughout development and testing.
 | REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_rejects_empty_or_whitespace_only_name` | API | Partial |
 | REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_rejects_non_string_name` | API | Partial |
 | REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_blocks_blank_name_submission` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_validation_feedback_tracks_input` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_cancel_clears_form_feedback` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_open_clears_previous_form_feedback` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_preserves_unrelated_feedback` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_server_validation_feedback_clears_on_correction` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_edit_success_clears_prior_validation_feedback` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | `test_project_name_input_preserves_other_form_feedback` | Frontend unit | Partial |
+| REQ-007 | AC-007.3 — Invalid Project Name Editing | BUG-20 Edit feedback correction, successful Save, and Cancel/reopen (manual browser verification, 6 October 2026) | UI | Manual |
 
-**Coverage note:** BUG-21 regression coverage rejects empty, spaces-only, and tab/newline names without changing the original name. Non-string names follow the same validation rule. AC-007.3 remains Partial pending browser verification of validation feedback; frontend unit tests verify blocked submissions and unchanged valid payloads. BUG-20 feedback lifetime remains intentionally unchanged.
+**Coverage note:** BUG-21 regression coverage rejects empty, spaces-only, and tab/newline names without changing the original name. Non-string names follow the same validation rule. BUG-20 manual browser verification reported by the user on 6 October 2026 passed: whitespace-only Edit/Save displays "Project name is required."; meaningful correction clears it, while whitespace-only correction retains it; successful Save updates the project name without retaining the old validation error; Cancel/reopen does not retain stale form feedback. AC-007.3 remains Partial: preservation of unrelated network, authorization, service, loading, and page-level feedback was not manually checked and remains frontend-unit-only evidence. Existing frontend-unit rows, including other-form feedback isolation, are preserved; blocked submissions and unchanged valid payloads retain their automated coverage. Backend validation behavior remains unchanged.
 
 ### REQ-008 — Project Deletion
 
