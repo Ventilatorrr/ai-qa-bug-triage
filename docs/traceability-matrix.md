@@ -329,7 +329,15 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.5 — Testing Outcome | `test_non_assigned_qa_cannot_record_testing_outcome` | API / Security | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_testing_outcome_is_required` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_invalid_testing_outcome_is_rejected` | API / Validation | Partial |
-| REQ-017 | AC-017.5 — Testing Outcome | — | UI | Pending |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_passed_transition_persists_optional_fix_version` | API | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_failed_transition_preserves_fix_version` | API | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_fix_version_is_rejected_outside_passed_transition` | API / Validation | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_passed_fix_version_preserves_authorization` | API / Security | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_passed_fix_version_input_visible_and_sends_value` | Frontend unit | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_passed_fix_version_respects_eligibility` | Frontend unit | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_failed_flow_does_not_use_fix_version` | Frontend unit | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | — | UI | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | Fix Version on Pass: blank value, prefill/replacement, Failed preservation, and Pass/Fail labels (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_non_assigned_developer_cannot_close_bug_without_fixing` | API / Security | Partial |
@@ -375,7 +383,11 @@ Closed has no normal forward lifecycle transition. A Project Owner may return a 
 
 The Project Owner Closed-to-Triage test also verifies that Last Updated changes during the transition.
 
-AC-017.1 through AC-017.8 remain Partial because browser verification and automated UI coverage are still pending. The lifecycle UI includes closure outcomes and the Project Owner's return-to-Triage action, but the project does not yet have a frontend browser-test framework. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
+AC-017.5 optional Fix Version coverage is maintained in `tests/test_fix_version_on_pass.py` and `tests/frontend/fix-version-on-pass.test.cjs`. Parameterized API cases verify Passed with supplied, unchanged, replaced, omitted, null, empty, and untrimmed values, with GET readback; omitted values preserve the stored version and explicit null clears it. The status, resolution, and supplied Fix Version are persisted in the same database update. Failed preserves its existing version, other transitions reject supplied Fix Version without changing the bug, and existing authorization remains enforced. Frontend unit tests exercise the actual page script with DOM/request substitutes: the immediately visible optional input with its exact placeholder, prefill and eligibility, direct Passed submission with value/null payloads, and unchanged Failed requests.
+
+Manual browser verification of the Fix Version on Pass enhancement reported by the user passed: a Testing bug with blank Fix Version immediately shows the input with placeholder "Fix Version (optional)" and the Pass button; blank does not block a single Pass click, which closes the bug as Fixed and leaves Fix Version blank. An existing Fix Version is prefilled; changing it and clicking Pass once persists the new value and closes the bug as Fixed. The Developer selector remains unchanged; Fail returns the bug to Development with the selected Developer as assignee and preserves the existing Fix Version. The visible action labels are Pass and Fail. AC-017.5 remains Partial because broader lifecycle browser/accessibility coverage is incomplete; the existing API and frontend-unit evidence is preserved.
+
+AC-017.1 through AC-017.8 remain Partial because broader lifecycle browser/accessibility verification and automated UI coverage are incomplete. The lifecycle UI includes closure outcomes and the Project Owner's return-to-Triage action, but the project does not yet have a frontend browser-test framework. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
 
 ## REQ-018 — Request AI-Assisted Triage
 

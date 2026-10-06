@@ -102,6 +102,7 @@ class BugStatusUpdate(BaseModel):
     assignee_id: int | None = None
     testing_outcome: Literal["Passed", "Failed"] | None = None
     resolution: Literal["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"] | None = None
+    fix_version: str | None = None
 
 
 class AiAssistRequest(BaseModel):
