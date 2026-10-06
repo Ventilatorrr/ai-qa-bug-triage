@@ -7,24 +7,58 @@ Current automated coverage uses pytest and FastAPI TestClient. BDD feature files
 
 See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Historical working notes and requirements_old.md are not the current specification.
 
-For the existing configured Windows environment, run from the repository root:
+For a fresh Windows PowerShell setup, install Python 3.14 and Git, then run:
 
 ```powershell
-$env:JWT_SECRET_KEY = "your-secure-random-secret"
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+git clone https://github.com/Ventilatorrr/ai-qa-bug-triage.git
+cd ai-qa-bug-triage
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+python -m pip check
+$env:JWT_SECRET_KEY = python -c "import secrets; print(secrets.token_urlsafe(48))"
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+
+If `py` is unavailable, replace `py -3.14` with the path to your Python 3.14
+executable.
+
+`requirements.txt` contains the core runtime dependencies. For a runtime-only
+installation, use `python -m pip install -r requirements.txt` instead.
+`requirements-ai.txt` adds the optional OpenAI SDK; install it with
+`python -m pip install -r requirements-ai.txt` if you want live AI Assist.
+`requirements-dev.txt` includes both manifests, pytest, and httpx2 for the full
+Python test suite. The SDK is required by mocked provider tests even without an
+API key. Direct dependencies are pinned; transitive dependencies are resolved by
+pip. SQLite is included with Python.
 
 `JWT_SECRET_KEY` is required and must not be empty or whitespace-only. The
 application will refuse to sign or verify tokens without a nonblank value.
 Use a long, random value and do not commit it to the repository. Changing the
-secret invalidates all existing tokens; users must log in again.
+secret invalidates all existing tokens; users must log in again. The command
+above generates a new secret for the current shell session; preserve your local
+secret securely outside the repository if you need tokens to survive restarts.
 
-Open http://127.0.0.1:8000/login.html. A reproducible dependency manifest and clean-machine setup instructions remain outstanding; the command above assumes the existing virtual environment. Tests use a fixed disposable test_bugtriage.db filename and must not run concurrently. Formal versioning has not started.
+Open http://127.0.0.1:8000/login.html. Stop Uvicorn with Ctrl+C, then run the Python
+tests from the repository root using the development installation:
+
+```powershell
+Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
+python -m pytest
+```
+
+Tests configure their own temporary JWT secret, mock provider calls, and require
+no real API key. They use a fixed disposable `test_bugtriage.db` filename and must
+not run concurrently. Formal versioning has not started.
+
+Python dependency installation does not install Node; the separate frontend
+test commands below require it.
 
 The AI Assist backend uses OpenAI GPT-6 Luna only when `OPENAI_API_KEY` is set in
-the server environment. Install its optional SDK dependency with
-`.\.venv\Scripts\python.exe -m pip install -r requirements-ai.txt`. No key or a
-blank key retains HTTP 503: `AI assistance is not configured yet.` Configuration
+the server environment and the optional SDK is installed. For real AI Assist,
+optionally set `$env:OPENAI_API_KEY = "<your-api-key>"` in the same shell before
+starting Uvicorn. No key or a blank key retains HTTP 503:
+`AI assistance is not configured yet.` Configuration
 is checked per request; no provider-switching variable or dotenv loader is used.
 Keep keys outside repository files. Provider failures return a fixed HTTP 502
 message without SDK details; clients are closed after use and automatic SDK
