@@ -630,6 +630,7 @@ this status does not change REQ-020 coverage or claim the increment is done.
 | REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions` | API / Mocked Provider Integration | Covered |
 | REQ-022 | AC-022.2 — Restrict AI Context | `test_ai_triage_revalidates_current_member_eligibility` | API / Context / Mocked Provider Integration | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions` | API / Mocked Provider Integration | Covered |
+| REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_valid_suggestion_cannot_modify_bug_without_user_save` | API / Mocked Provider Integration | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_triage_instruction_like_content_and_output_cannot_perform_actions` | API / Security / Mocked Provider Integration | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_generation_instructions_define_context_and_safety_boundaries` | Unit / Generation Contract | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_response_delegates_to_validator_and_returns_its_result` | Unit / Response Processing | Covered |
@@ -643,6 +644,12 @@ this status does not change REQ-020 coverage or claim the increment is done.
 | REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_suggestions_review_separates_values_and_follows_form_order` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | `test_ai_use_all_maps_every_supported_field_without_persistence` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | New/Edit script-like suggestions render as literal text; review/use does not persist until normal Create/Save (REQ-020 smoke evidence above, 5 October 2026) | Manual / Browser + Database Smoke | Covered |
+
+The valid advisory-output test returns a supported severity suggestion (Minor →
+Major) through the Edit AI Assist pipeline while the stored bug stays Minor and
+project/member/bug state stays unchanged. No normal PATCH occurs during AI Assist;
+valid output remains advisory until normal user-controlled Create/Save. Provider
+transport is mocked, not a live-model call.
 
 ### Audit and scope
 
