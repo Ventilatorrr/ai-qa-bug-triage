@@ -377,6 +377,8 @@ As an authorized project member, I want to view and open bug reports in projects
 - Ascending Status follows Triage, Open, Development, Testing, Closed; descending reverses that order.
 - Missing optional values, including Unassigned, are displayed last in both directions.
 - Sorting preserves displayed data and bug links without updating bug records. The active sort is retained when the list refreshes on the current page.
+- The selected column and direction are restored when returning to the project or reloading its page within the same browser tab/session. Preferences are stored separately for each signed-in user and project.
+- With no valid saved preference, or when session storage is unavailable, the initial sort remains Last Updated descending and sorting continues to work.
 
 ---
 

@@ -313,6 +313,11 @@ async function deleteProject(project, projectElement) {
     if (response.ok) {
         editingProjectId = null;
         projectElement.remove();
+        try {
+            sessionStorage.removeItem(`bug-list-sort:${getCurrentUserId()}:${project.id}`);
+        } catch (error) {
+            // Successful deletion must not depend on session storage availability.
+        }
         showProjectMessage(
             `Project "${project.name}" deleted successfully.`,
             "success"

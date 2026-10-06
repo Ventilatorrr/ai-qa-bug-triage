@@ -489,6 +489,47 @@ let projectBugs = [];
 let bugSortColumn = "updated_at";
 let bugSortDirection = "descending";
 
+function getBugSortStorageKey() {
+    const userId = getCurrentUserId();
+    const numericProjectId = Number(projectId);
+    if (!Number.isSafeInteger(userId) || userId < 1 ||
+        !Number.isSafeInteger(numericProjectId) || numericProjectId < 1) {
+        return null;
+    }
+    return `bug-list-sort:${userId}:${numericProjectId}`;
+}
+
+function restoreBugSortPreference() {
+    bugSortColumn = "updated_at";
+    bugSortDirection = "descending";
+    try {
+        const key = getBugSortStorageKey();
+        if (!key) return;
+        const preference = JSON.parse(sessionStorage.getItem(key));
+        const columns = ["id", "title", "severity", "priority", "status", "assignee_id", "updated_at"];
+        if (preference && columns.includes(preference.column) &&
+            ["ascending", "descending"].includes(preference.direction)) {
+            bugSortColumn = preference.column;
+            bugSortDirection = preference.direction;
+        }
+    } catch (error) {
+        // Missing, malformed, or blocked storage leaves the default sort intact.
+    }
+}
+
+function saveBugSortPreference() {
+    try {
+        const key = getBugSortStorageKey();
+        if (key) {
+            sessionStorage.setItem(key, JSON.stringify({
+                column: bugSortColumn, direction: bugSortDirection
+            }));
+        }
+    } catch (error) {
+        // Sorting on the current page still works if the preference cannot be saved.
+    }
+}
+
 function showBugMessage(text, type = "neutral") {
     bugMessage.classList.remove("message-success", "message-error");
     bugMessage.textContent = text;
@@ -660,6 +701,7 @@ function renderBugs() {
                 ? "descending"
                 : "ascending";
             bugSortColumn = column;
+            saveBugSortPreference();
             renderBugs();
             bugsContainer.querySelector(`[data-sort-column="${column}"]`).focus();
         });
@@ -1049,6 +1091,7 @@ bugForm.addEventListener(
 if (!localStorage.getItem("access_token")) {
     redirectToLogin();
 } else {
+    restoreBugSortPreference();
     showBugDeletionFeedback();
     loadProject();
 
@@ -1066,6 +1109,7 @@ if (!localStorage.getItem("access_token")) {
             return;
         }
 
+        restoreBugSortPreference();
         showMemberMessage("");
         showBugMessage("");
 
