@@ -310,17 +310,23 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.2 — Triage to Open | `test_triage_to_open_rejects_ineligible_assignee` | API / Validation | Partial |
 | REQ-017 | AC-017.2 — Triage to Open | `test_developer_cannot_move_bug_from_triage_to_open` | API / Security | Partial |
 | REQ-017 | AC-017.2 — Triage to Open | `test_bug_without_assignee_cannot_move_from_triage_to_open` | API / Validation | Partial |
-| REQ-017 | AC-017.2 — Triage to Open | — | UI | Pending |
+| REQ-017 | AC-017.2 — Triage to Open | `test_move_to_open_requires_eligible_selection_and_resets_after_transition` | Frontend unit | Partial |
+| REQ-017 | AC-017.2 — Triage to Open | — | UI | Partial |
+| REQ-017 | AC-017.2 — Triage to Open | Lifecycle disabled-state: empty/cleared selection, eligible QA/Developer, successful transition (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_project_owner_can_move_bug_from_open_to_development` | API | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_open_to_development_requires_valid_developer_assignee` | API / Validation | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_qa_analyst_cannot_move_bug_from_open_to_development` | API / Security | Partial |
 | REQ-017 | AC-017.3 — Open to Development | `test_non_assigned_developer_cannot_move_bug_from_open_to_development` | API / Security | Partial |
-| REQ-017 | AC-017.3 — Open to Development | — | UI | Pending |
+| REQ-017 | AC-017.3 — Open to Development | `test_move_to_development_requires_developer_selection_and_resets_after_transition` | Frontend unit | Partial |
+| REQ-017 | AC-017.3 — Open to Development | — | UI | Partial |
+| REQ-017 | AC-017.3 — Open to Development | Lifecycle disabled-state: empty/cleared/non-Developer selection, valid Developer, successful transition (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.4 — Development to Testing | `test_assigned_developer_can_move_bug_from_development_to_testing` | API | Partial |
 | REQ-017 | AC-017.4 — Development to Testing | `test_project_owner_can_move_bug_from_development_to_testing` | API | Partial |
 | REQ-017 | AC-017.4 — Development to Testing | `test_non_assigned_developer_cannot_move_bug_from_development_to_testing` | API / Security | Partial |
 | REQ-017 | AC-017.4 — Development to Testing | `test_bug_cannot_move_to_testing_with_developer_assignee` | API / Validation | Partial |
+| REQ-017 | AC-017.4 — Development to Testing | `test_send_to_testing_and_close_retain_required_selection_behavior` | Frontend unit | Partial |
 | REQ-017 | AC-017.4 — Development to Testing | — | UI | Pending |
+| REQ-017 | AC-017.4 — Development to Testing | Lifecycle disabled-state regression: Send to Testing requires QA selection (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_pass_bug_and_close_it` | API | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_project_owner_can_pass_bug_and_close_it` | API | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_assigned_qa_can_fail_bug_and_return_it_to_development` | API | Partial |
@@ -338,12 +344,15 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.5 — Testing Outcome | `test_failed_flow_does_not_use_fix_version` | Frontend unit | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | — | UI | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | Fix Version on Pass: blank value, prefill/replacement, Failed preservation, and Pass/Fail labels (user-reported browser verification) | Manual / Browser | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | Lifecycle disabled-state regression: Pass/Fail and Fix Version behavior remain intact (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_non_assigned_developer_cannot_close_bug_without_fixing` | API / Security | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_bug_cannot_be_closed_without_resolution` | API / Validation | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_fixed_resolution_cannot_be_manually_selected_when_closing_bug` | API / Validation | Partial |
+| REQ-017 | AC-017.6 — Close Without Fixing | `test_send_to_testing_and_close_retain_required_selection_behavior` | Frontend unit | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | — | UI | Pending |
+| REQ-017 | AC-017.6 — Close Without Fixing | Lifecycle disabled-state regression: Close requires resolution selection (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_project_owner_can_move_closed_bug_to_triage` | API | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_project_owner_can_move_unassigned_closed_bug_to_triage` | API | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_unauthorized_user_cannot_move_closed_bug_to_triage` | API / Security | Partial |
@@ -357,6 +366,10 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.8 — Invalid Status Transitions | `test_bug_cannot_move_from_testing_back_to_triage` | API / Validation | Partial |
 | REQ-017 | AC-017.8 — Invalid Status Transitions | — | UI | Pending |
 | REQ-017 | AC-017.9 — Status Update Timestamp | `test_changing_bug_status_updates_last_updated_timestamp` | API | Covered |
+
+Lifecycle disabled-state coverage in `tests/frontend/lifecycle-action-disabled-state.test.cjs` runs the actual page script with DOM/request substitutes. Move to Open requires a selected project QA Analyst or Developer; Move to Development requires a selected project Developer under the existing actor rules. Tests cover initial empty selection, valid selection, clearing/ineligible selection, defensive validation without a request, unchanged valid payloads, and control reset after transitions. Send to Testing and Close retain their required-selection behavior. Existing automated and Fix Version on Pass evidence is unchanged.
+
+Manual browser verification of this disabled-state fix reported by the user passed: Move to Open is disabled with no assignee, enables for an eligible QA Analyst or Developer, and disables again when cleared; valid Triage-to-Open transitions succeed. Move to Development stays disabled for empty or non-Developer selections, enables for a valid Developer, and disables again when cleared; valid Open-to-Development transitions succeed. Regression checks confirmed Send to Testing remains disabled until a QA Analyst is selected, Close remains disabled until a resolution is selected, and Pass/Fail and Fix Version behavior remain intact. This evidence covers the verified selection behavior; broader lifecycle UI/accessibility coverage remains incomplete and the affected ACs remain Partial.
 
 **Coverage note:** Project Owner lifecycle authority is now covered at the API layer for:
 
