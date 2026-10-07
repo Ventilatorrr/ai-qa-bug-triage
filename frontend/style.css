@@ -1282,6 +1282,43 @@ button:disabled {
     margin-bottom: 0;
 }
 
+#lifecycle-pass-fix-version-field {
+    position: relative;
+}
+
+#lifecycle-pass-fix-version {
+    /* Keep the existing total vertical padding and outer control dimensions. */
+    padding: 16px 12px 4px;
+    text-align: center;
+}
+
+#lifecycle-pass-fix-version-field label {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    right: 12px;
+    transform: translateY(-50%);
+
+    margin: 0;
+    padding: 0;
+    color: var(--placeholder-text);
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    line-height: 1;
+    text-align: center;
+    cursor: text;
+}
+
+#lifecycle-pass-fix-version:focus + label,
+#lifecycle-pass-fix-version:not(:placeholder-shown) + label {
+    top: 4px;
+    transform: none;
+    font-size: 10px;
+    font-style: normal;
+    line-height: 1.2;
+}
+
 .bug-lifecycle-guidance {
     width: 100%;
 

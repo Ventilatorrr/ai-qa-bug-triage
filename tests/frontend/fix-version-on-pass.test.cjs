@@ -64,14 +64,19 @@ async function page({role = "QA Analyst", status = "Testing", fixVersion = null,
 test("test_passed_fix_version_input_visible_and_sends_value", async () => {
     const html = fs.readFileSync(path.join(__dirname, "../../frontend/bugs.html"), "utf8");
     const input = html.match(/<input\b[^>]*id="lifecycle-pass-fix-version"[^>]*>/)?.[0];
+    const field = html.match(/<div\b[^>]*id="lifecycle-pass-fix-version-field"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+    const labels = [...(field || "").matchAll(/<label\b([^>]*)for="lifecycle-pass-fix-version"([^>]*)>([\s\S]*?)<\/label>/g)];
     assert.ok(input, "Fix Version input exists in HTML");
     assert.doesNotMatch(input, /\brequired\b/);
-    assert.match(input, /placeholder="Fix Version \(optional\)"/);
+    assert.equal(labels.length, 1, "One associated label exists inside the control");
+    assert.equal(labels[0][3].trim(), "Fix Version (optional)");
+    assert.doesNotMatch(labels[0][1] + labels[0][2], /\bhidden\b|aria-hidden="true"/, "Label is not hidden");
+    assert.match(input, /placeholder=" "/, "Blank placeholder supports CSS empty-state detection");
+    assert.doesNotMatch(input, /aria-label(?:ledby)?=/, "The semantic label provides the accessible name");
     assert.doesNotMatch(html, /lifecycle-confirm-pass-button/, "No Confirm Passed button");
     assert.doesNotMatch(html, /lifecycle-cancel-pass-button/, "No Cancel button");
     assert.doesNotMatch(html, /lifecycle-pass-confirmation/, "No confirmation container");
     assert.doesNotMatch(html, /lifecycle-pass-fix-version-help/, "No Passed guidance paragraph");
-    assert.doesNotMatch(html, /<label\b[^>]*for="lifecycle-pass-fix-version"/, "No label above the input");
 
     for (const [current, entered, expected, role] of [
         [null, "1.3.0", "1.3.0", "QA Analyst"],
