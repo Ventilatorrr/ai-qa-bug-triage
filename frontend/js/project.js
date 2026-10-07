@@ -890,9 +890,15 @@ toggleMembersButton.addEventListener(
    Member Form
    ========================================================= */
 
+function clearWorkflowFeedback() {
+    showBugMessage("");
+    showMemberMessage("");
+}
+
 showMemberFormButton.addEventListener(
     "click",
     function () {
+        clearWorkflowFeedback();
         memberForm.hidden = false;
 
         showMemberFormButton.hidden = true;
@@ -950,6 +956,7 @@ bugAssigneeInput.addEventListener("change", function () {
 showBugFormButton.addEventListener(
     "click",
     async function () {
+        clearWorkflowFeedback();
         ++bugFormSession;
         newBugAiAssistButton.hidden = true;
         newBugAiMessage.textContent = "";
