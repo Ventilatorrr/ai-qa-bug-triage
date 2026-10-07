@@ -21,6 +21,7 @@ def create_bug(
     conn = get_connection()
 
     try:
+        conn.execute("BEGIN IMMEDIATE")
         membership = conn.execute(
             """
             SELECT role
@@ -62,6 +63,10 @@ def create_bug(
                     detail="Invalid bug assignee."
                 )
 
+        bug_number = conn.execute(
+            "SELECT next_bug_number FROM projects WHERE id=?", (project_id,)
+        ).fetchone()[0]
+
         now = datetime.now(timezone.utc).isoformat()
 
         cursor = conn.execute(
@@ -83,9 +88,10 @@ def create_bug(
                 resolution,
                 created_by,
                 created_at,
-                updated_at
+                updated_at,
+                bug_number
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 project_id,
@@ -104,19 +110,28 @@ def create_bug(
                 None,
                 user_id,
                 now,
-                now
+                now,
+                bug_number
             )
         )
 
         bug_id = cursor.lastrowid
 
+        conn.execute(
+            "UPDATE projects SET next_bug_number=next_bug_number+1 WHERE id=?",
+            (project_id,),
+        )
         conn.commit()
 
+    except BaseException:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
     return {
         "id": bug_id,
+        "bug_number": bug_number,
         "project_id": project_id,
         "title": bug.title.strip(),
         "affected_version": bug.affected_version,
@@ -172,7 +187,8 @@ def get_bugs(
                 b.status,
                 b.resolution,
                 b.assignee_id,
-                b.updated_at
+                b.updated_at,
+                b.bug_number
             FROM bugs b
             WHERE b.project_id = ?
             ORDER BY b.updated_at DESC
@@ -192,16 +208,17 @@ def get_bugs(
             "status": row[4],
             "resolution": row[5],
             "assignee_id": row[6],
-            "updated_at": row[7]
+            "updated_at": row[7],
+            "bug_number": row[8]
         }
         for row in rows
     ]
 
 
-@router.get("/projects/{project_id}/bugs/{bug_id}")
+@router.get("/projects/{project_id}/bugs/{bug_number}")
 def get_bug(
     project_id: int,
-    bug_id: int,
+    bug_number: int,
     authorization: str | None = Header(default=None)
 ):
     user_id = get_current_user_id(authorization)
@@ -244,11 +261,12 @@ def get_bug(
                 actual_result,
                 created_by,
                 created_at,
-                updated_at
+                updated_at,
+                bug_number
             FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         ).fetchone()
 
     finally:
@@ -278,14 +296,15 @@ def get_bug(
         "actual_result": row[14],
         "created_by": row[15],
         "created_at": row[16],
-        "updated_at": row[17]
+        "updated_at": row[17],
+        "bug_number": row[18]
     }
 
 
-@router.patch("/projects/{project_id}/bugs/{bug_id}")
+@router.patch("/projects/{project_id}/bugs/{bug_number}")
 def update_bug(
     project_id: int,
-    bug_id: int,
+    bug_number: int,
     bug: BugUpdate,
     authorization: str | None = Header(default=None)
 ):
@@ -312,9 +331,9 @@ def update_bug(
             """
             SELECT id, status, assignee_id
             FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         ).fetchone()
 
         if existing_bug is None:
@@ -418,13 +437,13 @@ def update_bug(
         fields.append("updated_at = ?")
         values.append(now)
 
-        values.extend([bug_id, project_id])
+        values.extend([project_id, bug_number])
 
         conn.execute(
             f"""
             UPDATE bugs
             SET {", ".join(fields)}
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
             values
         )
@@ -451,11 +470,12 @@ def update_bug(
                 actual_result,
                 created_by,
                 created_at,
-                updated_at
+                updated_at,
+                bug_number
             FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         ).fetchone()
 
     finally:
@@ -479,14 +499,15 @@ def update_bug(
         "actual_result": row[14],
         "created_by": row[15],
         "created_at": row[16],
-        "updated_at": row[17]
+        "updated_at": row[17],
+        "bug_number": row[18]
     }
 
 
-@router.patch("/projects/{project_id}/bugs/{bug_id}/status")
+@router.patch("/projects/{project_id}/bugs/{bug_number}/status")
 def update_bug_status(
     project_id: int,
-    bug_id: int,
+    bug_number: int,
     status_update: BugStatusUpdate,
     authorization: str | None = Header(default=None)
 ):
@@ -517,9 +538,9 @@ def update_bug_status(
                 resolution,
                 assignee_id
             FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         ).fetchone()
 
         if bug is None:
@@ -925,7 +946,7 @@ def update_bug_status(
                 resolution = ?,
                 fix_version = CASE WHEN ? THEN ? ELSE fix_version END,
                 updated_at = ?
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
             (
                 requested_status,
@@ -934,8 +955,8 @@ def update_bug_status(
                 fix_version_supplied,
                 status_update.fix_version,
                 now,
-                bug_id,
-                project_id
+                project_id,
+                bug_number
             )
         )
 
@@ -961,11 +982,12 @@ def update_bug_status(
                 actual_result,
                 created_by,
                 created_at,
-                updated_at
+                updated_at,
+                bug_number
             FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         ).fetchone()
 
     finally:
@@ -989,14 +1011,15 @@ def update_bug_status(
         "actual_result": row[14],
         "created_by": row[15],
         "created_at": row[16],
-        "updated_at": row[17]
+        "updated_at": row[17],
+        "bug_number": row[18]
     }
 
 
-@router.delete("/projects/{project_id}/bugs/{bug_id}", status_code=204)
+@router.delete("/projects/{project_id}/bugs/{bug_number}", status_code=204)
 def delete_bug(
     project_id: int,
-    bug_id: int,
+    bug_number: int,
     authorization: str | None = Header(default=None)
 ):
     user_id = get_current_user_id(authorization)
@@ -1028,9 +1051,9 @@ def delete_bug(
             """
             SELECT id
             FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         ).fetchone()
 
         if bug is None:
@@ -1042,9 +1065,9 @@ def delete_bug(
         conn.execute(
             """
             DELETE FROM bugs
-            WHERE id = ? AND project_id = ?
+            WHERE project_id = ? AND bug_number = ?
             """,
-            (bug_id, project_id)
+            (project_id, bug_number)
         )
 
         conn.commit()

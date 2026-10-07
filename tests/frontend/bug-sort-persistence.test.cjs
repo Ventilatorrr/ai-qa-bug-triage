@@ -26,13 +26,13 @@ function storage() {
 
 const key = (user = 1, project = 1) => `bug-list-sort:${user}:${project}`;
 const bugs = [
-    {id: 9, title: "Zulu", severity: "Minor", priority: "Low", status: "Open", assignee_id: 1, updated_at: "2026-10-01T00:00:00Z"},
-    {id: 2, title: "Alpha", severity: "Blocker", priority: "Urgent", status: "Triage", assignee_id: 2, updated_at: "2026-10-03T00:00:00Z"},
-    {id: 4, title: "Bravo", severity: "Major", priority: "Medium", status: "Closed", assignee_id: 3, updated_at: "2026-10-02T00:00:00Z"}
+    {id: 9, bug_number: 2, title: "Zulu", severity: "Minor", priority: "Low", status: "Open", assignee_id: 1, updated_at: "2026-10-01T00:00:00Z"},
+    {id: 2, bug_number: 11, title: "Alpha", severity: "Blocker", priority: "Urgent", status: "Triage", assignee_id: 2, updated_at: "2026-10-03T00:00:00Z"},
+    {id: 4, bug_number: 1, title: "Bravo", severity: "Major", priority: "Medium", status: "Closed", assignee_id: 3, updated_at: "2026-10-02T00:00:00Z"}
 ];
 const columns = ["id", "title", "severity", "priority", "status", "assignee_id", "updated_at"];
 
-async function page({session = storage(), user = 1, project = 1, script = "project.js", deletionOk = true} = {}) {
+async function page({session = storage(), user = 1, project = 1, script = "project.js", deletionOk = true, reports = bugs} = {}) {
     const nodes = new Map();
     const node = selector => {
         if (!nodes.has(selector)) nodes.set(selector, new PageElement());
@@ -54,7 +54,7 @@ async function page({session = storage(), user = 1, project = 1, script = "proje
             json: async () => options?.method === "DELETE" ? {detail: "Not authorized."}
                 : script === "projects.js" ? []
                 : url.endsWith("/members") ? [{user_id: user, email: "qa@example.com", role: "Project Owner"}]
-                : url.endsWith("/bugs") ? bugs : {id: project, name: "QA Project"}
+                : url.endsWith("/bugs") ? reports : {id: project, name: "QA Project"}
         })
     });
     if (session !== undefined && session !== null) {
@@ -86,12 +86,20 @@ async function page({session = storage(), user = 1, project = 1, script = "proje
 }
 
 function assertDefault(f) {
-    assert.deepEqual(f.order(), ["BUG-2", "BUG-4", "BUG-9"]);
+    assert.deepEqual(f.order(), ["BUG-11", "BUG-1", "BUG-2"]);
     assert.deepEqual(f.active(), [{column: "updated_at", direction: "descending", label: "Last Updated ↓"}]);
 }
 
 test("test_bug_sort_first_visit_defaults_to_last_updated_descending", async () => {
     assertDefault(await page());
+});
+
+test("test_bug_list_rejects_invalid_number_response", async () => {
+    for (const bug_number of [undefined, null, 0, -1, 1.5, "11"]) {
+        const f = await page({reports: [{...bugs[0], bug_number}]});
+        assert.match(f.node("#bug-message").textContent, /Invalid server response/);
+        assert.equal(f.node("#bugs").querySelector("tbody"), null);
+    }
 });
 
 test("test_bug_sort_saves_column_and_direction_on_header_click", async () => {
@@ -107,9 +115,9 @@ test("test_bug_sort_reinitialization_restores_order_indicators_and_links", async
     first.sort("id");
     first.sort("id");
     const returned = await page({session});
-    assert.deepEqual(returned.order(), ["BUG-9", "BUG-4", "BUG-2"]);
+    assert.deepEqual(returned.order(), ["BUG-11", "BUG-2", "BUG-1"]);
     assert.deepEqual(returned.active(), [{column: "id", direction: "descending", label: "Bug ID ↓"}]);
-    assert.equal(returned.node("#bugs").querySelector("tbody").children[0].children[0].children[0].href, "/bugs.html?project_id=1&bug_id=9");
+    assert.equal(returned.node("#bugs").querySelector("tbody").children[0].children[0].children[0].href, "/bugs.html?project_id=1&bug_number=11");
     const reloaded = await page({session});
     assert.deepEqual(reloaded.order(), returned.order());
     assert.deepEqual(reloaded.active(), returned.active());
@@ -117,7 +125,7 @@ test("test_bug_sort_reinitialization_restores_order_indicators_and_links", async
 
 test("test_bug_sort_restores_every_supported_column_and_direction", async () => {
     const ascending = {
-        id: [2, 4, 9], title: [2, 4, 9], severity: [9, 4, 2], priority: [9, 4, 2],
+        id: [4, 9, 2], title: [2, 4, 9], severity: [9, 4, 2], priority: [9, 4, 2],
         status: [2, 9, 4], assignee_id: [9, 2, 4], updated_at: [9, 4, 2]
     };
     for (const column of columns) for (const direction of ["ascending", "descending"]) {
@@ -125,7 +133,7 @@ test("test_bug_sort_restores_every_supported_column_and_direction", async () => 
         session.setItem(key(), JSON.stringify({column, direction}));
         const f = await page({session});
         const ids = direction === "ascending" ? ascending[column] : [...ascending[column]].reverse();
-        assert.deepEqual(f.order(), ids.map(id => `BUG-${id}`), `${column} ${direction}`);
+        assert.deepEqual(f.order(), ids.map(id => `BUG-${bugs.find(bug => bug.id === id).bug_number}`), `${column} ${direction}`);
         assert.equal(f.active()[0].column, column);
         assert.equal(f.active()[0].direction, direction);
         assert.ok(f.active()[0].label.endsWith(direction === "ascending" ? " ↑" : " ↓"));
@@ -170,7 +178,7 @@ test("test_bug_sort_storage_failures_preserve_working_default_and_header_sorting
         assertDefault(f);
         f.sort("id");
         f.sort("id");
-        assert.deepEqual(f.order(), ["BUG-9", "BUG-4", "BUG-2"]);
+        assert.deepEqual(f.order(), ["BUG-11", "BUG-2", "BUG-1"]);
         assert.equal(f.active()[0].column, "id");
     }
 });
@@ -180,7 +188,7 @@ test("test_bug_sort_back_forward_refresh_preserves_preference", async () => {
     f.sort("title");
     f.sort("title");
     await f.pageshow();
-    assert.deepEqual(f.order(), ["BUG-9", "BUG-4", "BUG-2"]);
+    assert.deepEqual(f.order(), ["BUG-2", "BUG-1", "BUG-11"]);
     assert.equal(f.active()[0].direction, "descending");
 });
 

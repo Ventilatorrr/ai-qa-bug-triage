@@ -19,7 +19,8 @@ def lifecycle_bug(test_client, authenticated_user_factory, project_factory, memb
                   "affected_version": "0.1.0", "fix_version": fix_version},
         )
         assert response.status_code == 201
-        url = f"/projects/{project['id']}/bugs/{response.json()['id']}"
+        number = response.json()["bug_number"]
+        url = f"/projects/{project['id']}/bugs/{response.json()['bug_number']}"
         for payload in [
             {"status": "Open"},
             {"status": "Development"},
@@ -30,6 +31,7 @@ def lifecycle_bug(test_client, authenticated_user_factory, project_factory, memb
                 break
             response = test_client.patch(f"{url}/status", headers=headers, json=payload)
             assert response.status_code == 200
+            assert response.json()["bug_number"] == number
         assert response.json()["status"] == state
         return url, response.json(), actors
 
@@ -61,6 +63,7 @@ def test_passed_transition_persists_optional_fix_version(
     assert response.status_code == 200
     result = response.json()
     assert result["status"] == "Closed"
+    assert result["bug_number"] == before["bug_number"]
     assert result["resolution"] == "Fixed"
     assert result["fix_version"] == expected
     assert result["assignee_id"] == actors["qa"]["user_id"]
@@ -83,6 +86,7 @@ def test_failed_transition_preserves_fix_version(test_client, lifecycle_bug):
     assert response.status_code == 200
     result = response.json()
     assert result["status"] == "Development"
+    assert result["bug_number"] == before["bug_number"]
     assert result["resolution"] is None
     assert result["assignee_id"] == actors["developer"]["user_id"]
     assert result["fix_version"] == before["fix_version"]

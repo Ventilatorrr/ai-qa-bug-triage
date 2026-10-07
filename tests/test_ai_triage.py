@@ -122,7 +122,7 @@ def test_ai_valid_suggestion_cannot_modify_bug_without_user_save(
 ):
     """Mock GPT-6 Luna output proposes Minor -> Major; AI Assist cannot save it."""
     owner, _, _, bug, base = ai_project
-    bug_url = f"{base}/bugs/{bug['id']}"
+    bug_url = f"{base}/bugs/{bug['bug_number']}"
     setup = test_client.patch(bug_url, headers=headers(owner), json={"severity": "Minor"})
     assert setup.status_code == 200
     stored = test_client.get(bug_url, headers=headers(owner))
@@ -266,7 +266,7 @@ def test_ai_triage_configured_requests_authorize_before_any_pipeline_work(
     elif rejection == "non_member":
         auth = headers(authenticated_user_factory(email="outsider@example.com"))
     else:
-        assert test_client.patch(f"{base}/bugs/{bug['id']}/status", headers=auth, json={"status": "Open"}).status_code == 200
+        assert test_client.patch(f"{base}/bugs/{bug['bug_number']}/status", headers=auth, json={"status": "Open"}).status_code == 200
 
     def unexpected(*args):
         pytest.fail("Authorization must happen before any pipeline work.")
@@ -340,7 +340,7 @@ def test_ai_triage_instruction_like_content_and_output_cannot_perform_actions(
     assert json.loads(sent["input"][0]["content"])["current_form"] == form
     assert instruction not in sent["instructions"]
     assert persisted_state(test_client, ai_project) == before
-    assert test_client.get(f"{base}/bugs/{bug['id']}", headers=headers(owner)).json() == bug
+    assert test_client.get(f"{base}/bugs/{bug['bug_number']}", headers=headers(owner)).json() == bug
 
     # Neither the supplied instructions nor returned role/action fields grant
     # this member AI permissions on the next request.

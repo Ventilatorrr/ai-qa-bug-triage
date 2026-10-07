@@ -9,7 +9,7 @@ from app.schemas import AiAssistRequest
 router = APIRouter(tags=["AI Assist"])
 
 
-def authorize_ai_assist(project_id, bug_id, authorization):
+def authorize_ai_assist(project_id, bug_number, authorization):
     user_id = get_current_user_id(authorization)
     conn = get_connection()
     try:
@@ -21,21 +21,24 @@ def authorize_ai_assist(project_id, bug_id, authorization):
             raise HTTPException(status_code=404, detail="Project not found.")
         if member[0] not in ("Project Owner", "QA Analyst"):
             raise HTTPException(status_code=403, detail="You are not authorized to request AI assistance.")
-        if bug_id is not None:
+        bug_id = None
+        if bug_number is not None:
             bug = conn.execute(
-                "SELECT status FROM bugs WHERE id = ? AND project_id = ?",
-                (bug_id, project_id),
+                "SELECT id, status FROM bugs WHERE project_id = ? AND bug_number = ?",
+                (project_id, bug_number),
             ).fetchone()
             if bug is None:
                 raise HTTPException(status_code=404, detail="Bug not found.")
-            if bug[0] != "Triage":
+            if bug[1] != "Triage":
                 raise HTTPException(status_code=409, detail="AI assistance requires a bug in Triage.")
+            bug_id = bug[0]
+        return bug_id
     finally:
         conn.close()
 
 
-def request_authorized_triage(project_id, bug_id, form, authorization):
-    authorize_ai_assist(project_id, bug_id, authorization)
+def request_authorized_triage(project_id, bug_number, form, authorization):
+    bug_id = authorize_ai_assist(project_id, bug_number, authorization)
     try:
         result = ai_triage.request_triage(project_id, bug_id, form)
         return {"outcome": result.outcome, "suggestions": result.suggestions}
@@ -54,11 +57,11 @@ def request_new_bug_triage(
     return request_authorized_triage(project_id, None, form, authorization)
 
 
-@router.post("/projects/{project_id}/bugs/{bug_id}/ai-assist")
+@router.post("/projects/{project_id}/bugs/{bug_number}/ai-assist")
 def request_edit_bug_triage(
     project_id: int,
-    bug_id: int,
+    bug_number: int,
     form: AiAssistRequest,
     authorization: str | None = Header(default=None),
 ):
-    return request_authorized_triage(project_id, bug_id, form, authorization)
+    return request_authorized_triage(project_id, bug_number, form, authorization)

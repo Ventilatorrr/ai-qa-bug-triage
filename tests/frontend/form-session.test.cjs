@@ -19,7 +19,7 @@ function pageFixture(edit, {realListRefresh = false} = {}) {
         return nodes.get(selector);
     };
     const window = new Element();
-    window.location = {search: "?id=1&project_id=1&bug_id=2", replace() {}};
+    window.location = {search: "?id=1&project_id=1&bug_number=11", replace() {}};
     Object.assign(f.runtime, {
         window, URLSearchParams, console,
         localStorage: {getItem() { return null; }, removeItem() {}},
@@ -29,7 +29,7 @@ function pageFixture(edit, {realListRefresh = false} = {}) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js", edit ? "bugs.js" : "project.js"), "utf8"), f.runtime);
     const actualLoadBugs = f.runtime.loadBugs;
     const actualShowBugMessage = f.runtime.showBugMessage;
-    const stored = {id: 2, title: "Stored", status: "Triage", assignee_id: null};
+    const stored = {id: 2, project_id: 1, bug_number: 11, title: "Stored", status: "Triage", assignee_id: null};
     for (const field of ["environment", "description", "steps_to_reproduce", "expected_result", "actual_result", "severity", "priority", "affected_version", "fix_version"]) stored[field] = null;
     if (edit) vm.runInContext(`currentBug = ${JSON.stringify(stored)}`, f.runtime);
     const messages = [], rendered = [];
@@ -39,7 +39,7 @@ function pageFixture(edit, {realListRefresh = false} = {}) {
         updateBugAssigneeVisibility: async () => { f.button.hidden = false; },
         loadBugs: realListRefresh ? actualLoadBugs : async ({ silent = false } = {}) => { refreshes++; if (f.loadBugsFailure && !silent) node("#bug-message").textContent = f.loadBugsFailure; },
         loadProjectMembers: async () => true,
-        isValidBugResponse: data => Number.isInteger(data?.id),
+        isValidBugResponse: f.runtime.isValidBugResponse,
         renderBug: data => rendered.push(data.title), renderRoleSpecificActions() {},
         showBugMessage: realListRefresh ? actualShowBugMessage : (...args) => messages.push(args),
         showMessage: (target, text) => { target.textContent = text; messages.push([text]); },
@@ -118,7 +118,7 @@ async function check_manual_save_after_ai_failure_or_no_usable_outcome(edit) {
         await f.save();
         assert.equal(writes.length, 1);
         assert.equal(writes[0].method, edit ? "PATCH" : "POST");
-        assert.equal(writes[0].url, edit ? "/projects/1/bugs/2" : "/projects/1/bugs");
+        assert.equal(writes[0].url, edit ? "/projects/1/bugs/11" : "/projects/1/bugs");
         assert.equal(writes[0].body.title, "Saved manually after AI");
         assert.equal(writes[0].body.environment, "Manually revised environment");
         assert.equal(writes[0].body.description, "Keep\nmanual description");
@@ -150,7 +150,10 @@ async function check_current_success_closes_form_and_discards_ai(edit) {
     assert.equal(f.area.hidden, true);
     assert.ok(f.messages.some(([text]) => /successfully/.test(text)));
     if (edit) assert.equal(f.saveButton.disabled, false);
-    else assert.equal(f.inputs[`#${f.prefix}title`].value, "");
+    else {
+        assert.equal(f.inputs[`#${f.prefix}title`].value, "");
+        assert.ok(f.messages.some(([text]) => text === 'BUG-11 "Current submission" created successfully.'));
+    }
 }
 
 
@@ -208,6 +211,20 @@ test("test_edit_save_late_success_preserves_reopened_form_and_ai", async functio
 
 test("test_new_create_current_success_closes_form_and_discards_ai", async function test_new_create_current_success_closes_form_and_discards_ai() {
     await check_current_success_closes_form_and_discards_ai(false);
+});
+
+test("test_new_create_invalid_number_response_preserves_form", async () => {
+    for (const bug_number of [undefined, null, 0, -1, 1.5, "11"]) {
+        const f = pageFixture(false);
+        await f.open();
+        f.inputs["#bug-title"].value = "Keep unsaved report";
+        f.send = async () => ({ok: true, json: async () => ({...f.stored, bug_number})});
+        await f.save();
+        assert.equal(f.form.hidden, false);
+        assert.equal(f.inputs["#bug-title"].value, "Keep unsaved report");
+        assert.equal(f.refreshes(), 0);
+        assert.ok(f.messages.some(([text]) => /Invalid server response/.test(text)));
+    }
 });
 
 test("test_edit_save_current_success_closes_form_and_discards_ai", async function test_edit_save_current_success_closes_form_and_discards_ai() {
@@ -309,7 +326,7 @@ async function check_delayed_create_list_refresh_preserves_newer_session(boundar
     for (const ok of [false, true]) {
         const f = pageFixture(false, {realListRefresh: true});
         const started = deferred(), delayed = deferred();
-        const list = [{id: 2, title: "Persisted earlier Create"}];
+        const list = [{id: 2, bug_number: 11, title: "Persisted earlier Create"}];
         const result = ok ? list : {detail: "Unable to load bug list."};
         let renders = 0;
         f.runtime.renderBugs = () => { renders++; };
@@ -326,7 +343,7 @@ async function check_delayed_create_list_refresh_preserves_newer_session(boundar
         await f.open();
         f.inputs["#bug-title"].value = "Current Create";
         await f.submit();
-        f.send = async () => ({ok: true, json: async () => ({id: 2, title: "Current Create"})});
+        f.send = async () => ({ok: true, json: async () => ({id: 2, bug_number: 11, title: "Current Create"})});
         const first = f.save();
         await started.promise;
         assert.equal(f.form.hidden, true, "current Create performs normal cleanup before refresh finishes");

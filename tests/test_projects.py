@@ -667,7 +667,7 @@ def test_removing_member_unassigns_only_their_bugs_in_that_project(
         bugs.append(response.json())
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bugs[0]['id']}/status",
+        f"/projects/{project['id']}/bugs/{bugs[0]['bug_number']}/status",
         json={"status": "Open"},
         headers={"Authorization": f"Bearer {owner['token']}"}
     )
@@ -686,7 +686,7 @@ def test_removing_member_unassigns_only_their_bugs_in_that_project(
 
     for bug in bugs:
         response = test_client.get(
-            f"/projects/{bug['project_id']}/bugs/{bug['id']}",
+            f"/projects/{bug['project_id']}/bugs/{bug['bug_number']}",
             headers={"Authorization": f"Bearer {owner['token']}"}
         )
 

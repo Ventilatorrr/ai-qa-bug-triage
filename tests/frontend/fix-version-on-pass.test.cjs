@@ -21,7 +21,7 @@ async function page({role = "QA Analyst", status = "Testing", fixVersion = null,
     };
     node("#edit-bug-form").hidden = true;
     const window = new Element();
-    window.location = {search: "?project_id=1&bug_id=2", replace() {}};
+    window.location = {search: "?project_id=1&bug_number=2", replace() {}};
     const runtime = vm.createContext({
         document: {querySelector: node, querySelectorAll: () => [], createElement: tag => new PageElement(tag)},
         window, URLSearchParams, console,
@@ -36,7 +36,7 @@ async function page({role = "QA Analyst", status = "Testing", fixVersion = null,
         {user_id: 3, email: "qa@example.com", role: "QA Analyst"},
     ];
     const actor = members.find(member => member.role === role);
-    const bug = {id: 2, status, assignee_id: assigned ? 3 : 1, fix_version: fixVersion};
+    const bug = {id: 42, project_id: 1, bug_number: 2, title: "Example", status, assignee_id: assigned ? 3 : 1, fix_version: fixVersion};
     vm.runInContext(`currentBug = ${JSON.stringify(bug)}; projectMembers = ${JSON.stringify(members)}; currentMember = ${JSON.stringify(actor)};`, runtime);
     const requests = [];
     Object.assign(runtime, {
@@ -52,7 +52,6 @@ async function page({role = "QA Analyst", status = "Testing", fixVersion = null,
             runtime.renderLifecycleControls();
             return true;
         },
-        isValidBugResponse: data => data?.id === 2,
     });
     runtime.renderLifecycleControls();
     const click = async selector => {
