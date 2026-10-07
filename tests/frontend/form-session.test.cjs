@@ -80,7 +80,7 @@ async function check_late_success_preserves_reopened_form_and_ai(edit) {
     assert.equal(f.openButton.hidden, true);
     assert.equal(f.inputs[`#${f.prefix}title`].value, "Newer unsaved title");
     assert.equal(f.inputs[`#${f.prefix}environment`].value, "Newer environment");
-    assert.equal(f.card("Title").all("dd")[1].textContent, "Newer AI title");
+    assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "Newer AI title");
     assert.equal(f.button.disabled, true);
     if (edit) assert.ok(f.rendered.includes("First submission"), "persisted result remains visible in surrounding details");
     else assert.equal(f.refreshes(), 1, "persisted result refreshes bug list");
@@ -148,6 +148,8 @@ async function check_current_success_closes_form_and_discards_ai(edit) {
     assert.equal(f.form.hidden, true);
     assert.equal(f.openButton.hidden, false);
     assert.equal(f.area.hidden, true);
+    assert.equal(f.form.all("article").length, 0, "Create/Save clears cards from every field row");
+    assert.equal(f.form.classList.contains("has-ai-suggestions"), false);
     assert.ok(f.messages.some(([text]) => /successfully/.test(text)));
     if (edit) assert.equal(f.saveButton.disabled, false);
     else {
@@ -374,7 +376,7 @@ async function check_delayed_create_list_refresh_preserves_newer_session(boundar
         assert.equal(f.inputs["#bug-environment"].value, "Newer environment");
         assert.equal(f.inputs["#bug-description"].value, "Newer description");
         assert.equal(f.message.textContent, aiFeedback);
-        assert.equal(f.card("Title").all("dd")[1].textContent, "Newer pending title");
+        assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "Newer pending title");
         assert.equal(f.area.hidden, false);
         assert.equal(f.button.disabled, true);
         assert.equal(renders, ok ? 1 : 0);

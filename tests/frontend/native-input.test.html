@@ -36,15 +36,18 @@ document.querySelector("#run").addEventListener("click", async function test_ai_
                             environment: `Windows 11${newline}Chrome 152`, description: "Usable\ntext"
                         }})
                     }));
-                    const cards = [...area.querySelectorAll("article")];
-                    check(cards.length === 1 && cards[0].querySelector("h4").textContent === "Description", `${prefix}${action}: mismatched values reached review`);
-                    const reviewed = cards[0].querySelectorAll("dd")[1].textContent;
-                    [...area.querySelectorAll("button")].find(control => control.textContent === action).click();
+                    const cards = [...form.querySelectorAll(".ai-suggestion")];
+                    check(cards.length === 1 && cards[0].querySelector("h4").textContent === "AI Suggestion", `${prefix}${action}: mismatched values reached review`);
+                    check(cards[0].querySelector("h4").getAttribute("aria-label") === "AI suggestion: Description", "Field-specific accessible naming was lost");
+                    const reviewed = cards[0].querySelector(".ai-suggestion-value").textContent;
+                    const footer = form.querySelector(".ai-suggestions-footer");
+                    const reviewRoot = action === "Use" ? cards[0] : footer;
+                    [...reviewRoot.querySelectorAll("button")].find(control => control.textContent === action).click();
                     check(form.querySelector(`#${prefix}description`).value === reviewed, "Reviewed/applied value mismatch");
                     check(input.value === "Keep environment", "Excluded suggestion changed environment");
                     check(form.querySelector(`#${prefix}title`).value === "", "Excluded suggestion changed title");
                     check(form.querySelector(`#${prefix}affected-version`).value === "", "Excluded suggestion changed affected version");
-                    check(!button.disabled && area.hidden, "Review did not finish normally");
+                    check(!button.disabled && area.hidden && footer.hidden, "Review did not finish normally");
                     endAiAssistSession(form);
                     cases++;
                 }

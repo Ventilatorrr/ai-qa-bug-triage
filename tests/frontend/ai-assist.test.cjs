@@ -28,8 +28,8 @@ async function assertRetryUsesEditedValues(f, prefix) {
     assert.equal(sent.title, "Manually revised title");
     assert.equal(sent.environment, "Manually revised environment");
     assert.equal(sent.description, "Manually revised\ncontent");
-    assert.equal(f.card("Title").all("dd")[0].textContent, "Manually revised title");
-    assert.equal(f.card("Title").all("dd")[1].textContent, "Fresh suggestion");
+    assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "Fresh suggestion");
+    assert.equal(f.card("Title").parentElement, f.inputs[`#${prefix}title`].closest(".bug-field-row"));
     assert.equal(f.inputs[`#${prefix}title`].value, "Manually revised title");
     assert.equal(f.button.disabled, true);
     assert.match(f.message.textContent, /ready for review/);
@@ -48,8 +48,9 @@ test("test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all", 
                     title: `Bad${newline}title`, affected_version: `1${newline}2`,
                     environment: `Windows 11${newline}Chrome 152`, description: "Usable\ntext"
                 }));
-                assert.deepEqual(f.area.all("h4").map(node => node.textContent), ["Description"]);
-                const reviewed = f.card("Description").all("dd")[1].textContent;
+                assert.deepEqual(f.form.all("h4").map(node => node.textContent), ["AI Suggestion"]);
+                assert.equal(f.card("Description").all("h4")[0].attributes["aria-label"], "AI suggestion: Description");
+                const reviewed = f.card("Description").querySelector(".ai-suggestion-value").textContent;
                 f.action(action, action === "Use" ? "Description" : undefined);
                 assert.equal(f.inputs[`#${prefix}description`].value, reviewed);
                 assert.equal(input.value, "Keep environment");
@@ -69,7 +70,7 @@ test("test_ai_all_native_input_mismatches_allow_manual_work_and_retry", async fu
         assert.match(f.message.textContent, /No usable AI suggestions/);
         assert.equal(f.button.disabled, false);
         await f.submit(async () => success({environment: "Windows / Chrome"}));
-        const reviewed = f.card("Environment").all("dd")[1].textContent;
+        const reviewed = f.card("Environment").querySelector(".ai-suggestion-value").textContent;
         f.action("Use", "Environment");
         assert.equal(f.inputs[`#${prefix}environment`].value, reviewed);
     }
@@ -151,26 +152,62 @@ test("test_ai_suggestions_review_separates_values_and_follows_form_order", async
         assert.equal(f.inputs[`#${prefix}title`].value, "Original title");
         assert.equal(f.inputs[`#${prefix}severity`].value, "");
         assert.equal(f.area.hidden, false);
+        assert.equal(f.footer.hidden, false);
         assert.equal(f.area.all("h3")[0].textContent, "AI Suggestions");
-        assert.deepEqual(f.area.all("h4").map(node => node.textContent), ["Title", "Actual Result", "Severity", "Assignee"]);
-        assert.deepEqual(f.card("Title").all("dd").map(node => node.textContent), ["Original title", "<script>bad()</script>"]);
-        assert.equal(f.card("Assignee").all("dd")[1].textContent, "qa@example.com (QA Analyst)");
+        assert.deepEqual(f.form.all("h4").map(node => node.textContent), Array(4).fill("AI Suggestion"));
+        assert.deepEqual(f.form.all("h4").map(node => node.attributes["aria-label"]), ["AI suggestion: Title", "AI suggestion: Actual Result", "AI suggestion: Severity", "AI suggestion: Assignee"]);
+        assert.equal(f.form.classList.contains("has-ai-suggestions"), true);
+        assert.equal(f.form.children[0], f.area, "review guidance precedes the field rows");
+        assert.equal(f.area.querySelector(".ai-suggestions-toolbar").all("h3")[0].id, f.area.attributes["aria-labelledby"]);
+        assert.equal(f.area.all("button").length, 0, "bulk controls are outside the top guidance");
+        assert.deepEqual(f.footer.all("button").map(node => node.textContent), ["Use All", "Dismiss All"]);
+        const rows = f.form.querySelectorAll(".bug-field-row");
+        assert.ok(rows.every(row => f.form.children.indexOf(row) < f.form.children.indexOf(f.footer)), "bulk controls follow all field rows");
+        assert.ok(f.form.children.indexOf(f.footer) < f.form.children.indexOf(f.button), "bulk controls precede the normal form actions");
+        assert.equal(f.area.all("article").length, 0, "suggestions live beside fields");
+        for (const suffix of ["affected-version", "environment", "description", "steps", "expected", "priority", "fix-version"]) {
+            const input = f.inputs[`#${prefix}${suffix}`];
+            assert.deepEqual(input.closest(".bug-field-row").children, [input.parentElement], "fields without suggestions have only their full-width field block");
+        }
+        for (const [label, suffix] of [["Title", "title"], ["Actual Result", "actual"], ["Severity", "severity"], ["Assignee", "assignee"]]) {
+            const card = f.card(label), row = f.inputs[`#${prefix}${suffix}`].closest(".bug-field-row");
+            assert.equal(card.parentElement, row);
+            assert.deepEqual(row.children, [f.inputs[`#${prefix}${suffix}`].parentElement, card], "field precedes its suggestion in reading and stacking order");
+            assert.equal(card.attributes["aria-labelledby"], card.all("h4")[0].id);
+            assert.equal(card.all("h4")[0].attributes["aria-label"], `AI suggestion: ${label}`);
+            assert.deepEqual(card.children, [card.all("h4")[0], card.querySelector(".ai-suggestion-value"), card.querySelector(".ai-suggestion-actions")], "all cards show heading, value, then the action row");
+            assert.equal(card.all("p").length, 1, "only the suggested value is displayed");
+            assert.equal(card.all("dl").length, 0, "there is no duplicate current-value comparison");
+            assert.equal(card.all("button")[1].attributes["aria-label"], `Dismiss ${label} suggestion`);
+        }
+        assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "<script>bad()</script>");
+        assert.equal(f.card("Assignee").querySelector(".ai-suggestion-value").textContent, "qa@example.com (QA Analyst)");
         assert.deepEqual(f.card("Title").all("button").map(node => node.textContent), ["Use", "Dismiss"]);
         assert.equal(f.card("Title").all("button")[0].attributes["aria-label"], "Use Title suggestion");
-        assert.ok(f.area.all("button").every(button => button.type === "button"));
-        assert.equal(f.area.all("script").length, 0);
+        const reviewButtons = [...f.footer.all("button"), ...f.form.all("article").flatMap(card => card.all("button"))];
+        assert.ok(reviewButtons.every(button => button.type === "button" && button.classList.contains("ai-review-button")));
+        assert.ok(reviewButtons.every(button => button.classList.contains(button.textContent.startsWith("Use") ? "ai-use-button" : "ai-dismiss-button") && !button.classList.contains("secondary-action-button")));
+        assert.equal(f.form.all("script").length, 0);
         assert.equal(f.button.disabled, true);
         assert.equal(f.requests.length, 1);
     }
 });
 
 test("test_ai_review_tracks_current_values_after_manual_edits", async function test_ai_review_tracks_current_values_after_manual_edits() {
-    const f = fixture("bug-");
-    await f.submit();
-    f.inputs["#bug-title"].value = "Edited while pending";
-    f.inputs["#bug-title"].dispatchEvent({type: "input", bubbles: true});
-    assert.equal(f.card("Title").all("dd")[0].textContent, "Edited while pending");
-    assert.equal(f.card("Title").all("dd")[1].textContent, "Suggested title");
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        await f.submit();
+        const input = f.inputs[`#${prefix}title`], card = f.card("Title");
+        input.value = "Edited while pending";
+        input.dispatchEvent({type: "input", bubbles: true});
+        input.dispatchEvent({type: "change", bubbles: true});
+        assert.equal(input.value, "Edited while pending");
+        assert.equal(input.disabled, false);
+        assert.equal(card.parentElement.children[0], input.parentElement);
+        assert.equal(card.querySelector(".ai-suggestion-value").textContent, "Suggested title");
+        assert.equal(card.all("p").length, 1);
+        assert.equal(f.button.disabled, true);
+    }
 });
 
 test("test_ai_use_replaces_value_removes_pending_and_remains_editable", async function test_ai_use_replaces_value_removes_pending_and_remains_editable() {
@@ -181,12 +218,19 @@ test("test_ai_use_replaces_value_removes_pending_and_remains_editable", async fu
         f.action("Use", "Title");
         assert.equal(f.inputs[`#${prefix}title`].value, "Suggested title");
         assert.equal(f.card("Title"), undefined);
+        const titleInput = f.inputs[`#${prefix}title`];
+        assert.deepEqual(titleInput.closest(".bug-field-row").children, [titleInput.parentElement], "using a suggestion restores that row while other suggestions remain");
+        assert.equal(f.footer.hidden, false);
+        assert.equal(f.footer.all("button")[0].focused, true);
         assert.ok(f.card("Severity"));
         f.inputs[`#${prefix}title`].value = "My revision";
         assert.equal(f.inputs[`#${prefix}title`].disabled, false);
         f.action("Use", "Severity");
         assert.equal(f.inputs[`#${prefix}title`].value, "My revision");
         assert.equal(f.area.hidden, true);
+        assert.equal(f.footer.hidden, true);
+        assert.equal(f.footer.children.length, 0);
+        assert.equal(f.form.classList.contains("has-ai-suggestions"), false);
         assert.equal(f.button.disabled, false);
         assert.equal(f.requests.length, 1);
     }
@@ -199,10 +243,13 @@ test("test_ai_dismiss_preserves_form_and_excludes_field_from_use_all", async fun
     f.action("Dismiss", "Title");
     assert.equal(f.inputs["#bug-title"].value, "Keep this");
     assert.equal(f.card("Title"), undefined);
+    assert.deepEqual(f.inputs["#bug-title"].closest(".bug-field-row").children, [f.inputs["#bug-title"].parentElement], "dismissing a suggestion restores that row while other suggestions remain");
+    assert.equal(f.footer.hidden, false);
     f.action("Use All");
     assert.equal(f.inputs["#bug-title"].value, "Keep this");
     assert.equal(f.inputs["#bug-severity"].value, "Major");
     assert.equal(f.area.hidden, true);
+    assert.equal(f.footer.hidden, true);
 });
 
 test("test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields", async function test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields() {
@@ -221,7 +268,8 @@ test("test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields
         assert.equal(f.inputs[`#${prefix}assignee`].value, "7");
         f.inputs[`#${prefix}severity`].value = "Moderate";
         assert.equal(f.inputs[`#${prefix}severity`].disabled, false);
-        assert.equal(f.area.all("article").length, 0);
+        assert.equal(f.form.all("article").length, 0);
+        assert.equal(f.form.classList.contains("has-ai-suggestions"), false);
         assert.equal(f.button.disabled, false);
         assert.equal(f.requests.length, 1);
     }
@@ -256,7 +304,7 @@ test("test_ai_repeat_request_waits_for_resolution_and_uses_latest_form", async f
     assert.equal(f.requests.length, 2);
     assert.equal(JSON.parse(f.requests[1].options.body).title, "Latest unsaved title");
     assert.equal(JSON.parse(f.requests[1].options.body).severity, "Major");
-    assert.equal(f.card("Title").all("dd")[1].textContent, "Same suggestion");
+    assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "Same suggestion");
     assert.ok(f.card("Severity"));
 });
 
@@ -269,6 +317,7 @@ test("test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry"
         await f.submit(async () => ({ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {}})}));
         assert.match(f.message.textContent, /No usable AI suggestions/);
         assert.equal(f.area.hidden, true);
+        assert.equal(f.message.classList.contains("message-error"), false);
         assert.equal(f.button.disabled, false);
         assertFormValues(f, original);
         assert.equal(f.requests.length, 1);
@@ -309,12 +358,14 @@ test("test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry", asyn
             waiting.resolve(send());
             await pending;
             assert.match(f.message.textContent, /Unable|Safe provider failure|not configured|could not generate/);
+            assert.equal(f.message.classList.contains("message-error"), true);
             assertFormValues(f, original);
             assert.equal(f.area.hidden, true);
             assert.equal(f.button.disabled, false);
             assert.equal(f.requests.length, 1);
             assert.equal(submits, 0);
             await assertRetryUsesEditedValues(f, prefix);
+            assert.equal(f.message.classList.contains("message-error"), false);
             assert.equal(submits, 0);
         }
     }
@@ -327,14 +378,18 @@ test("test_ai_cancel_discards_pending_and_detached_actions_cannot_apply", async 
         const abandonedUse = f.card("Title").all("button")[0];
         f.runtime.endAiAssistSession(f.form);
         assert.equal(f.area.hidden, true);
+        assert.equal(f.footer.hidden, true);
         assert.equal(f.area.children.length, 0);
+        assert.equal(f.footer.children.length, 0);
+        assert.equal(f.form.all("article").length, 0, "session cleanup also removes cards beside the fields");
+        assert.equal(f.form.classList.contains("has-ai-suggestions"), false);
         assert.equal(f.message.textContent, "");
         f.begin();
         abandonedUse.click();
         assert.equal(f.inputs[`#${prefix}title`].value, "");
         await f.submit();
         assert.ok(f.card("Title"));
-        assert.equal(f.form.listeners.input.size, 1);
+        assert.equal(f.form.all("article").length, 1, "reopening creates no duplicate inline cards");
     }
 });
 
@@ -355,7 +410,7 @@ test("test_ai_late_success_or_error_cannot_populate_reopened_session", async fun
             assert.equal(f.button.disabled, true);
             newer.resolve(success({title: "New"}));
             await pending;
-            assert.equal(f.card("Title").all("dd")[1].textContent, "New");
+            assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "New");
         }
     }
 });
@@ -375,7 +430,7 @@ test("test_ai_late_json_cannot_replace_later_results", async function test_ai_la
                 ? {outcome: "suggestions", suggestions: {title: "Earlier result"}}
                 : {detail: "Earlier error"});
             await abandoned;
-            assert.equal(f.card("Title").all("dd")[1].textContent, "Later result");
+            assert.equal(f.card("Title").querySelector(".ai-suggestion-value").textContent, "Later result");
             assert.equal(f.button.disabled, true);
             assert.match(f.message.textContent, /ready for review/);
         }
@@ -404,7 +459,7 @@ test("test_ai_sessions_are_isolated_between_new_and_edit_forms", async function 
     response.resolve(success({title: "New suggestion"}));
     await pending;
     assert.equal(newBug.area.hidden, true);
-    assert.equal(editBug.card("Title").all("dd")[1].textContent, "Edit suggestion");
+    assert.equal(editBug.card("Title").querySelector(".ai-suggestion-value").textContent, "Edit suggestion");
 });
 
 test("test_ai_use_all_maps_every_supported_field_without_persistence", async function test_ai_use_all_maps_every_supported_field_without_persistence() {
@@ -437,7 +492,7 @@ test("test_ai_validated_assignee_missing_from_dropdown_is_reviewable_and_usable"
         await f.submit(async () => success({title: "Title", assignee_id: 8}));
         assert.equal(input.value, "7");
         assert.equal(input.options.length, 2);
-        assert.equal(f.card("Assignee").all("dd")[1].textContent, "User 8");
+        assert.equal(f.card("Assignee").querySelector(".ai-suggestion-value").textContent, "User 8");
         f.action("Use All");
         assert.equal(input.value, "8");
         assert.equal(input.options[2].value, "8");
