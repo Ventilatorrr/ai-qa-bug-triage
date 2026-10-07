@@ -319,6 +319,7 @@ As an authorized project member, I want to create a bug report with the informat
 - The system records the bug's creation date and time.
 - The system records the bug's Last Updated date and time.
 - The newly created bug report can be viewed within the project.
+- The server assigns an immutable positive integer bug number independently within each project, starting at 1 and increasing for subsequent reports. Numbers are never reused after deletion, including when all reports in a project are deleted.
 
 #### AC-011.2 — Missing Bug Title
 
@@ -353,12 +354,15 @@ As an authorized project member, I want to view and open bug reports in projects
 
 - An authorized project member can view the bug reports within a project they have access to.
 - The bug list displays the Bug ID, Title, Status, and Last Updated date for each bug report.
+- The displayed Bug ID is `BUG-{bug_number}`, using the project's local number. The same number can exist in different projects; the API exposes `bug_number` alongside the internal global database `id`.
 - Severity, Priority, and Assignee are displayed where available.
 
 #### AC-012.2 — Open Bug Report
 
 - An authorized project member can open a bug report within a project they have access to.
 - The bug report details are displayed, including all available bug information.
+- The combination of `project_id` and `bug_number` identifies the public bug resource. Browser links use `bugs.html?project_id={project_id}&bug_number={bug_number}`; project-scoped API resource paths use `/projects/{project_id}/bugs/{bug_number}`, including edit, lifecycle/status, deletion, and Edit AI Assist.
+- The global database `id` remains an internal implementation identity and may remain in API responses, but is not used for frontend navigation or public bug resource addressing.
 
 #### AC-012.3 — Unauthorized Bug Access
 
@@ -370,7 +374,7 @@ As an authorized project member, I want to view and open bug reports in projects
 - An authorized project member can sort the bug list by all columns.
 - The default bug list order is most recently updated first.
 - Selecting a different column starts ascending; selecting the active column toggles direction. The active column and direction are indicated.
-- Bug ID sorts numerically, Title and the displayed Assignee value sort alphabetically without case sensitivity, and Last Updated sorts chronologically.
+- Bug ID sorts numerically by the displayed project-local bug number, Title and the displayed Assignee value sort alphabetically without case sensitivity, and Last Updated sorts chronologically.
 - Severity is ordered from highest to lowest impact: Blocker, Major, Moderate, Minor.
 - Priority is ordered from highest to lowest urgency: Urgent, High, Medium, Low.
 - Ascending Severity and Priority use low-to-high rank; descending uses high-to-low rank.

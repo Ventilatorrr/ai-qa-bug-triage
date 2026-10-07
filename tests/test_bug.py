@@ -40,9 +40,10 @@ def test_project_member_can_create_bug(
     assert data["updated_at"] is not None
 
     bug_id = data["id"]
+    bug_number = data["bug_number"]
 
     view_response = test_client.get(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {user['token']}"
         }
@@ -313,9 +314,10 @@ def test_project_member_can_open_bug_report(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     response = test_client.get(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {developer['token']}"
         }
@@ -382,9 +384,10 @@ def test_non_member_cannot_open_bug_report(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     response = test_client.get(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {non_member['token']}"
         }
@@ -456,7 +459,7 @@ def test_bug_list_defaults_to_most_recently_updated_first(
     assert bugs[1]["title"] == "First bug"
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{first_bug_id}",
+        f"/projects/{project['id']}/bugs/{first_bug_response.json()['bug_number']}",
         json={
             "description": "Updated first bug"
         },
@@ -515,10 +518,11 @@ def test_project_member_can_edit_bug_report(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "title": "Login button still does not work",
             "description": "Updated description."
@@ -570,9 +574,10 @@ def test_bug_update_rejected_with_null_title(
 
     original_bug = create_response.json()
     bug_id = original_bug["id"]
+    bug_number = original_bug["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "title": None
         },
@@ -589,7 +594,7 @@ def test_bug_update_rejected_with_null_title(
     assert "Bug title is required." in detail[0]["msg"]
 
     get_response = test_client.get(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {user['token']}"
         }
@@ -628,9 +633,10 @@ def test_project_member_can_update_optional_bug_information(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "affected_version": "1.2.0",
             "environment": "macOS Sonoma, Safari",
@@ -688,9 +694,10 @@ def test_non_member_cannot_edit_bug_report(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "title": "Unauthorized change"
         },
@@ -754,9 +761,10 @@ def test_authorized_member_can_delete_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     delete_response = test_client.delete(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {actor['token']}"
         }
@@ -765,7 +773,7 @@ def test_authorized_member_can_delete_bug(
     assert delete_response.status_code == 204
 
     get_response = test_client.get(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {actor['token']}"
         }
@@ -822,9 +830,10 @@ def test_unauthorized_member_cannot_delete_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     delete_response = test_client.delete(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {actor['token']}"
         }
@@ -930,10 +939,11 @@ def test_authorized_member_can_assign_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "assignee_id": assignee_member["user_id"]
         },
@@ -1031,10 +1041,11 @@ def test_authorized_member_can_unassign_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "assignee_id": None
         },
@@ -1097,9 +1108,10 @@ def test_bug_cannot_be_assigned_to_invalid_member(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "assignee_id": assignee_id
         },
@@ -1163,9 +1175,10 @@ def test_non_member_cannot_assign_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "assignee_id": target_member["user_id"]
         },
@@ -1237,10 +1250,11 @@ def test_authorized_member_can_reassign_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "assignee_id": developer_member["user_id"]
         },
@@ -1330,9 +1344,10 @@ def test_project_member_can_set_bug_severity(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "severity": severity
         },
@@ -1421,9 +1436,10 @@ def test_project_member_can_set_bug_priority(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "priority": priority
         },
@@ -1509,10 +1525,11 @@ def test_project_member_can_update_bug_classification(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     original_updated_at = create_response.json()["updated_at"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "severity": "Blocker",
             "priority": "High"
@@ -1566,9 +1583,10 @@ def test_non_member_cannot_update_bug_classification(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "severity": "Blocker",
             "priority": "High"
@@ -1636,9 +1654,10 @@ def test_bug_rejects_invalid_severity(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "severity": severity
         },
@@ -1690,9 +1709,10 @@ def test_bug_rejects_invalid_priority(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         json={
             "priority": priority
         },
@@ -1808,9 +1828,10 @@ def test_project_owner_or_qa_can_move_bug_from_triage_to_open(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -1864,7 +1885,7 @@ def test_triage_to_open_can_assign_eligible_project_member(
     assert create_response.status_code == 201
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{create_response.json()['id']}/status",
+        f"/projects/{project['id']}/bugs/{create_response.json()['bug_number']}/status",
         json={
             "status": "Open",
             "assignee_id": member["user_id"]
@@ -1912,7 +1933,7 @@ def test_triage_to_open_rejects_ineligible_assignee(
         else outsider["user_id"]
     )
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{create_response.json()['id']}/status",
+        f"/projects/{project['id']}/bugs/{create_response.json()['bug_number']}/status",
         json={
             "status": "Open",
             "assignee_id": assignee_id
@@ -1971,9 +1992,10 @@ def test_developer_cannot_move_bug_from_triage_to_open(
     assert create_response.json()["assignee_id"] == developer_member["user_id"]
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2018,9 +2040,10 @@ def test_bug_without_assignee_cannot_move_from_triage_to_open(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     update_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2091,9 +2114,10 @@ def test_qa_analyst_cannot_move_bug_from_open_to_development(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2105,7 +2129,7 @@ def test_qa_analyst_cannot_move_bug_from_open_to_development(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -2176,9 +2200,10 @@ def test_project_owner_can_move_bug_from_open_to_development(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2190,7 +2215,7 @@ def test_project_owner_can_move_bug_from_open_to_development(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development",
             "assignee_id": developer_member["user_id"]
@@ -2248,8 +2273,9 @@ def test_open_to_development_requires_valid_developer_assignee(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={"Authorization": f"Bearer {owner['token']}"}
     )
@@ -2262,7 +2288,7 @@ def test_open_to_development_requires_valid_developer_assignee(
         payload["assignee_id"] = qa_member["user_id"]
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json=payload,
         headers={"Authorization": f"Bearer {owner['token']}"}
     )
@@ -2328,9 +2354,10 @@ def test_non_assigned_developer_cannot_move_bug_from_open_to_development(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2342,7 +2369,7 @@ def test_non_assigned_developer_cannot_move_bug_from_open_to_development(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -2413,9 +2440,10 @@ def test_assigned_developer_can_move_bug_from_development_to_testing(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2427,7 +2455,7 @@ def test_assigned_developer_can_move_bug_from_development_to_testing(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -2442,7 +2470,7 @@ def test_assigned_developer_can_move_bug_from_development_to_testing(
     original_updated_at = development_response.json()["updated_at"]
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -2515,9 +2543,10 @@ def test_project_owner_can_move_bug_from_development_to_testing(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -2527,7 +2556,7 @@ def test_project_owner_can_move_bug_from_development_to_testing(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={
             "Authorization": f"Bearer {developer['token']}"
@@ -2537,7 +2566,7 @@ def test_project_owner_can_move_bug_from_development_to_testing(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -2622,9 +2651,10 @@ def test_non_assigned_developer_cannot_move_bug_from_development_to_testing(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2636,7 +2666,7 @@ def test_non_assigned_developer_cannot_move_bug_from_development_to_testing(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -2648,7 +2678,7 @@ def test_non_assigned_developer_cannot_move_bug_from_development_to_testing(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -2720,9 +2750,10 @@ def test_bug_cannot_move_to_testing_with_developer_assignee(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -2734,7 +2765,7 @@ def test_bug_cannot_move_to_testing_with_developer_assignee(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -2746,7 +2777,7 @@ def test_bug_cannot_move_to_testing_with_developer_assignee(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": other_developer_member["user_id"]
@@ -2817,9 +2848,10 @@ def test_assigned_qa_can_pass_bug_and_close_it(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -2829,7 +2861,7 @@ def test_assigned_qa_can_pass_bug_and_close_it(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={
             "Authorization": f"Bearer {developer['token']}"
@@ -2839,7 +2871,7 @@ def test_assigned_qa_can_pass_bug_and_close_it(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -2856,7 +2888,7 @@ def test_assigned_qa_can_pass_bug_and_close_it(
     original_updated_at = testing_response.json()["updated_at"]
 
     pass_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "testing_outcome": "Passed"
@@ -2877,7 +2909,7 @@ def test_assigned_qa_can_pass_bug_and_close_it(
     assert data["updated_at"] != original_updated_at
 
     get_response = test_client.get(
-        f"/projects/{project['id']}/bugs/{bug_id}",
+        f"/projects/{project['id']}/bugs/{bug_number}",
         headers={
             "Authorization": f"Bearer {qa['token']}"
         }
@@ -2956,21 +2988,22 @@ def test_project_owner_can_pass_bug_and_close_it(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={"Authorization": f"Bearer {owner['token']}"}
     ).status_code == 200
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={"Authorization": f"Bearer {developer['token']}"}
     ).status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -2983,7 +3016,7 @@ def test_project_owner_can_pass_bug_and_close_it(
     assert testing_response.status_code == 200
 
     pass_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "testing_outcome": "Passed"
@@ -3056,9 +3089,10 @@ def test_assigned_qa_can_fail_bug_and_return_it_to_development(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -3068,7 +3102,7 @@ def test_assigned_qa_can_fail_bug_and_return_it_to_development(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={
             "Authorization": f"Bearer {developer['token']}"
@@ -3078,7 +3112,7 @@ def test_assigned_qa_can_fail_bug_and_return_it_to_development(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -3093,7 +3127,7 @@ def test_assigned_qa_can_fail_bug_and_return_it_to_development(
     original_updated_at = testing_response.json()["updated_at"]
 
     fail_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development",
             "testing_outcome": "Failed",
@@ -3168,21 +3202,22 @@ def test_project_owner_can_fail_bug_and_return_it_to_development(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={"Authorization": f"Bearer {owner['token']}"}
     ).status_code == 200
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={"Authorization": f"Bearer {developer['token']}"}
     ).status_code == 200
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -3193,7 +3228,7 @@ def test_project_owner_can_fail_bug_and_return_it_to_development(
     ).status_code == 200
 
     fail_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development",
             "testing_outcome": "Failed",
@@ -3289,15 +3324,16 @@ def test_failed_testing_requires_valid_developer_assignee(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={"Authorization": f"Bearer {owner['token']}"}
     ).status_code == 200
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development",
             "assignee_id": developer_member["user_id"]
@@ -3306,7 +3342,7 @@ def test_failed_testing_requires_valid_developer_assignee(
     ).status_code == 200
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -3320,7 +3356,7 @@ def test_failed_testing_requires_valid_developer_assignee(
         request_data["assignee_id"] = qa_member["user_id"]
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json=request_data,
         headers={"Authorization": f"Bearer {owner['token']}"}
     )
@@ -3395,9 +3431,10 @@ def test_non_assigned_qa_cannot_record_testing_outcome(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -3407,7 +3444,7 @@ def test_non_assigned_qa_cannot_record_testing_outcome(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={
             "Authorization": f"Bearer {developer['token']}"
@@ -3417,7 +3454,7 @@ def test_non_assigned_qa_cannot_record_testing_outcome(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": assigned_qa_member["user_id"]
@@ -3430,7 +3467,7 @@ def test_non_assigned_qa_cannot_record_testing_outcome(
     assert testing_response.status_code == 200
 
     outcome_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "testing_outcome": "Passed"
@@ -3507,9 +3544,10 @@ def test_testing_outcome_is_required(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -3521,7 +3559,7 @@ def test_testing_outcome_is_required(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development",
             "assignee_id": developer_member["user_id"]
@@ -3534,7 +3572,7 @@ def test_testing_outcome_is_required(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -3554,7 +3592,7 @@ def test_testing_outcome_is_required(
         payload["assignee_id"] = developer_member["user_id"]
 
     outcome_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json=payload,
         headers={
             "Authorization": f"Bearer {qa['token']}"
@@ -3623,9 +3661,10 @@ def test_invalid_testing_outcome_is_rejected(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -3637,7 +3676,7 @@ def test_invalid_testing_outcome_is_rejected(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -3649,7 +3688,7 @@ def test_invalid_testing_outcome_is_rejected(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -3662,7 +3701,7 @@ def test_invalid_testing_outcome_is_rejected(
     assert testing_response.status_code == 200
 
     outcome_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "testing_outcome": "Invalid"
@@ -3728,9 +3767,10 @@ def test_assigned_developer_can_close_bug_without_fixing(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -3742,7 +3782,7 @@ def test_assigned_developer_can_close_bug_without_fixing(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -3756,7 +3796,7 @@ def test_assigned_developer_can_close_bug_without_fixing(
     original_updated_at = development_response.json()["updated_at"]
 
     close_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "resolution": resolution
@@ -3824,9 +3864,10 @@ def test_project_owner_can_close_bug_without_fixing(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -3838,7 +3879,7 @@ def test_project_owner_can_close_bug_without_fixing(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -3852,7 +3893,7 @@ def test_project_owner_can_close_bug_without_fixing(
     original_updated_at = development_response.json()["updated_at"]
 
     close_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "resolution": resolution
@@ -3926,15 +3967,16 @@ def test_non_assigned_developer_cannot_close_bug_without_fixing(
 
     assert create_response.status_code == 201
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Open"},
         headers={"Authorization": f"Bearer {owner['token']}"}
     ).status_code == 200
 
     assert test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={"status": "Development"},
         headers={
             "Authorization": f"Bearer {assigned_developer['token']}"
@@ -3942,7 +3984,7 @@ def test_non_assigned_developer_cannot_close_bug_without_fixing(
     ).status_code == 200
 
     close_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "resolution": "Duplicate"
@@ -4001,9 +4043,10 @@ def test_bug_cannot_be_closed_without_resolution(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4015,7 +4058,7 @@ def test_bug_cannot_be_closed_without_resolution(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4027,7 +4070,7 @@ def test_bug_cannot_be_closed_without_resolution(
     assert development_response.status_code == 200
 
     close_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed"
         },
@@ -4086,9 +4129,10 @@ def test_fixed_resolution_cannot_be_manually_selected_when_closing_bug(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4100,7 +4144,7 @@ def test_fixed_resolution_cannot_be_manually_selected_when_closing_bug(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4112,7 +4156,7 @@ def test_fixed_resolution_cannot_be_manually_selected_when_closing_bug(
     assert development_response.status_code == 200
 
     close_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Closed",
             "resolution": "Fixed"
@@ -4191,9 +4235,10 @@ def _create_closed_bug_for_lifecycle_test(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4205,7 +4250,7 @@ def _create_closed_bug_for_lifecycle_test(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4218,7 +4263,7 @@ def _create_closed_bug_for_lifecycle_test(
 
     if resolution == "Fixed":
         testing_response = test_client.patch(
-            f"/projects/{project['id']}/bugs/{bug_id}/status",
+            f"/projects/{project['id']}/bugs/{bug_number}/status",
             json={
                 "status": "Testing",
                 "assignee_id": qa_member["user_id"]
@@ -4231,7 +4276,7 @@ def _create_closed_bug_for_lifecycle_test(
         assert testing_response.status_code == 200
 
         close_response = test_client.patch(
-            f"/projects/{project['id']}/bugs/{bug_id}/status",
+            f"/projects/{project['id']}/bugs/{bug_number}/status",
             json={
                 "status": "Closed",
                 "testing_outcome": "Passed"
@@ -4243,7 +4288,7 @@ def _create_closed_bug_for_lifecycle_test(
         expected_assignee_id = qa_member["user_id"]
     else:
         close_response = test_client.patch(
-            f"/projects/{project['id']}/bugs/{bug_id}/status",
+            f"/projects/{project['id']}/bugs/{bug_number}/status",
             json={
                 "status": "Closed",
                 "resolution": resolution
@@ -4269,7 +4314,7 @@ def _create_closed_bug_for_lifecycle_test(
         assert remove_response.status_code == 200
 
         closed_bug_response = test_client.get(
-            f"/projects/{project['id']}/bugs/{bug_id}",
+            f"/projects/{project['id']}/bugs/{bug_number}",
             headers={"Authorization": f"Bearer {owner['token']}"}
         )
 
@@ -4284,7 +4329,7 @@ def _create_closed_bug_for_lifecycle_test(
         "developer": developer,
         "qa": qa,
         "project_id": project["id"],
-        "bug_id": bug_id,
+        "bug_number": bug_number,
         "assignee_id": expected_assignee_id,
         "closed_bug": closed_bug
     }
@@ -4308,7 +4353,7 @@ def test_project_owner_can_move_closed_bug_to_triage(
     )
 
     response = test_client.patch(
-        f"/projects/{setup['project_id']}/bugs/{setup['bug_id']}/status",
+        f"/projects/{setup['project_id']}/bugs/{setup['bug_number']}/status",
         json={
             "status": "Triage"
         },
@@ -4346,7 +4391,7 @@ def test_project_owner_can_move_unassigned_closed_bug_to_triage(
     assert setup["closed_bug"]["assignee_id"] is None
 
     response = test_client.patch(
-        f"/projects/{setup['project_id']}/bugs/{setup['bug_id']}/status",
+        f"/projects/{setup['project_id']}/bugs/{setup['bug_number']}/status",
         json={"status": "Triage"},
         headers={"Authorization": f"Bearer {setup['owner']['token']}"}
     )
@@ -4408,7 +4453,7 @@ def test_unauthorized_user_cannot_move_closed_bug_to_triage(
         token = setup[actor]["token"]
 
     response = test_client.patch(
-        f"/projects/{setup['project_id']}/bugs/{setup['bug_id']}/status",
+        f"/projects/{setup['project_id']}/bugs/{setup['bug_number']}/status",
         json={
             "status": "Triage"
         },
@@ -4441,7 +4486,7 @@ def test_closed_bug_rejects_invalid_direct_transition(
     )
 
     response = test_client.patch(
-        f"/projects/{setup['project_id']}/bugs/{setup['bug_id']}/status",
+        f"/projects/{setup['project_id']}/bugs/{setup['bug_number']}/status",
         json={
             "status": requested_status
         },
@@ -4488,7 +4533,7 @@ def test_closed_to_triage_rejects_extra_transition_data(
         payload[extra_data] = "Duplicate"
 
     response = test_client.patch(
-        f"/projects/{setup['project_id']}/bugs/{setup['bug_id']}/status",
+        f"/projects/{setup['project_id']}/bugs/{setup['bug_number']}/status",
         json=payload,
         headers={
             "Authorization": f"Bearer {setup['owner']['token']}"
@@ -4545,9 +4590,10 @@ def test_bug_cannot_skip_from_triage_to_development(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4618,9 +4664,10 @@ def test_bug_cannot_skip_from_open_to_testing(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4632,7 +4679,7 @@ def test_bug_cannot_skip_from_open_to_testing(
     assert open_response.status_code == 200
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -4692,9 +4739,10 @@ def test_bug_cannot_move_from_development_back_to_open(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4706,7 +4754,7 @@ def test_bug_cannot_move_from_development_back_to_open(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4718,7 +4766,7 @@ def test_bug_cannot_move_from_development_back_to_open(
     assert development_response.status_code == 200
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4789,9 +4837,10 @@ def test_bug_cannot_move_from_testing_back_to_open(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4803,7 +4852,7 @@ def test_bug_cannot_move_from_testing_back_to_open(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4815,7 +4864,7 @@ def test_bug_cannot_move_from_testing_back_to_open(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -4828,7 +4877,7 @@ def test_bug_cannot_move_from_testing_back_to_open(
     assert testing_response.status_code == 200
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4899,9 +4948,10 @@ def test_bug_cannot_move_from_testing_back_to_triage(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
 
     open_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },
@@ -4913,7 +4963,7 @@ def test_bug_cannot_move_from_testing_back_to_triage(
     assert open_response.status_code == 200
 
     development_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Development"
         },
@@ -4925,7 +4975,7 @@ def test_bug_cannot_move_from_testing_back_to_triage(
     assert development_response.status_code == 200
 
     testing_response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Testing",
             "assignee_id": qa_member["user_id"]
@@ -4938,7 +4988,7 @@ def test_bug_cannot_move_from_testing_back_to_triage(
     assert testing_response.status_code == 200
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Triage"
         },
@@ -4997,10 +5047,11 @@ def test_changing_bug_status_updates_last_updated_timestamp(
     assert create_response.status_code == 201
 
     bug_id = create_response.json()["id"]
+    bug_number = create_response.json()["bug_number"]
     original_updated_at = create_response.json()["updated_at"]
 
     response = test_client.patch(
-        f"/projects/{project['id']}/bugs/{bug_id}/status",
+        f"/projects/{project['id']}/bugs/{bug_number}/status",
         json={
             "status": "Open"
         },

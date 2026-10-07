@@ -577,8 +577,9 @@ function displayBugStatus(bug) {
 }
 
 function compareBugs(first, second) {
-    let firstValue = first[bugSortColumn];
-    let secondValue = second[bugSortColumn];
+    const valueColumn = bugSortColumn === "id" ? "bug_number" : bugSortColumn;
+    let firstValue = first[valueColumn];
+    let secondValue = second[valueColumn];
     const firstMissing = firstValue == null || firstValue === "";
     const secondMissing = secondValue == null || secondValue === "";
 
@@ -611,6 +612,13 @@ function compareBugs(first, second) {
     return bugSortDirection === "ascending" ? comparison : -comparison;
 }
 
+function isValidBugResponse(data) {
+    return data && typeof data === "object" && !Array.isArray(data) &&
+        Number.isInteger(data.id) && data.id > 0 &&
+        Number.isInteger(data.bug_number) && data.bug_number > 0 &&
+        typeof data.title === "string" && data.title.trim() !== "";
+}
+
 async function loadBugs({ silent = false, feedbackSession = null } = {}) {
     const response = await authenticatedFetch(`/projects/${projectId}/bugs`);
 
@@ -623,6 +631,13 @@ async function loadBugs({ silent = false, feedbackSession = null } = {}) {
     if (!response.ok) {
         if (!silent && (feedbackSession === null || feedbackSession === bugFormSession)) {
             bugMessage.textContent = formatApiError(data.detail);
+        }
+        return;
+    }
+
+    if (!Array.isArray(data) || !data.every(isValidBugResponse)) {
+        if (!silent && (feedbackSession === null || feedbackSession === bugFormSession)) {
+            showBugMessage("Unable to load bug list. Invalid server response.", "error");
         }
         return;
     }
@@ -732,10 +747,10 @@ function renderBugs() {
             document.createElement("a");
 
         bugLink.href =
-            `/bugs.html?project_id=${projectId}&bug_id=${bug.id}`;
+            `/bugs.html?project_id=${projectId}&bug_number=${bug.bug_number}`;
 
         bugLink.textContent =
-            `BUG-${bug.id}`;
+            `BUG-${bug.bug_number}`;
 
         bugLink.className =
             "bug-link";
@@ -1056,6 +1071,12 @@ bugForm.addEventListener(
         const data = await response.json();
 
         if (response.ok) {
+            if (!isValidBugResponse(data)) {
+                if (isCurrentSubmission()) {
+                    showBugMessage("Unable to confirm bug creation. Invalid server response.", "error");
+                }
+                return;
+            }
             const current = isCurrentSubmission();
 
             if (current) {
@@ -1068,7 +1089,7 @@ bugForm.addEventListener(
                 bugForm.hidden = true;
                 showBugFormButton.hidden = false;
                 showBugMessage(
-                    `BUG-${data.id} "${data.title}" created successfully.`,
+                    `BUG-${data.bug_number} "${data.title}" created successfully.`,
                     "success"
                 );
             }

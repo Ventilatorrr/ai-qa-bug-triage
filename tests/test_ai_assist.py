@@ -20,12 +20,17 @@ def ai_project(test_client, authenticated_user_factory, project_factory, member_
     project = project_factory(owner["token"])
     member_factory(owner["token"], project["id"], developer["user"]["email"], "Developer")
     base = f"/projects/{project['id']}"
+    other = project_factory(owner["token"], name="Global ID offset")
+    assert test_client.post(
+        f"/projects/{other['id']}/bugs", headers=headers(owner), json={"title": "Other-project report"},
+    ).status_code == 201
     response = test_client.post(
         f"{base}/bugs", headers=headers(developer),
         json={"title": "Stored title", "description": "Stored description",
               "assignee_id": developer["user_id"]},
     )
     assert response.status_code == 201
+    assert response.json()["id"] != response.json()["bug_number"]
     return owner, developer, project, response.json(), base
 
 
@@ -46,7 +51,7 @@ def service_calls(monkeypatch):
 
 
 def request_url(context, edit):
-    return (f"{context[4]}/bugs/{context[3]['id']}" if edit else context[4]) + "/ai-assist"
+    return (f"{context[4]}/bugs/{context[3]['bug_number']}" if edit else context[4]) + "/ai-assist"
 
 
 @pytest.mark.parametrize("edit", [False, True])
@@ -104,7 +109,7 @@ def test_ai_assist_checks_current_bug_status(
     if status == "Triage":
         transitions.append({"status": "Triage"})
     for transition in transitions:
-        response = test_client.patch(f"{base}/bugs/{bug['id']}/status", headers=headers(owner), json=transition)
+        response = test_client.patch(f"{base}/bugs/{bug['bug_number']}/status", headers=headers(owner), json=transition)
         assert response.status_code == 200
     response = test_client.post(request_url(ai_project, True), headers=headers(qa), json=blank_form)
     assert response.status_code == (503 if status == "Triage" else 409)
@@ -128,9 +133,9 @@ def test_ai_assist_rechecks_membership(test_client, ai_project, blank_form, serv
 def test_ai_assist_rejects_bug_outside_project(test_client, ai_project, project_factory, blank_form, service_calls):
     owner, _, _, bug, _ = ai_project
     other = project_factory(owner["token"], name="Other project")
-    for bug_id in (bug["id"], bug["id"] + 100):
+    for bug_number in (bug["bug_number"], bug["bug_number"] + 100):
         response = test_client.post(
-            f"/projects/{other['id']}/bugs/{bug_id}/ai-assist", headers=headers(owner), json=blank_form,
+            f"/projects/{other['id']}/bugs/{bug_number}/ai-assist", headers=headers(owner), json=blank_form,
         )
         assert response.status_code == 404
     assert service_calls == []
@@ -148,7 +153,7 @@ def test_ai_assist_preserves_current_form_without_saving(test_client, ai_project
     response = test_client.post(request_url(ai_project, edit), headers=headers(owner), json=form)
     assert response.status_code == 503
     assert service_calls == [(project["id"], bug["id"] if edit else None, form)]
-    stored = test_client.get(f"{base}/bugs/{bug['id']}", headers=headers(owner)).json()
+    stored = test_client.get(f"{base}/bugs/{bug['bug_number']}", headers=headers(owner)).json()
     assert stored == bug
     bugs = test_client.get(f"{base}/bugs", headers=headers(owner)).json()
     assert len(bugs) == 1

@@ -56,8 +56,8 @@ def create_bug(client, context, **fields):
     return response.json()
 
 
-def request_context(client, context, snapshot, captured, bug_id=None):
-    url = context["base"] + (f"/bugs/{bug_id}" if bug_id is not None else "") + "/ai-assist"
+def request_context(client, context, snapshot, captured, bug_number=None):
+    url = context["base"] + (f"/bugs/{bug_number}" if bug_number is not None else "") + "/ai-assist"
     response = client.post(url, headers=context["headers"], json=snapshot)
     assert response.status_code == 503
     assert response.json() == {"detail": "AI assistance is not configured yet."}
@@ -83,7 +83,7 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
             actual_result="Failure", severity="Moderate", priority="High", assignee_id=context_project["qa"]["user_id"],
         )
     context = request_context(
-        test_client, context_project, snapshot, captured_contexts, stored["id"] if edit else None,
+        test_client, context_project, snapshot, captured_contexts, stored["bug_number"] if edit else None,
     )
     assert len(captured_contexts) == 1
     assert context.current_form.model_dump() == snapshot
@@ -91,7 +91,7 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
     if not edit:
         assert context.recent_bugs[0].model_dump() == {"id": stored["id"]} | {field: stored[field] for field in snapshot}
     assert set(context.model_dump()) == {"current_form", "recent_bugs", "eligible_assignees"}
-    response = test_client.get(f"{context_project['base']}/bugs/{stored['id']}", headers=context_project["headers"])
+    response = test_client.get(f"{context_project['base']}/bugs/{stored['bug_number']}", headers=context_project["headers"])
     assert response.status_code == 200
     assert response.json() == stored
     assert len(test_client.get(f"{context_project['base']}/bugs", headers=context_project["headers"]).json()) == 1
@@ -129,7 +129,7 @@ def test_ai_context_retrieves_bounded_deterministic_same_project_history(
     expected = [bug_id for bug_id in ordered_ids if bug_id != excluded_id][:RECENT_BUG_LIMIT]
     before = test_client.get(f"{context_project['base']}/bugs", headers=context_project["headers"]).json()
     for _ in range(2):
-        context = request_context(test_client, context_project, blank_snapshot, captured_contexts, excluded_id)
+        context = request_context(test_client, context_project, blank_snapshot, captured_contexts, bugs[0]["bug_number"] if edit else None)
         assert [bug.id for bug in context.recent_bugs] == expected
         assert len(context.recent_bugs) == RECENT_BUG_LIMIT
         assert foreign.json()["id"] not in [bug.id for bug in context.recent_bugs]
@@ -211,9 +211,9 @@ def test_ai_context_is_not_constructed_for_rejected_requests(
         bug = create_bug(test_client, context_project, assignee_id=context_project["developer"]["user_id"])
         if rejection == "wrong_project_bug":
             other = project_factory(context_project["owner"]["token"], name="Other project")
-            url = f"/projects/{other['id']}/bugs/{bug['id']}/ai-assist"
+            url = f"/projects/{other['id']}/bugs/{bug['bug_number']}/ai-assist"
         else:
-            assert test_client.patch(f"{context_project['base']}/bugs/{bug['id']}/status", headers=headers, json={"status": "Open"}).status_code == 200
-            url = f"{context_project['base']}/bugs/{bug['id']}/ai-assist"
+            assert test_client.patch(f"{context_project['base']}/bugs/{bug['bug_number']}/status", headers=headers, json={"status": "Open"}).status_code == 200
+            url = f"{context_project['base']}/bugs/{bug['bug_number']}/ai-assist"
     response = test_client.post(url, headers=headers, json=blank_snapshot)
     assert response.status_code == status

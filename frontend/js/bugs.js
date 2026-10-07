@@ -1,7 +1,7 @@
 const params = new URLSearchParams(window.location.search);
 
 const projectId = params.get("project_id");
-const bugId = params.get("bug_id");
+const bugNumber = params.get("bug_number");
 
 const backToProjectLink = document.querySelector("#back-to-project");
 const bugMessage = document.querySelector("#bug-message");
@@ -589,9 +589,9 @@ function renderBugAssignee(bug) {
 }
 
 function renderBug(bug) {
-    document.title = `BUG-${bug.id}: ${bug.title} - AI QA Bug Triage`;
+    document.title = `BUG-${bug.bug_number}: ${bug.title} - AI QA Bug Triage`;
 
-    setText("#bug-reference", `BUG-${bug.id}`);
+    setText("#bug-reference", `BUG-${bug.bug_number}`);
     setText("#bug-heading", bug.title);
 
     setText("#bug-environment", bug.environment);
@@ -650,7 +650,8 @@ function renderBug(bug) {
 function isValidBugResponse(data) {
     return (
         data && typeof data === "object" && !Array.isArray(data) &&
-        Number.isInteger(data.id) && String(data.id) === bugId &&
+        Number.isInteger(data.id) && data.id > 0 &&
+        Number.isInteger(data.bug_number) && data.bug_number > 0 && String(data.bug_number) === bugNumber &&
         Number.isInteger(data.project_id) && String(data.project_id) === projectId &&
         typeof data.title === "string" && data.title.trim() !== "" &&
         typeof data.status === "string" && data.status.trim() !== ""
@@ -674,14 +675,14 @@ async function loadBug(preserveVisibleState = false) {
 
     backToProjectLink.href = `/project.html?id=${projectId}`;
 
-    if (!isValidId(bugId)) {
-        showMessage(bugMessage, "Invalid bug ID.", "error");
+    if (!isValidId(bugNumber)) {
+        showMessage(bugMessage, "Invalid bug number.", "error");
         return false;
     }
 
     try {
         const response = await authenticatedFetch(
-            `/projects/${projectId}/bugs/${bugId}`
+            `/projects/${projectId}/bugs/${bugNumber}`
         );
 
         if (!response) {
@@ -757,7 +758,7 @@ deleteBugButton.addEventListener("click", async function() {
 
     try {
         const response = await authenticatedFetch(
-            `/projects/${projectId}/bugs/${bugId}`,
+            `/projects/${projectId}/bugs/${bugNumber}`,
             {
                 method: "DELETE"
             }
@@ -771,7 +772,7 @@ deleteBugButton.addEventListener("click", async function() {
             try {
                 sessionStorage.setItem(
                     "bug-deletion-feedback",
-                    `BUG-${currentBug.id} "${currentBug.title}" deleted successfully.`
+                    `BUG-${currentBug.bug_number} "${currentBug.title}" deleted successfully.`
                 );
             } catch (error) {
                 // Continue to the project page if session storage is unavailable.
@@ -856,7 +857,7 @@ async function submitLifecycleTransition(payload, successMessage, actionButton) 
 
     try {
         const response = await authenticatedFetch(
-            `/projects/${projectId}/bugs/${bugId}/status`,
+            `/projects/${projectId}/bugs/${bugNumber}/status`,
             {
                 method: "PATCH",
                 headers: {
@@ -1220,7 +1221,7 @@ showEditBugFormButton.addEventListener("click", async function() {
 
     try {
         const response = await authenticatedFetch(
-            `/projects/${projectId}/bugs/${bugId}`
+            `/projects/${projectId}/bugs/${bugNumber}`
         );
 
         if (!response) {
@@ -1275,7 +1276,7 @@ showEditBugFormButton.addEventListener("click", async function() {
 
 editBugAiAssistButton.addEventListener("click", function() {
     submitAiAssist(
-        editBugForm, "edit-bug-", `/projects/${projectId}/bugs/${bugId}/ai-assist`,
+        editBugForm, "edit-bug-", `/projects/${projectId}/bugs/${bugNumber}/ai-assist`,
         editBugAiAssistButton, editBugAiMessage, authenticatedFetch
     );
 });
@@ -1371,7 +1372,7 @@ editBugForm.addEventListener("submit", async function(event) {
     showMessage(editBugMessage, "");
 
     try {
-        const response = await authenticatedFetch(`/projects/${projectId}/bugs/${bugId}`, {
+        const response = await authenticatedFetch(`/projects/${projectId}/bugs/${bugNumber}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json"
@@ -1390,7 +1391,7 @@ editBugForm.addEventListener("submit", async function(event) {
             if (response.ok) {
                 // Refresh persisted details from the server, keeping the newer
                 // edit form, its comparison baseline, and AI review untouched.
-                const refreshed = await authenticatedFetch(`/projects/${projectId}/bugs/${bugId}`);
+                const refreshed = await authenticatedFetch(`/projects/${projectId}/bugs/${bugNumber}`);
                 if (refreshed?.ok) {
                     const latest = await refreshed.json();
                     if (isValidBugResponse(latest)) {
