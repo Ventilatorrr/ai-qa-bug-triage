@@ -72,6 +72,15 @@ const resolution = "#lifecycle-resolution";
 const close = "#lifecycle-close-button";
 const request = payload => [{url: "/projects/1/bugs/2/status", method: "PATCH", payload}];
 
+test("test_bug_action_feedback_follows_controls", () => {
+    const html = fs.readFileSync(path.join(__dirname, "../../frontend/bugs.html"), "utf8");
+    assert.match(html,
+        /<section\b[^>]*class="bug-actions"[^>]*>[\s\S]*?<\/section>\s*<p id="bug-message" class="section-message" role="status" aria-live="polite">/,
+        "Bug actions precede their existing feedback live region in normal document flow");
+    assert.equal((html.match(/id="bug-message"/g) || []).length, 1,
+        "The feedback live region is not duplicated");
+});
+
 test("test_move_to_open_requires_eligible_selection_and_resets_after_transition", async () => {
     for (const [role, selected] of [["Project Owner", "2"], ["Project Owner", "3"], ["QA Analyst", "2"]]) {
         const f = await page("Triage", role);
