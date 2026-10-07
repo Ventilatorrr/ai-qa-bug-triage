@@ -720,6 +720,87 @@ source inspection, and the existing browser smoke. Broader browser automation,
 cross-browser/accessibility work, and Increment 3 completion remain separate;
 this status does not change REQ-020 coverage or claim the increment is done.
 
+## AI Suggestions inline presentation — 7 October 2026
+
+The final New Bug and Edit Bug presentation is visually approved by the user.
+On desktop, each pending suggestion appears inline beside its editable field.
+Only rows with pending suggestions split into field/card columns; unsuggested,
+used, and dismissed rows remain or return to full width. On narrow layouts,
+cards stack below their fields. Cards align with the actual control rather than
+its label, and textarea cards stretch to match the control height when content
+fits. Card borders are uniform cyan.
+
+The top `AI Suggestions` heading and review instructions are left-aligned in a
+subtle teal panel with a 1px border, 6px radius, and 10px vertical/12px horizontal
+padding. The panel uses the general/Dismiss AI background
+(`--ai-action-background`), separate from the stronger Use treatment. Headings
+and instructions use the theme-aware AI text color. Each card shows the visible
+heading `AI Suggestion`, its suggested value, then Use/Dismiss at the bottom.
+All three are left-aligned. Suggested values use normal primary text color;
+there is no duplicate current-form-value display. The heading's field-specific
+ARIA label is referenced by the card's `aria-labelledby`, and action buttons
+retain their field-specific accessible names.
+
+Individual Use/Dismiss buttons are **64 × 26px on desktop**. Bulk Use All/Dismiss
+All buttons are **92 × 36px on desktop**, centered below the field rows with an
+8px gap and 18px top/bottom footer margins. The main AI Assist, Create/Save,
+Cancel, and Delete actions are centered and share **100 × 40px desktop**
+dimensions. AI controls retain their cyan/teal styling, with stronger Use/Use All
+and subtler Dismiss backgrounds; Create/Save remains the filled primary action,
+Cancel grey, and Delete red. Existing mobile behavior is preserved: review
+buttons use **80 × 36px** at mobile widths, and main actions retain responsive
+wrapping/stretching.
+
+AI informational/status feedback is centered below the main action row and uses
+the AI turquoise/cyan text color. Its margin is 16px above and 0 below, with the
+existing 4px left padding and normal form padding retained. Errors use the
+existing `message-error` styling; retry and session reset clear that class.
+Dark-theme Use, Dismiss, Use All, and Dismiss All share the intentionally brighter
+approved review hover background **#1c6c82**. AI Assist retains its separate
+general hover background **#164e63**, muted disabled styling, and existing focus
+styling. Light-theme behavior is unchanged: review hover remains **#a5f3fc** and
+AI Assist hover **#cffafe**.
+
+Suggestions remain session-only and non-authoritative. Use copies one suggested
+value into its normal editable field; Dismiss removes that pending suggestion
+without reverting previously used values. Use All applies only remaining
+pending suggestions, and Dismiss All removes the remaining suggestions. Only
+Create/Save persists form values. AI Assist is unavailable while pending
+suggestions require review. Backend behavior and requirement identifiers are
+unchanged.
+
+Existing frontend tests cover field-row association, accessible naming, absence
+of duplicate current values, bulk-control placement, resolved-row restoration,
+footer/session cleanup, manual edits, Create/Save cleanup, and error/retry
+presentation. Current verification:
+`node --test tests/frontend/ai-assist.test.cjs tests/frontend/form-session.test.cjs`
+passes **37 tests, 0 failures**; `node --test tests/frontend/*.test.cjs` passes
+**76 tests, 0 failures**; `git diff --check` passes. Earlier `node --check` runs
+passed for the shared helper, page handlers, and changed JavaScript test/helper
+files; Node's `vm.Script` compilation also checked the native-input test's inline
+script.
+
+Previously performed static browser checks used actual New/Edit markup, CSS,
+and the shared AI helper with fixed suggestions for all ten supported fields,
+without the application server, database, or provider. New Bug in dark theme and
+Edit Bug in light theme were observed at wide and 390px viewports. Checks
+confirmed full-width unsuggested rows, field/card stacking without horizontal
+overflow, uniform borders, heading/value/actions order, control-top alignment
+for all ten cards, and matching heights for all four textarea cards with fixture
+content. Field-specific names were present in the browser accessibility tree;
+individual review restored rows, and bulk review cleared cards and hid controls.
+The native-input browser test passed **12 cases** (New/Edit × Use/Use All ×
+LF/CR/CRLF). Later isolated sizing checks confirmed 100 × 40px main actions in
+both forms and unchanged mobile dimensions without horizontal overflow. These
+checks support the specific observations above, not exhaustive verification of
+the final UI; final visual approval is the user's manual-review evidence. No
+new browser verification was performed during this documentation reconciliation.
+
+Static fixtures do not exercise complete application workflows or persistence.
+Broader cross-browser and accessibility verification remain pending. REQ-020
+remains Partial; no requirement status is upgraded and Increment 3 completion is
+not claimed.
+
 ## REQ-022 — AI Authorization and Data Protection
 
 | REQ | AC | Test Reference | Test Layer | Status |

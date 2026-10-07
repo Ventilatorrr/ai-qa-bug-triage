@@ -125,186 +125,232 @@
             <p id="bug-message" class="section-message"></p>
 
 
-            <form id="bug-form" hidden>
-
-                <label for="bug-title">
-                    Title:
-                </label>
-
-                <input
-                    type="text"
-                    id="bug-title"
-                    class="form-input"
-                    name="bug_title"
-                    placeholder="Enter bug title"
-                    required>
-
-
-                <label for="bug-affected-version">
-                    Affected Version:
-                </label>
-
-                <input
-                    type="text"
-                    id="bug-affected-version"
-                    class="form-input"
-                    name="affected_version"
-                    placeholder="e.g. 1.2.0">
-
-
-                <label for="bug-environment">
-                    Environment:
-                </label>
-
-                <input
-                    type="text"
-                    id="bug-environment"
-                    class="form-input"
-                    name="environment"
-                    placeholder="e.g. Windows 11, Chrome 152, Desktop">
-
-
-                <label for="bug-description">
-                    Description:
-                </label>
-
-                <textarea
-                    id="bug-description"
-                    class="form-input bug-textarea"
-                    name="description"
-                    placeholder="Describe the bug"></textarea>
-
-
-                <label for="bug-steps">
-                    Steps to Reproduce:
-                </label>
-
-                <textarea
-                    id="bug-steps"
-                    class="form-input bug-textarea bug-steps-textarea"
-                    name="steps_to_reproduce"
-                    placeholder="Describe how to reproduce the bug"></textarea>
-
-
-                <label for="bug-expected">
-                    Expected Result:
-                </label>
-
-                <textarea
-                    id="bug-expected"
-                    class="form-input"
-                    name="expected_result"
-                    placeholder="What should happen?"></textarea>
-
-
-                <label for="bug-actual">
-                    Actual Result:
-                </label>
-
-                <textarea
-                    id="bug-actual"
-                    class="form-input"
-                    name="actual_result"
-                    placeholder="What actually happens?"></textarea>
-
-
-                <label for="bug-severity">
-                    Severity:
-                </label>
-
-                <select
-                    id="bug-severity"
-                    class="form-input select-prompt"
-                    name="severity">
-
-                    <option value="">
-                        Select severity
-                    </option>
-
-                    <option value="Blocker">
-                        Blocker
-                    </option>
-
-                    <option value="Major">
-                        Major
-                    </option>
-
-                    <option value="Moderate">
-                        Moderate
-                    </option>
-
-                    <option value="Minor">
-                        Minor
-                    </option>
-
-                </select>
-
-
-                <label for="bug-priority">
-                    Priority:
-                </label>
-
-                <select
-                    id="bug-priority"
-                    class="form-input select-prompt"
-                    name="priority">
-
-                    <option value="">
-                        Select priority
-                    </option>
-
-                    <option value="Urgent">
-                        Urgent
-                    </option>
-
-                    <option value="High">
-                        High
-                    </option>
-
-                    <option value="Medium">
-                        Medium
-                    </option>
-
-                    <option value="Low">
-                        Low
-                    </option>
-
-                </select>
-
-
-                <label for="bug-assignee">
-                    Assignee:
-                </label>
-
-                <select
-                    id="bug-assignee"
-                    class="form-input select-prompt"
-                    name="assignee_id">
-
-                    <option value="">
-                        Unassigned
-                    </option>
-
-                </select>
-
-
-                <label for="bug-fix-version">
-                    Fix Version:
-                </label>
-
-                <input
-                    type="text"
-                    id="bug-fix-version"
-                    class="form-input"
-                    name="fix_version"
-                    placeholder="e.g. 1.3.0">
-
+            <form id="bug-form" class="bug-form" hidden>
 
                 <section id="new-bug-ai-suggestions" class="ai-suggestions" hidden></section>
 
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-title">
+                            Title:
+                        </label>
+
+                        <input
+                            type="text"
+                            id="bug-title"
+                            class="form-input"
+                            name="bug_title"
+                            placeholder="Enter bug title"
+                            required>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-affected-version">
+                            Affected Version:
+                        </label>
+
+                        <input
+                            type="text"
+                            id="bug-affected-version"
+                            class="form-input"
+                            name="affected_version"
+                            placeholder="e.g. 1.2.0">
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-environment">
+                            Environment:
+                        </label>
+
+                        <input
+                            type="text"
+                            id="bug-environment"
+                            class="form-input"
+                            name="environment"
+                            placeholder="e.g. Windows 11, Chrome 152, Desktop">
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-description">
+                            Description:
+                        </label>
+
+                        <textarea
+                            id="bug-description"
+                            class="form-input bug-textarea"
+                            name="description"
+                            placeholder="Describe the bug"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-steps">
+                            Steps to Reproduce:
+                        </label>
+
+                        <textarea
+                            id="bug-steps"
+                            class="form-input bug-textarea bug-steps-textarea"
+                            name="steps_to_reproduce"
+                            placeholder="Describe how to reproduce the bug"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-expected">
+                            Expected Result:
+                        </label>
+
+                        <textarea
+                            id="bug-expected"
+                            class="form-input"
+                            name="expected_result"
+                            placeholder="What should happen?"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-actual">
+                            Actual Result:
+                        </label>
+
+                        <textarea
+                            id="bug-actual"
+                            class="form-input"
+                            name="actual_result"
+                            placeholder="What actually happens?"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-severity">
+                            Severity:
+                        </label>
+
+                        <select
+                            id="bug-severity"
+                            class="form-input select-prompt"
+                            name="severity">
+
+                            <option value="">
+                                Select severity
+                            </option>
+
+                            <option value="Blocker">
+                                Blocker
+                            </option>
+
+                            <option value="Major">
+                                Major
+                            </option>
+
+                            <option value="Moderate">
+                                Moderate
+                            </option>
+
+                            <option value="Minor">
+                                Minor
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-priority">
+                            Priority:
+                        </label>
+
+                        <select
+                            id="bug-priority"
+                            class="form-input select-prompt"
+                            name="priority">
+
+                            <option value="">
+                                Select priority
+                            </option>
+
+                            <option value="Urgent">
+                                Urgent
+                            </option>
+
+                            <option value="High">
+                                High
+                            </option>
+
+                            <option value="Medium">
+                                Medium
+                            </option>
+
+                            <option value="Low">
+                                Low
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-assignee">
+                            Assignee:
+                        </label>
+
+                        <select
+                            id="bug-assignee"
+                            class="form-input select-prompt"
+                            name="assignee_id">
+
+                            <option value="">
+                                Unassigned
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="bug-field-row">
+                    <div class="bug-field">
+                        <label for="bug-fix-version">
+                            Fix Version:
+                        </label>
+
+                        <input
+                            type="text"
+                            id="bug-fix-version"
+                            class="form-input"
+                            name="fix_version"
+                            placeholder="e.g. 1.3.0">
+                    </div>
+                </div>
+
+
+                <div class="ai-suggestions-footer" hidden></div>
+
                 <div class="form-actions creation-form-actions">
 
-                    <button id="new-bug-ai-assist" class="creation-form-action-button secondary-action-button" type="button" hidden>AI Assist</button>
+                    <button id="new-bug-ai-assist" class="creation-form-action-button ai-assist-button" type="button" hidden>AI Assist</button>
 
                     <button class="creation-form-action-button" type="submit">
                         Create

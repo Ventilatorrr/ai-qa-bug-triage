@@ -28,33 +28,30 @@ function endAiAssistSession(form) {
     const session = aiAssistSessions.get(form);
     if (!session) return;
     aiAssistSessions.delete(form);
-    form.removeEventListener("input", session.updateCurrentValues);
-    form.removeEventListener("change", session.updateCurrentValues);
+    for (const pending of session.pending.values()) pending.card.remove();
     session.pending.clear();
+    form.classList.remove("has-ai-suggestions");
     session.area.replaceChildren();
     session.area.hidden = true;
+    session.footer.replaceChildren();
+    session.footer.hidden = true;
     session.message.textContent = "";
+    session.message.classList.remove("message-error");
     session.button.disabled = false;
 }
 
 function beginAiAssistSession(form, prefix, button, message, area) {
     endAiAssistSession(form);
-    const session = {form, prefix, button, message, area, pending: new Map(), loading: false, requestId: 0};
-    session.updateCurrentValues = () => {
-        for (const [field, suffix] of aiAssistFields) {
-            const pending = session.pending.get(field);
-            if (pending) {
-                pending.current.textContent = aiDisplayValue(form.querySelector(`#${prefix}${suffix}`));
-            }
-        }
-    };
+    const footer = form.querySelector(".ai-suggestions-footer");
+    const session = {form, prefix, button, message, area, footer, pending: new Map(), loading: false, requestId: 0};
     aiAssistSessions.set(form, session);
-    form.addEventListener("input", session.updateCurrentValues);
-    form.addEventListener("change", session.updateCurrentValues);
     area.replaceChildren();
     area.hidden = true;
+    footer.replaceChildren();
+    footer.hidden = true;
     button.disabled = false;
     message.textContent = "";
+    message.classList.remove("message-error");
 }
 
 function isCurrentAiSession(session) {
@@ -74,7 +71,7 @@ function aiDisplayValue(input, value = input.value) {
 function aiReviewButton(label, action, fieldLabel) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "context-action-button secondary-action-button";
+    button.className = `ai-review-button ${label.startsWith("Use") ? "ai-use-button" : "ai-dismiss-button"}`;
     button.textContent = label;
     if (fieldLabel) button.setAttribute("aria-label", `${label} ${fieldLabel} suggestion`);
     button.addEventListener("click", action);
@@ -101,8 +98,11 @@ function resolveAiSuggestion(session, field, use) {
     pending.card.remove();
     session.pending.delete(field);
     if (!session.pending.size) {
+        session.form.classList.remove("has-ai-suggestions");
         session.area.replaceChildren();
         session.area.hidden = true;
+        session.footer.replaceChildren();
+        session.footer.hidden = true;
         session.button.disabled = false;
         session.message.textContent = "AI suggestions reviewed. You can request AI Assist again. Choose Create or Save to save form values.";
     }
@@ -113,6 +113,8 @@ function renderAiSuggestions(session, suggestions) {
     heading.id = `${session.prefix}ai-suggestions-heading`;
     heading.textContent = "AI Suggestions";
     session.area.setAttribute("aria-labelledby", heading.id);
+    const toolbar = document.createElement("div");
+    toolbar.className = "ai-suggestions-toolbar";
     const note = document.createElement("p");
     note.textContent = "Review suggestions before using them. Use replaces the current form value. Only Create or Save saves your changes.";
     const bulk = document.createElement("div");
@@ -123,7 +125,10 @@ function renderAiSuggestions(session, suggestions) {
             session.button.focus({preventScroll: true});
         }));
     }
-    session.area.replaceChildren(heading, note, bulk);
+    toolbar.appendChild(heading);
+    toolbar.appendChild(note);
+    session.area.replaceChildren(toolbar);
+    session.footer.replaceChildren(bulk);
 
     for (const [field, suffix, label] of aiAssistFields) {
         if (!Object.hasOwn(suggestions, field)) continue;
@@ -131,34 +136,31 @@ function renderAiSuggestions(session, suggestions) {
         const card = document.createElement("article");
         card.className = "ai-suggestion";
         const title = document.createElement("h4");
-        title.textContent = label;
-        const comparison = document.createElement("dl");
-        const current = document.createElement("dd");
-        const suggested = document.createElement("dd");
-        current.textContent = aiDisplayValue(input);
+        title.id = `${session.prefix}${suffix}-ai-suggestion-heading`;
+        title.textContent = "AI Suggestion";
+        title.setAttribute("aria-label", `AI suggestion: ${label}`);
+        card.setAttribute("aria-labelledby", title.id);
+        const suggested = document.createElement("p");
+        suggested.className = "ai-suggestion-value";
         suggested.textContent = aiDisplayValue(input, suggestions[field]);
-        for (const [text, value] of [["Current form value", current], ["Suggested value", suggested]]) {
-            const term = document.createElement("dt");
-            term.textContent = text;
-            comparison.appendChild(term);
-            comparison.appendChild(value);
-        }
         const actions = document.createElement("div");
         actions.className = "ai-suggestion-actions";
         for (const [text, use] of [["Use", true], ["Dismiss", false]]) {
             actions.appendChild(aiReviewButton(text, () => {
                 resolveAiSuggestion(session, field, use);
-                const next = session.area.querySelector("button") || session.button;
+                const next = session.footer.querySelector("button") || session.button;
                 next.focus({preventScroll: true});
             }, label));
         }
         card.appendChild(title);
-        card.appendChild(comparison);
+        card.appendChild(suggested);
         card.appendChild(actions);
-        session.area.appendChild(card);
-        session.pending.set(field, {input, card, current, value: suggestions[field]});
+        input.closest(".bug-field-row").appendChild(card);
+        session.pending.set(field, {input, card, value: suggestions[field]});
     }
+    session.form.classList.add("has-ai-suggestions");
     session.area.hidden = false;
+    session.footer.hidden = false;
 }
 
 function isAiSuggestionResponse(data, form, prefix) {
@@ -204,6 +206,7 @@ async function submitAiAssist(form, prefix, url, button, message, sendRequest) {
     const requestId = ++session.requestId;
     const isCurrentRequest = () => isCurrentAiSession(session) && session.requestId === requestId;
     button.disabled = true;
+    message.classList.remove("message-error");
     message.textContent = "Requesting AI assistance...";
     try {
         const response = await sendRequest(url, {
@@ -219,8 +222,10 @@ async function submitAiAssist(form, prefix, url, button, message, sendRequest) {
         const data = await response.json();
         if (!isCurrentRequest()) return;
         if (!response.ok) {
+            message.classList.add("message-error");
             message.textContent = formatApiError(data.detail, "Unable to request AI assistance.");
         } else if (!isAiSuggestionResponse(data, form, prefix)) {
+            message.classList.add("message-error");
             message.textContent = "Unable to process the AI assistance response. Please try again.";
         } else if (data.outcome === "no_usable_suggestions") {
             message.textContent = "No usable AI suggestions are available. You can continue manually or request AI Assist again.";
@@ -236,7 +241,10 @@ async function submitAiAssist(form, prefix, url, button, message, sendRequest) {
             }
         }
     } catch (error) {
-        if (isCurrentRequest()) message.textContent = "Unable to request AI assistance. Please try again.";
+        if (isCurrentRequest()) {
+            message.classList.add("message-error");
+            message.textContent = "Unable to request AI assistance. Please try again.";
+        }
     } finally {
         // A late completion must not unlock or change a newer session's request.
         if (isCurrentRequest()) {

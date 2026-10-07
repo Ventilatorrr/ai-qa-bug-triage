@@ -12,7 +12,18 @@ class Element {
         this.attributes = {};
         this.type = tagName === "input" ? "text" : "";
         this.value = "";
-        this.classList = {toggle() {}, add() {}, remove() {}};
+        this.className = "";
+        const classes = () => new Set(this.className.split(/\s+/).filter(Boolean));
+        this.classList = {
+            contains: name => classes().has(name),
+            add: (...names) => { this.className = [...new Set([...classes(), ...names])].join(" "); },
+            remove: (...names) => { this.className = [...classes()].filter(name => !names.includes(name)).join(" "); },
+            toggle: (name, force) => {
+                const enabled = force ?? !this.classList.contains(name);
+                this.classList[enabled ? "add" : "remove"](name);
+                return enabled;
+            }
+        };
         this.textContent = "";
         this.hidden = false;
         this.disabled = false;
@@ -24,14 +35,16 @@ class Element {
             ? String(value).replace(/[\r\n]/g, "") : String(value);
     }
     cloneNode() { const clone = new Element(this.tagName); clone.type = this.type; return clone; }
+    get parentElement() { return this.parent || null; }
     appendChild(child) {
+        if (child.parent) child.remove();
         child.parent = this;
         this.children.push(child);
         if (child.tagName === "option" && this.options) this.options.push(child);
         return child;
     }
-    replaceChildren(...children) { this.children = []; children.forEach(child => this.appendChild(child)); }
-    remove() { this.parent.children = this.parent.children.filter(child => child !== this); }
+    replaceChildren(...children) { this.children.forEach(child => { child.parent = null; }); this.children = []; children.forEach(child => this.appendChild(child)); }
+    remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); this.parent = null; }
     setAttribute(name, value) { this.attributes[name] = value; }
     addEventListener(type, handler) { (this.listeners[type] ||= new Set()).add(handler); }
     removeEventListener(type, handler) { this.listeners[type]?.delete(handler); }
@@ -42,7 +55,14 @@ class Element {
     click() { this.dispatchEvent({type: "click"}); }
     focus() { this.focused = true; }
     all(tagName) { return this.children.flatMap(child => [...(child.tagName === tagName ? [child] : []), ...child.all(tagName)]); }
-    querySelector(selector) { return this.all(selector)[0] || null; }
+    matches(selector) {
+        if (selector.startsWith(".")) return this.classList.contains(selector.slice(1));
+        if (selector.startsWith("#")) return this.id === selector.slice(1);
+        return this.tagName === selector;
+    }
+    closest(selector) { return this.matches(selector) ? this : this.parent?.closest(selector) || null; }
+    querySelectorAll(selector) { return this.children.flatMap(child => [...(child.matches(selector) ? [child] : []), ...child.querySelectorAll(selector)]); }
+    querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
 }
 
 function fixture(prefix, sharedRuntime) {
@@ -66,9 +86,25 @@ function fixture(prefix, sharedRuntime) {
         inputs[`#${prefix}${suffix}`].options = values.map(value => ({value, textContent: value === "7" ? "qa@example.com (QA Analyst)" : value}));
     }
     const form = new Element("form");
-    Object.values(inputs).forEach(input => form.appendChild(input));
-    form.querySelector = selector => inputs[selector];
-    const button = new Element("button"), message = new Element("p"), area = new Element("section");
+    form.className = "bug-form";
+    const button = new Element("button"), message = new Element("p"), area = new Element("section"), footer = new Element("div");
+    area.className = "ai-suggestions";
+    footer.className = "ai-suggestions-footer";
+    form.appendChild(area);
+    for (const [id, input] of Object.entries(inputs)) {
+        input.id = id.slice(1);
+        const row = new Element("div"), field = new Element("div"), label = new Element("label");
+        row.className = "bug-field-row";
+        field.className = "bug-field";
+        label.setAttribute("for", input.id);
+        field.appendChild(label);
+        field.appendChild(input);
+        row.appendChild(field);
+        form.appendChild(row);
+    }
+    form.appendChild(footer);
+    form.appendChild(button);
+    form.appendChild(message);
     const begin = () => runtime.beginAiAssistSession(form, prefix, button, message, area);
     begin();
     const requests = [];
@@ -76,12 +112,12 @@ function fixture(prefix, sharedRuntime) {
         form, prefix, prefix === "bug-" ? "/projects/1/ai-assist" : "/projects/1/bugs/2/ai-assist",
         button, message, (url, options) => { requests.push({url, options}); return send(url, options); }
     );
-    const card = label => area.all("article").find(card => card.all("h4")[0].textContent === label);
+    const card = label => form.all("article").find(card => card.all("h4")[0].attributes["aria-label"] === `AI suggestion: ${label}`);
     const action = (label, field) => {
-        const root = field ? card(field) : area;
+        const root = field ? card(field) : footer;
         root.all("button").find(button => button.textContent === label).click();
     };
-    return {runtime, inputs, form, button, message, area, begin, submit, requests, card, action};
+    return {runtime, inputs, form, button, message, area, footer, begin, submit, requests, card, action};
 }
 
 function success(suggestions) { return {ok: true, json: async () => ({outcome: "suggestions", suggestions})}; }

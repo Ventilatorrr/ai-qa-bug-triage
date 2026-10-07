@@ -36,6 +36,12 @@
 
     --focus-border: #22d3ee;
 
+    --ai-action-background: #123844;
+    --ai-action-hover: #164e63;
+    --ai-action-text: #a5f3fc;
+    --ai-use-background: #164e63;
+    --ai-use-hover: #1c6c82;
+
     --success-text: #4ade80;
     --error-text: #ff6b6b;
 
@@ -90,6 +96,12 @@ body.light-theme {
     --navigation-hover: #2093b3;
 
     --focus-border: #0891b2;
+
+    --ai-action-background: #ecfeff;
+    --ai-action-hover: #cffafe;
+    --ai-action-text: #0e7490;
+    --ai-use-background: #cffafe;
+    --ai-use-hover: #a5f3fc;
 
     --success-text: #15803d;
     --error-text: #b42318;
@@ -558,8 +570,7 @@ form button {
 
 #project-form > label,
 #member-form > label,
-#bug-form > label,
-#edit-bug-form > label {
+.bug-field > label {
     padding-left: 4px;
 }
 
@@ -771,44 +782,114 @@ button:disabled {
 }
 
 .ai-suggestions {
-    margin: 20px 0;
-    padding: 16px;
+    margin: 0 0 18px;
     color: var(--primary-text);
     font-family: Arial, sans-serif;
     line-height: 1.5;
-    border: 1px solid var(--focus-border);
-    border-radius: 8px;
-    background-color: var(--input-background);
 }
 
-.ai-suggestions[hidden] {
+.ai-suggestions[hidden],
+.ai-suggestions-footer[hidden] {
     display: none;
 }
 
 .ai-suggestions h3 {
-    margin: 0 0 12px;
-    color: var(--title-text);
+    margin: 0;
+    color: var(--ai-action-text);
 }
 
-.ai-suggestions > p,
-.ai-suggestion dt {
-    color: var(--secondary-text);
+.ai-suggestions-toolbar {
+    min-width: 0;
+    padding: 10px 12px;
+    text-align: left;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--ai-action-background);
+}
+
+.ai-suggestions-toolbar > p {
+    margin: 6px 0 0;
+    color: var(--ai-action-text);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.bug-form {
+    container-type: inline-size;
+}
+
+.bug-field-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px 20px;
+    margin-bottom: 18px;
+}
+
+.bug-field-row:has(> .ai-suggestion) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    row-gap: 6px;
+}
+
+/* Share the label/control rows so each card begins at the actual control. */
+.bug-field-row:has(> .ai-suggestion) > .bug-field {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: 1 / span 2;
+}
+
+.bug-field-row:has(> .ai-suggestion) > .bug-field > label {
+    margin-bottom: 0;
+}
+
+.bug-field-row:has(> .ai-suggestion) > .bug-field > .form-input {
+    align-self: start;
+}
+
+.bug-field {
+    min-width: 0;
+}
+
+.bug-field > label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.bug-field > .form-input {
+    margin-bottom: 0;
+}
+
+.bug-field-row:has(.form-input[hidden]),
+.bug-field > [hidden] {
+    display: none;
 }
 
 .ai-suggestion {
-    margin-top: 16px;
-    padding: 16px;
-    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    grid-column: 2;
+    grid-row: 2;
+    gap: 4px;
+    min-width: 0;
+    padding: 6px 10px;
+    color: var(--primary-text);
+    font-family: Arial, sans-serif;
+    line-height: 1.35;
+    border: 1px solid var(--focus-border);
     border-radius: 6px;
-    background-color: var(--surface-background);
+    background-color: var(--input-background);
 }
 
 .ai-suggestion h4 {
-    margin: 0 0 12px;
+    margin: 0;
+    color: var(--ai-action-text);
+    font-size: 14px;
+    overflow-wrap: anywhere;
 }
 
-.ai-suggestion dd {
-    margin: 4px 0 12px;
+.ai-suggestion-value {
+    margin: 0;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
@@ -817,6 +898,130 @@ button:disabled {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.ai-suggestion > .ai-suggestion-actions {
+    margin-top: auto;
+}
+
+/* Fill the textarea's control row when the suggested content fits. */
+.bug-field-row:has(textarea) > .ai-suggestion {
+    align-self: stretch;
+}
+
+.ai-suggestions-footer {
+    margin: 18px 0;
+}
+
+.ai-suggestions-footer > .ai-suggestion-actions {
+    justify-content: flex-start;
+}
+
+:is(#bug-form, #edit-bug-form) > .ai-suggestions-footer > .ai-suggestion-actions,
+:is(#bug-form, #edit-bug-form) > .form-actions {
+    justify-content: center;
+}
+
+.ai-review-button {
+    box-sizing: border-box;
+    flex: 0 0 80px;
+    width: 80px;
+    height: 32px;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 6px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+@media (min-width: 701px) {
+    #new-bug-ai-assist,
+    #edit-bug-ai-assist {
+        width: 100px;
+    }
+
+    .ai-suggestions-footer .ai-review-button {
+        flex-basis: 92px;
+        width: 92px;
+        height: 36px;
+        min-height: 36px;
+    }
+
+    .ai-suggestion .ai-review-button {
+        flex-basis: 64px;
+        width: 64px;
+        height: 26px;
+        min-height: 26px;
+    }
+}
+
+.ai-assist-button,
+.ai-review-button {
+    border: 1px solid var(--focus-border);
+    background-color: var(--ai-action-background);
+    color: var(--ai-action-text);
+}
+
+.ai-assist-button:hover,
+.ai-review-button:hover {
+    background-color: var(--ai-action-hover);
+}
+
+.ai-use-button {
+    background-color: var(--ai-use-background);
+}
+
+.ai-use-button:hover,
+.ai-dismiss-button:hover {
+    background-color: var(--ai-use-hover);
+}
+
+.ai-assist-button:disabled {
+    border-color: var(--border-color);
+    background-color: var(--input-background);
+    color: var(--muted-text);
+}
+
+.ai-assist-button:focus-visible,
+.ai-review-button:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
+}
+
+#new-bug-ai-message,
+#edit-bug-ai-message {
+    margin: 16px 0 0;
+    padding-left: 4px;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+#new-bug-ai-message:not(.message-error),
+#edit-bug-ai-message:not(.message-error) {
+    color: var(--ai-action-text);
+}
+
+/* Stack based on the form's available width, including its surrounding panel. */
+@container (max-width: 760px) {
+    .bug-field-row:has(> .ai-suggestion) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+        row-gap: 12px;
+    }
+
+    .bug-field-row:has(> .ai-suggestion) > .bug-field {
+        display: block;
+        grid-row: auto;
+    }
+
+    .bug-field-row:has(> .ai-suggestion) > .bug-field > label {
+        margin-bottom: 6px;
+    }
+
+    .ai-suggestion {
+        grid-column: 1;
+        grid-row: auto;
+    }
 }
 
 .equal-action-buttons .context-action-button {
@@ -1500,6 +1705,12 @@ footer a:hover {
         min-height: 44px;
 
         padding: 10px 16px;
+    }
+
+    .ai-review-button {
+        height: 36px;
+        min-height: 36px;
+        padding: 0 6px;
     }
 
     .form-actions {
