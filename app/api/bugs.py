@@ -478,6 +478,12 @@ def update_bug(
             (project_id, bug_number)
         ).fetchone()
 
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Bug not found."
+            )
+
     finally:
         conn.close()
 
@@ -989,6 +995,12 @@ def update_bug_status(
             """,
             (project_id, bug_number)
         ).fetchone()
+
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Bug not found."
+            )
 
     finally:
         conn.close()
