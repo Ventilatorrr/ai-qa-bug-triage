@@ -51,12 +51,21 @@ Tests configure their own temporary JWT secret, mock provider calls, and require
 no real API key. They use a fixed disposable `test_bugtriage.db` filename and must
 not run concurrently.
 
-Formal versioning is active. `APP_VERSION = "0.1.0"` is the source of truth,
-exposed in FastAPI metadata and `/version`, and displayed on the About page.
-The annotated Git tag `v0.1.0` and published GitHub Release `v0.1.0` mark this
-release. The planned workflow is development -> release candidates when
-appropriate -> stable release; `v1.0.0` is intended for the requirements-complete
-release.
+Formal versioning follows Semantic Versioning. `APP_VERSION` in `app/version.py`
+is the source of truth for FastAPI metadata, `/version`, and the About page.
+
+| Version | Meaning |
+| --- | --- |
+| `0.1.0-dev` | Retrospective label for development before `v0.1.0`; no release or Git tag existed for this label |
+| `0.1.0` | First stable release, published as GitHub Release and annotated Git tag `v0.1.0` |
+| `1.0.0-dev` | Current development application version |
+| `1.0.0-rc.1` | Planned first release candidate |
+| `1.0.0` | Next planned stable release, `v1.0.0` |
+
+`v0.1.0` remains the published release. No release candidate or new Git tag has
+been created yet. Affected Version may identify an observed development build,
+such as `1.0.0-dev`; it is not populated automatically. Fix Version identifies
+the released version containing a fix and remains blank while the fix is unreleased.
 
 Python dependency installation does not install Node; the separate frontend
 test commands below require it.

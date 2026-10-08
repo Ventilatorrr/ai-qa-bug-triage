@@ -2,7 +2,7 @@ from app.version import APP_VERSION
 
 
 def test_application_version_is_shared_by_openapi_and_endpoint(test_client):
-    assert APP_VERSION == "0.1.0"
+    assert APP_VERSION == "1.0.0-dev"
 
     openapi_response = test_client.get("/openapi.json")
     version_response = test_client.get("/version")
