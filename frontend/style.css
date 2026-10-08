@@ -851,6 +851,11 @@ button:disabled {
     align-self: start;
 }
 
+/* Let multiline originals fill the shared control row beside a taller card. */
+.bug-field-row:has(> .ai-suggestion) > .bug-field > textarea.form-input {
+    align-self: stretch;
+}
+
 .bug-field {
     min-width: 0;
 }

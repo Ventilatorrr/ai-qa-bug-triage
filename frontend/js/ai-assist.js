@@ -28,7 +28,7 @@ function endAiAssistSession(form) {
     const session = aiAssistSessions.get(form);
     if (!session) return;
     aiAssistSessions.delete(form);
-    for (const pending of session.pending.values()) pending.card.remove();
+    for (const pending of session.pending.values()) removeAiSuggestionCard(pending);
     session.pending.clear();
     form.classList.remove("has-ai-suggestions");
     session.area.replaceChildren();
@@ -78,6 +78,30 @@ function aiReviewButton(label, action, fieldLabel) {
     return button;
 }
 
+function expandManuallySizedAiTextarea(pending) {
+    const {input, card} = pending;
+    // Untouched textareas already stretch through CSS; DOM substitutes lack styles.
+    if (input.tagName.toLowerCase() !== "textarea" || !input.style?.height) return;
+
+    const original = input.getBoundingClientRect();
+    const suggestion = card.getBoundingClientRect();
+    // Stacked cards need no matching height. Preserve larger manual sizes.
+    if (suggestion.left < original.right || original.height >= suggestion.height) return;
+
+    pending.previousTextareaHeight = input.style.height;
+    input.style.height = `${suggestion.height}px`;
+    pending.automaticTextareaHeight = input.style.height;
+}
+
+function removeAiSuggestionCard(pending) {
+    // A later native resize changes the inline height and should be preserved.
+    if (pending.automaticTextareaHeight &&
+        pending.input.style.height === pending.automaticTextareaHeight) {
+        pending.input.style.height = pending.previousTextareaHeight;
+    }
+    pending.card.remove();
+}
+
 function resolveAiSuggestion(session, field, use) {
     if (!isCurrentAiSession(session) || !session.pending.has(field)) return;
     const pending = session.pending.get(field);
@@ -95,7 +119,7 @@ function resolveAiSuggestion(session, field, use) {
         pending.input.dispatchEvent(new Event("input", {bubbles: true}));
         pending.input.dispatchEvent(new Event("change", {bubbles: true}));
     }
-    pending.card.remove();
+    removeAiSuggestionCard(pending);
     session.pending.delete(field);
     if (!session.pending.size) {
         session.form.classList.remove("has-ai-suggestions");
@@ -161,6 +185,7 @@ function renderAiSuggestions(session, suggestions) {
     session.form.classList.add("has-ai-suggestions");
     session.area.hidden = false;
     session.footer.hidden = false;
+    for (const pending of session.pending.values()) expandManuallySizedAiTextarea(pending);
 }
 
 function isAiSuggestionResponse(data, form, prefix) {
