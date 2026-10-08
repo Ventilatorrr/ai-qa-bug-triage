@@ -537,6 +537,7 @@ As a project member with the appropriate permissions, I want bugs to progress th
 - A bug report has one of the following statuses: `Triage`, `Open`, `Development`, `Testing`, or `Closed`.
 - A newly created bug report has the status `Triage`.
 - A Project Owner can perform lifecycle actions available to a QA Analyst or Developer, while the same assignee and transition requirements still apply.
+- After a successful lifecycle transition and after the updated details, controls, and success message have rendered, the page skips scrolling only when both the last visible lifecycle action button and the success message are fully within the viewport. If either is partially or completely outside the viewport, the page scrolls to bring the success message below the controls fully into view, aiming for a 16 px gap below the message or the nearest achievable position within document/viewport limits. The gap does not affect the visibility check. Initial loading, navigation, refresh, ordinary editing, and failed or unconfirmed transitions do not trigger this automatic scroll.
 
 #### AC-017.2 — Triage to Open
 
