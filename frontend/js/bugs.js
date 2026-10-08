@@ -848,8 +848,30 @@ function disableLifecycleControls() {
     lifecycleResolution.disabled = true;
 }
 
+function scrollLifecycleFeedbackIfNeeded() {
+    // Scrolling is optional in environments without native scrolling APIs.
+    if (typeof bugMessage.scrollIntoView !== "function") return;
+
+    const buttons = Array.from(lifecycleActions.querySelectorAll("button"))
+        .filter(button => button.getClientRects().length > 0);
+    const lastButton = buttons.at(-1);
+
+    if (!lastButton || bugMessage.getClientRects().length === 0) return;
+
+    const fullyVisible = [lastButton, bugMessage].every(element => {
+        const rect = element.getBoundingClientRect();
+        return rect.top >= 0 && rect.bottom <= window.innerHeight &&
+            rect.left >= 0 && rect.right <= window.innerWidth;
+    });
+
+    if (!fullyVisible) {
+        bugMessage.scrollIntoView({ block: "end", behavior: "instant" });
+    }
+}
+
 async function submitLifecycleTransition(payload, successMessage, actionButton) {
     let lifecycleStateConfirmed = true;
+    let transitionSucceeded = false;
 
     lifecycleInProgress = true;
     actionButton.textContent = "Updating...";
@@ -939,6 +961,7 @@ async function submitLifecycleTransition(payload, successMessage, actionButton) 
         }
 
         showMessage(bugMessage, successMessage, "success");
+        transitionSucceeded = true;
     } catch (error) {
         lifecycleStateConfirmed = false;
         actionButton.textContent = "Refresh required";
@@ -955,6 +978,10 @@ async function submitLifecycleTransition(payload, successMessage, actionButton) 
         if (lifecycleStateConfirmed && currentBug && !bugDetails.hidden) {
             renderRoleSpecificActions();
         }
+    }
+
+    if (transitionSucceeded) {
+        scrollLifecycleFeedbackIfNeeded();
     }
 }
 
