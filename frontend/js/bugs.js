@@ -637,6 +637,9 @@ function renderBug(bug) {
     renderBugAssignee(bug);
     setText("#bug-affected-version", bug.affected_version);
     setText("#bug-fix-version", bug.fix_version);
+    document.querySelector("#bug-fix-version-detail").hidden = !(
+        bug.status === "Closed" && bug.resolution === "Fixed"
+    );
     setText(
         "#bug-created-at",
         bug.created_at ? formatDateTime(bug.created_at) : null
@@ -1133,7 +1136,10 @@ function populateEditForm() {
     editBugSeverity.value = currentBug.severity || "";
     editBugPriority.value = currentBug.priority || "";
     editBugAffectedVersion.value = currentBug.affected_version || "";
-    editBugFixVersion.value = currentBug.fix_version || "";
+    const canEditFixVersion = currentBug.status === "Closed" && currentBug.resolution === "Fixed";
+    document.querySelector("#edit-bug-fix-version-row").hidden = !canEditFixVersion;
+    editBugFixVersion.disabled = !canEditFixVersion;
+    editBugFixVersion.value = canEditFixVersion ? currentBug.fix_version || "" : "";
 
     editBugAssignee.innerHTML = "";
 
@@ -1339,8 +1345,10 @@ editBugForm.addEventListener("submit", async function(event) {
     const affectedVal = editBugAffectedVersion.value || null;
     if (affectedVal !== currentBug.affected_version) payload.affected_version = affectedVal;
 
-    const fixVal = editBugFixVersion.value || null;
-    if (fixVal !== currentBug.fix_version) payload.fix_version = fixVal;
+    if (currentBug.status === "Closed" && currentBug.resolution === "Fixed") {
+        const fixVal = editBugFixVersion.value || null;
+        if (fixVal !== currentBug.fix_version) payload.fix_version = fixVal;
+    }
 
     if (currentBug.status !== "Closed") {
         const isAlreadyUnassigned = currentBug.assignee_id === null || currentBug.assignee_id === undefined;

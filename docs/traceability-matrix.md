@@ -208,6 +208,8 @@ AC-009.2 has API coverage for member removal, loss of access, automatic unassign
 | REQ-011 | AC-011.2 — Missing Bug Title | `test_bug_creation_rejected_without_title` | API / Validation | Partial |
 | REQ-011 | AC-011.3 — Unauthorized Bug Creation | `test_non_member_cannot_create_bug` | API / Security | Covered |
 | REQ-011 | AC-011.4 — Optional Bug Information | `test_bug_can_be_created_with_optional_information` | API / Validation | Partial |
+| REQ-011 | AC-011.4 — Optional Bug Information | `test_bug_creation_allows_empty_fix_version` | API | Partial |
+| REQ-011 | AC-011.4 — Optional Bug Information | `test_bug_creation_rejects_nonempty_fix_version` | API / Validation | Partial |
 
 **Coverage note:** AC-011.4 includes the optional free-text Environment field. The automated creation test verifies that Environment can be supplied and returned correctly. Existing bug-creation tests that omit Environment also verify that the field remains optional.
 
@@ -279,6 +281,10 @@ The refinement's `git diff --check` passed. The real `bugtriage.db` fingerprint 
 | REQ-013 | AC-013.1 — Edit Bug Report | `test_project_member_can_edit_bug_report` | API | Partial |
 | REQ-013 | AC-013.1 — Edit Bug Report | `test_bug_number_is_preserved_on_edit` | API | Partial |
 | REQ-013 | AC-013.2 — Optional Bug Information | `test_project_member_can_update_optional_bug_information` | API / Validation | Partial |
+| REQ-013 | AC-013.2 — Optional Bug Information | `test_unresolved_bug_edit_rejects_nonempty_fix_version` | API / Validation | Partial |
+| REQ-013 | AC-013.2 — Optional Bug Information | `test_unresolved_bug_edit_clears_legacy_fix_version` | API | Partial |
+| REQ-013 | AC-013.2 — Optional Bug Information | `test_closed_fixed_bug_fix_version_can_be_edited_and_cleared` | API | Partial |
+| REQ-013 | AC-013.2 — Optional Bug Information | `test_nonfixed_bug_edit_clears_legacy_fix_version` | API | Partial |
 | REQ-013 | AC-013.3 — Unauthorized Bug Editing | `test_non_member_cannot_edit_bug_report` | API / Security | Covered |
 | REQ-013 | — | `test_bug_update_rejected_with_null_title` | API / Validation | Covered |
 
@@ -370,7 +376,7 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.5 — Testing Outcome | `test_testing_outcome_is_required` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_invalid_testing_outcome_is_rejected` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_passed_transition_persists_optional_fix_version` | API | Partial |
-| REQ-017 | AC-017.5 — Testing Outcome | `test_failed_transition_preserves_fix_version` | API | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_failed_transition_clears_legacy_fix_version` | API | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_fix_version_is_rejected_outside_passed_transition` | API / Validation | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_passed_fix_version_preserves_authorization` | API / Security | Partial |
 | REQ-017 | AC-017.5 — Testing Outcome | `test_passed_fix_version_input_visible_and_sends_value` | Frontend unit | Partial |
@@ -381,6 +387,7 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.5 — Testing Outcome | Lifecycle disabled-state regression: Pass/Fail and Fix Version behavior remain intact (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_assigned_developer_can_close_bug_without_fixing` | API | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_project_owner_can_close_bug_without_fixing` | API | Partial |
+| REQ-017 | AC-017.6 — Close Without Fixing | `test_nonfixed_closure_clears_fix_version_and_rejects_assignment` | API / Validation | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_non_assigned_developer_cannot_close_bug_without_fixing` | API / Security | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_bug_cannot_be_closed_without_resolution` | API / Validation | Partial |
 | REQ-017 | AC-017.6 — Close Without Fixing | `test_fixed_resolution_cannot_be_manually_selected_when_closing_bug` | API / Validation | Partial |
@@ -388,6 +395,7 @@ The validation tests also verify that unsupported values and values belonging to
 | REQ-017 | AC-017.6 — Close Without Fixing | — | UI | Pending |
 | REQ-017 | AC-017.6 — Close Without Fixing | Lifecycle disabled-state regression: Close requires resolution selection (user-reported browser verification) | Manual / Browser | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_project_owner_can_move_closed_bug_to_triage` | API | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_reopening_clears_resolution_and_fix_version` | API | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_project_owner_can_move_unassigned_closed_bug_to_triage` | API | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_unauthorized_user_cannot_move_closed_bug_to_triage` | API / Security | Partial |
 | REQ-017 | AC-017.7 — Closed Bugs | `test_closed_bug_rejects_invalid_direct_transition` | API / Validation | Partial |
@@ -426,15 +434,26 @@ The close-without-fixing tests are parameterized across all supported non-fix re
 
 `Fixed` cannot be selected manually. It is assigned automatically only when a bug in Testing receives a `Passed` testing outcome and moves to Closed.
 
-Closed has no normal forward lifecycle transition. A Project Owner may return a Closed bug to Triage; the transition clears its resolution, preserves its assignee, and restores the normal lifecycle and assignment rules.
+Closed has no normal forward lifecycle transition. A Project Owner may return a Closed bug to Triage; the transition clears Resolution and Fix Version in the same database update, preserves its assignee, and restores the normal lifecycle and assignment rules.
 
 The Project Owner Closed-to-Triage test also verifies that Last Updated changes during the transition.
 
-AC-017.5 optional Fix Version coverage is maintained in `tests/test_fix_version_on_pass.py` and `tests/frontend/fix-version-on-pass.test.cjs`. Parameterized API cases verify Passed with supplied, unchanged, replaced, omitted, null, empty, and untrimmed values, with GET readback; omitted values preserve the stored version and explicit null clears it. The status, resolution, and supplied Fix Version are persisted in the same database update. Failed preserves its existing version, other transitions reject supplied Fix Version without changing the bug, and existing authorization remains enforced. Frontend unit tests exercise the actual page script with DOM/request substitutes: the immediately visible optional input, prefill and eligibility, direct Passed submission with value/null payloads, and unchanged Failed requests. The existing frontend test also checks one associated semantic label with the exact text "Fix Version (optional)" inside the control, a blank placeholder for CSS empty-state detection, and no competing accessible label. CSS positions the label like a placeholder when empty and unfocused, floats it when focused or populated, and centers the value while preserving the existing width and total vertical padding.
+AC-017.5 optional Fix Version coverage is maintained in `tests/test_fix_version_on_pass.py` and `tests/frontend/fix-version-on-pass.test.cjs`. Parameterized API cases verify Passed with supplied, unchanged, replaced, omitted, null, empty, and untrimmed values, with GET readback; omitted values preserve a stored legacy version and explicit null clears it. Legacy unresolved versions are seeded only in the disposable test database because creation now rejects them. Status, resolution, and Fix Version are persisted in the same database update. Failed clears any legacy version; other transitions still reject supplied Fix Version, and existing authorization remains enforced. Existing frontend unit tests exercise the actual page script with DOM/request substitutes: the optional Pass input, prefill and eligibility, direct Passed submission with value/null payloads, and unchanged Failed requests. Their stubbed Failed response still preserves a legacy value and is not evidence of current backend persistence behavior. The existing frontend test also checks one associated semantic label with the exact text "Fix Version (optional)" inside the control, a blank placeholder for CSS empty-state detection, and no competing accessible label. CSS positions the label like a placeholder when empty and unfocused, floats it when focused or populated, and centers the value while preserving the existing width and total vertical padding.
+
+**Fix Version lifecycle correction (8 October 2026):** REQ-011/013/017 API regression coverage now checks rejection of premature assignments (including no partial edit or consumed creation number), allowed empty values, editing/clearing Closed/Fixed versions, all non-fix resolutions, and reopen readback with both fields cleared and Affected Version preserved. Ordinary edits and transitions outside Closed/Fixed clear legacy values without a migration. New Bug no longer renders or submits Fix Version; ordinary Edit Bug and bug details show it only for Closed/Fixed, with edit eligibility and values reset whenever the form is populated. The readback regression retains both edit/status branches and deleted-between-commit-and-readback behavior, using Affected Version as the populated unchanged optional field. The AI-context regression seeds a legacy Fix Version only in the disposable database to preserve its exclusion/non-persistence checks. No CommonJS tests were changed. Browser verification of the new visibility, stale-value prevention, and lifecycle rules remains pending; affected ACs remain Partial.
+
+Verification for this correction, using disposable databases serially:
+
+- Before the backend correction, `.\.venv\Scripts\python.exe -m pytest tests/test_fix_version_on_pass.py -q --tb=short -k 'creation_rejects or unresolved_bug_edit_rejects or reopening_clears or nonfixed_closure'` — **11 failed, 39 deselected in 20.53 seconds**, demonstrating the original defects.
+- Initial wider focused run, `.\.venv\Scripts\python.exe -m pytest tests/test_fix_version_on_pass.py tests/test_bug_update_readback.py tests/test_bug.py tests/test_ai_context.py -q --tb=short` — **191 passed, 2 failed in 216.06 seconds**. Both failures were new test assertions comparing list responses with full detail responses; these assertions were corrected.
+- `.\.venv\Scripts\python.exe -m pytest tests/test_fix_version_on_pass.py tests/test_bug_update_readback.py -q --tb=short` — **54 passed in 67.04 seconds**, including the corrected cases.
+- `.\.venv\Scripts\python.exe -m pytest -q --tb=short` — **544 passed in 346.63 seconds**.
+- `node --test tests/frontend/*.test.cjs` — **77 passed, 0 failures**. These are existing unit tests with DOM/request substitutes; they do not establish browser visibility or appearance verification of the new rules.
+- `node --check frontend/js/project.js`, `node --check frontend/js/bugs.js`, and `git diff --check` — passed.
 
 Manual browser appearance verification of the Fix Version floating-label enhancement reported by the user passed: an empty field shows "Fix Version (optional)" centered inside the control; a populated field keeps the small persistent label visible and centers the entered version value. In both states, the label uses normal font style and the same subdued grey/placeholder-style color as nearby lifecycle controls. Control dimensions remain visually consistent with the previous layout, and Pass / Fail and Fix Version behavior remain unchanged. AC-017.5 remains Partial because broader lifecycle/accessibility coverage is incomplete; all existing automated evidence is preserved.
 
-Manual browser verification of the Fix Version on Pass enhancement reported by the user passed: a Testing bug with blank Fix Version immediately shows the input with its associated semantic label "Fix Version (optional)" in a placeholder-like position and the Pass button; blank does not block a single Pass click, which closes the bug as Fixed and leaves Fix Version blank. An existing Fix Version is prefilled; changing it and clicking Pass once persists the new value and closes the bug as Fixed. The Developer selector remains unchanged; Fail returns the bug to Development with the selected Developer as assignee and preserves the existing Fix Version. The visible action labels are Pass and Fail. AC-017.5 remains Partial because broader lifecycle browser/accessibility coverage is incomplete; the existing API and frontend-unit evidence is preserved.
+Historical manual browser verification of the Fix Version on Pass enhancement reported by the user passed: a Testing bug with blank Fix Version immediately showed the input with its associated semantic label "Fix Version (optional)" in a placeholder-like position and the Pass button; blank did not block a single Pass click, which closed the bug as Fixed and left Fix Version blank. An existing Fix Version was prefilled; changing it and clicking Pass once persisted the new value and closed the bug as Fixed. The Developer selector remained unchanged; Fail returned the bug to Development with the selected Developer as assignee and preserved the existing Fix Version. That preservation observation predates the 8 October lifecycle correction and is superseded by the clearing requirement above. The visible action labels were Pass and Fail. AC-017.5 remains Partial because current lifecycle browser/accessibility verification is incomplete.
 
 AC-017.1 through AC-017.8 remain Partial because broader lifecycle browser/accessibility verification and automated UI coverage are incomplete. The lifecycle UI includes closure outcomes and the Project Owner's return-to-Triage action, but the project does not yet have a frontend browser-test framework. AC-017.9 is Covered at the API layer because it specifies timestamp behavior rather than a separate browser interaction.
 
