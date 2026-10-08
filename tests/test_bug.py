@@ -175,8 +175,7 @@ def test_bug_can_be_created_with_optional_information(
             "actual_result": "Nothing happens after clicking Login.",
             "severity": severity,
             "priority": "High",
-            "assignee_id": developer_member["user_id"],
-            "fix_version": "1.3.0"
+            "assignee_id": developer_member["user_id"]
         },
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -201,7 +200,7 @@ def test_bug_can_be_created_with_optional_information(
     assert data["severity"] == severity
     assert data["priority"] == "High"
     assert data["assignee_id"] == developer_member["user_id"]
-    assert data["fix_version"] == "1.3.0"
+    assert data["fix_version"] is None
 
 
 
@@ -303,8 +302,7 @@ def test_project_member_can_open_bug_report(
             "actual_result": "Nothing happens.",
             "severity": "Blocker",
             "priority": "High",
-            "assignee_id": developer_member["user_id"],
-            "fix_version": "1.3.0"
+            "assignee_id": developer_member["user_id"]
         },
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -315,6 +313,20 @@ def test_project_member_can_open_bug_report(
 
     bug_id = create_response.json()["id"]
     bug_number = create_response.json()["bug_number"]
+
+    qa = authenticated_user_factory(email="bug-detail-qa@example.com")
+    member_factory(owner["token"], project["id"], qa["user"]["email"], "QA Analyst")
+    for payload in [
+        {"status": "Open"},
+        {"status": "Development"},
+        {"status": "Testing", "assignee_id": qa["user_id"]},
+        {"status": "Closed", "testing_outcome": "Passed", "fix_version": "1.3.0"},
+    ]:
+        transition = test_client.patch(
+            f"/projects/{project['id']}/bugs/{bug_number}/status",
+            headers={"Authorization": f"Bearer {owner['token']}"}, json=payload,
+        )
+        assert transition.status_code == 200
 
     response = test_client.get(
         f"/projects/{project['id']}/bugs/{bug_number}",
@@ -332,8 +344,9 @@ def test_project_member_can_open_bug_report(
     assert data["title"] == "Login button does not work"
     assert data["severity"] == "Blocker"
     assert data["priority"] == "High"
-    assert data["status"] == "Triage"
-    assert data["assignee_id"] == developer_member["user_id"]
+    assert data["status"] == "Closed"
+    assert data["resolution"] == "Fixed"
+    assert data["assignee_id"] == qa["user_id"]
     assert data["affected_version"] == "1.2.0"
     assert data["fix_version"] == "1.3.0"
     assert data["environment"] == "Windows 11, Chrome 152, Desktop"
@@ -641,8 +654,7 @@ def test_project_member_can_update_optional_bug_information(
             "affected_version": "1.2.0",
             "environment": "macOS Sonoma, Safari",
             "severity": "Blocker",
-            "priority": "High",
-            "fix_version": "1.3.0"
+            "priority": "High"
         },
         headers={
             "Authorization": f"Bearer {user['token']}"
@@ -657,7 +669,7 @@ def test_project_member_can_update_optional_bug_information(
     assert data["environment"] == "macOS Sonoma, Safari"
     assert data["severity"] == "Blocker"
     assert data["priority"] == "High"
-    assert data["fix_version"] == "1.3.0"
+    assert data["fix_version"] is None
 
 
 # AC-013.3 — Unauthorized Bug Editing

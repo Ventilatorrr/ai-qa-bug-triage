@@ -1396,6 +1396,15 @@ button:disabled {
     grid-column: 1 / -1;
 }
 
+/* Keep lower rows stable when an optional right-hand field is hidden. */
+.bug-detail-row-start {
+    grid-column: 1;
+}
+
+.bug-detail-resolution:has(dd[hidden]) {
+    visibility: hidden;
+}
+
 .bug-actions {
     display: flex;
     flex-direction: column;

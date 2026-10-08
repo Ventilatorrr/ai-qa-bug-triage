@@ -20,7 +20,7 @@ def test_bug_update_response_readback_after_commit(
     headers = {"Authorization": f"Bearer {owner['token']}"}
     created = test_client.post(
         f"/projects/{project['id']}/bugs", headers=headers,
-        json={"title": "Original report", "fix_version": "1.2.0"},
+        json={"title": "Original report", "affected_version": "1.2.0"},
     )
     assert created.status_code == 201
     before = created.json()
@@ -82,6 +82,6 @@ def test_bug_update_response_readback_after_commit(
         result = response.json()
         assert stored.json() == result
         assert (result["title"], result["status"], result["assignee_id"]) == expected
-        for field in ["id", "project_id", "bug_number", "created_at", "fix_version", "resolution"]:
+        for field in ["id", "project_id", "bug_number", "created_at", "affected_version", "fix_version", "resolution"]:
             assert result[field] == before[field]
         assert result["updated_at"] != before["updated_at"]

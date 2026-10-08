@@ -63,6 +63,12 @@ def create_bug(
                     detail="Invalid bug assignee."
                 )
 
+        if bug.fix_version:
+            raise HTTPException(
+                status_code=422,
+                detail="Fix Version cannot be set when creating a bug."
+            )
+
         bug_number = conn.execute(
             "SELECT next_bug_number FROM projects WHERE id=?", (project_id,)
         ).fetchone()[0]
@@ -329,7 +335,7 @@ def update_bug(
 
         existing_bug = conn.execute(
             """
-            SELECT id, status, assignee_id
+            SELECT id, status, assignee_id, resolution
             FROM bugs
             WHERE project_id = ? AND bug_number = ?
             """,
@@ -421,6 +427,15 @@ def update_bug(
                         status_code=422,
                         detail="Testing bugs must have a QA Analyst assigned."
                     )
+
+        if current_status != "Closed" or existing_bug[3] != "Fixed":
+            if updates.get("fix_version"):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Fix Version can only be set on Closed bugs with Fixed resolution."
+                )
+            # Also clear any legacy value when editing a bug outside Closed/Fixed.
+            updates["fix_version"] = updates.get("fix_version")
 
         fields = []
         values = []
@@ -950,13 +965,19 @@ def update_bug_status(
                 status = ?,
                 assignee_id = ?,
                 resolution = ?,
-                fix_version = CASE WHEN ? THEN ? ELSE fix_version END,
+                fix_version = CASE
+                    WHEN ? = 'Closed' AND ? = 'Fixed'
+                    THEN CASE WHEN ? THEN ? ELSE fix_version END
+                    ELSE NULL
+                END,
                 updated_at = ?
             WHERE project_id = ? AND bug_number = ?
             """,
             (
                 requested_status,
                 new_assignee_id,
+                new_resolution,
+                requested_status,
                 new_resolution,
                 fix_version_supplied,
                 status_update.fix_version,

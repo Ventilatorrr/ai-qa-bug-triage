@@ -1,3 +1,5 @@
+from contextlib import closing
+
 import pytest
 
 
@@ -16,7 +18,7 @@ def lifecycle_bug(test_client, authenticated_user_factory, project_factory, memb
         response = test_client.post(
             f"/projects/{project['id']}/bugs", headers=headers,
             json={"title": "Bug for version transition", "assignee_id": developer["user_id"],
-                  "affected_version": "0.1.0", "fix_version": fix_version},
+                  "affected_version": "0.1.0"},
         )
         assert response.status_code == 201
         number = response.json()["bug_number"]
@@ -25,7 +27,7 @@ def lifecycle_bug(test_client, authenticated_user_factory, project_factory, memb
             {"status": "Open"},
             {"status": "Development"},
             {"status": "Testing", "assignee_id": qa["user_id"]},
-            {"status": "Closed", "testing_outcome": "Passed"},
+            {"status": "Closed", "testing_outcome": "Passed", "fix_version": fix_version},
         ]:
             if response.json()["status"] == state:
                 break
@@ -33,6 +35,17 @@ def lifecycle_bug(test_client, authenticated_user_factory, project_factory, memb
             assert response.status_code == 200
             assert response.json()["bug_number"] == number
         assert response.json()["status"] == state
+        if state != "Closed" and fix_version is not None:
+            # Reproduce data accepted before the lifecycle restriction, only in
+            # the disposable database. New API requests must not create it.
+            from app import database
+
+            assert database.DATABASE_NAME == "test_bugtriage.db"
+            with closing(database.get_connection()) as conn:
+                conn.execute("UPDATE bugs SET fix_version=? WHERE id=?", (fix_version, response.json()["id"]))
+                conn.commit()
+            response = test_client.get(url, headers=headers)
+            assert response.status_code == 200
         return url, response.json(), actors
 
     return create
@@ -75,7 +88,7 @@ def test_passed_transition_persists_optional_fix_version(
     assert stored.json() == result
 
 
-def test_failed_transition_preserves_fix_version(test_client, lifecycle_bug):
+def test_failed_transition_clears_legacy_fix_version(test_client, lifecycle_bug):
     url, before, actors = lifecycle_bug(fix_version="1.2.0")
     headers = {"Authorization": f"Bearer {actors['qa']['token']}"}
     response = test_client.patch(
@@ -89,7 +102,8 @@ def test_failed_transition_preserves_fix_version(test_client, lifecycle_bug):
     assert result["bug_number"] == before["bug_number"]
     assert result["resolution"] is None
     assert result["assignee_id"] == actors["developer"]["user_id"]
-    assert result["fix_version"] == before["fix_version"]
+    assert result["fix_version"] is None
+    assert result["affected_version"] == before["affected_version"]
     assert result["updated_at"] != before["updated_at"]
     stored = test_client.get(url, headers=headers)
     assert stored.status_code == 200
@@ -120,6 +134,130 @@ def test_fix_version_is_rejected_outside_passed_transition(
     stored = test_client.get(url, headers=headers)
     assert stored.status_code == 200
     assert stored.json() == before
+
+
+@pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
+def test_bug_creation_allows_empty_fix_version(test_client, lifecycle_bug, version_payload):
+    url, _, actors = lifecycle_bug("Triage")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    response = test_client.post(url.rsplit("/", 1)[0], headers=headers, json={"title": "New report"} | version_payload)
+    assert response.status_code == 201
+    result = response.json()
+    assert result["status"] == "Triage"
+    assert result["resolution"] is None
+    assert result["fix_version"] == version_payload.get("fix_version")
+    assert test_client.get(f"{url.rsplit('/', 1)[0]}/{result['bug_number']}", headers=headers).json() == result
+
+
+@pytest.mark.parametrize("fix_version", ["1.3.0", " \t "])
+def test_bug_creation_rejects_nonempty_fix_version(test_client, lifecycle_bug, fix_version):
+    url, before, actors = lifecycle_bug("Triage")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    collection = url.rsplit("/", 1)[0]
+    existing = test_client.get(collection, headers=headers)
+    assert existing.status_code == 200
+    response = test_client.post(collection, headers=headers, json={"title": "Invalid report", "fix_version": fix_version})
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Fix Version cannot be set when creating a bug."}
+    assert test_client.get(collection, headers=headers).json() == existing.json()
+    assert test_client.get(url, headers=headers).json() == before
+    valid = test_client.post(collection, headers=headers, json={"title": "Valid report"})
+    assert valid.status_code == 201
+    assert valid.json()["bug_number"] == before["bug_number"] + 1
+
+
+@pytest.mark.parametrize("state", ["Triage", "Open", "Development", "Testing"])
+def test_unresolved_bug_edit_rejects_nonempty_fix_version(test_client, lifecycle_bug, state):
+    url, before, actors = lifecycle_bug(state)
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    response = test_client.patch(url, headers=headers, json={"title": "Must not persist", "fix_version": "1.3.0"})
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Fix Version can only be set on Closed bugs with Fixed resolution."}
+    assert test_client.get(url, headers=headers).json() == before
+
+
+@pytest.mark.parametrize("state", ["Triage", "Open", "Development", "Testing"])
+@pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
+def test_unresolved_bug_edit_clears_legacy_fix_version(test_client, lifecycle_bug, state, version_payload):
+    url, before, actors = lifecycle_bug(state, fix_version="1.2.0")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    response = test_client.patch(url, headers=headers, json={"title": "Edited report"} | version_payload)
+    assert response.status_code == 200
+    result = response.json()
+    assert not result["fix_version"]
+    assert result["status"] == state
+    assert result["title"] == "Edited report"
+    assert result["affected_version"] == before["affected_version"]
+    assert test_client.get(url, headers=headers).json() == result
+
+
+def test_closed_fixed_bug_fix_version_can_be_edited_and_cleared(test_client, lifecycle_bug):
+    url, before, actors = lifecycle_bug("Closed", fix_version="1.2.0")
+    # Ordinary bug editing remains available to every project member.
+    headers = {"Authorization": f"Bearer {actors['developer']['token']}"}
+    for payload, expected in [({"fix_version": "1.3.0"}, "1.3.0"), ({"title": "Corrected"}, "1.3.0"),
+                              ({"fix_version": None}, None), ({"fix_version": "1.4.0"}, "1.4.0"),
+                              ({"fix_version": ""}, "")]:
+        response = test_client.patch(url, headers=headers, json=payload)
+        assert response.status_code == 200
+        result = response.json()
+        assert result["status"] == "Closed"
+        assert result["resolution"] == "Fixed"
+        assert result["fix_version"] == expected
+        assert result["affected_version"] == before["affected_version"]
+        assert test_client.get(url, headers=headers).json() == result
+
+
+def test_reopening_clears_resolution_and_fix_version(test_client, lifecycle_bug):
+    url, before, actors = lifecycle_bug("Closed", fix_version="1.2.0")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    response = test_client.patch(f"{url}/status", headers=headers, json={"status": "Triage"})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "Triage"
+    assert result["resolution"] is None
+    assert result["fix_version"] is None
+    for field in ["id", "project_id", "bug_number", "assignee_id", "affected_version", "created_at"]:
+        assert result[field] == before[field]
+    assert result["updated_at"] != before["updated_at"]
+    assert test_client.get(url, headers=headers).json() == result
+
+
+@pytest.mark.parametrize("resolution", ["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"])
+def test_nonfixed_closure_clears_fix_version_and_rejects_assignment(test_client, lifecycle_bug, resolution):
+    url, before, actors = lifecycle_bug("Development", fix_version="1.2.0")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    response = test_client.patch(f"{url}/status", headers=headers, json={"status": "Closed", "resolution": resolution})
+    assert response.status_code == 200
+    closed = response.json()
+    assert closed["resolution"] == resolution
+    assert closed["fix_version"] is None
+    assert closed["affected_version"] == before["affected_version"]
+    rejected = test_client.patch(url, headers=headers, json={"fix_version": "1.3.0"})
+    assert rejected.status_code == 422
+    assert rejected.json() == {"detail": "Fix Version can only be set on Closed bugs with Fixed resolution."}
+    assert test_client.get(url, headers=headers).json() == closed
+
+
+@pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
+def test_nonfixed_bug_edit_clears_legacy_fix_version(test_client, lifecycle_bug, version_payload):
+    from app import database
+
+    url, before, actors = lifecycle_bug("Development")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    closed = test_client.patch(f"{url}/status", headers=headers, json={"status": "Closed", "resolution": "Duplicate"})
+    assert closed.status_code == 200
+    assert database.DATABASE_NAME == "test_bugtriage.db"
+    with closing(database.get_connection()) as conn:
+        conn.execute("UPDATE bugs SET fix_version=? WHERE id=?", ("1.2.0", before["id"]))
+        conn.commit()
+    response = test_client.patch(url, headers=headers, json={"title": "Corrected"} | version_payload)
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "Closed"
+    assert result["resolution"] == "Duplicate"
+    assert not result["fix_version"]
+    assert test_client.get(url, headers=headers).json() == result
 
 
 @pytest.mark.parametrize("actor,expected_status", [("developer", 403), ("non_member", 404)])

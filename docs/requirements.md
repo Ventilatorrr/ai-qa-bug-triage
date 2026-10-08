@@ -333,7 +333,8 @@ As an authorized project member, I want to create a bug report with the informat
 
 #### AC-011.4 — Optional Bug Information
 
-- Description, Environment, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, Assignee, and Fix Version are optional when creating a bug report.
+- Description, Environment, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Assignee are optional when creating a bug report.
+- Fix Version is hidden on New Bug. Creating a bug with a nonempty Fix Version is rejected; omitted, null, or empty values are allowed.
 - Environment is free-text information describing the context in which the bug occurred, such as operating system, browser and version, device type, or relevant user/account context.
 - Affected Version identifies the application version in which the bug was observed or reproduced. It does not necessarily identify the version in which the defect was first introduced.
 - Optional bug information can be provided when the bug is created or added or updated later.
@@ -405,7 +406,10 @@ As an authorized project member, I want to edit bug report information so that I
 
 #### AC-013.2 — Optional Bug Information
 
-- A project member can add or update Title, Description, Environment, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, Priority, and Fix Version after the bug has been created.
+- A project member can add or update Title, Description, Environment, Steps to Reproduce, Expected Result, Actual Result, Affected Version, Severity, and Priority after the bug has been created.
+- Fix Version is visible and editable in ordinary Edit Bug only when the bug is `Closed` with resolution `Fixed`. It may be added, changed, or cleared in that state.
+- Ordinary edits cannot assign a nonempty Fix Version in any other state. Omitted, null, or empty values are allowed; editing a bug outside `Closed`/`Fixed` clears any legacy Fix Version.
+- Fix Version identifies the released version containing the fix, not a planned release. Affected Version remains independent.
 
 #### AC-013.3 — Unauthorized Bug Editing
 
@@ -555,10 +559,12 @@ As a project member with the appropriate permissions, I want bugs to progress th
 - An assigned QA Analyst or Project Owner can select `Passed` or `Failed` as the testing outcome.
 - When testing is `Passed`, the bug status changes to `Closed` and the resolution is automatically set to `Fixed`.
 - As part of the same `Passed` action, the user may optionally specify the released Fix Version. Fix Version is not required and may be left blank if the fix is unreleased.
-- Existing Fix Version entry during bug creation and editing remains available.
+- Fix Version remains available during the successful Testing → Closed action, while hidden in ordinary Edit Bug for `Testing` and all other unresolved states.
+- Status, `Fixed` resolution, and any supplied Fix Version are saved together. When omitted, an existing legacy Fix Version is preserved; explicit null or empty clears it.
 - When testing is `Failed`, the bug status changes to `Development`.
 - When testing is `Failed`, a Developer who is a member of the project must be assigned to the bug.
 - The assigned Developer becomes the bug's assignee when testing fails.
+- Failed testing clears any legacy Fix Version as the bug returns to `Development`.
 
 #### AC-017.6 — Close Without Fixing
 
@@ -566,12 +572,13 @@ As a project member with the appropriate permissions, I want bugs to progress th
 - When a bug is closed without being fixed, a resolution must be selected.
 - Supported non-fix resolutions are `Won't Fix`, `Duplicate`, `Cannot Reproduce`, and `Not a Bug`.
 - The `Fixed` resolution is assigned only when testing is `Passed`.
+- A bug closed with a non-Fixed resolution has no Fix Version. The transition clears any legacy value, and Fix Version remains hidden and cannot be assigned through ordinary editing.
 
 #### AC-017.7 — Closed Bugs
 
 - A bug in `Closed` status has no normal forward lifecycle transition.
 - A Project Owner can move a `Closed` bug back to `Triage` to correct or reconsider its closure.
-- Moving a bug from `Closed` to `Triage` clears its resolution and preserves its existing assignee.
+- Moving a bug from `Closed` to `Triage` clears both Resolution and Fix Version atomically and preserves its existing assignee.
 - No other project role can move a bug out of `Closed`.
 - A `Closed` bug cannot transition directly to `Open`, `Development`, or `Testing`.
 - After returning to `Triage`, the normal lifecycle and assignment requirements apply again.

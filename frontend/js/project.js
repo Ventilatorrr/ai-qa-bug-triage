@@ -61,8 +61,6 @@ const bugPriorityInput =
     document.querySelector("#bug-priority");
 const bugAssigneeInput =
     document.querySelector("#bug-assignee");
-const bugFixVersionInput =
-    document.querySelector("#bug-fix-version");
 
 let projectMembers = [];
 
@@ -1050,11 +1048,7 @@ bugForm.addEventListener(
                     ? Number(
                         bugAssigneeInput.value
                     )
-                    : null,
-
-            fix_version:
-                bugFixVersionInput.value ||
-                null
+                    : null
         };
 
         const response = await authenticatedFetch(

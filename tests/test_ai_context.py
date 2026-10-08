@@ -1,3 +1,5 @@
+from contextlib import closing
+
 import pytest
 
 from app.ai_suggestions import validate_suggestions
@@ -73,8 +75,17 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
 
     stored = create_bug(
         test_client, context_project, description="Stored description", affected_version="0.1",
-        environment="Stored environment", fix_version="0.2", assignee_id=context_project["developer"]["user_id"],
+        environment="Stored environment", assignee_id=context_project["developer"]["user_id"],
     )
+    # Legacy data keeps exclusion of a populated Fix Version meaningful without
+    # creating an invalid report through the API. Only use the disposable DB.
+    from app import database
+
+    assert database.DATABASE_NAME == "test_bugtriage.db"
+    with closing(database.get_connection()) as conn:
+        conn.execute("UPDATE bugs SET fix_version=? WHERE id=?", ("0.2", stored["id"]))
+        conn.commit()
+    stored["fix_version"] = "0.2"
     snapshot = blank_snapshot.copy()
     if populated:
         snapshot.update(
