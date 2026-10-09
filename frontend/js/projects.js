@@ -178,7 +178,15 @@ function renderProjectView(projectElement, project, role) {
 
     if (role === "Project Owner") {
         const editButton = document.createElement("button");
-        editButton.textContent = "Edit";
+        editButton.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M15 5l4 4M4 16l11-11a2.828 2.828 0 0 1 4 4L8 20l-5 1 1-5Z" />
+                <path d="M4 16l4 4" />
+            </svg>`;
+        editButton.setAttribute("aria-label", `Edit project ${project.name}`);
+        editButton.title = `Edit project ${project.name}`;
         editButton.type = "button";
         editButton.className = "project-edit-button context-action-button";
         editButton.addEventListener("click", function () {

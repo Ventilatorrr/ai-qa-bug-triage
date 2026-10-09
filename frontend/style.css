@@ -1136,6 +1136,64 @@ button:disabled {
     padding: 12px 15px;
 }
 
+#projects .project:not(.project-editing) {
+    display: grid;
+    /* Equal side columns keep names centered with or without an Edit icon. */
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+}
+
+#projects .project:not(.project-editing) .project-name {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+#projects .project:not(.project-editing) .project-buttons {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    width: auto;
+}
+
+#projects .project:not(.project-editing) .project-edit-button {
+    --project-edit-background: #223248;
+    --project-edit-hover-background: #2b405a;
+
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    background-color: var(--project-edit-background);
+    color: var(--secondary-text);
+    border: 1px solid var(--border-color);
+    font-size: 18px;
+    line-height: 1;
+}
+
+#projects .project:not(.project-editing) .project-edit-button:hover {
+    background-color: var(--project-edit-hover-background);
+    color: var(--primary-text);
+    border-color: var(--secondary-button-background);
+}
+
+#projects .project:not(.project-editing) .project-edit-button:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
+}
+
+body.light-theme #projects .project:not(.project-editing) .project-edit-button {
+    --project-edit-background: #edf2f8;
+    --project-edit-hover-background: #e3ebf5;
+}
+
 #members .project {
     min-height: 61px;
 
