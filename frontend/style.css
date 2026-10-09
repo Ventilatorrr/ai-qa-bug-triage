@@ -363,11 +363,46 @@ main h2 {
 }
 
 #members {
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+
     margin-top: 12px;
 
     margin-bottom: 20px;
 
     color: var(--secondary-text);
+}
+
+#members > .project > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#members > .project > button.context-action-button {
+    --member-remove-background: #223248;
+
+    flex-shrink: 0;
+    background-color: var(--member-remove-background);
+    color: var(--secondary-text);
+    border: 1px solid var(--border-color);
+    /* Account for the border without enlarging the existing button. */
+    padding: 6px 11px;
+}
+
+body.light-theme #members > .project > button.context-action-button {
+    --member-remove-background: #edf2f8;
+}
+
+#members > .project > button.context-action-button:hover {
+    background-color: color-mix(in srgb, var(--danger-button-background) 12%, var(--surface-background));
+    color: var(--error-text);
+    border-color: color-mix(in srgb, var(--error-text) 45%, var(--border-color));
+}
+
+#members > .project > button.context-action-button:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
 }
 
 #member-management {
