@@ -822,6 +822,29 @@ function renderBugs() {
         bugLink.className =
             "bug-link";
 
+        row.className = "bug-report-row";
+        row.addEventListener("click", function (event) {
+            if (event.defaultPrevented || event.button !== 0 ||
+                event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+                return;
+            }
+
+            // Leave links and other controls to their native interaction handlers.
+            if (event.target.closest(
+                "a, button, input, select, textarea, label, summary, " +
+                "[contenteditable], [role], [tabindex]"
+            )) {
+                return;
+            }
+
+            // A drag that selects text must not open the report on release.
+            if (window.getSelection()?.isCollapsed === false) {
+                return;
+            }
+
+            window.location.assign(bugLink.href);
+        });
+
         bugIdCell.appendChild(bugLink);
 
 

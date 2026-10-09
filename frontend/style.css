@@ -29,6 +29,8 @@
     --header-button-background: #334155;
     --header-button-hover: #475569;
 
+    --bug-row-hover-background: #273B55;
+
     --danger-button-background: #b42318;
     --danger-button-hover: #8f1d16;
 
@@ -89,6 +91,8 @@ body.light-theme {
 
     --header-button-background: #64748b;
     --header-button-hover: #475569;
+
+    --bug-row-hover-background: var(--header-background);
 
     --danger-button-background: #b42318;
     --danger-button-hover: #8f1d16;
@@ -1340,6 +1344,14 @@ button:disabled {
     border-bottom: none;
 }
 
+.bug-table .bug-report-row {
+    cursor: pointer;
+}
+
+.bug-table .bug-report-row:hover {
+    background-color: var(--bug-row-hover-background);
+}
+
 
 /* =========================================================
    Severity Highlighting
@@ -1413,6 +1425,11 @@ button:disabled {
 
 .bug-link:hover {
     text-decoration: underline;
+}
+
+.bug-link:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
 }
 
 
