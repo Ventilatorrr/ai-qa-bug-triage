@@ -41,6 +41,13 @@ window.addEventListener("pageshow", event => {
 });
 
 const bugsContainer = document.querySelector("#bugs");
+const bugPagination = document.querySelector("#bug-pagination");
+const bugPageSizeInput = document.querySelector("#bug-page-size");
+const bugRange = document.querySelector("#bug-range");
+const bugPageNavigation = document.querySelector("#bug-page-navigation");
+const bugPageIndicator = document.querySelector("#bug-page-indicator");
+const bugPreviousButton = document.querySelector("#bug-previous-page");
+const bugNextButton = document.querySelector("#bug-next-page");
 
 const bugTitleInput = document.querySelector("#bug-title");
 const bugAffectedVersionInput =
@@ -486,6 +493,55 @@ async function updateBugAssigneeVisibility() {
 let projectBugs = [];
 let bugSortColumn = "updated_at";
 let bugSortDirection = "descending";
+let bugPageSize = 10;
+let bugCurrentPage = 1;
+
+function getBugPageSizeStorageKey() {
+    const userId = getCurrentUserId();
+    return Number.isSafeInteger(userId) && userId > 0
+        ? `bug-list-page-size:${userId}`
+        : null;
+}
+
+function restoreBugPageSizePreference() {
+    bugPageSize = 10;
+    try {
+        const key = getBugPageSizeStorageKey();
+        const saved = key ? localStorage.getItem(key) : null;
+        if (["10", "20", "50"].includes(saved)) {
+            bugPageSize = Number(saved);
+        }
+    } catch (error) {
+        // Missing, invalid, or blocked storage leaves the default page size intact.
+    }
+}
+
+bugPageSizeInput.addEventListener("change", function () {
+    if (!["10", "20", "50"].includes(bugPageSizeInput.value)) return;
+    bugPageSize = Number(bugPageSizeInput.value);
+    bugCurrentPage = 1;
+    try {
+        const key = getBugPageSizeStorageKey();
+        if (key) localStorage.setItem(key, String(bugPageSize));
+    } catch (error) {
+        // Pagination still works when the preference cannot be saved.
+    }
+    renderBugs();
+});
+
+bugPreviousButton.addEventListener("click", function () {
+    if (bugCurrentPage > 1) {
+        --bugCurrentPage;
+        renderBugs();
+    }
+});
+
+bugNextButton.addEventListener("click", function () {
+    if (bugCurrentPage < Math.ceil(projectBugs.length / bugPageSize)) {
+        ++bugCurrentPage;
+        renderBugs();
+    }
+});
 
 function getBugSortStorageKey() {
     const userId = getCurrentUserId();
@@ -654,6 +710,18 @@ async function refreshProjectMemberAndBugData(preserveVisibleState = false) {
 
 function renderBugs() {
     const data = [...projectBugs].sort(compareBugs);
+    const totalPages = Math.max(1, Math.ceil(data.length / bugPageSize));
+    bugCurrentPage = Math.min(bugCurrentPage, totalPages);
+    const start = (bugCurrentPage - 1) * bugPageSize;
+    const end = Math.min(start + bugPageSize, data.length);
+
+    bugPagination.hidden = data.length === 0;
+    bugPageSizeInput.value = String(bugPageSize);
+    bugRange.textContent = `Showing ${data.length ? start + 1 : 0}–${end} of ${data.length}`;
+    bugPageNavigation.hidden = totalPages === 1;
+    bugPageIndicator.textContent = `Page ${bugCurrentPage} of ${totalPages}`;
+    bugPreviousButton.disabled = bugCurrentPage === 1;
+    bugNextButton.disabled = bugCurrentPage === totalPages;
     bugsContainer.innerHTML = "";
 
     if (data.length === 0) {
@@ -714,6 +782,7 @@ function renderBugs() {
                 ? "descending"
                 : "ascending";
             bugSortColumn = column;
+            bugCurrentPage = 1;
             saveBugSortPreference();
             renderBugs();
             bugsContainer.querySelector(`[data-sort-column="${column}"]`).focus();
@@ -731,7 +800,7 @@ function renderBugs() {
     const tbody =
         document.createElement("tbody");
 
-    data.forEach(function (bug) {
+    data.slice(start, end).forEach(function (bug) {
         const row =
             document.createElement("tr");
 
@@ -1114,6 +1183,7 @@ if (!localStorage.getItem("access_token")) {
     redirectToLogin();
 } else {
     restoreBugSortPreference();
+    restoreBugPageSizePreference();
     showBugDeletionFeedback();
     loadProject();
 
@@ -1132,6 +1202,8 @@ if (!localStorage.getItem("access_token")) {
         }
 
         restoreBugSortPreference();
+        restoreBugPageSizePreference();
+        bugCurrentPage = 1;
         showMemberMessage("");
         showBugMessage("");
 

@@ -385,6 +385,21 @@ As an authorized project member, I want to view and open bug reports in projects
 - The selected column and direction are restored when returning to the project or reloading its page within the same browser tab/session. Preferences are stored separately for each signed-in user and project.
 - With no valid saved preference, or when session storage is unavailable, the initial sort remains Last Updated descending and sorting continues to work.
 
+#### AC-012.5 — Paginate Bug Reports
+
+- The project bug list displays 10 reports per page by default, with selectable page sizes of 10, 20, and 50.
+- Multi-page lists provide Previous and Next controls, current/total pages, and a range such as "Showing 1–10 of 27". Previous is disabled on the first page and Next on the last.
+- A single-page list retains the page-size selector and range but hides page navigation; an empty list shows the existing empty message without pagination controls. Controls remain compact and wrap at narrow widths using the existing styling.
+- Sorting applies to the complete list before pagination. Changing the sort column/direction or page size starts at page 1; changing page size preserves sorting, project-local Bug IDs, and bug links.
+- Refreshing bug data, including after creation or deletion, updates counts and keeps the current page when valid; otherwise it moves to the nearest valid page.
+- Opening a project, including returning with browser Back/Forward, starts at page 1. The current page number is not stored.
+
+#### AC-012.6 — Remember Bug Page Size
+
+- The page-size preference is saved in browser localStorage separately for each signed-in user, shared across that user's projects, and retained after navigation, reload, and logout/login.
+- Preferences stay local to the browser and are not synchronized across devices. Sorting preferences remain independent and unchanged.
+- Missing, invalid, or unavailable preference storage falls back to 10; unavailable writes do not prevent pagination on the current page.
+
 ---
 
 ### REQ-013 — Bug Editing

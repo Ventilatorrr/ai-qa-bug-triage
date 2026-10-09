@@ -353,6 +353,24 @@
 
 
             <div id="bugs"></div>
+            <div id="bug-pagination" class="bug-pagination" hidden>
+                <div class="bug-pagination-summary">
+                    <div class="bug-page-size-control">
+                        <label for="bug-page-size">Bugs per page:</label>
+                        <select id="bug-page-size" class="form-input">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <span id="bug-range" role="status" aria-live="polite"></span>
+                </div>
+                <nav id="bug-page-navigation" class="bug-page-navigation" aria-label="Bug report pages" hidden>
+                    <button id="bug-previous-page" class="context-action-button" type="button" aria-controls="bugs">Previous</button>
+                    <span id="bug-page-indicator"></span>
+                    <button id="bug-next-page" class="context-action-button" type="button" aria-controls="bugs">Next</button>
+                </nav>
+            </div>
 
         </section>
     </main>
