@@ -364,6 +364,8 @@ As an authorized project member, I want to view and open bug reports in projects
 - The bug report details are displayed, including all available bug information.
 - The combination of `project_id` and `bug_number` identifies the public bug resource. Browser links use `bugs.html?project_id={project_id}&bug_number={bug_number}`; project-scoped API resource paths use `/projects/{project_id}/bugs/{bug_number}`, including edit, lifecycle/status, deletion, and Edit AI Assist.
 - The global database `id` remains an internal implementation identity and may remain in API responses, but is not used for frontend navigation or public bug resource addressing.
+- A normal left-click on a noninteractive part of a project bug-list data row opens the same report as its Bug ID link, including after sorting, pagination, page-size changes, and data refresh. Headers and the empty-list message do not navigate.
+- The Bug ID remains a native link for Tab/Enter, modifier clicks, middle-click, and context menus. Row navigation does not intercept interactive controls or clicks with selected text. Data rows have a pointer cursor and subtle theme-aware hover background, preserving table semantics, dimensions, classification colors, and visible link focus without additional tab stops.
 
 #### AC-012.3 — Unauthorized Bug Access
 
