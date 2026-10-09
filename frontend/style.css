@@ -1210,6 +1210,74 @@ button:disabled {
     overflow-x: auto;
 }
 
+.bug-pagination,
+.bug-pagination-summary,
+.bug-page-size-control,
+.bug-page-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.bug-pagination {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 12px;
+    padding: 0 0 0 5px;
+    justify-content: space-between;
+    gap: 12px 20px;
+    font-size: 14px;
+    color: var(--muted-text);
+}
+
+.bug-pagination-summary {
+    min-width: 0;
+    gap: 8px 12px;
+}
+
+.bug-page-navigation {
+    margin-left: auto;
+}
+
+.bug-page-navigation button {
+    background-color: transparent;
+    color: var(--secondary-text);
+    border: 1px solid var(--border-color);
+}
+
+.bug-page-navigation button:hover {
+    background-color: var(--surface-background);
+    color: var(--primary-text);
+}
+
+.bug-page-navigation button:disabled {
+    background-color: transparent;
+    color: var(--secondary-text);
+}
+
+.bug-page-navigation button:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
+}
+
+.bug-page-size-control label {
+    color: inherit;
+}
+
+.bug-pagination[hidden],
+.bug-page-navigation[hidden] {
+    display: none;
+}
+
+.bug-page-size-control .form-input {
+    width: auto;
+    margin: 0;
+    color: var(--muted-text);
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
 .bug-table {
     width: 100%;
     min-width: 900px;
