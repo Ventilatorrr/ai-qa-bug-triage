@@ -241,6 +241,78 @@ h3 {
 
     font-family: Arial, sans-serif;
     font-size: 32px;
+    font-weight: 700;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.wordmark {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    color: #eaf6ff;
+    text-shadow: 0 0 6px rgb(143 207 255 / 22%);
+}
+
+.wordmark-prefix {
+    margin-right: 0.26em;
+    color: inherit;
+}
+
+.wordmark-b {
+    display: inline-block;
+    font-size: 1.225em;
+    line-height: 1;
+    transform: rotate(-7deg);
+    transform-origin: 50% 75%;
+}
+
+.wordmark-beetle {
+    /* Account for the original PNG's transparent edges without altering it. */
+    width: 1.8em;
+    height: 1.8em;
+    margin-left: -0.48em;
+    margin-right: -0.58em;
+    flex: none;
+    position: relative;
+    transform: translate(-3px, -0.05em) rotate(15deg);
+}
+
+.wordmark-triage {
+    margin-left: 0.26em;
+    color: inherit;
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+    /* Apply the same vertical gradient to each text span, including Triage. */
+    body:not(.light-theme) .wordmark > span {
+        background-image: linear-gradient(to bottom, #ffffff 0%, #ffffff 15%, #c7e7ff 45%, #278fdb 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
+
+    body.light-theme .wordmark > span {
+        background-image: linear-gradient(to bottom, #0f3356 0%, #126ba2 50%, #0086ad 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
+}
+
+body.light-theme .wordmark {
+    color: #0e7490;
+    text-shadow: none;
+}
+
+body.light-theme .wordmark-prefix {
+    color: #256781;
+}
+
+body.light-theme .wordmark-triage {
+    color: #007d99;
 }
 
 .main-navigation {
