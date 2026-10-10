@@ -38,11 +38,17 @@
 
     --focus-border: #22d3ee;
 
+    --ai-instruction-background: #17324B;
     --ai-action-background: #123844;
     --ai-action-hover: #164e63;
     --ai-action-text: #a5f3fc;
     --ai-use-background: #164e63;
     --ai-use-hover: #1c6c82;
+
+    /* Edit this hex to experiment with generated value colors in dark theme.
+       Alternatives: Blue Lavender #AEC4FF, Periwinkle #C0CEFF, Violet #CDC1FF.
+       Headings, instructions and semantic Severity/Priority colors are separate. */
+    --ai-suggestion-value-color: #a1d2ff;
 
     --success-text: #4ade80;
     --error-text: #ff6b6b;
@@ -101,11 +107,15 @@ body.light-theme {
 
     --focus-border: #0891b2;
 
+    --ai-instruction-background: #EFF6FF;
     --ai-action-background: #ecfeff;
     --ai-action-hover: #cffafe;
     --ai-action-text: #0e7490;
     --ai-use-background: #cffafe;
     --ai-use-hover: #a5f3fc;
+
+    /* Independent light-theme equivalent; keep readable on --input-background. */
+    --ai-suggestion-value-color: #285B86;
 
     --success-text: #15803d;
     --error-text: #b42318;
@@ -938,7 +948,7 @@ button:disabled {
     text-align: left;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    background-color: var(--ai-action-background);
+    background-color: var(--ai-instruction-background);
 }
 
 .ai-suggestions-toolbar > p {
@@ -1020,17 +1030,31 @@ button:disabled {
     background-color: var(--input-background);
 }
 
-.ai-suggestion h4 {
+.ai-suggestion > h4,
+.ai-suggestion > .ai-suggestion-value {
+    font-family: "Oxanium", Arial, sans-serif;
+}
+
+.ai-suggestion > h4 {
     margin: 0;
     color: var(--ai-action-text);
     font-size: 14px;
     overflow-wrap: anywhere;
 }
 
-.ai-suggestion-value {
+.ai-suggestion > .ai-suggestion-value {
     margin: 0;
+    color: var(--ai-suggestion-value-color);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+/* Keep semantic colors, but use normal weight only inside suggestion cards. */
+.ai-suggestion > .ai-suggestion-value:is(
+    .bug-severity-blocker, .bug-severity-major, .bug-severity-moderate, .bug-severity-minor,
+    .bug-priority-urgent, .bug-priority-high, .bug-priority-medium, .bug-priority-low
+) {
+    font-weight: 400;
 }
 
 .ai-suggestion-actions {

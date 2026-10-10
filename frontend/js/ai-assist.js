@@ -140,7 +140,7 @@ function renderAiSuggestions(session, suggestions) {
     const toolbar = document.createElement("div");
     toolbar.className = "ai-suggestions-toolbar";
     const note = document.createElement("p");
-    note.textContent = "Review suggestions before using them. Use replaces the current form value. Only Create or Save saves your changes.";
+    note.textContent = 'Review suggestions before using them. "Use" replaces the current form value. Only "Create" or "Save" saves your changes.';
     const bulk = document.createElement("div");
     bulk.className = "ai-suggestion-actions";
     for (const [label, use] of [["Use All", true], ["Dismiss All", false]]) {
@@ -166,6 +166,10 @@ function renderAiSuggestions(session, suggestions) {
         card.setAttribute("aria-labelledby", title.id);
         const suggested = document.createElement("p");
         suggested.className = "ai-suggestion-value";
+        // Reuse the normal classification colors without changing form values.
+        if (field === "severity" || field === "priority") {
+            suggested.classList.add(`bug-${field}-${suggestions[field].toLowerCase()}`);
+        }
         suggested.textContent = aiDisplayValue(input, suggestions[field]);
         const actions = document.createElement("div");
         actions.className = "ai-suggestion-actions";
