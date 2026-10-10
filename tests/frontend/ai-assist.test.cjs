@@ -144,6 +144,27 @@ test("test_submit_ai_context_recovers_from_network_failure", async function test
     assert.equal(message.textContent, "Unable to request AI assistance. Please try again.");
 });
 
+test("test_ai_classification_suggestions_keep_semantic_value_classes", async function test_ai_classification_suggestions_keep_semantic_value_classes() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        for (const [field, label, values] of [
+            ["severity", "Severity", ["Blocker", "Major", "Moderate", "Minor"]],
+            ["priority", "Priority", ["Urgent", "High", "Medium", "Low"]]
+        ]) {
+            for (const value of values) {
+                const f = fixture(prefix);
+                await f.submit(async () => success({[field]: value, title: value}));
+                const card = f.card(label);
+                const suggested = card.querySelector(".ai-suggestion-value");
+                assert.equal(suggested.textContent, value);
+                assert.ok(suggested.classList.contains(`bug-${field}-${value.toLowerCase()}`));
+                assert.equal(f.card("Title").querySelector(".ai-suggestion-value").className, "ai-suggestion-value");
+                assert.equal(f.inputs[`#${prefix}${field}`].value, "", "styling must not accept the suggestion");
+                assert.ok(card.all("button").every(button => !button.className.includes(`bug-${field}-`)));
+            }
+        }
+    }
+});
+
 test("test_ai_suggestions_review_separates_values_and_follows_form_order", async function test_ai_suggestions_review_separates_values_and_follows_form_order() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -159,6 +180,8 @@ test("test_ai_suggestions_review_separates_values_and_follows_form_order", async
         assert.equal(f.form.classList.contains("has-ai-suggestions"), true);
         assert.equal(f.form.children[0], f.area, "review guidance precedes the field rows");
         assert.equal(f.area.querySelector(".ai-suggestions-toolbar").all("h3")[0].id, f.area.attributes["aria-labelledby"]);
+        assert.equal(f.area.querySelector(".ai-suggestions-toolbar").all("p")[0].textContent,
+            'Review suggestions before using them. "Use" replaces the current form value. Only "Create" or "Save" saves your changes.');
         assert.equal(f.area.all("button").length, 0, "bulk controls are outside the top guidance");
         assert.deepEqual(f.footer.all("button").map(node => node.textContent), ["Use All", "Dismiss All"]);
         const rows = f.form.querySelectorAll(".bug-field-row");
