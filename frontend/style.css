@@ -2127,3 +2127,130 @@ footer a:hover {
         flex: 0 0 72px;
     }
 }
+
+
+/* =========================================================
+   About Page — Scoped Styles
+   =========================================================
+   Only applies to about.html. Uses existing CSS variables
+   from style.css so this page inherits any future theme
+   changes automatically. No hardcoded color values.
+   ========================================================= */
+
+
+/* =========================================================
+   Content Container
+   ========================================================= */
+
+.about-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   Heading
+   ========================================================= */
+
+.about-content h2 {
+    /* text-align: center is already set by main h2 in style.css */
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   Introduction
+   ========================================================= */
+
+.about-intro {
+    /* Inherits text-align: center from .page-description in style.css */
+    margin: 12px auto 0;
+    line-height: 1.7;
+    color: var(--secondary-text);
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   Separators
+   ========================================================= */
+
+.about-separator {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 32px 0;
+}
+
+
+/* =========================================================
+   Content Sections
+   ========================================================= */
+
+.about-section {
+    margin-bottom: 36px;
+}
+
+.about-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.about-section h3 {
+    margin: 0 0 12px;
+    color: var(--title-text);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.about-section p {
+    margin: 0 0 14px;
+    color: var(--secondary-text);
+    line-height: 1.7;
+    font-size: 15px;
+}
+
+.about-section p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   Technology & Version (below second separator)
+   ========================================================= */
+
+.about-meta {
+    text-align: center;
+}
+
+.about-meta-label {
+    color: var(--secondary-text);
+    font-weight: 500;
+}
+
+.about-technology {
+    margin: 0 0 8px;
+    color: var(--muted-text);
+    font-size: 14px;
+}
+
+
+.about-version {
+    /* color: var(--muted-text) and font-size: 14px are already set
+       globally in style.css. */
+    margin: 0;
+}
+
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 640px) {
+    .about-separator {
+        margin: 24px 0;
+    }
+
+    .about-section {
+        margin-bottom: 28px;
+    }
+}
