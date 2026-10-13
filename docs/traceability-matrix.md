@@ -721,6 +721,7 @@ design decisions changed. This slice does not establish Increment 3 completion.
 | REQ | AC | Test Reference | Test Layer | Status |
 | --- | --- | --- | --- | --- |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_suggestions_review_separates_values_and_follows_form_order` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_pending_guidance_uses_bottom_status_and_clears_after_review` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_replaces_value_removes_pending_and_remains_editable` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_all_maps_every_supported_field_without_persistence` | Unit (JavaScript / DOM substitutes) | Covered |
@@ -733,6 +734,12 @@ values in review cards and session state. Rendering does not assign suggestions
 to editable controls. Only Use or Use All transfers them into ordinary fields;
 used or dismissed entries leave pending review. Suggested text uses `textContent`.
 No production change or duplicate automated test was needed for REQ-021.
+
+The preceding implementation description and the following 5 October test
+results are historical. The approved inline cards, accessible hidden group
+heading and bottom guidance supersede that visible heading/banner presentation;
+see the 12 October presentation evidence and the final 13 October verification
+below. Requirement/AC identifiers and broader coverage gaps are unchanged.
 
 The existing review test directly asserts the visible area's exact heading,
 unchanged form values, and separate current/suggested displays in both form modes.
@@ -1017,6 +1024,23 @@ Verification on 5 October 2026:
 
 Only tests/documentation changed, so no full pytest run was needed. No real
 application records, migrations, or live provider calls were used.
+
+## UI presentation refinement evidence — 12 October 2026
+
+The approved AC-021.1 presentation now uses individually labelled suggestion
+cards and an accessible review-group name without the visible top instructional
+banner. Pending-only guidance reuses the existing status message below the form
+actions. Earlier dated banner descriptions remain historical evidence.
+
+`test_ai_pending_guidance_uses_bottom_status_and_clears_after_review` covers New
+and Edit form guidance, final review, reset, error and no-usable states. The
+frontend suite passed **80 tests**, focused deletion API coverage passed **9
+tests**, and native browser fixtures passed **9 divider cases, 4 destructive
+focus/disabled cases and 12 existing input cases**. Actual app theme verification
+and its limits are recorded in [UI refinements verification](ui-refinements-verification.md).
+REQ-012 and REQ-014 retain outstanding broader UI coverage; the native accepted
+deletion dialog was not completed. These targeted technical rows and updated
+AC-021.1 evidence do not establish full increment or release completion.
 
 ## Technical and infrastructure evidence
 

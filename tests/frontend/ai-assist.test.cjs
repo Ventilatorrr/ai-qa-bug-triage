@@ -178,11 +178,11 @@ test("test_ai_suggestions_review_separates_values_and_follows_form_order", async
         assert.deepEqual(f.form.all("h4").map(node => node.textContent), Array(4).fill("AI Suggestion"));
         assert.deepEqual(f.form.all("h4").map(node => node.attributes["aria-label"]), ["AI suggestion: Title", "AI suggestion: Actual Result", "AI suggestion: Severity", "AI suggestion: Assignee"]);
         assert.equal(f.form.classList.contains("has-ai-suggestions"), true);
-        assert.equal(f.form.children[0], f.area, "review guidance precedes the field rows");
-        assert.equal(f.area.querySelector(".ai-suggestions-toolbar").all("h3")[0].id, f.area.attributes["aria-labelledby"]);
-        assert.equal(f.area.querySelector(".ai-suggestions-toolbar").all("p")[0].textContent,
-            'Review suggestions before using them. "Use" replaces the current form value. Only "Create" or "Save" saves your changes.');
-        assert.equal(f.area.all("button").length, 0, "bulk controls are outside the top guidance");
+        assert.equal(f.form.children[0], f.area, "the accessible group label precedes the field rows");
+        assert.equal(f.area.all("h3")[0].id, f.area.attributes["aria-labelledby"]);
+        assert.equal(f.area.querySelector(".ai-suggestions-toolbar"), null, "there is no top instructional banner");
+        assert.equal(f.area.all("p").length, 0);
+        assert.equal(f.area.all("button").length, 0, "bulk controls stay below the fields");
         assert.deepEqual(f.footer.all("button").map(node => node.textContent), ["Use All", "Dismiss All"]);
         const rows = f.form.querySelectorAll(".bug-field-row");
         assert.ok(rows.every(row => f.form.children.indexOf(row) < f.form.children.indexOf(f.footer)), "bulk controls follow all field rows");
@@ -213,6 +213,44 @@ test("test_ai_suggestions_review_separates_values_and_follows_form_order", async
         assert.equal(f.form.all("script").length, 0);
         assert.equal(f.button.disabled, true);
         assert.equal(f.requests.length, 1);
+    }
+});
+
+test("test_ai_pending_guidance_uses_bottom_status_and_clears_after_review", async function test_ai_pending_guidance_uses_bottom_status_and_clears_after_review() {
+    for (const prefix of ["bug-", "edit-bug-"]) {
+        const f = fixture(prefix);
+        const saveAction = prefix === "edit-bug-" ? "Save" : "Create";
+        assert.equal(f.message.textContent, "");
+        assert.equal(f.message.classList.contains("message-ai-pending"), false);
+        await f.submit(async () => success({title: "Suggestion", priority: "Urgent"}));
+        assert.equal(f.form.children.at(-1), f.message, "guidance uses the existing bottom status node");
+        assert.match(f.message.textContent, /AI suggestions are ready for review/);
+        assert.match(f.message.textContent, /"Use" replaces the corresponding form value without saving/);
+        assert.match(f.message.textContent, /"Dismiss" ignores the suggestion/);
+        assert.match(f.message.textContent, /Review all pending suggestions before requesting AI Assist again/);
+        assert.ok(f.message.textContent.endsWith(`Only "${saveAction}" saves form values.`));
+        assert.doesNotMatch(f.message.textContent, saveAction === "Create" ? /Save/ : /Create/);
+        assert.equal(f.message.classList.contains("message-ai-pending"), true);
+        const guidance = f.message.textContent;
+        f.action("Use", "Title");
+        assert.equal(f.message.textContent, guidance, "guidance stays while another suggestion is pending");
+        assert.equal(f.inputs[`#${prefix}title`].value, "Suggestion");
+        f.action("Dismiss", "Priority");
+        assert.equal(f.message.classList.contains("message-ai-pending"), false);
+        assert.equal(f.message.textContent, `AI suggestions reviewed. You can request AI Assist again. Choose "${saveAction}" to save form values.`);
+        assert.doesNotMatch(f.message.textContent, /"Dismiss" ignores/);
+        await f.submit(async () => ({ok: false, json: async () => ({detail: "Provider unavailable"})}));
+        assert.equal(f.message.textContent, "Provider unavailable");
+        assert.equal(f.message.classList.contains("message-error"), true);
+        assert.equal(f.message.classList.contains("message-ai-pending"), false);
+        await f.submit(async () => ({ok: true, json: async () => ({outcome: "no_usable_suggestions", suggestions: {}})}));
+        assert.match(f.message.textContent, /No usable AI suggestions/);
+        assert.equal(f.message.classList.contains("message-error"), false);
+        assert.equal(f.message.classList.contains("message-ai-pending"), false);
+        await f.submit(async () => success({title: "New suggestion"}));
+        f.begin();
+        assert.equal(f.message.textContent, "");
+        assert.equal(f.message.classList.contains("message-ai-pending"), false);
     }
 });
 
