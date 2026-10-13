@@ -74,7 +74,7 @@
                     <dd id="bug-priority"></dd>
                 </div>
 
-                <div class="bug-detail-item">
+                <div class="bug-detail-item bug-detail-assignee">
                     <dt>Assignee</dt>
                     <dd id="bug-assignee"></dd>
                 </div>
@@ -84,7 +84,7 @@
                     <dd id="bug-fix-version"></dd>
                 </div>
 
-                <div class="bug-detail-item bug-detail-row-start">
+                <div class="bug-detail-item bug-detail-row-start bug-detail-status">
                     <dt>Status</dt>
                     <dd id="bug-status-detail"></dd>
                 </div>
@@ -327,7 +327,7 @@
                                 id="lifecycle-assignee"
                                 class="form-input"
                                 aria-label="Assignee for lifecycle transition">
-                                <option value="" disabled selected>Select a QA or a Dev</option>
+                                <option value="" disabled selected hidden>Select a QA or a Dev</option>
                             </select>
                         </div>
 
@@ -336,7 +336,7 @@
                                 id="lifecycle-qa-assignee"
                                 class="form-input"
                                 aria-label="QA Analyst for testing">
-                                <option value="" disabled selected>Select a QA Analyst</option>
+                                <option value="" disabled selected hidden>Select a QA Analyst</option>
                             </select>
                         </div>
 
@@ -362,7 +362,7 @@
                                     id="lifecycle-developer-assignee"
                                     class="form-input"
                                     aria-label="Developer for failed testing">
-                                    <option value="" disabled selected>Select a Developer</option>
+                                    <option value="" disabled selected hidden>Select a Developer</option>
                                 </select>
                             </div>
 
@@ -376,7 +376,7 @@
                                 id="lifecycle-resolution"
                                 class="form-input"
                                 aria-label="Resolution for closing without fixing">
-                                <option value="" disabled selected>Select a resolution</option>
+                                <option value="" disabled selected hidden>Select a resolution</option>
                                 <option value="Won't Fix">Won't Fix</option>
                                 <option value="Duplicate">Duplicate</option>
                                 <option value="Cannot Reproduce">Cannot Reproduce</option>

@@ -5,6 +5,8 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "../..");
 const routes = new Map([
     ["/", ["tests/frontend/native-input.test.html", "text/html"]],
+    ["/ui-style.test.html", ["tests/frontend/ui-style.test.html", "text/html"]],
+    ["/style.css", ["frontend/style.css", "text/css"]],
     ["/project.html", ["frontend/project.html", "text/html"]],
     ["/bugs.html", ["frontend/bugs.html", "text/html"]],
     ["/js/ai-assist.js", ["frontend/js/ai-assist.js", "text/javascript"]]

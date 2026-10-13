@@ -227,6 +227,7 @@ AC-009.2 has API coverage for member removal, loss of access, automatic unassign
 | REQ-012 | AC-012.2 — Open Bug Report | Temporary clickable-row diagnostics below; native Chrome link/selection and theme/focus checks pending | Frontend diagnostics / UI | Partial |
 | REQ-012 | AC — | `test_bug_response_validates_project_and_local_resource_number` | Frontend unit | Partial |
 | REQ-012 | AC — | `test_bug_number_query_rejects_invalid_missing_and_legacy_identity` | Frontend unit | Partial |
+| REQ-012 | AC — | `test_bug_details_dividers_preserve_metadata_rows` | Native browser / actual markup and CSS | Covered |
 | REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Covered |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Partial |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_sort_first_visit_defaults_to_last_updated_descending` | Frontend unit | Partial |
@@ -307,6 +308,8 @@ The refinement's `git diff --check` passed. The real `bugtriage.db` fingerprint 
 | REQ | AC | Test Reference | Test Layer | Status |
 |---|---|---|---|---|
 | REQ-014 | AC-014.1 — Successful Bug Deletion | `test_authorized_member_can_delete_bug` | API | Partial |
+| REQ-014 | AC-014.1 — Successful Bug Deletion | `test_bug_deletion_requires_confirmation_and_preserves_cancelled_report` | Frontend unit / actual Delete handler | Partial |
+| REQ-014 | AC — | `test_destructive_buttons_preserve_focus_and_disabled_states` | Native browser / actual markup and CSS | Covered |
 | REQ-014 | AC-014.1 — Successful Bug Deletion | — | UI | Pending |
 | REQ-014 | AC-014.2 — Unauthorized Bug Deletion | `test_unauthorized_member_cannot_delete_bug` | API / Security | Covered |
 
@@ -1043,6 +1046,19 @@ deletion dialog was not completed. These targeted technical rows and updated
 AC-021.1 evidence do not establish full increment or release completion.
 
 ## Technical and infrastructure evidence
+
+Final pre-commit review on 13 October 2026 passed the full backend suite
+(**544 passed, 0 failed, 0 skipped**) and full frontend suite
+(**80 passed, 0 failed, 0 skipped**), plus the existing native fixtures
+(**9 divider, 4 destructive-state and 12 input cases**, all passed).
+Browser-computed semantic contrast meets AA in both themes, including the
+current manually approved light hover `#EFF7FA` and the dark mixed-color hover.
+BUG-31's semantic contrast remediation is supported by these retest measurements;
+its application record was not changed and final closure remains with the user.
+The final-state section of [UI refinements verification](ui-refinements-verification.md#final-approved-state-and-pre-commit-verification--2026-10-13)
+records exact measurements, Git state and limitations. This does not upgrade
+broader Partial rows or establish Increment 3 completion under the Definition of
+Done; cross-browser, screen-reader and broader mobile verification remain open.
 
 These tests protect implementation quality without a dedicated requirement or AC in `docs/requirements.md`. No new requirement is introduced, and the rows do not establish completion of any feature AC or increment.
 
