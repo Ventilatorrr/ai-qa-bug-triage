@@ -1,0 +1,155 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Native UI style regressions</title>
+<button id="run" type="button">Run UI style regressions</button>
+<button id="inspect" type="button">Inspect Delete states</button>
+<button id="disable" type="button" disabled>Toggle fixture Delete disabled</button>
+<pre id="result" role="status">Ready</pre>
+<pre id="states" role="status"></pre>
+<div id="fixtures"></div>
+<script>
+// Load real bug-page markup/CSS in a native iframe; never start app page handlers,
+// touch storage, connect to an application database or call an AI provider.
+const check = (condition, message) => { if (!condition) throw new Error(message); };
+const close = (a, b) => Math.abs(a - b) < 1;
+async function bugFixture(width) {
+    const html = await (await fetch('/bugs.html')).text();
+    const source = new DOMParser().parseFromString(html, 'text/html');
+    source.querySelectorAll('script, link:not([href="style.css"])').forEach(node => node.remove());
+    source.querySelector('link[href="style.css"]').href = '/style.css';
+    const frame = document.createElement('iframe');
+    frame.style.cssText = `display:block;width:${width}px;height:900px;border:0`;
+    const ready = new Promise(resolve => frame.addEventListener('load', resolve, {once: true}));
+    frame.srcdoc = '<!doctype html>' + source.documentElement.outerHTML;
+    document.querySelector('#fixtures').replaceChildren(frame);
+    await ready;
+    const doc = frame.contentDocument;
+    doc.querySelector('#bug-details').hidden = false;
+    doc.querySelector('#bug-heading').textContent = 'Disposable native style fixture';
+    for (const node of doc.querySelectorAll('.bug-detail-item dd')) node.textContent = 'Not provided';
+    doc.querySelector('#bug-assignee').textContent = 'Unassigned';
+    doc.querySelector('#bug-status-detail').textContent = 'Triage';
+    return {doc, style: node => frame.contentWindow.getComputedStyle(node)};
+}
+
+async function test_bug_details_dividers_preserve_metadata_rows() {
+    let cases = 0;
+    for (const width of [1000, 680, 390]) {
+        const {doc, style} = await bugFixture(width);
+        const grid = doc.querySelector('.bug-details-grid');
+        const item = id => doc.querySelector(id).parentElement;
+        const assignee = item('#bug-assignee'), status = item('#bug-status-detail');
+        const created = item('#bug-created-at'), updated = item('#bug-updated-at');
+        for (const [fixVisible, resolutionVisible] of [[false, false], [true, true], [false, true]]) {
+            doc.querySelector('#bug-fix-version-detail').hidden = !fixVisible;
+            doc.querySelector('#bug-resolution-label').hidden = !resolutionVisible;
+            doc.querySelector('#bug-resolution').hidden = !resolutionVisible;
+            const g = grid.getBoundingClientRect(), a = assignee.getBoundingClientRect();
+            const s = status.getBoundingClientRect(), c = created.getBoundingClientRect(), u = updated.getBoundingClientRect();
+            const desktop = width > 700;
+            const context = `${width}px / Fix ${fixVisible} / Resolution ${resolutionVisible}`;
+            check(close(a.left, g.left) && close(s.left, g.left) && close(c.left, g.left), `${context}: left metadata position changed`);
+            check(s.top >= a.bottom - 1 && c.top >= s.bottom - 1, `${context}: Assignee/Status/Created row order changed`);
+            const rowBottom = resolutionVisible ? Math.max(s.bottom, item('#bug-resolution').getBoundingClientRect().bottom) : s.bottom;
+            check(close(c.top, rowBottom), `${context}: unexpected empty row below Status`);
+            check(close(a.width, desktop && fixVisible ? g.width / 2 : g.width), `${context}: Assignee divider is incomplete`);
+            check(close(s.width, desktop && resolutionVisible ? g.width / 2 : g.width), `${context}: Status divider is incomplete`);
+            check(style(assignee).borderBottomStyle === 'solid' && style(status).borderBottomStyle === 'solid', `${context}: divider border missing`);
+            check(doc.querySelector('#bug-fix-version-detail').hidden === !fixVisible, `${context}: Fix Version visibility changed`);
+            check(style(item('#bug-resolution')).display === 'none' || resolutionVisible, `${context}: hidden resolution reserves a row`);
+            check(doc.querySelector('#bug-affected-version').textContent === 'Not provided', `${context}: empty affected version changed`);
+            if (desktop) {
+                check(close(c.top, u.top) && u.left > c.left, `${context}: Created/Updated column positions changed`);
+                if (fixVisible) check(close(a.top, doc.querySelector('#bug-fix-version-detail').getBoundingClientRect().top), `${context}: visible Fix Version moved`);
+                if (resolutionVisible) check(close(s.top, item('#bug-resolution').getBoundingClientRect().top), `${context}: visible Resolution moved`);
+            } else check(u.top >= c.bottom - 1, `${context}: narrow metadata stacking changed`);
+            cases++;
+        }
+    }
+    return cases;
+}
+
+function luminance(color) {
+    const values = color.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => v / 255)
+        .map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+    return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
+}
+async function test_destructive_buttons_preserve_focus_and_disabled_states() {
+    const {doc, style} = await bugFixture(1000);
+    const edit = doc.querySelector('#edit-bug-form');
+    edit.hidden = false;
+    doc.querySelector('.bug-details-grid').hidden = true;
+    const bugDelete = doc.querySelector('#delete-bug-button');
+    bugDelete.hidden = false;
+    // The project Delete button is rendered dynamically with these actual classes.
+    const group = doc.createElement('div');
+    group.className = 'project-buttons';
+    const projectDelete = doc.createElement('button');
+    projectDelete.className = 'project-delete-button';
+    projectDelete.type = 'button';
+    projectDelete.textContent = 'Delete';
+    group.appendChild(projectDelete);
+    doc.querySelector('main').appendChild(group);
+    let cases = 0;
+    for (const light of [false, true]) {
+        doc.body.classList.toggle('light-theme', light);
+        for (const button of [bugDelete, projectDelete]) {
+            button.disabled = false;
+            button.blur();
+            const s = style(button), background = s.backgroundColor;
+            const contrast = (luminance(s.color) + 0.05) / (luminance(background) + 0.05);
+            check(contrast >= 4.5, 'Destructive button text contrast is insufficient');
+            button.focus();
+            check(button.matches(':focus-visible') && parseFloat(style(button).outlineWidth) >= 2 && style(button).outlineStyle !== 'none', 'Destructive keyboard focus indicator is missing');
+            button.disabled = true;
+            check(style(button).backgroundColor === background, 'Disabled destructive background changed');
+            check(parseFloat(style(button).opacity) < 1 && style(button).cursor === 'not-allowed', 'Disabled destructive state is unclear');
+            button.disabled = false;
+            cases++;
+        }
+    }
+    return cases;
+}
+
+document.querySelector('#run').addEventListener('click', async () => {
+    const result = document.querySelector('#result');
+    const results = [];
+    for (const test of [test_bug_details_dividers_preserve_metadata_rows, test_destructive_buttons_preserve_focus_and_disabled_states]) {
+        try { results.push({name: test.name, pass: true, cases: await test()}); }
+        catch (error) { results.push({name: test.name, pass: false, error: error.message}); }
+    }
+    document.querySelector('#fixtures').replaceChildren();
+    result.textContent = JSON.stringify(results, null, 2);
+    result.dataset.results = JSON.stringify(results);
+});
+
+// Optional trusted-pointer/keyboard inspection of a real native button. The
+// fixture has no application delete handler, so this cannot delete any data.
+let inspection;
+document.querySelector('#inspect').addEventListener('click', async () => {
+    const {doc, style} = await bugFixture(1000);
+    doc.querySelector('.bug-details-grid').hidden = true;
+    doc.querySelector('#edit-bug-form').hidden = false;
+    const button = doc.querySelector('#delete-bug-button');
+    button.hidden = false;
+    const history = [];
+    const record = () => {
+        const computed = style(button);
+        history.push({hover: button.matches(':hover'), active: button.matches(':active'), focus: button.matches(':focus-visible'),
+            disabled: button.disabled, background: computed.backgroundColor, color: computed.color,
+            outline: computed.outlineWidth, opacity: computed.opacity});
+        document.querySelector('#states').textContent = JSON.stringify(history, null, 2);
+        document.querySelector('#states').dataset.results = JSON.stringify(history);
+    };
+    for (const event of ['pointerenter', 'pointerdown', 'pointerup', 'focus', 'keydown', 'keyup']) {
+        button.addEventListener(event, () => doc.defaultView.requestAnimationFrame(record));
+    }
+    inspection = {button, record};
+    document.querySelector('#disable').disabled = false;
+    record();
+});
+document.querySelector('#disable').addEventListener('click', () => {
+    inspection.button.disabled = !inspection.button.disabled;
+    inspection.record();
+});
+</script>

@@ -36,6 +36,28 @@ test("test_bug_details_and_deletion_use_local_resource_number", async () => {
     assert.equal(f.destination(), "/project.html?id=3");
 });
 
+test("test_bug_deletion_requires_confirmation_and_preserves_cancelled_report", async function test_bug_deletion_requires_confirmation_and_preserves_cancelled_report() {
+    for (const confirmed of [false, true]) {
+        const f = page();
+        const prompts = [];
+        const initialDestination = f.destination();
+        f.runtime.confirm = message => { prompts.push(message); return confirmed; };
+        vm.runInContext(`currentBug = ${JSON.stringify(f.bug)}`, f.runtime);
+        for (const handler of f.node("#delete-bug-button").listeners.click) await handler();
+        assert.deepEqual(prompts, ['Are you sure you want to delete "Example"?']);
+        assert.equal(f.node("#delete-bug-button").disabled, false);
+        if (confirmed) {
+            assert.deepEqual(f.calls, [["/projects/3/bugs/7", "DELETE"]]);
+            assert.equal(f.destination(), "/project.html?id=3");
+        } else {
+            assert.deepEqual(f.calls, []);
+            assert.equal(f.destination(), initialDestination, "cancellation causes no additional navigation");
+            assert.equal(f.feedback.size, 0);
+            assert.equal(vm.runInContext("currentBug.title", f.runtime), "Example");
+        }
+    }
+});
+
 test("test_bug_response_validates_project_and_local_resource_number", () => {
     const f = page();
     assert.equal(f.runtime.isValidBugResponse(f.bug), true);

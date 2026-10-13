@@ -227,6 +227,7 @@ AC-009.2 has API coverage for member removal, loss of access, automatic unassign
 | REQ-012 | AC-012.2 — Open Bug Report | Temporary clickable-row diagnostics below; native Chrome link/selection and theme/focus checks pending | Frontend diagnostics / UI | Partial |
 | REQ-012 | AC — | `test_bug_response_validates_project_and_local_resource_number` | Frontend unit | Partial |
 | REQ-012 | AC — | `test_bug_number_query_rejects_invalid_missing_and_legacy_identity` | Frontend unit | Partial |
+| REQ-012 | AC — | `test_bug_details_dividers_preserve_metadata_rows` | Native browser / actual markup and CSS | Covered |
 | REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Covered |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Partial |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_sort_first_visit_defaults_to_last_updated_descending` | Frontend unit | Partial |
@@ -307,6 +308,8 @@ The refinement's `git diff --check` passed. The real `bugtriage.db` fingerprint 
 | REQ | AC | Test Reference | Test Layer | Status |
 |---|---|---|---|---|
 | REQ-014 | AC-014.1 — Successful Bug Deletion | `test_authorized_member_can_delete_bug` | API | Partial |
+| REQ-014 | AC-014.1 — Successful Bug Deletion | `test_bug_deletion_requires_confirmation_and_preserves_cancelled_report` | Frontend unit / actual Delete handler | Partial |
+| REQ-014 | AC — | `test_destructive_buttons_preserve_focus_and_disabled_states` | Native browser / actual markup and CSS | Covered |
 | REQ-014 | AC-014.1 — Successful Bug Deletion | — | UI | Pending |
 | REQ-014 | AC-014.2 — Unauthorized Bug Deletion | `test_unauthorized_member_cannot_delete_bug` | API / Security | Covered |
 
@@ -721,6 +724,7 @@ design decisions changed. This slice does not establish Increment 3 completion.
 | REQ | AC | Test Reference | Test Layer | Status |
 | --- | --- | --- | --- | --- |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_suggestions_review_separates_values_and_follows_form_order` | Unit (JavaScript / DOM substitutes) | Covered |
+| REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_pending_guidance_uses_bottom_status_and_clears_after_review` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_replaces_value_removes_pending_and_remains_editable` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields` | Unit (JavaScript / DOM substitutes) | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | `test_ai_use_all_maps_every_supported_field_without_persistence` | Unit (JavaScript / DOM substitutes) | Covered |
@@ -733,6 +737,12 @@ values in review cards and session state. Rendering does not assign suggestions
 to editable controls. Only Use or Use All transfers them into ordinary fields;
 used or dismissed entries leave pending review. Suggested text uses `textContent`.
 No production change or duplicate automated test was needed for REQ-021.
+
+The preceding implementation description and the following 5 October test
+results are historical. The approved inline cards, accessible hidden group
+heading and bottom guidance supersede that visible heading/banner presentation;
+see the 12 October presentation evidence and the final 13 October verification
+below. Requirement/AC identifiers and broader coverage gaps are unchanged.
 
 The existing review test directly asserts the visible area's exact heading,
 unchanged form values, and separate current/suggested displays in both form modes.
@@ -1018,7 +1028,37 @@ Verification on 5 October 2026:
 Only tests/documentation changed, so no full pytest run was needed. No real
 application records, migrations, or live provider calls were used.
 
+## UI presentation refinement evidence — 12 October 2026
+
+The approved AC-021.1 presentation now uses individually labelled suggestion
+cards and an accessible review-group name without the visible top instructional
+banner. Pending-only guidance reuses the existing status message below the form
+actions. Earlier dated banner descriptions remain historical evidence.
+
+`test_ai_pending_guidance_uses_bottom_status_and_clears_after_review` covers New
+and Edit form guidance, final review, reset, error and no-usable states. The
+frontend suite passed **80 tests**, focused deletion API coverage passed **9
+tests**, and native browser fixtures passed **9 divider cases, 4 destructive
+focus/disabled cases and 12 existing input cases**. Actual app theme verification
+and its limits are recorded in [UI refinements verification](ui-refinements-verification.md).
+REQ-012 and REQ-014 retain outstanding broader UI coverage; the native accepted
+deletion dialog was not completed. These targeted technical rows and updated
+AC-021.1 evidence do not establish full increment or release completion.
+
 ## Technical and infrastructure evidence
+
+Final pre-commit review on 13 October 2026 passed the full backend suite
+(**544 passed, 0 failed, 0 skipped**) and full frontend suite
+(**80 passed, 0 failed, 0 skipped**), plus the existing native fixtures
+(**9 divider, 4 destructive-state and 12 input cases**, all passed).
+Browser-computed semantic contrast meets AA in both themes, including the
+current manually approved light hover `#EFF7FA` and the dark mixed-color hover.
+BUG-31's semantic contrast remediation is supported by these retest measurements;
+its application record was not changed and final closure remains with the user.
+The final-state section of [UI refinements verification](ui-refinements-verification.md#final-approved-state-and-pre-commit-verification--2026-10-13)
+records exact measurements, Git state and limitations. This does not upgrade
+broader Partial rows or establish Increment 3 completion under the Definition of
+Done; cross-browser, screen-reader and broader mobile verification remain open.
 
 These tests protect implementation quality without a dedicated requirement or AC in `docs/requirements.md`. No new requirement is introduced, and the rows do not establish completion of any feature AC or increment.
 

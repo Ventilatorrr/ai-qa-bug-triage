@@ -36,7 +36,7 @@ function endAiAssistSession(form) {
     session.footer.replaceChildren();
     session.footer.hidden = true;
     session.message.textContent = "";
-    session.message.classList.remove("message-error");
+    session.message.classList.remove("message-error", "message-ai-pending");
     session.button.disabled = false;
 }
 
@@ -51,7 +51,7 @@ function beginAiAssistSession(form, prefix, button, message, area) {
     footer.hidden = true;
     button.disabled = false;
     message.textContent = "";
-    message.classList.remove("message-error");
+    message.classList.remove("message-error", "message-ai-pending");
 }
 
 function isCurrentAiSession(session) {
@@ -128,7 +128,9 @@ function resolveAiSuggestion(session, field, use) {
         session.footer.replaceChildren();
         session.footer.hidden = true;
         session.button.disabled = false;
-        session.message.textContent = "AI suggestions reviewed. You can request AI Assist again. Choose Create or Save to save form values.";
+        session.message.classList.remove("message-ai-pending");
+        const saveAction = session.prefix === "edit-bug-" ? "Save" : "Create";
+        session.message.textContent = `AI suggestions reviewed. You can request AI Assist again. Choose "${saveAction}" to save form values.`;
     }
 }
 
@@ -137,10 +139,6 @@ function renderAiSuggestions(session, suggestions) {
     heading.id = `${session.prefix}ai-suggestions-heading`;
     heading.textContent = "AI Suggestions";
     session.area.setAttribute("aria-labelledby", heading.id);
-    const toolbar = document.createElement("div");
-    toolbar.className = "ai-suggestions-toolbar";
-    const note = document.createElement("p");
-    note.textContent = 'Review suggestions before using them. "Use" replaces the current form value. Only "Create" or "Save" saves your changes.';
     const bulk = document.createElement("div");
     bulk.className = "ai-suggestion-actions";
     for (const [label, use] of [["Use All", true], ["Dismiss All", false]]) {
@@ -149,9 +147,8 @@ function renderAiSuggestions(session, suggestions) {
             session.button.focus({preventScroll: true});
         }));
     }
-    toolbar.appendChild(heading);
-    toolbar.appendChild(note);
-    session.area.replaceChildren(toolbar);
+    // Keep the group's accessible name without a visible instructional banner.
+    session.area.replaceChildren(heading);
     session.footer.replaceChildren(bulk);
 
     for (const [field, suffix, label] of aiAssistFields) {
@@ -235,7 +232,7 @@ async function submitAiAssist(form, prefix, url, button, message, sendRequest) {
     const requestId = ++session.requestId;
     const isCurrentRequest = () => isCurrentAiSession(session) && session.requestId === requestId;
     button.disabled = true;
-    message.classList.remove("message-error");
+    message.classList.remove("message-error", "message-ai-pending");
     message.textContent = "Requesting AI assistance...";
     try {
         const response = await sendRequest(url, {
@@ -264,9 +261,13 @@ async function submitAiAssist(form, prefix, url, button, message, sendRequest) {
                 message.textContent = "No usable AI suggestions are available. You can continue manually or request AI Assist again.";
             } else {
                 renderAiSuggestions(session, usable);
-                message.textContent = Object.keys(usable).length < Object.keys(data.suggestions).length
-                    ? "Some suggestions could not be represented unchanged in the form and were excluded. Review the remaining suggestions."
-                    : "AI suggestions are ready for review. Use or dismiss all pending suggestions before requesting AI Assist again.";
+                const saveAction = session.prefix === "edit-bug-" ? "Save" : "Create";
+                const guidance = `AI suggestions are ready for review. "Use" replaces the corresponding form value without saving; "Dismiss" ignores the suggestion. Review all pending suggestions before requesting AI Assist again. Only "${saveAction}" saves form values.`;
+                const excluded = Object.keys(usable).length < Object.keys(data.suggestions).length
+                    ? "Some suggestions could not be represented unchanged in the form and were excluded. Review the remaining suggestions. "
+                    : "";
+                message.classList.add("message-ai-pending");
+                message.textContent = excluded + guidance;
             }
         }
     } catch (error) {

@@ -786,8 +786,9 @@ As a Project Owner or QA Analyst, I want AI-generated suggestions to be clearly 
 
 #### AC-021.1 — Identify Pending AI Suggestions
 
-- Pending AI suggestions are displayed in a clearly labelled `AI Suggestions` area.
+- Pending AI suggestions appear in individually labelled `AI Suggestion` cards beside the corresponding form fields. The review group retains the accessible name `AI Suggestions` without a visible instructional banner.
 - Suggested values remain separate from the corresponding editable form fields until the user chooses `Use` or `Use All`.
+- While suggestions are pending, the existing status message below the form action buttons provides guidance: suggestions are ready for review, `Use` updates the form value without saving, `Dismiss` ignores the suggestion, and all pending suggestions must be reviewed before requesting AI Assist again. This guidance is not shown when no suggestions remain; other dynamic status and error messages are preserved.
 
 ---
 

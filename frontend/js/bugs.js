@@ -279,6 +279,7 @@ function populateLifecycleAssignees(roles, placeholder, includeRole) {
     prompt.textContent = placeholder;
     prompt.disabled = true;
     prompt.selected = true;
+    prompt.hidden = true;
     lifecycleAssignee.appendChild(prompt);
 
     projectMembers.forEach(function(member) {
@@ -305,6 +306,7 @@ function populateLifecycleQaAnalysts() {
     prompt.textContent = "Select a QA Analyst";
     prompt.disabled = true;
     prompt.selected = true;
+    prompt.hidden = true;
     lifecycleQaAssignee.appendChild(prompt);
 
     projectMembers.forEach(function(member) {
@@ -329,6 +331,7 @@ function populateLifecycleDevelopers() {
     prompt.textContent = "Select a Developer";
     prompt.disabled = true;
     prompt.selected = true;
+    prompt.hidden = true;
     lifecycleDeveloperAssignee.appendChild(prompt);
 
     projectMembers.forEach(function(member) {
