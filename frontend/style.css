@@ -254,7 +254,7 @@ body {
 }
 
 body {
-    width: 100vw;
+    width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
     background-color: var(--page-background);
@@ -334,6 +334,10 @@ h3 {
     gap: 10px;
     flex-wrap: wrap;
     padding: 12px 0;
+}
+
+.header-account-actions {
+    display: contents;
 }
 
 .header-identity {
@@ -841,8 +845,9 @@ form button {
 
 #project-form > label,
 #member-form > label,
-.bug-field > label {
-    padding-left: 4px;
+.bug-field > label,
+.bug-mobile-sort label {
+    padding-left: 2px;
 }
 
 #bug-form textarea {
@@ -1700,8 +1705,13 @@ body.light-theme #projects .project:not(.project-editing) .project-edit-button:h
 
 .bug-table td:nth-child(2) {
     min-width: 220px;
+}
 
+/* Long titles and account identities must not push other columns out of view. */
+.bug-table td:nth-child(2),
+.bug-table td:nth-child(6) {
     white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .bug-table tr:last-child td {
@@ -1845,6 +1855,7 @@ body.light-theme #projects .project:not(.project-editing) .project-edit-button:h
     margin: 4px 0 0;
 
     text-align: left;
+    overflow-wrap: anywhere;
 }
 
 .bug-reference {
@@ -2117,6 +2128,17 @@ footer a:hover {
 
 @media (max-width: 700px) {
 
+    body {
+        width: 100%;
+    }
+
+    .wordmark-beetle {
+        width: 1.2em;
+        height: 1.2em;
+        margin: 0 0.08em;
+        transform: none;
+    }
+
     main {
         padding: 24px 16px;
     }
@@ -2129,17 +2151,18 @@ footer a:hover {
     }
 
     .site-header {
-        min-height: 70px;
-
+        min-height: 0;
         padding: 12px 16px;
-
-        display: flex;
-
-        gap: 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: 8px;
     }
 
     .site-title {
         position: static;
+        grid-column: 1 / -1;
+        grid-row: 1;
 
         transform: none;
 
@@ -2153,8 +2176,46 @@ footer a:hover {
         font-size: 16px;
     }
 
+    .header-left,
     .header-right {
-        gap: 6px;
+        display: contents;
+    }
+
+    .header-identity,
+    #logout-button,
+    #theme-toggle {
+        grid-column: 1 / -1;
+        justify-self: center;
+        max-width: 100%;
+    }
+
+    .site-header .main-navigation {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: center;
+        gap: 8px 16px;
+    }
+
+    .site-header:has(.header-right .main-navigation:not([hidden])) {
+        grid-template-columns: minmax(0, auto) minmax(0, auto);
+        justify-content: center;
+    }
+
+    .site-header:has(.header-right .main-navigation:not([hidden])) .header-left .main-navigation {
+        grid-column: 1;
+    }
+
+    .header-right .main-navigation {
+        grid-column: 2;
+    }
+
+    .header-identity {
+        text-align: center;
+    }
+
+    #logout-button {
+        min-height: 0;
+        padding: 6px 0;
     }
 
     #theme-toggle {
@@ -2223,10 +2284,6 @@ footer a:hover {
 
     .project-buttons {
         justify-content: flex-end;
-    }
-
-    .bug-table {
-        min-width: 850px;
     }
 
     .bug-details-grid {
@@ -2965,5 +3022,276 @@ body.light-theme button:is(.ai-assist-button, .ai-review-button):disabled {
 
     .about-section {
         margin-bottom: 28px;
+    }
+}
+
+/* Project labels stay bounded; their full text is also available on focus. */
+#back-to-project {
+    position: relative;
+    min-width: 0;
+}
+
+#back-to-project > span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#back-to-project:is(:hover, :focus-visible)::after {
+    content: attr(title);
+    position: absolute;
+    z-index: 2;
+    top: 100%;
+    left: 0;
+    width: max-content;
+    max-width: min(28rem, calc(100vw - 180px));
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--header-background);
+    color: var(--primary-text);
+    font-size: 14px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.bug-mobile-sort {
+    display: none;
+}
+
+@media (min-width: 701px) {
+    .header-left .main-navigation {
+        flex-wrap: nowrap;
+    }
+
+    .header-left .main-navigation > a:not(#back-to-project) {
+        flex-shrink: 0;
+    }
+
+    #back-to-project {
+        max-width: 220px;
+    }
+
+    .header-right {
+        flex-wrap: nowrap;
+    }
+
+    .header-identity {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (min-width: 701px) and (max-width: 1200px) {
+    .site-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .site-title {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .header-left,
+    .header-right {
+        grid-row: 2;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 700px) {
+    .main-navigation > a {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    #back-to-project > span {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    #back-to-project::after {
+        display: none;
+    }
+
+}
+
+/* Seven readable columns need more space than the compact header. */
+@media (max-width: 1100px) {
+    /* One table and one set of sort handlers at every viewport size. */
+    .bug-table {
+        display: block;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .bug-table thead,
+    .bug-table tbody {
+        display: block;
+    }
+
+    /* Keep column relationships, but expose only the mobile sort controls. */
+    .bug-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    .bug-table .bug-sort-button {
+        display: none;
+    }
+
+    .bug-table .bug-report-row {
+        display: block;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bug-row-background);
+    }
+
+    .bug-table td,
+    .bug-table td:nth-child(2) {
+        display: block;
+        min-width: 0;
+        padding: 8px 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        border: 0;
+    }
+
+    .bug-table td::before {
+        content: attr(data-label) ": ";
+        color: var(--muted-text);
+        font-weight: normal;
+        font-size: 14px;
+    }
+
+    .bug-mobile-sort:not([hidden]) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .bug-mobile-sort label {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .bug-mobile-sort .form-input {
+        margin: 0;
+        min-height: 50px;
+    }
+
+    #bug-sort-direction {
+        min-height: 50px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        background: var(--utility-button-background);
+        color: var(--primary-text);
+        font-size: 16px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 700px) {
+    .bug-pagination {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        gap: 10px;
+    }
+
+    .bug-pagination-summary {
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .bug-page-size-control {
+        flex-wrap: nowrap;
+        gap: 4px;
+    }
+
+    #bug-range {
+        white-space: nowrap;
+    }
+
+    .bug-page-navigation:not([hidden]) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        margin: 0;
+    }
+
+    #bug-previous-page { justify-self: start; }
+    #bug-next-page { justify-self: end; }
+    #bug-page-indicator { white-space: nowrap; }
+}
+
+/* Four existing buttons need about 427px; use the form's actual content width. */
+@container (min-width: 304px) and (max-width: 427px) {
+    #edit-bug-form > .creation-form-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #edit-bug-form > .creation-form-actions > button {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 700px) {
+    .header-account-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-account-actions #logout-button {
+        min-height: 44px;
+        padding: 8px 4px;
+    }
+
+    .site-header #theme-toggle {
+        --theme-toggle-background: transparent;
+        --theme-toggle-hover: transparent;
+        --theme-toggle-active: transparent;
+        position: relative;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        border: 0;
+        background: none;
+        box-shadow: none;
+    }
+
+    .header-account-actions:has(#logout-button:not([hidden])) #theme-toggle::before {
+        content: "";
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 16px;
+        border-left: 1px solid var(--border-color);
     }
 }

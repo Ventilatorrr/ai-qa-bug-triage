@@ -1124,3 +1124,18 @@ tests/bdd/features/project_creation.feature
 Executable BDD automation may be added later as a representative example rather than being used for the entire test suite.
 
 The authentication feature still uses historical password AC references: all password-policy examples belong to AC-001.4 — Invalid Password, and password security belongs to AC-001.5 — Password Security. There are 17 scenarios across the two files, rather than the intended small representative showcase. Updating those specification files is deferred because this review does not change files under tests/.
+
+## Essential mobile UI fixes — 14 October 2026
+
+BUG-32 retains one semantic table, renderer, links and pagination. CSS stacks rows at 700px and below; a mobile field selector and direction button reuse desktop sorting and preference logic. Mobile headers are centered and always visible; the superseded Menu script and its tests were removed. Long Bug Details titles wrap, long desktop project links truncate with full text on focus, and Edit actions use two balanced columns when the form cannot fit all four buttons.
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-012 | AC — | `test_bug_mobile_labels_and_header_relationships_survive_sorting` | Frontend unit | Covered |
+| REQ-012 | AC — | `test_mobile_sort_controls_reuse_all_columns_direction_and_preferences` | Frontend unit | Covered |
+| REQ-012 | AC — | `test_mobile_sort_resets_pagination_and_empty_list_hides_toolbar` | Frontend unit | Covered |
+| REQ-012 | AC — | `test_project_navigation_preserves_full_name_as_text_and_focus_tooltip` | Frontend unit | Covered |
+
+Final refinement verification: `node --test tests/frontend/*.test.cjs` passed 84 tests; syntax checks for `project.js` and `bugs.js` and `git diff --check` passed. Browser checks used a separate server on port 8138 with its configured temporary SQLite database verified before interaction: 320/390/430/500/700/701/1280px in both themes, long header labels/email, mobile sort selection/direction, pagination, reload/viewport preference continuity, and intermediate Edit action layouts (including 509px). No development database or protected project was used. Existing AC statuses remain unchanged; screen-reader, physical-device and broader browser checks remain outstanding.
+
+Final polish: Sort by shares the Edit field-label rule (2px left padding). Logout and a borderless theme icon share one centered mobile row, with a divider only when Logout is visible; desktop styling is unchanged. Isolated browser checks at 320/390/700/1280px in both themes confirmed equal label insets, action alignment, visible theme keyboard focus, theme switching, successful Logout and no guest divider. The frontend suite remains 84 passing tests.

@@ -1501,7 +1501,10 @@ async function loadProjectNavigation() {
             return;
         }
 
-        backToProjectLink.textContent = data.name;
+        const projectLabel = document.createElement("span");
+        projectLabel.textContent = data.name;
+        backToProjectLink.replaceChildren(projectLabel);
+        backToProjectLink.title = data.name;
         backToProjectLink.hidden = false;
     } catch (error) {
         showMessage(bugMessage, "Unable to load project name. Please refresh the page.", "error");
