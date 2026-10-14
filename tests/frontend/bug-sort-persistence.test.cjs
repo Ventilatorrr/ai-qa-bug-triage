@@ -94,6 +94,24 @@ test("test_bug_sort_first_visit_defaults_to_last_updated_descending", async () =
     assertDefault(await page());
 });
 
+test("test_bug_mobile_labels_and_header_relationships_survive_sorting", async () => {
+    const f = await page();
+    for (const column of columns) {
+        f.sort(column);
+        const table = f.node("#bugs");
+        const headers = table.all("th");
+        for (const row of table.querySelector("tbody").children) {
+            assert.equal(row.children.length, 7);
+            row.children.forEach((cell, index) => {
+                assert.equal(cell.dataset.label, ["Bug ID", "Title", "Severity", "Priority", "Status", "Assignee", "Last Updated"][index]);
+                assert.equal(cell.attributes.headers, headers[index].id);
+                assert.equal(cell.attributes.role, "cell");
+            });
+            assert.match(row.children[0].children[0].href, /^\/bugs.html\?project_id=1&bug_number=\d+$/);
+        }
+    }
+});
+
 test("test_bug_list_rejects_invalid_number_response", async () => {
     for (const bug_number of [undefined, null, 0, -1, 1.5, "11"]) {
         const f = await page({reports: [{...bugs[0], bug_number}]});
@@ -108,6 +126,39 @@ test("test_bug_sort_saves_column_and_direction_on_header_click", async () => {
     assert.deepEqual(JSON.parse(session.getItem(key())), {column: "title", direction: "ascending"});
     f.sort("title");
     assert.deepEqual(JSON.parse(session.getItem(key())), {column: "title", direction: "descending"});
+});
+
+test("test_mobile_sort_controls_reuse_all_columns_direction_and_preferences", async () => {
+    const session = storage(), f = await page({session});
+    for (const column of columns) {
+        f.node("#bug-sort-field").value = column;
+        f.node("#bug-sort-field").dispatchEvent({type: "change"});
+        assert.equal(f.active()[0].column, column);
+        assert.equal(f.active()[0].direction, "ascending");
+        assert.equal(f.node("#bug-sort-direction").getAttribute("aria-label"), "Sort descending");
+        const ascending = [...f.order()];
+        f.node("#bug-sort-direction").click();
+        assert.deepEqual(f.order(), [...ascending].reverse());
+        assert.equal(f.node("#bug-sort-direction").textContent, "↓ Descending");
+        assert.deepEqual(JSON.parse(session.getItem(key())), {column, direction: "descending"});
+    }
+    const restored = await page({session});
+    assert.equal(restored.node("#bug-sort-field").value, "updated_at");
+    assert.equal(restored.node("#bug-sort-direction").textContent, "↓ Descending");
+    restored.sort("title");
+    assert.equal(restored.node("#bug-sort-field").value, "title");
+    assert.equal(restored.node("#bug-sort-direction").textContent, "↑ Ascending");
+});
+
+test("test_mobile_sort_resets_pagination_and_empty_list_hides_toolbar", async () => {
+    const reports = Array.from({length: 11}, (_, i) => ({...bugs[0], id: i + 1, bug_number: i + 1}));
+    const f = await page({reports});
+    f.node("#bug-next-page").click();
+    assert.equal(f.order().length, 1);
+    f.node("#bug-sort-direction").click();
+    assert.equal(f.order().length, 10);
+    assert.equal(f.node("#bug-page-indicator").textContent, "Page 1 of 2");
+    assert.equal((await page({reports: []})).node("#bug-mobile-sort").hidden, true);
 });
 
 test("test_bug_sort_reinitialization_restores_order_indicators_and_links", async () => {

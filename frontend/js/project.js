@@ -495,6 +495,21 @@ let bugSortColumn = "updated_at";
 let bugSortDirection = "descending";
 let bugPageSize = 10;
 let bugCurrentPage = 1;
+const bugMobileSort = document.querySelector("#bug-mobile-sort");
+const bugSortField = document.querySelector("#bug-sort-field");
+const bugSortDirectionButton = document.querySelector("#bug-sort-direction");
+
+function changeBugSort(column) {
+    bugSortDirection = column === bugSortColumn && bugSortDirection === "ascending"
+        ? "descending" : "ascending";
+    bugSortColumn = column;
+    bugCurrentPage = 1;
+    saveBugSortPreference();
+    renderBugs();
+}
+
+bugSortField.addEventListener("change", () => changeBugSort(bugSortField.value));
+bugSortDirectionButton.addEventListener("click", () => changeBugSort(bugSortColumn));
 
 function getBugPageSizeStorageKey() {
     const userId = getCurrentUserId();
@@ -716,6 +731,11 @@ function renderBugs() {
     const end = Math.min(start + bugPageSize, data.length);
 
     bugPagination.hidden = data.length === 0;
+    bugMobileSort.hidden = data.length === 0;
+    bugSortField.value = bugSortColumn;
+    const ascending = bugSortDirection === "ascending";
+    bugSortDirectionButton.textContent = ascending ? "↑ Ascending" : "↓ Descending";
+    bugSortDirectionButton.setAttribute("aria-label", ascending ? "Sort descending" : "Sort ascending");
     bugPageSizeInput.value = String(bugPageSize);
     bugRange.textContent = `Showing ${data.length ? start + 1 : 0}–${end} of ${data.length}`;
     bugPageNavigation.hidden = totalPages === 1;
@@ -745,12 +765,17 @@ function renderBugs() {
         document.createElement("table");
 
     table.className = "bug-table";
+    // Explicit roles retain table relationships when CSS stacks rows on phones.
+    table.setAttribute("role", "table");
+    table.setAttribute("aria-label", "Bug reports; select a column heading to sort");
 
     const thead =
         document.createElement("thead");
 
     const headerRow =
         document.createElement("tr");
+    thead.setAttribute("role", "rowgroup");
+    headerRow.setAttribute("role", "row");
 
     const headers = [
         ["id", "Bug ID"],
@@ -767,6 +792,9 @@ function renderBugs() {
             document.createElement("th");
 
         th.scope = "col";
+        th.id = `bug-column-${column}`;
+        th.setAttribute("role", "columnheader");
+        th.setAttribute("aria-label", headerText);
         const active = column === bugSortColumn;
         th.setAttribute("aria-sort", active ? bugSortDirection : "none");
 
@@ -778,13 +806,7 @@ function renderBugs() {
             ? (bugSortDirection === "ascending" ? " ↑" : " ↓")
             : "");
         button.addEventListener("click", function () {
-            bugSortDirection = column === bugSortColumn && bugSortDirection === "ascending"
-                ? "descending"
-                : "ascending";
-            bugSortColumn = column;
-            bugCurrentPage = 1;
-            saveBugSortPreference();
-            renderBugs();
+            changeBugSort(column);
             bugsContainer.querySelector(`[data-sort-column="${column}"]`).focus();
         });
         th.appendChild(button);
@@ -799,6 +821,7 @@ function renderBugs() {
 
     const tbody =
         document.createElement("tbody");
+    tbody.setAttribute("role", "rowgroup");
 
     data.slice(start, end).forEach(function (bug) {
         const row =
@@ -823,6 +846,7 @@ function renderBugs() {
             "bug-link";
 
         row.className = "bug-report-row";
+        row.setAttribute("role", "row");
         row.addEventListener("click", function (event) {
             if (event.defaultPrevented || event.button !== 0 ||
                 event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
@@ -832,7 +856,7 @@ function renderBugs() {
             // Leave links and other controls to their native interaction handlers.
             if (event.target.closest(
                 "a, button, input, select, textarea, label, summary, " +
-                "[contenteditable], [role], [tabindex]"
+                "[contenteditable], [role]:not([role='cell']):not([role='row']):not([role='rowgroup']):not([role='table']), [tabindex]"
             )) {
                 return;
             }
@@ -930,6 +954,12 @@ function renderBugs() {
         row.appendChild(assigneeCell);
 
         row.appendChild(updatedCell);
+
+        Array.from(row.children).forEach((cell, index) => {
+            cell.dataset.label = headers[index][1];
+            cell.setAttribute("role", "cell");
+            cell.setAttribute("headers", `bug-column-${headers[index][0]}`);
+        });
 
         tbody.appendChild(row);
     });

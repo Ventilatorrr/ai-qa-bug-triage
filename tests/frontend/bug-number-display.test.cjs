@@ -72,6 +72,19 @@ test("test_bug_response_validates_project_and_local_resource_number", () => {
     assert.equal(f.runtime.isValidBugResponse({...f.bug, project_id: 4}), false);
 });
 
+test("test_project_navigation_preserves_full_name_as_text_and_focus_tooltip", async () => {
+    const f = page();
+    const name = 'A very long project name with <literal markup> and "quotes"';
+    f.runtime.authenticatedFetch = async () => ({ok: true, json: async () => ({name})});
+    await f.runtime.loadProjectNavigation();
+    const link = f.node("#back-to-project");
+    assert.equal(link.children.length, 1);
+    assert.equal(link.children[0].tagName, "span");
+    assert.equal(link.children[0].textContent, name);
+    assert.equal(link.title, name);
+    assert.equal(link.hidden, false);
+});
+
 test("test_bug_detail_get_and_ai_assist_use_local_resource_number", async () => {
     const f = page();
     f.runtime.localStorage.getItem = () => "token";

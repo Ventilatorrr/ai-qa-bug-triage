@@ -21,8 +21,10 @@
         <h1 class="site-title" aria-label="AI QA Bug Triage"><span class="wordmark" aria-hidden="true"><span class="wordmark-prefix">AI QA</span> <span class="wordmark-b">B</span><img class="wordmark-beetle" src="assets/beetle-vertical.png" alt="" width="1254" height="1254"><span>ug</span> <span class="wordmark-triage">Triage</span></span></h1>
         <div class="header-right">
             <span id="header-identity" class="header-identity" hidden></span>
-            <button id="logout-button" type="button">Logout</button>
-            <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
+            <div class="header-account-actions">
+                <button id="logout-button" type="button">Logout</button>
+                <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
+            </div>
         </div>
     </header>
 
@@ -354,6 +356,21 @@
             </form>
 
 
+            <div id="bug-mobile-sort" class="bug-mobile-sort" hidden>
+                <div>
+                    <label for="bug-sort-field">Sort by</label>
+                    <select id="bug-sort-field" class="form-input">
+                        <option value="id">Bug ID</option>
+                        <option value="title">Title</option>
+                        <option value="severity">Severity</option>
+                        <option value="priority">Priority</option>
+                        <option value="status">Status</option>
+                        <option value="assignee_id">Assignee</option>
+                        <option value="updated_at">Last Updated</option>
+                    </select>
+                </div>
+                <button id="bug-sort-direction" type="button" aria-controls="bugs"></button>
+            </div>
             <div id="bugs"></div>
             <div id="bug-pagination" class="bug-pagination" hidden>
                 <div class="bug-pagination-summary">
