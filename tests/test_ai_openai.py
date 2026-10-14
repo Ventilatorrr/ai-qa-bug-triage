@@ -152,6 +152,22 @@ def test_ai_openai_rejects_missing_or_unparseable_json(provider_input, text):
         request_openai_suggestions(provider_input, client=client)
 
 
+@pytest.mark.parametrize("text", [
+    '{"suggestions": [], "suggestions": []}',
+    '{"suggestions": [{"field": "title", "value": "First", "value": "Second"}]}',
+    '{"suggestions": [{"field": "title", "value": "Same", "value": "Same"}]}',
+    '{"suggestions": [{"field": "title", "field": "description", "value": "Text"}]}',
+    '{"suggestions": [{"field": "title", "value": {"nested": {"key": 1, "key": 2}}}]}',
+    '{"suggestions": [{"field": "title", "value": [{"key": 1, "key": 2}]}]}',
+    '{"suggestions": [{"field": "title", "value": "First", "\\u0076alue": "Second"}]}',
+])
+def test_ai_openai_rejects_duplicate_json_properties_at_any_depth(provider_input, text):
+    client = fake_client({"suggestions": []})
+    client.responses.create.return_value.output_text = text
+    with pytest.raises(OpenAiSuggestionResponseError, match="duplicate JSON object properties"):
+        request_openai_suggestions(provider_input, client=client)
+
+
 def test_ai_openai_propagates_request_failure_without_fake_suggestions(provider_input):
     client = fake_client({"suggestions": []})
     failure = RuntimeError("Simulated client failure")

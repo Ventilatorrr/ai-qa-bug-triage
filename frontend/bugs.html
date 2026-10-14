@@ -301,6 +301,11 @@
 
                 <p id="edit-bug-message" class="section-message" role="alert" aria-live="polite"></p>
 
+                <div id="edit-bug-ai-disclosure" class="section-message ai-assist-disclosure" role="note" data-ai-button="edit-bug-ai-assist" hidden>
+                    <p id="edit-bug-ai-disclosure-text">AI Assist sends the current bug, up to five recently updated bugs from this project, and eligible assignee information to OpenAI. Avoid passwords, API keys, and sensitive personal information. Learn more in our <a href="/privacy.html">Privacy Policy</a>.</p>
+                    <button class="ai-notice-dismiss" type="button" aria-label="Dismiss AI data-sharing notice">&times;</button>
+                </div>
+
                 <div class="form-actions creation-form-actions">
 
                     <button id="edit-bug-ai-assist" class="creation-form-action-button ai-assist-button" type="button" hidden>AI Assist</button>
@@ -402,12 +407,14 @@
 
     <footer>
         <p>Copyright &copy; 2026 AI QA Assistant</p>
+        <p><a href="/privacy.html">Privacy Policy</a></p>
     </footer>
 
     <script src="js/theme.js"></script>
     <script src="js/logout.js"></script>
     <script src="js/api-errors.js"></script>
     <script src="js/ai-assist.js"></script>
+    <script src="js/ai-notice.js"></script>
     <script src="js/bugs.js"></script>
 </body>
 </html>

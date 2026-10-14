@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - AI QA Bug Triage</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-left">
+            <nav class="main-navigation" aria-label="Main navigation">
+                <a id="about-projects-link" href="/projects.html" hidden>Projects</a>
+                <a href="/about.html">About</a>
+            </nav>
+        </div>
+        <h1 class="site-title" aria-label="AI QA Bug Triage"><span class="wordmark" aria-hidden="true"><span class="wordmark-prefix">AI QA</span> <span class="wordmark-b">B</span><img class="wordmark-beetle" src="assets/beetle-vertical.png" alt="" width="1254" height="1254"><span>ug</span> <span class="wordmark-triage">Triage</span></span></h1>
+        <div class="header-right">
+
+            <nav class="main-navigation" id="guest-account-actions" aria-label="Account"><a href="/register.html">Register</a><a href="/login.html">Login</a></nav>
+            <div class="header-account-actions">
+                <button id="logout-button" type="button" hidden>Logout</button>
+                <button id="theme-toggle" type="button" aria-label="Switch theme">☀</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="about-content privacy-content">
+            <h2>Privacy Policy</h2>
+            <p class="page-description about-intro">Pre-deployment draft — updated 14 October 2026</p>
+            <hr class="about-separator">
+            <div class="about-section">
+                <h3>Draft status and contact</h3>
+                <p>This draft describes the current AI QA Bug Triage implementation and its planned public portfolio use. It is not a confirmation of final deployment arrangements. Before publication, the operator must identify the data controller, publish a working privacy contact, and confirm the applicable jurisdiction and legal basis for each processing purpose. No privacy contact has been confirmed yet.</p>
+            </div>
+            <div class="about-section">
+                <h3>Accounts and project information</h3>
+                <p>Registration collects an email address and password. The application stores a password hash, not a plain-text password, and uses the credentials to authenticate access. Login issues an access token. Providing these details is required to create and use an account.</p>
+                <p>The application stores accounts, project names, memberships and roles, and user-supplied bug reports, including titles, descriptions, environment, reproduction steps, expected and actual results, versions, classifications, assignments, lifecycle information, authorship and timestamps. It uses this information to provide project collaboration and bug management. Authorized members can view their project's reports and member email addresses and roles.</p>
+            </div>
+            <div class="about-section">
+                <h3>Optional AI Assist and OpenAI</h3>
+                <p>AI Assist contacts OpenAI only when an eligible user explicitly requests it and the service is configured. It sends the current form's Title, Affected Version, Environment, Description, Steps to Reproduce, Expected Result, Actual Result, Severity, Priority and Assignee ID, including unsaved edits.</p>
+                <p>It also sends up to five recently updated reports from the same project, with those fields and internal report IDs, and eligible assignees' user IDs, email addresses and roles. The edited report is excluded from historical context; there is no separate saved-version snapshot. Historical content may have been entered by other project members.</p>
+                <p>Application-managed authentication tokens, session credentials and configuration secrets are not automatically added to AI context. User-supplied text is not automatically checked for every possible secret. Do not include passwords, API keys, sensitive personal information or confidential third-party material in reports or AI requests.</p>
+                <p>Suggestions are advisory: review actions change only the form, and Create or Save persists the chosen values. The data-sharing notice can be dismissed; dismissal is an informational preference, not consent or a change to the data sent.</p>
+                <p>The application requests <code>store=false</code> from OpenAI. This does not establish zero retention or other provider guarantees. Before deployment, confirm the provider account's applicable terms, retention, data-use settings and transfer arrangements. See <a href="https://developers.openai.com/api/docs/guides/your-data">OpenAI's API data controls</a>.</p>
+            </div>
+            <div class="about-section">
+                <h3>Hosting and other service providers</h3>
+                <p>The hosting provider, server location, subprocessors, backup arrangements and any international transfers have not been confirmed for public deployment. Hosting infrastructure may process technical connection information such as IP addresses, browser details and request times. Actual logging, access and retention must be documented before publication. No hosting location or transfer safeguard is promised by this draft.</p>
+            </div>
+            <div class="about-section">
+                <h3>Browser storage</h3>
+                <p>The frontend uses localStorage for the access token, theme, bug page-size preferences and the shared dismissed AI-notice preference. It uses sessionStorage for per-user/project sorting and temporary interface feedback. Logging out removes the access token; other preferences remain until changed or browser storage is cleared. Clearing storage can sign you out and make the notice reappear. If storage is unavailable, dismissal may last only for the current page.</p>
+                <p>The current frontend does not implement advertising or analytics tracking. Hosting-level cookies or future integrations must be assessed and disclosed before deployment.</p>
+            </div>
+            <div class="about-section">
+                <h3>Security, retention and deletion</h3>
+                <p>The application uses password hashing, authenticated API requests, project membership checks and role-based permissions. Public deployment still requires confirmation of HTTPS, hosting and database access, backups and operational security. No system can guarantee complete security; use fictional, non-sensitive content for portfolio demonstrations.</p>
+                <p>No automatic account or report retention schedule is currently implemented. Authorized project actions can delete reports and projects or remove memberships, but there is no self-service account-deletion feature. The operator must confirm retention periods or criteria for accounts, project data, logs, backups and provider copies, and establish a privacy-request and deletion process before publication. Removing a project member does not delete that person's account or all content they previously supplied.</p>
+            </div>
+            <div class="about-section">
+                <h3>Planned recruiter demonstrations</h3>
+                <p>Temporary recruiter demo accounts and fictional demonstration data are planned, not currently implemented as an automated feature. Access, expiry, cleanup and separation from real user data must be defined before those accounts are offered. This draft does not promise automatic expiry or deletion.</p>
+            </div>
+            <div class="about-section">
+                <h3>Privacy rights and requests</h3>
+                <p>Depending on the applicable law and circumstances, you may have rights to access, correct or erase personal data, restrict or object to processing, receive portable data, and withdraw consent where processing relies on consent. You may also complain to the relevant supervisory authority; for UK data protection matters, see the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office</a>. These rights can have conditions and exceptions.</p>
+                <p>Before public registration opens, this page must provide the operator's identity and privacy contact, explain how to submit requests, and confirm the applicable legal bases and rights. The dismissible AI notice does not establish a legal basis or record consent. Update this policy when the confirmed deployment or data practices change.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Copyright &copy; 2026 AI QA Assistant</p>
+        <p><a href="/privacy.html">Privacy Policy</a></p>
+    </footer>
+
+    <script src="js/theme.js"></script>
+    <script src="js/logout.js"></script>
+</body>
+</html>

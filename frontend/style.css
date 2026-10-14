@@ -845,6 +845,8 @@ form button {
 
 #project-form > label,
 #member-form > label,
+#login-form > label,
+#register-form > label,
 .bug-field > label,
 .bug-mobile-sort label {
     padding-left: 2px;
@@ -1123,6 +1125,11 @@ button:disabled {
     container-type: inline-size;
 }
 
+#bug-form,
+#edit-bug-form {
+    --bug-label-input-gap: 0px;
+}
+
 .bug-field-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1134,7 +1141,7 @@ button:disabled {
 .bug-field-row:has(> .ai-suggestion) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto auto;
-    row-gap: 6px;
+    row-gap: var(--bug-label-input-gap, 6px);
 }
 
 /* Share the label/control rows so each card begins at the actual control. */
@@ -1164,6 +1171,15 @@ button:disabled {
 .bug-field > label {
     display: block;
     margin-bottom: 6px;
+}
+
+/* Restore compact auth labels and use the same flow for both bug forms. */
+#login-form > label,
+#register-form > label,
+#bug-form .bug-field > label,
+#edit-bug-form .bug-field > label {
+    display: inline;
+    margin-bottom: 0;
 }
 
 .bug-field > .form-input {
@@ -1311,6 +1327,57 @@ button:disabled {
 .ai-review-button:focus-visible {
     outline: 2px solid var(--focus-border);
     outline-offset: 3px;
+}
+
+.ai-assist-disclosure {
+    position: relative;
+    display: block;
+    padding: 8px 48px 8px 8px;
+    min-height: 32px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.ai-assist-disclosure[hidden] {
+    display: none;
+}
+
+.ai-assist-disclosure p {
+    margin: 0;
+}
+
+.ai-assist-disclosure a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.ai-assist-disclosure .ai-notice-dismiss {
+    position: absolute;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 0 0 8px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 20px;
+    line-height: 21px;
+}
+
+.ai-notice-dismiss:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 2px;
 }
 
 #new-bug-ai-message,
@@ -2072,6 +2139,10 @@ body.light-theme #projects .project:not(.project-editing) .project-edit-button:h
 
 footer {
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 
     padding: 20px;
 
@@ -2082,18 +2153,26 @@ footer {
     text-align: center;
 }
 
+footer p {
+    margin: 0;
+}
+
 footer a {
     color: var(--muted-text);
 
-    text-decoration: none;
+    text-decoration: underline;
 
-    font-size: 18px;
+    font-size: inherit;
 }
 
 footer a:hover {
     color: var(--secondary-text);
 }
 
+footer a:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
+}
 
 /* =========================================================
    Responsive Layout
@@ -2132,19 +2211,15 @@ footer a:hover {
         width: 100%;
     }
 
-    .wordmark-beetle {
-        width: 1.2em;
+    .wordmark {
+        /* Keep the compact title row while sharing the base graphic styling. */
         height: 1.2em;
-        margin: 0 0.08em;
-        transform: none;
     }
 
     main {
         padding: 24px 16px;
     }
 
-    #login-form,
-    #register-form,
     #project-form,
     #bug-form {
         max-width: 100%;
@@ -2152,11 +2227,11 @@ footer a:hover {
 
     .site-header {
         min-height: 0;
-        padding: 12px 16px;
+        padding: 20px 12px 4px;
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         justify-items: center;
-        gap: 8px;
+        gap: 4px 16px;
     }
 
     .site-title {
@@ -2168,7 +2243,8 @@ footer a:hover {
 
         text-align: center;
 
-        font-size: 22px;
+        font-size: clamp(28px, 9vw, 32px);
+        line-height: 1.2;
     }
 
     .main-navigation a,
@@ -2181,12 +2257,11 @@ footer a:hover {
         display: contents;
     }
 
-    .header-identity,
-    #logout-button,
-    #theme-toggle {
+    .header-identity {
         grid-column: 1 / -1;
         justify-self: center;
         max-width: 100%;
+        text-align: center;
     }
 
     .site-header .main-navigation {
@@ -2196,32 +2271,47 @@ footer a:hover {
         gap: 8px 16px;
     }
 
+    .site-header .main-navigation > a:not([hidden]) {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    /* Guest navigation groups share one gap without wordmark-sized grid tracks. */
     .site-header:has(.header-right .main-navigation:not([hidden])) {
-        grid-template-columns: minmax(0, auto) minmax(0, auto);
+        display: flex;
         justify-content: center;
     }
 
-    .site-header:has(.header-right .main-navigation:not([hidden])) .header-left .main-navigation {
-        grid-column: 1;
+    .site-header:has(.header-right .main-navigation:not([hidden])) .header-account-actions {
+        flex-basis: 100%;
     }
 
-    .header-right .main-navigation {
-        grid-column: 2;
+    .header-account-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
     }
 
-    .header-identity {
-        text-align: center;
+    .header-account-actions #logout-button {
+        min-height: 44px;
+        padding: 8px 4px;
     }
 
-    #logout-button {
-        min-height: 0;
-        padding: 6px 0;
-    }
-
-    #theme-toggle {
-        width: 38px;
-        height: 38px;
-
+    .site-header #theme-toggle {
+        --theme-toggle-background: transparent;
+        --theme-toggle-hover: transparent;
+        --theme-toggle-active: transparent;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0;
+        border: 0;
+        background: none;
+        box-shadow: none;
         font-size: 16px;
     }
 
@@ -2311,22 +2401,9 @@ footer a:hover {
 
 @media (max-width: 450px) {
 
-    .site-header {
-        padding: 10px 12px;
-    }
-
-    .site-title {
-        font-size: 18px;
-    }
-
     .main-navigation a,
     #logout-button {
         font-size: 14px;
-    }
-
-    #theme-toggle {
-        width: 38px;
-        height: 38px;
     }
 
     main {
@@ -2983,6 +3060,12 @@ body.light-theme button:is(.ai-assist-button, .ai-review-button):disabled {
     margin-bottom: 0;
 }
 
+.privacy-content a,
+#register-description a {
+    color: inherit;
+    text-decoration: underline;
+}
+
 
 /* =========================================================
    Technology & Version (below second separator)
@@ -3254,44 +3337,5 @@ body.light-theme button:is(.ai-assist-button, .ai-review-button):disabled {
     #edit-bug-form > .creation-form-actions > button {
         width: 100%;
         min-width: 0;
-    }
-}
-
-@media (max-width: 700px) {
-    .header-account-actions {
-        grid-column: 1 / -1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .header-account-actions #logout-button {
-        min-height: 44px;
-        padding: 8px 4px;
-    }
-
-    .site-header #theme-toggle {
-        --theme-toggle-background: transparent;
-        --theme-toggle-hover: transparent;
-        --theme-toggle-active: transparent;
-        position: relative;
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        min-height: 44px;
-        border: 0;
-        background: none;
-        box-shadow: none;
-    }
-
-    .header-account-actions:has(#logout-button:not([hidden])) #theme-toggle::before {
-        content: "";
-        position: absolute;
-        left: -6px;
-        top: 50%;
-        transform: translateY(-50%);
-        height: 16px;
-        border-left: 1px solid var(--border-color);
     }
 }

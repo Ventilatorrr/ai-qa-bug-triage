@@ -810,10 +810,12 @@ As a project member, I want AI-assisted triage to respect existing project permi
 
 #### AC-022.2 — Restrict AI Context
 
-- AI context may include the current New Bug or Edit Bug form information and permitted information from the same project.
+- AI context may include the current New Bug or Edit Bug form information, up to five recently updated bugs from the same project, and eligible project-member information.
+- User-supplied bug content may be transmitted to the AI provider when the user explicitly requests `AI Assist`.
 - Information from bugs belonging to another project must not be included in the AI context.
 - When project-member information is provided to support an Assignee suggestion, only members of the relevant project are included.
-- Content supplied to the AI model must not include authentication tokens, user credentials, AI service credentials, or other application secrets.
+- Application-managed authentication tokens, session credentials, AI service credentials, configuration secrets, and other application-managed secrets must never be included automatically in provider context.
+- New Bug and Edit Bug show a compact, dismissible data-sharing notice near the available `AI Assist` control, warn against passwords, API keys, or sensitive personal information, and link to the public Privacy Policy. Dismissal is informational, not consent, and is remembered across both forms and future visits in the same browser when local storage is available. Hidden or dismissed notices are not referenced by the control's accessible description.
 
 #### AC-022.3 — Limit AI Capabilities
 
