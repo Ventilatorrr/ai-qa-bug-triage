@@ -1,5 +1,6 @@
 from copy import deepcopy
 import json
+from unittest.mock import Mock
 
 import httpx2
 from openai import OpenAI
@@ -31,7 +32,7 @@ def offline_provider(test_client, monkeypatch):
             "id": "resp_offline", "object": "response", "created_at": 0,
             "model": "gpt-6-luna", "status": "completed",
             "output": [{"id": "msg_offline", "type": "message", "role": "assistant", "status": "completed",
-                        "content": [{"type": "output_text", "text": json.dumps(state["raw"]), "annotations": []}]}],
+                        "content": [{"type": "output_text", "text": state.get("raw_text", json.dumps(state["raw"])), "annotations": []}]}],
         })
 
     def create_client(api_key):
@@ -55,6 +56,30 @@ def persisted_state(client, project):
     responses = [client.get(path, headers=headers(owner)) for path in paths]
     assert all(response.status_code == 200 for response in responses)
     return [response.json() for response in responses]
+
+
+@pytest.mark.parametrize("edit", [False, True])
+def test_ai_triage_duplicate_json_is_safe_failure_before_validation(
+    test_client, ai_project, blank_form, offline_provider, monkeypatch, caplog, edit,
+):
+    from app import ai_triage
+
+    private_text = "private-duplicate-value"
+    offline_provider["raw_text"] = (
+        '{"suggestions": [{"field": "title", "value": "First", '
+        '"value": "' + private_text + '"}]}'
+    )
+
+    validate = Mock(wraps=ai_triage.process_provider_response)
+    monkeypatch.setattr(ai_triage, "process_provider_response", validate)
+    before = persisted_state(test_client, ai_project)
+    response = test_client.post(request_url(ai_project, edit), headers=headers(ai_project[0]), json=blank_form)
+    assert response.status_code == 502
+    assert response.json() == {"detail": "AI assistance could not generate suggestions. Please try again."}
+    validate.assert_not_called()
+    assert private_text not in response.text + caplog.text
+    assert len(offline_provider["requests"]) == 1
+    assert persisted_state(test_client, ai_project) == before
 
 
 @pytest.mark.parametrize("edit", [False, True])

@@ -12,6 +12,16 @@ class OpenAiSuggestionResponseError(ValueError):
     """The provider did not complete a usable structured-output response."""
 
 
+def _unique_json_object(pairs):
+    """Reject duplicate properties in every decoded object, including nested ones."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise OpenAiSuggestionResponseError("OpenAI returned duplicate JSON object properties.")
+        result[key] = value
+    return result
+
+
 def request_openai_suggestions(generation_input: dict, *, client: "OpenAI") -> object:
     """Return untrusted decoded JSON for process_provider_response to validate.
 
@@ -45,6 +55,6 @@ def request_openai_suggestions(generation_input: dict, *, client: "OpenAI") -> o
         if item.type == "message" and any(content.type == "refusal" for content in item.content):
             raise OpenAiSuggestionResponseError("OpenAI refused the suggestion request.")
     try:
-        return json.loads(response.output_text)
+        return json.loads(response.output_text, object_pairs_hook=_unique_json_object)
     except json.JSONDecodeError as exc:
         raise OpenAiSuggestionResponseError("OpenAI did not return structured suggestion JSON.") from exc

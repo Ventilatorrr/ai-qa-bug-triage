@@ -46,13 +46,27 @@ it when files change or assumptions need verification.
 ## Data and authorization
 
 - Backend authorization is authoritative; UI visibility is not security.
-- Use disposable databases for automated tests and defect reproduction.
-- `tests/conftest.py` currently uses the fixed `test_bugtriage.db` filename;
-  do not run test suites concurrently against it.
-- Do not modify real application data or run migrations against the real
-  application database unless the task explicitly requires and authorizes it.
-- Do not manipulate real dogfooding bug records merely to test implementation;
-  use supported test fixtures or explicitly authorized workflows.
+- All automated testing, defect reproduction, and agent-driven browser interaction must use isolated, disposable test data.
+- Never open, inspect, query, copy, modify, overwrite, delete, or migrate any real/non-test application database. This includes read-only inspection.
+- Never interact with genuine dogfooding projects or bug reports through browser automation, APIs, scripts, or database tools. The user manages genuine QA records manually.
+- Do not access a real database merely to verify that it is not being used. Verify test configuration and process startup instead.
+- `tests/conftest.py` currently uses the fixed `test_bugtriage.db` filename; do not run test suites concurrently against it.
+- Use fictional accounts, projects, bug reports, and mocked AI responses for automated testing unless explicitly instructed otherwise.
+
+
+### Local browser testing
+
+- Always use `http://127.0.0.1:8148` for agent-driven local browser testing of this project.
+- This is the approved browser-testing origin. Do not select random alternative ports.
+- Before starting a server, check whether port 8148 is available.
+- If port 8148 is occupied, identify the existing process and its configuration. Never assume that an existing localhost server is safe, and never terminate or reuse an unidentified process.
+- For frontend-only visual checks, prefer a static server with no database or application API access.
+- For tests requiring a running backend, explicitly configure a fresh, isolated, disposable database before starting the application.
+- Verify the effective database configuration and server process before any browser or API interaction. Do not rely on the port number alone as proof of isolation.
+- If isolation cannot be verified, do not proceed with browser testing. Report the blocker instead.
+- Never modify the browser's global site permissions or request unrestricted access to all websites.
+- If the designated port cannot be used safely, ask before using another port.
+- Shut down only test servers started and owned by the current task. Preserve unrelated processes and data.
 
 
 ## Verification and QA evidence
