@@ -50,7 +50,7 @@ it when files change or assumptions need verification.
 - Never open, inspect, query, copy, modify, overwrite, delete, or migrate any real/non-test application database. This includes read-only inspection.
 - Never interact with genuine dogfooding projects or bug reports through browser automation, APIs, scripts, or database tools. The user manages genuine QA records manually.
 - Do not access a real database merely to verify that it is not being used. Verify test configuration and process startup instead.
-- `tests/conftest.py` currently uses the fixed `test_bugtriage.db` filename; do not run test suites concurrently against it.
+- `tests/conftest.py` uses a fresh absolute database path per test under pytest's temporary directory; verify that configuration before startup. Keep test suites serial.
 - Use fictional accounts, projects, bug reports, and mocked AI responses for automated testing unless explicitly instructed otherwise.
 
 

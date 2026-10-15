@@ -19,6 +19,6 @@ http.createServer((request, response) => {
     }
     response.writeHead(200, {"Content-Type": route[1], "Cache-Control": "no-store"});
     response.end(fs.readFileSync(path.join(root, route[0])));
-}).listen(8128, "127.0.0.1", () => {
-    console.log("Native input regressions: http://127.0.0.1:8128/ (Ctrl+C to stop)");
+}).listen(8148, "127.0.0.1", () => {
+    console.log("Native input regressions: http://127.0.0.1:8148/ (Ctrl+C to stop)");
 });

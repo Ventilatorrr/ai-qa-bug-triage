@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.fixture
-def lifecycle_bug(test_client, authenticated_user_factory, project_factory, member_factory):
+def lifecycle_bug(test_client, test_database, authenticated_user_factory, project_factory, member_factory):
     owner = authenticated_user_factory(email="version-owner@example.com")
     developer = authenticated_user_factory(email="version-developer@example.com")
     qa = authenticated_user_factory(email="version-qa@example.com")
@@ -40,7 +40,7 @@ def lifecycle_bug(test_client, authenticated_user_factory, project_factory, memb
             # the disposable database. New API requests must not create it.
             from app import database
 
-            assert database.DATABASE_NAME == "test_bugtriage.db"
+            assert database.DATABASE_NAME == str(test_database)
             with closing(database.get_connection()) as conn:
                 conn.execute("UPDATE bugs SET fix_version=? WHERE id=?", (fix_version, response.json()["id"]))
                 conn.commit()
@@ -240,14 +240,14 @@ def test_nonfixed_closure_clears_fix_version_and_rejects_assignment(test_client,
 
 
 @pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
-def test_nonfixed_bug_edit_clears_legacy_fix_version(test_client, lifecycle_bug, version_payload):
+def test_nonfixed_bug_edit_clears_legacy_fix_version(test_client, test_database, lifecycle_bug, version_payload):
     from app import database
 
     url, before, actors = lifecycle_bug("Development")
     headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
     closed = test_client.patch(f"{url}/status", headers=headers, json={"status": "Closed", "resolution": "Duplicate"})
     assert closed.status_code == 200
-    assert database.DATABASE_NAME == "test_bugtriage.db"
+    assert database.DATABASE_NAME == str(test_database)
     with closing(database.get_connection()) as conn:
         conn.execute("UPDATE bugs SET fix_version=? WHERE id=?", ("1.2.0", before["id"]))
         conn.commit()

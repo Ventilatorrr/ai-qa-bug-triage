@@ -5,22 +5,39 @@ import pytest
 
 from fastapi.testclient import TestClient
 
-TEST_DATABASE = "test_bugtriage.db"
 TEST_JWT_SECRET = "test-only-jwt-secret-not-for-production"
 
 
 @pytest.fixture
-def test_client(monkeypatch):
-    monkeypatch.setenv("DATABASE_NAME", TEST_DATABASE)
+def test_database(tmp_path, monkeypatch):
+    database_path = (tmp_path / "test_bugtriage.db").resolve()
+    assert not database_path.exists()
+    monkeypatch.setenv("DATABASE_NAME", str(database_path))
+
+    # Configure before importing the app; imports themselves do not open SQLite.
+    # Rebind the cached setting too, whether database was imported earlier or not.
+    from app import database
+
+    monkeypatch.setattr(database, "DATABASE_NAME", str(database_path))
+    assert database.DATABASE_NAME == os.environ["DATABASE_NAME"] == str(database_path)
+    try:
+        yield database_path
+    finally:
+        # Dependent TestClient fixtures exit lifespan before this teardown runs.
+        database_path.unlink(missing_ok=True)
+
+
+@pytest.fixture
+def test_client(test_database, monkeypatch):
     monkeypatch.setenv("JWT_SECRET_KEY", TEST_JWT_SECRET)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     from app.main import app
+    from app import database
 
+    assert database.DATABASE_NAME == str(test_database)
     with TestClient(app) as client:
         yield client
-
-    if os.path.exists(TEST_DATABASE):
-        os.remove(TEST_DATABASE)
 
 
 @pytest.fixture
@@ -119,4 +136,3 @@ def member_factory(test_client):
         return response.json()
 
     return add_member
-    

@@ -176,12 +176,12 @@ def test_failed_creation_rolls_back_bug_and_counter(test_client, numbering_proje
 
 
 def test_concurrent_creation_allocates_unique_bug_numbers(
-    test_client, numbering_project, tmp_path, monkeypatch,
+    test_client, test_database, numbering_project, tmp_path, monkeypatch,
 ):
     from app import database
 
     project, headers = numbering_project
-    assert database.DATABASE_NAME == "test_bugtriage.db"
+    assert database.DATABASE_NAME == str(test_database)
     temporary = tmp_path / "concurrent.db"
     with closing(database.get_connection()) as source, closing(sqlite3.connect(temporary)) as destination:
         source.backup(destination)

@@ -723,6 +723,13 @@ def test_non_member_cannot_edit_bug_report(
         "detail": "Project not found."
     }
 
+    stored = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_number}",
+        headers={"Authorization": f"Bearer {owner['token']}"}
+    )
+    assert stored.status_code == 200
+    assert stored.json() == create_response.json()
+
 
 # AC-014.1 — Successful Bug Deletion
 @pytest.mark.parametrize("role", ["Project Owner", "QA Analyst"])
@@ -861,6 +868,13 @@ def test_unauthorized_member_cannot_delete_bug(
         assert delete_response.json() == {
             "detail": "Project not found."
         }
+
+    stored = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_number}",
+        headers={"Authorization": f"Bearer {owner['token']}"}
+    )
+    assert stored.status_code == 200
+    assert stored.json() == create_response.json()
 
 
 # AC-015.1 — Assign and Unassign Bugs
