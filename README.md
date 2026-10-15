@@ -3,7 +3,7 @@ Bug triage application built as a QA portfolio project with FastAPI, SQLite, and
 
 Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The frontend supports bug creation, viewing, editing, deletion, lifecycle actions, sorting, and pagination. Increment 3 AI Assist is implemented with explicit suggestion review and normal Create/Save persistence. Broader browser verification and increment completion remain outstanding; see traceability for evidence and gaps.
 
-Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, and dependency-free frontend JavaScript tests. BDD feature files are specification examples, not executable tests. Playwright E2E automation, Postman, real-model evaluation, and CI/CD remain planned work.
+Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite. BDD feature files are specification examples, not executable tests. Postman, real-model evaluation, and CI/CD remain planned work.
 
 See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Historical working notes and requirements_old.md are not the current specification.
 
@@ -117,3 +117,80 @@ with no application database, application API, or provider access. Stop only the
 fixture server you started, using Ctrl+C. It does not automate complete page
 workflows. Backend tests mock provider calls and require no real API key. See
 traceability for the REQ-020 browser checks and remaining gaps.
+
+## Python Playwright E2E tests
+
+Install the optional E2E dependencies into the project virtual environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-e2e.txt
+.\.venv\Scripts\python.exe -m playwright install --list
+```
+
+The browser revision must match the installed Playwright package. If compatible
+Chromium and headless-shell binaries are already listed, reuse them. Install
+missing/incompatible binaries only when needed with
+`.\.venv\Scripts\python.exe -m playwright install chromium`.
+
+Normal `.\.venv\Scripts\python.exe -m pytest` runs collect the existing backend
+suite and exclude `tests/e2e/`. Browser tests require explicit opt-in. For the
+user's manual workflow on reserved port 8151:
+
+```powershell
+# Headless Chromium
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --browser chromium
+# Headed Chromium
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --browser chromium --headed
+```
+
+Agent-driven runs must explicitly use approved port 8148:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium
+```
+
+Run suites serially. The fixture refuses an occupied port without contacting or
+terminating its listener. Identify any existing owner/configuration before
+continuing; the fixture never attaches to an existing application server. Ports
+8148 and 8151 are the only supported choices. Do not run the static fixture server
+at the same time on the selected port.
+
+Each E2E invocation creates a new temporary directory/database, a dedicated FastAPI
+process, and a fictional JWT secret. Before HTTP interaction, the parent verifies
+the child's startup report: interpreter/launcher ownership, effective database
+path, bound loopback socket, and a per-run identity also checked in the first
+response. Windows uses a selector event loop in this test server to avoid the
+observed Proactor reset-connection shutdown leak. Shutdown is explicit; forced
+shutdown or temporary-directory cleanup failures fail the run.
+Safety checks use runtime exceptions, so Python's optimized mode cannot disable
+database configuration, server identity, or shutdown checks.
+
+Tests use fresh browser contexts and unique fictional accounts/projects. API
+requests seed prerequisites and verify persisted results through the same test
+server; the journeys themselves exercise real pages and browser controls. External
+browser requests are blocked. Inherited OpenAI credentials/configuration are
+removed, and the server replaces only the SDK client's transport with an
+in-memory deterministic mock. Actual authorization, context construction,
+generation input, response validation, form review, and normal persistence still
+run. No paid/external AI call occurs; outgoing server connections are blocked
+after startup. Synthetic descriptions containing `E2E:failure` or `E2E:empty`
+select provider-error or empty-result fixtures; these switches exist only in the
+test server, never the application.
+
+The initial scenarios cover authentication and logout protection, project
+creation/rename/deletion, membership removal and unauthorized access, bug
+creation/edit/assignment/deletion, Developer/QA lifecycle handoff with Pass/Fail
+and reopening, sorting/pagination/navigation/page-size persistence, and AI
+Use/Dismiss/bulk review, cancellation, persistence, failure, and retry. Exhaustive
+validation and permission combinations remain in API/unit tests. No filtering
+scenario is added because the application has no filtering feature. Chromium
+coverage does not establish cross-browser, full accessibility, visual/theme,
+real-model quality, or increment completion.
+
+The suite now contains 15 scenarios, including Fix Version eligibility and form
+reset across lifecycle states, and page-size preferences across projects and
+users through navigation, reload, and logout/login. Focused JavaScript tests
+cover invalid/blocked preference storage without changing browser permissions.
+
+For failure artifacts, append `--tracing retain-on-failure --screenshot only-on-failure`.
+Artifacts go to ignored `test-results/`; they contain fictional test data only.
