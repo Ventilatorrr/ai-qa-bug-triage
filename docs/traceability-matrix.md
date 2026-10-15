@@ -1048,6 +1048,269 @@ AC-021.1 evidence do not establish full increment or release completion.
 
 ## Technical and infrastructure evidence
 
+### Python Playwright E2E — 15 October 2026
+
+The initial suite in `tests/e2e/` contained 12 test functions and 13 Chromium
+scenarios (the AI failure/empty test has two cases). The scenario 14/15 extension
+below brings the current suite to 14 functions and 15 scenarios. These rows add maintained
+browser evidence alongside existing API/unit coverage and dated manual evidence.
+They do not replace historical results or promote entire ACs to Covered: this
+suite samples important journeys, uses one browser, and does not establish every
+required visual, accessibility, negative, or cross-browser condition.
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-001 | AC-001.1 — Successful Registration | `test_registration_login_logout` | UI / Browser E2E | Partial |
+| REQ-002 | AC-002.1 — Successful Login | `test_registration_login_logout` | UI / Browser E2E | Partial |
+| REQ-003 | AC-003.2 — Unauthenticated Access | `test_registration_login_logout` | UI / Browser E2E | Partial |
+| REQ-004 | AC-004.1 — Successful Logout | `test_registration_login_logout` | UI / Browser E2E | Partial |
+| REQ-004 | AC-004.2 — Protected Access After Logout | `test_registration_login_logout` | UI / Browser E2E | Partial |
+| REQ-002 | AC-002.2 — Invalid Credentials | `test_invalid_login_feedback_allows_correction` | UI / Browser E2E | Partial |
+| REQ-005 | AC-005.1 — Successful Project Creation | `test_project_create_rename_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-005 | AC-005.2 — Invalid Project Name | `test_project_create_rename_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-007 | AC-007.1 — Successful Project Name Editing | `test_project_create_rename_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-008 | AC-008.1 — Successful Project Deletion | `test_project_create_rename_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-009 | AC-009.1 — Add Member | `test_owner_manages_membership_and_removed_user_loses_access` | UI / Browser E2E | Partial |
+| REQ-009 | AC-009.2 — Remove Member | `test_owner_manages_membership_and_removed_user_loses_access` | UI / Browser E2E | Partial |
+| REQ-006 | AC-006.4 — Unauthorized Project Access | `test_owner_manages_membership_and_removed_user_loses_access` | UI / Browser E2E | Partial |
+| REQ-014 | AC-014.2 — Unauthorized Bug Deletion | `test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug` | UI / Browser E2E | Partial |
+| REQ-022 | AC-022.1 — Enforce AI Authorization | `test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-011 | AC-011.1 — Successful Bug Creation | `test_bug_create_edit_assign_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-013 | AC-013.1 — Edit Bug Report | `test_bug_create_edit_assign_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-015 | AC-015.1 — Assign and Unassign Bugs | `test_bug_create_edit_assign_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-014 | AC-014.1 — Successful Bug Deletion | `test_bug_create_edit_assign_and_confirmed_delete` | UI / Browser E2E | Partial |
+| REQ-017 | AC-017.2 — Triage to Open | `test_bug_handoff_pass_and_reopen` | UI / Browser E2E | Partial |
+| REQ-017 | AC-017.3 — Open to Development | `test_bug_handoff_pass_and_reopen` | UI / Browser E2E | Partial |
+| REQ-017 | AC-017.4 — Development to Testing | `test_bug_handoff_pass_and_reopen` | UI / Browser E2E | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_bug_handoff_pass_and_reopen` | UI / Browser E2E | Partial |
+| REQ-017 | AC-017.7 — Closed Bugs | `test_bug_handoff_pass_and_reopen` | UI / Browser E2E | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_failed_testing_returns_to_selected_developer` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.2 — Open Bug Report | `test_sort_pagination_and_page_size_survive_navigation_and_reload` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.4 — Sort Bug Reports | `test_sort_pagination_and_page_size_survive_navigation_and_reload` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.5 — Paginate Bug Reports | `test_sort_pagination_and_page_size_survive_navigation_and_reload` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.6 — Remember Bug Page Size | `test_sort_pagination_and_page_size_survive_navigation_and_reload` | UI / Browser E2E | Partial |
+| REQ-018 | AC-018.2 — Explicit Request | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-018 | AC-018.3 — Use Current Form Information | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.1 — Review Suggestions | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.2 — Use an Individual Suggestion | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.3 — Dismiss an Individual Suggestion | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.4 — Use All Pending Suggestions | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | `test_new_ai_review_applies_only_selected_suggestions_before_create` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.5 — Dismiss All Pending Suggestions | `test_edit_ai_cancel_discards_changes_then_save_persists_review` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.7 — Persist Changes Through Existing Form Actions | `test_edit_ai_cancel_discards_changes_then_save_persists_review` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.8 — Pending Suggestion Lifetime | `test_edit_ai_cancel_discards_changes_then_save_persists_review` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | `test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-023 | AC-023.2 — Continue Without AI | `test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry` | UI / Browser E2E (mocked provider) | Partial |
+| REQ-020 | AC-020.6 — Repeat AI Assist Requests | `test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry` | UI / Browser E2E (mocked provider) | Partial |
+
+Setup uses public API requests to create unique fictional prerequisites in the
+same owned server used by the browser. Each test has a fresh browser context;
+each invocation has a fresh temporary SQLite database, server and JWT secret.
+The fixture verifies readiness through an owned stdout channel with child/launcher
+PID relationship, effective database path, bound loopback socket and random
+identity; only then does it make an HTTP request and check the identity header.
+It refuses occupied ports without contacting existing listeners. Agent runs use
+8148; 8151 remains reserved for the user's manual workflow. Normal backend
+collection excludes the E2E directory unless `--e2e` is supplied.
+
+AI requests exercise real authorization, context construction, generation input,
+SDK serialization, validation, form review, and normal Create/Save persistence.
+Only the provider transport is mocked in the test server; no production code or
+API contract changes. Inherited provider configuration is removed, outgoing
+server connections are blocked after startup, and external browser requests are
+aborted. Provider-error and empty-result cases retry explicitly and still save
+manually without successful AI output. No real/non-test database or genuine
+project/report is used.
+
+Gaps remain for full permission and validation combinations (retained at API/unit
+layers), additional lifecycle branches, cross-user/project preference matrices,
+mobile/native keyboard gestures, visual/themes, broader accessibility, other
+browser engines, and real-model quality. Filtering is not implemented and is not
+invented for testing. No BDD or CI/CD work is introduced.
+
+E2E execution on 15 October 2026 reused the installed Playwright 1.64.0 and
+Chromium/headless-shell revision 1248 (the matching revision in its browser
+manifest). No package or browser installation was performed. Final headless
+Chromium verification on approved origin 8148:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium -q --tracing retain-on-failure --screenshot only-on-failure
+.\.venv\Scripts\python.exe -m pytest tests/e2e/test_projects.py tests/e2e/test_bugs.py tests/e2e/test_bug_list.py tests/e2e/test_authorization.py tests/e2e/test_auth.py tests/e2e/test_ai_triage.py --e2e --e2e-port 8148 --browser chromium -q --tracing retain-on-failure --screenshot only-on-failure
+```
+
+Both finalized runs passed **13 scenarios**, with **0 failures, 0 skips, and no
+teardown errors**: **40.68s** in normal module order and **40.61s** in reverse
+module order. Each run started a fresh owned server/database and completed
+graceful shutdown and temporary-directory cleanup. A separate occupied-port
+probe bound a known local listener on 8148, invoked the fixture's availability
+guard, and verified both rejection and an empty accept queue: no connection to
+the occupied listener occurred. Default backend collection reported **557 tests**
+without collecting E2E or launching a browser.
+
+Development runs exposed test-only startup/locator assumptions and Windows
+teardown behavior. The virtual-environment launcher spawns a child interpreter,
+so ownership checks verify that relationship rather than equating both PIDs.
+The observed Proactor `WinError 10054` path failed to detach a reset transport,
+leaving Uvicorn waiting for closure; the HTTP-only test server now selects a
+Windows selector loop. Runs requiring forced shutdown were reported as errors,
+not accepted as passing. The known temporary directory left by the first failed
+launcher cleanup was explicitly removed after identifying the task-owned path.
+No application defect was confirmed or production behavior changed. Headed,
+other-engine, visual/theme, and screen-reader execution were not performed.
+
+After both finalized E2E runs, regression commands ran serially:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+node --test tests/frontend/*.test.cjs
+.\.venv\Scripts\python.exe -m pip check
+git diff --check
+```
+
+Results: **557 backend tests passed in 317.61s**, with **0 failures and 0 skips**;
+**94 frontend tests passed in 283.2971ms**, with **0 failures and 0 skips**.
+Dependency validation reported **No broken requirements found**. Diff whitespace
+checks and Python source parsing passed; all 12 browser test functions have exact
+traceability references. No pytest suites ran concurrently. Existing user changes
+moving the two BDD example files were preserved; this task adds no BDD scenarios.
+
+#### Readability and safety follow-up — 15 October 2026
+
+The subsequent cleanup preserves all six test modules' executable syntax trees,
+including test names, assertions, locators and parametrization: still 12 functions
+and 13 scenarios. Meaningful blank lines and line wrapping separate setup,
+navigation, form actions, role changes and persistence checks. The definition-list
+helper now names its term locator. No scenarios, packages, CLI options or
+production changes were added; the existing dependency pins remain unchanged.
+
+E2E infrastructure safety assertions are now explicit runtime checks. A separate
+`python -O` probe rejected mismatched, generated temporary database settings before
+application imports and created no database. Its initial sandbox run could not
+remove its empty temporary directory; the rerun outside the sandbox passed and
+removed that known directory. No application database was involved. A known
+occupied-port probe again verified refusal without contacting its listener.
+
+The existing process/identity/bound-address handshake, startup reader thread,
+stdin shutdown, Windows selector loop, temporary-directory lifecycle and network
+restrictions remain: each supports isolation or observed Windows reliability.
+The mock client factory and response construction are clearer, and API request
+contexts are disposed in `finally`. Standard pytest temporary-directory retention
+would not provide the same immediate database-directory removal.
+
+Current Chromium runs used the commands above, with `--headed` added for the
+third run. All used approved port 8148, the matching installed Chromium revision
+1248, tracing on failure, and screenshots on failure:
+
+| Run | Result | Duration |
+| --- | --- | --- |
+| Headless, normal module order | 13 passed; 0 failures/skips | 40.73s |
+| Headless, reversed module order | 13 passed; 0 failures/skips | 40.74s |
+| Headed, normal module order | 13 passed; 0 failures/skips | 45.45s |
+
+All three completed without teardown errors or forced shutdown. Directory
+comparisons after the repeated and headed runs found no new E2E temporary
+directories remaining, and exclusive bind checks confirmed port 8148 was released.
+The user's intermittent Add Member timeout did not recur; this does not establish
+its cause or a fix. No speculative delay, retry or locator workaround was added.
+Headed execution supplements the earlier headless evidence; it does not establish
+visual/theme, accessibility or cross-browser coverage. AC statuses remain Partial.
+
+The backend and frontend regression commands above were rerun serially after
+cleanup: **557 backend tests passed in 324.63s** and **94 frontend tests passed in
+246.2406ms**, each with **0 failures and 0 skips**. Default collection with
+`.\.venv\Scripts\python.exe -m pytest --collect-only -q`
+still collected 557 backend tests and excluded E2E. `pip check` reported no
+broken requirements. All 11 Python files in the root/E2E support and test scope
+parsed and compiled; syntax-tree comparisons preserved the six test modules and
+content comparisons preserved the user's two BDD moves. `git diff --check` and
+an additional whitespace check covering untracked Python/dependency files passed.
+All test data was fictional and disposable; no real database or genuine QA
+records were accessed. No packages/browser binaries were installed, production
+files changed, or handoff script run during this cleanup.
+
+#### Scenarios 14 and 15 — 15 October 2026
+
+Two focused browser tests extend the suite to 14 functions / 15 scenarios.
+Existing scenarios, fixtures, production code and dependencies are preserved.
+
+| REQ | AC | Test Reference | Test Layer | Status |
+| --- | --- | --- | --- | --- |
+| REQ-011 | AC-011.4 — Optional Bug Information | `test_fix_version_eligibility_persistence_and_form_reset` | UI / Browser E2E + API readback | Partial |
+| REQ-013 | AC-013.2 — Optional Bug Information | `test_fix_version_eligibility_persistence_and_form_reset` | UI / Browser E2E + API readback | Partial |
+| REQ-017 | AC-017.5 — Testing Outcome | `test_fix_version_eligibility_persistence_and_form_reset` | UI / Browser E2E + API readback | Partial |
+| REQ-017 | AC-017.6 — Close Without Fixing | `test_fix_version_eligibility_persistence_and_form_reset` | UI / Browser E2E + API readback | Partial |
+| REQ-012 | AC-012.5 — Paginate Bug Reports | `test_page_size_preferences_persist_and_are_isolated_by_user` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.6 — Remember Bug Page Size | `test_page_size_preferences_persist_and_are_isolated_by_user` | UI / Browser E2E | Partial |
+| REQ-012 | AC-012.6 — Remember Bug Page Size | `test_page_size_invalid_or_unavailable_reads_fall_back_to_ten` | Frontend unit / DOM and storage substitutes | Partial |
+| REQ-012 | AC-012.6 — Remember Bug Page Size | `test_page_size_blocked_writes_preserve_current_pagination_and_sort` | Frontend unit / DOM and storage substitutes | Partial |
+
+Scenario 14 creates a report through New Bug without a Fix Version control and
+verifies no version was persisted. It checks hidden, empty ordinary Edit inputs
+in Triage, Open, Development and Testing, captures save requests to exclude Fix
+Version, and reads back the actual saved description/version through the API.
+The optional Testing Pass field remains editable and blank Pass closes as Fixed.
+Closed/Fixed ordinary Edit adds, replaces and clears a version, checking prefill,
+API persistence and reloaded Details each time. An unsaved version is cancelled;
+reopening to Triage in the same page clears the retained input before another
+save. A Closed/Duplicate report likewise hides the input and omits it from saves.
+API transitions seed lifecycle prerequisites; the browser exercises the relevant
+form behavior. Other non-Fixed resolutions retain existing parametrized API tests.
+
+Scenario 15 seeds two fictional projects with 21 reports each. It checks 10/20/50
+sizes against actual row counts, Back/reload and logout/login persistence,
+cross-project preference sharing, and two users retaining different preferences.
+Title descending in one project and Bug ID ascending in the other remain
+independent of page size; the second user initially has default sorting. The
+50-size single-page state hides navigation. Focused JavaScript tests exercise
+missing/invalid/throwing preference reads and blocked writes, including continued
+pagination and sorting after a write failure and default 10 on reinitialization.
+The existing frontend fixture now separates token access from preference storage.
+
+Rows retain the matrix's existing per-test contribution convention. Overall AC
+reconciliation and matrix restructuring remain a separate coverage-closure task.
+This slice does not verify all optional text-field edits, full pagination ranges,
+refresh clamping, native row gestures, lifecycle scrolling or real-model quality.
+No visual/theme or additional browser-engine verification is claimed.
+
+Current execution commands (serial; no browser/package installation):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/e2e/test_bugs.py tests/e2e/test_bug_list.py --e2e --e2e-port 8148 --browser chromium -q -k 'fix_version_eligibility or page_size_preferences' --tracing retain-on-failure --screenshot only-on-failure
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium -q --tracing retain-on-failure --screenshot only-on-failure
+$e2eNodes = @(.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --collect-only -q | Where-Object { $_ -match '^tests/e2e/.*::test_' })
+if ($e2eNodes.Count -ne 15) { throw "Expected 15 scenarios, found $($e2eNodes.Count)" }
+[Array]::Reverse($e2eNodes)
+.\.venv\Scripts\python.exe -m pytest @e2eNodes --e2e --e2e-port 8148 --browser chromium -q --tracing retain-on-failure --screenshot only-on-failure
+node --test tests/frontend/*.test.cjs
+.\.venv\Scripts\python.exe -m pytest tests/test_fix_version_on_pass.py tests/test_bug_numbers.py tests/test_bug_update_readback.py tests/test_database_isolation.py tests/test_database_lifecycle.py -q
+```
+
+The focused browser run passed **2 tests, 4 deselected in 14.58s**. After adding
+the final second-user return assertion, the complete suite passed **15 scenarios
+in 56.65s** in normal order and **15 in 56.61s** with every collected node ID
+reversed, including within modules and the AI parametrized cases. Both full runs
+had **0 failures, 0 skips and no teardown errors**. Each used a fresh temporary
+database and the existing verified server identity/configuration handshake on
+8148. Before/after temporary-directory comparisons found **0 new E2E directories
+remaining** after each run; exclusive socket binds confirmed the port was released.
+No forced shutdown, unknown listener contact, real database access, genuine QA
+record access or paid/external provider request occurred.
+
+All frontend JavaScript tests passed: **96 passed, 0 failures, 0 skips in
+272.4076ms**. Python E2E source parsing/compilation and the modified JavaScript
+file's syntax check passed. No production files changed, no Git operations staged
+or committed work, and the user-only handoff script was not run. Earlier dated
+13-scenario and regression results above remain historical evidence.
+
+The focused backend regression command passed **71 tests in 76.82s**, with
+**0 failures and 0 skips**, against the existing isolated per-test databases.
+It covers Fix Version rules, public numbering, durable update readback, database
+configuration isolation and lifespan management. Default collection still found
+**557 backend tests**, excluding E2E. `git diff --check` passed. The full backend
+suite and headed Chromium were not rerun in this extension; their earlier runs
+remain dated evidence above.
+
 ### Test-suite preparation — 15 October 2026
 
 This preparation pass changes test support, representative assertions, and

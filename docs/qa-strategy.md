@@ -212,7 +212,10 @@ Persistence and integrity verification where valuable
 
 The project will avoid excessive UI automation when the same logic can be tested more efficiently at the API layer.
 
-Playwright automation will be introduced after the relevant frontend functionality has stabilised.
+Focused Python Playwright automation now exercises stable, critical frontend
+journeys against a dedicated server with a temporary database. Detailed validation
+and permission matrices remain at the API/unit layers; broader browser coverage is tracked in
+the traceability matrix.
 
 Selected important workflows may intentionally be tested across multiple layers to demonstrate end-to-end coverage and provide additional confidence.
 
@@ -366,7 +369,7 @@ Current implementation status (15 October 2026; execution evidence is dated sepa
 * Project membership and role-based authorization have been implemented and tested.
 * The frontend has been developed alongside the existing API functionality.
 * Automated API coverage is currently the strongest test layer.
-* Playwright UI automation has not yet been implemented.
+* A focused Python Playwright E2E suite is implemented under `tests/e2e/`, with explicit collection opt-in, unique fictional data, a dedicated server with a temporary SQLite database, and deterministic mocked AI responses. README documents separate backend, frontend, and browser commands; traceability records execution evidence and limitations.
 * Increment 2 has not yet been formally reviewed and completed.
 * Increment 2 APIs are implemented through REQ-017. Frontend bug creation, viewing, editing, deletion, assignment, lifecycle actions, sorting, and pagination are implemented. Maintained JavaScript tests and dated browser checks provide partial UI evidence; broader browser coverage remains outstanding.
 * Increment 3 AI-assisted triage is implemented, including validated suggestions, user-controlled review, and failure handling. Automated provider integration uses mocked responses; real-model evaluation remains deferred.

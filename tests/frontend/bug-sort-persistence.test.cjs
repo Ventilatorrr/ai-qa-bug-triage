@@ -32,7 +32,10 @@ const bugs = [
 ];
 const columns = ["id", "title", "severity", "priority", "status", "assignee_id", "updated_at"];
 
-async function page({session = storage(), user = 1, project = 1, script = "project.js", deletionOk = true, reports = bugs} = {}) {
+async function page({
+    session = storage(), preferences = storage(), user = 1, project = 1,
+    script = "project.js", deletionOk = true, reports = bugs
+} = {}) {
     const nodes = new Map();
     const node = selector => {
         if (!nodes.has(selector)) nodes.set(selector, new PageElement());
@@ -46,7 +49,11 @@ async function page({session = storage(), user = 1, project = 1, script = "proje
     const runtime = vm.createContext({
         document: {querySelector: node, createElement: tag => new PageElement(tag)},
         window, URLSearchParams, atob, console, confirm: () => true,
-        localStorage: {getItem: () => currentToken, removeItem() { currentToken = null; }},
+        localStorage: {
+            getItem: key => key === "access_token" ? currentToken : preferences.getItem(key),
+            setItem: (key, value) => preferences.setItem(key, value),
+            removeItem() { currentToken = null; }
+        },
         formatApiError: detail => detail,
         fetch: async (url, options) => ({
             ok: options?.method === "DELETE" ? deletionOk : true,
@@ -89,6 +96,48 @@ function assertDefault(f) {
     assert.deepEqual(f.order(), ["BUG-11", "BUG-1", "BUG-2"]);
     assert.deepEqual(f.active(), [{column: "updated_at", direction: "descending", label: "Last Updated ↓"}]);
 }
+
+test("test_page_size_invalid_or_unavailable_reads_fall_back_to_ten", async () => {
+    const reports = Array.from({length: 21}, (_, i) => ({...bugs[0], id: i + 1, bug_number: i + 1}));
+    for (const value of [null, "", "0", "15", "-1", "20.0", "{}", "null"]) {
+        const preferences = storage();
+        if (value !== null) preferences.setItem("bug-list-page-size:1", value);
+        const f = await page({preferences, reports});
+        assert.equal(f.node("#bug-page-size").value, "10");
+        assert.equal(f.order().length, 10);
+        assert.equal(f.node("#bug-page-indicator").textContent, "Page 1 of 3");
+    }
+
+    const f = await page({reports, preferences: {
+        getItem() { throw new Error("Storage read blocked"); }, setItem() {}
+    }});
+    assert.equal(f.node("#bug-page-size").value, "10");
+    assert.equal(f.order().length, 10);
+    f.node("#bug-next-page").click();
+    assert.equal(f.node("#bug-page-indicator").textContent, "Page 2 of 3");
+});
+
+test("test_page_size_blocked_writes_preserve_current_pagination_and_sort", async () => {
+    const reports = Array.from({length: 51}, (_, i) => ({...bugs[0], id: i + 1, bug_number: i + 1}));
+    const preferences = {
+        getItem: () => null,
+        setItem() { throw new Error("Storage write blocked"); }
+    };
+    const f = await page({preferences, reports});
+    f.sort("id");
+    f.node("#bug-page-size").value = "20";
+    f.node("#bug-page-size").dispatchEvent({type: "change"});
+    assert.equal(f.order().length, 20);
+    assert.equal(f.active()[0].column, "id");
+    assert.equal(f.active()[0].direction, "ascending");
+    f.node("#bug-next-page").click();
+    assert.equal(f.node("#bug-page-indicator").textContent, "Page 2 of 3");
+    assert.equal(f.order()[0], "BUG-21");
+
+    const reloaded = await page({preferences, reports});
+    assert.equal(reloaded.node("#bug-page-size").value, "10");
+    assert.equal(reloaded.order().length, 10);
+});
 
 test("test_bug_sort_first_visit_defaults_to_last_updated_descending", async () => {
     assertDefault(await page());
