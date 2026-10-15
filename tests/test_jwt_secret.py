@@ -82,6 +82,40 @@ def test_forged_token_with_old_secret_is_rejected(test_client, user_factory):
     assert response.json()["detail"] == "Invalid or expired token."
 
 
+# AC-003.3 — Invalid Authentication
+
+@pytest.mark.parametrize("endpoint", ["/protected", "/projects"])
+def test_correctly_signed_expired_token_is_rejected(
+    test_client, authenticated_user_factory, endpoint
+):
+    auth = authenticated_user_factory(email="expired-token@example.com")
+    payload = {
+        "user_id": auth["user_id"],
+        "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
+    }
+    token = jwt.encode(payload, key=TEST_JWT_SECRET, algorithm="HS256")
+
+    # Verify the signature independently; expiry is the only disabled check.
+    decoded = jwt.decode(
+        token, key=TEST_JWT_SECRET, algorithms=["HS256"],
+        options={"verify_exp": False},
+    )
+    assert decoded["user_id"] == auth["user_id"]
+    with pytest.raises(jwt.ExpiredSignatureError):
+        jwt.decode(token, key=TEST_JWT_SECRET, algorithms=["HS256"])
+
+    valid = test_client.get(
+        endpoint, headers={"Authorization": f"Bearer {auth['token']}"}
+    )
+    response = test_client.get(
+        endpoint, headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert valid.status_code == 200
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid or expired token."}
+
+
 # --- Missing configuration fails securely ---
 
 @pytest.mark.parametrize(

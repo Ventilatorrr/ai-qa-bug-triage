@@ -1,6 +1,7 @@
 import sqlite3
 
 import bcrypt
+import pytest
 
 
 # AC-001.1 — Successful Registration
@@ -40,9 +41,10 @@ def test_registration_with_duplicate_email(test_client, user_factory):
 
 
 # AC-001.3 — Invalid Email
-def test_registration_with_invalid_email(test_client):
+@pytest.mark.parametrize("email", ["not-an-email", "user@", "@example.com"])
+def test_registration_with_invalid_email(test_client, email):
     user = {
-        "email": "not-an-email",
+        "email": email,
         "password": "Password1"
     }
 
@@ -52,7 +54,10 @@ def test_registration_with_invalid_email(test_client):
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"][0]["loc"] == ["body", "email"]
+    errors = response.json()["detail"]
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ["body", "email"]
+    assert "not a valid email address" in errors[0]["msg"]
 
 
 # AC-001.4 — Invalid Password: Minimum Length

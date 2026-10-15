@@ -58,7 +58,7 @@ The matrix is updated throughout development and testing.
 | ------- | ---------------------------------- | --------------------------------------------------------------- | ------------------- | ------- |
 | REQ-001 | AC-001.1 — Successful Registration | `test_successful_registration`                                  | API                 | Partial |
 | REQ-001 | AC-001.2 — Duplicate Email         | `test_registration_with_duplicate_email`                        | API                 | Partial |
-| REQ-001 | AC-001.3 — Invalid Email           | `test_registration_with_invalid_email`                          | API                 | Partial |
+| REQ-001 | AC-001.3 — Invalid Email           | `test_registration_with_invalid_email`                          | API / Validation    | Covered |
 | REQ-001 | AC-001.4 — Invalid Password        | `test_registration_with_short_password`                         | API                 | Partial |
 | REQ-001 | AC-001.4 — Invalid Password        | `test_registration_without_uppercase_password`                  | API                 | Partial |
 | REQ-001 | AC-001.4 — Invalid Password        | `test_registration_without_lowercase_password`                  | API                 | Partial |
@@ -89,6 +89,7 @@ The matrix is updated throughout development and testing.
 | REQ-003 | AC-003.2 — Unauthenticated Access | —                                                            | UI             | Manual  |
 | REQ-003 | AC-003.3 — Invalid Authentication | `test_invalid_token_cannot_access_protected_endpoint`        | API / Security | Partial |
 | REQ-003 | AC-003.3 — Invalid Authentication | `test_forged_token_with_old_secret_is_rejected` | API / Security | Partial |
+| REQ-003 | AC-003.3 — Invalid Authentication | `test_correctly_signed_expired_token_is_rejected` | API / Security | Partial |
 | REQ-003 | — | `test_secret_not_in_protected_response` | API / Security | Covered |
 | REQ-003 | — | `test_secret_not_in_error_response` | API / Security | Covered |
 
@@ -175,7 +176,7 @@ BUG-20 manual browser verification reported by the user on 6 October 2026 passed
 | REQ-009 | AC-009.2 — Remove Member        | `test_removing_member_unassigns_only_their_bugs_in_that_project`  | API              | Partial |
 | REQ-009 | AC-009.3 — Invalid Member       | `test_project_owner_cannot_add_user_who_does_not_have_an_account` | API / Validation | Covered |
 | REQ-009 | AC-009.4 — Duplicate Member     | `test_project_owner_cannot_add_same_user_more_than_once`          | API / Validation | Covered |
-| REQ-009 | AC-009.5 — View Project Members | `test_project_member_can_view_project_members`                    | API / Security   | Partial |
+| REQ-009 | AC-009.5 — View Project Members | `test_project_member_can_view_project_members`                    | API / Ordering   | Partial |
 | REQ-009 | —                               | `test_project_owner_cannot_remove_themselves`                     | API / Security   | Covered |
 
 AC-009.2 has API coverage for member removal, loss of access, automatic unassignment, preservation of other bug data, Last Updated changes, and unaffected assignments. UI/manual verification remains outstanding, so coverage is Partial.
@@ -228,7 +229,8 @@ AC-009.2 has API coverage for member removal, loss of access, automatic unassign
 | REQ-012 | AC — | `test_bug_response_validates_project_and_local_resource_number` | Frontend unit | Partial |
 | REQ-012 | AC — | `test_bug_number_query_rejects_invalid_missing_and_legacy_identity` | Frontend unit | Partial |
 | REQ-012 | AC — | `test_bug_details_dividers_preserve_metadata_rows` | Native browser / actual markup and CSS | Covered |
-| REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Covered |
+| REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_open_bug_report` | API / Security | Partial |
+| REQ-012 | AC-012.3 — Unauthorized Bug Access | `test_non_member_cannot_retrieve_another_projects_bug_collection` | API / Security | Partial |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_list_defaults_to_most_recently_updated_first` | API | Partial |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_sort_first_visit_defaults_to_last_updated_descending` | Frontend unit | Partial |
 | REQ-012 | AC-012.4 — Sort Bug Reports | `test_bug_sort_saves_column_and_direction_on_header_click` | Frontend unit | Partial |
@@ -323,12 +325,18 @@ The refinement's `git diff --check` passed. The real `bugtriage.db` fingerprint 
 |---|---|---|---|---|
 | REQ-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_assign_bug` | API | Partial |
 | REQ-015 | AC-015.1 — Assign and Unassign Bugs | `test_authorized_member_can_unassign_bug` | API | Partial |
-| REQ-015 | AC-015.1 — Assign and Unassign Bugs | — | UI | Pending |
+| REQ-015 | AC-015.1 — Assign and Unassign Bugs | `test_bug_unassignment_is_rejected_outside_triage` | API / Lifecycle / Permissions | Partial |
+| REQ-015 | AC-015.1 — Assign and Unassign Bugs | `test_non_member_cannot_assign_bug` | API / Security | Partial |
+| REQ-015 | AC-015.1 — Assign and Unassign Bugs | `test_removing_member_unassigns_only_their_bugs_in_that_project` | API / Persistence | Partial |
 | REQ-015 | AC-015.2 — Invalid Assignment | `test_bug_cannot_be_assigned_to_invalid_member` | API / Validation | Covered |
 | REQ-015 | AC-015.3 — Unauthorized Bug Assignment | `test_non_member_cannot_assign_bug` | API / Security | Covered |
 | REQ-015 | AC-015.4 — Change Bug Assignee | `test_authorized_member_can_reassign_bug` | API | Partial |
 
-**Coverage note:** AC-015.1 is Partial until assignment and unassignment are also covered through the browser UI.
+**Coverage note:** The former blanket UI-pending assessment is superseded by the
+six-AC closure assessment below. Existing browser evidence verifies assigned-user
+display; API tests cover allowed unassignment, lifecycle restrictions, permissions,
+timestamps and automatic member-removal behavior. A duplicate browser permission
+matrix is not required by this AC.
 
 
 ### REQ-016 — Bug Classification
@@ -1048,6 +1056,56 @@ AC-021.1 evidence do not establish full increment or release completion.
 
 ## Technical and infrastructure evidence
 
+### Targeted automated AC closure — 15 October 2026
+
+Scope: AC-001.3, AC-003.3, AC-009.5, AC-012.3, AC-013.2 and AC-015.1 only.
+This pass strengthens existing tests and adds three focused test functions; it
+does not change production code, dependencies, fixtures or browser tests.
+The branch started clean at `40e7f70` on `test/ac-coverage`.
+
+The following is the overall assessment for these six ACs, distinct from each
+individual mapping's contribution. Partial mapping rows remain where a single
+test proves only some conditions. The detail-only AC-012.3 mapping is corrected
+from Covered to Partial; the collection and detail tests collectively cover it.
+This scoped reconciliation does not restructure the rest of the matrix.
+
+| AC | Overall status | Collective evidence and limits |
+| --- | --- | --- |
+| AC-001.3 — Invalid Email | Covered | Three invalid-email forms receive 422 and one email-specific validation error explicitly explaining that the address is invalid. This verifies API feedback, not new browser form execution. |
+| AC-003.3 — Invalid Authentication | Covered | Existing malformed-token and wrong-secret tests complement `test_correctly_signed_expired_token_is_rejected`. The new test verifies the signature with only expiry checking disabled, then independently expects `ExpiredSignatureError`. Valid-token controls succeed on both `/protected` and `/projects`; the expired token receives exact 401 authentication feedback. |
+| AC-009.5 — View Project Members | Partial | The existing member-list test checks API emails and roles, Owner/QA/Developer grouping, and alphabetic ordering within both multi-member roles. Interleaved insertion, an Owner whose email sorts after the members, and equal local parts with different domains prevent insertion-order or role-order false positives. No case-insensitive ordering rule is invented. The API ordering gap is closed; displayed roles and ordering still need explicit UI assertions. The recorded browser membership scenario checks email visibility but does not assert these display conditions. |
+| AC-012.3 — Unauthorized Bug Access | Covered | The new collection test and existing detail test deny a nonmember with 404 and no report data. Positive controls access the outsider's own collection and the owner's private collection; both projects deliberately contain BUG-1. Existing isolated browser authorization evidence remains complementary. |
+| AC-013.2 — Optional Bug Information | Covered | The strengthened optional-field test adds and then changes Steps to Reproduce, Expected Result and Actual Result with fresh API GET readback, while preserving unrelated fields. Existing title/description/classification tests cover the other editable fields. Existing Fix Version API cases and the recorded scenario-14 browser run cover Closed/Fixed editing, unresolved/non-Fixed restrictions, legacy clearing, visibility and form reset. Version semantics remain those in requirements.md; no release-validation feature is inferred. |
+| AC-015.1 — Assign and Unassign Bugs | Covered | Existing assignment/reassignment tests cover eligible actors/targets and a single assignee; the browser scenario verifies assigned-user display. Triage unassignment now has GET readback for all three member roles and changed timestamps. Twelve state/actor cases reject removal in Open, Development, Testing and Closed without changing any persisted field. Nonmember assignment/unassignment is denied with unchanged owner readback. Member-removal tests retain automatic unassignment, status/field preservation, timestamps and cross-project isolation, and now verify that ordinary unassignment remains rejected on the resulting unassigned Open report. |
+
+The earlier recorded 15-scenario browser executions are reused only for their
+explicit display and Fix Version assertions: production and E2E sources have not
+changed since those runs. No browser or HTTP server was started in this task.
+All current execution uses the existing TestClient and fresh absolute per-test
+SQLite paths configured/rebound before application lifespan startup. No real
+database or genuine QA record is accessed and AI calls remain mocked.
+
+Current execution evidence (serial, project virtual environment):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_registration.py tests/test_login.py tests/test_jwt_secret.py tests/test_projects.py tests/test_bug.py -q -k 'registration_with_invalid_email or invalid_token_cannot or forged_token or correctly_signed_expired or project_member_can_view_project_members or non_member_cannot_open_bug_report or non_member_cannot_retrieve or project_member_can_update_optional_bug_information or authorized_member_can_unassign_bug or bug_unassignment_is_rejected or non_member_cannot_assign_bug or removing_member_unassigns'
+# 30 passed, 190 deselected in 45.60s
+
+.\.venv\Scripts\python.exe -m pytest -q
+# 575 passed in 539.08s (0:08:59)
+
+git diff --check
+# Passed; no whitespace errors.
+```
+
+There were no test failures or skips. The default run excludes opt-in E2E tests
+through the existing root conftest.py collection rule. The four modified Python
+modules also passed an AST parse/compile check. The suite gains 18 parameterized
+cases overall; no existing tests were removed. All six targeted API gaps are
+closed. AC-009.5 retains the UI display gap described above; the other five ACs'
+overall assessments combine current API results with the explicitly identified
+existing evidence. No frontend or browser tests were rerun in this API-only pass.
+
 ### Python Playwright E2E — 15 October 2026
 
 The initial suite in `tests/e2e/` contained 12 test functions and 13 Chromium
@@ -1425,8 +1483,8 @@ The version tests support the approved application-versioning convention (`APP_V
 ## Coverage limitations from the pre-commit review
 
 - User Stories remain in requirements.md. The previously noted missing REQ-005 user-story heading remains a specification follow-up; the matrix no longer contains US references, and no new ID is introduced here.
-- Registration feedback, project-name display, member management, bug creation/list/detail/editing, and reassignment remain Partial where required browser verification is outstanding. Existing Manual entries record earlier manual verification, not automated UI coverage. AC-009.5 also lacks an explicit test of alphabetical ordering within a role.
-- AC-003.3 is Partial: invalid-token coverage exists, but dedicated expired-token coverage is missing.
+- Historical pre-commit findings included outstanding registration feedback, project-name display, member management, bug workflows and reassignment checks. Existing Manual entries record earlier manual verification, not automated UI coverage. The targeted six-AC assessment above supersedes this earlier list only for its named ACs; AC-009.5 now has explicit within-role ordering assertions.
+- The historical AC-003.3 expired-token gap is closed by `test_correctly_signed_expired_token_is_rejected`; the scoped assessment above records its combined coverage with invalid-token tests.
 - The earlier shadowed definitions of `test_non_owner_cannot_manage_project_members`, `test_non_owner_cannot_edit_project`, and `test_non_owner_cannot_delete_project` were identical to the later collected definitions, including decorators. Only those dead earlier copies were removed; the collected definitions and their existing matrix entries are unchanged.
 - The frontend validation helper was checked with 38 temporary simulated JavaScript handler/helper assertions, plus syntax checks. These checks are not a committed automated suite or visual browser evidence and do not complete UI coverage.
 

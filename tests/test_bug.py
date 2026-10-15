@@ -412,6 +412,44 @@ def test_non_member_cannot_open_bug_report(
     }
 
 
+def test_non_member_cannot_retrieve_another_projects_bug_collection(
+    test_client, authenticated_user_factory, project_factory
+):
+    owner = authenticated_user_factory(email="collection-owner@example.com")
+    outsider = authenticated_user_factory(email="collection-outsider@example.com")
+    private_project = project_factory(owner["token"], name="Private fictional project")
+    own_project = project_factory(outsider["token"], name="Outsider's own project")
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    outsider_headers = {"Authorization": f"Bearer {outsider['token']}"}
+    created = []
+    for project, headers, title in [
+        (private_project, owner_headers, "Private synthetic report"),
+        (own_project, outsider_headers, "Accessible synthetic report"),
+    ]:
+        response = test_client.post(
+            f"/projects/{project['id']}/bugs", json={"title": title}, headers=headers
+        )
+        assert response.status_code == 201
+        created.append(response.json())
+
+    denied = test_client.get(
+        f"/projects/{private_project['id']}/bugs", headers=outsider_headers
+    )
+    accessible = test_client.get(
+        f"/projects/{own_project['id']}/bugs", headers=outsider_headers
+    )
+    private = test_client.get(
+        f"/projects/{private_project['id']}/bugs", headers=owner_headers
+    )
+
+    assert denied.status_code == 404
+    assert denied.json() == {"detail": "Project not found."}
+    assert accessible.status_code == private.status_code == 200
+    assert [bug["id"] for bug in accessible.json()] == [created[1]["id"]]
+    assert [bug["id"] for bug in private.json()] == [created[0]["id"]]
+    assert created[0]["bug_number"] == created[1]["bug_number"] == 1
+
+
 # AC-012.4 — Sort Bug Reports
 def test_bug_list_defaults_to_most_recently_updated_first(
     test_client,
@@ -653,6 +691,9 @@ def test_project_member_can_update_optional_bug_information(
         json={
             "affected_version": "1.2.0",
             "environment": "macOS Sonoma, Safari",
+            "steps_to_reproduce": "1. Open the page.\n2. Select Login.",
+            "expected_result": "The account dashboard is displayed.",
+            "actual_result": "The login page remains visible.",
             "severity": "Blocker",
             "priority": "High"
         },
@@ -667,9 +708,33 @@ def test_project_member_can_update_optional_bug_information(
 
     assert data["affected_version"] == "1.2.0"
     assert data["environment"] == "macOS Sonoma, Safari"
+    assert data["steps_to_reproduce"] == "1. Open the page.\n2. Select Login."
+    assert data["expected_result"] == "The account dashboard is displayed."
+    assert data["actual_result"] == "The login page remains visible."
     assert data["severity"] == "Blocker"
     assert data["priority"] == "High"
     assert data["fix_version"] is None
+
+    url = f"/projects/{project['id']}/bugs/{bug_number}"
+    headers = {"Authorization": f"Bearer {user['token']}"}
+    stored = test_client.get(url, headers=headers)
+    assert stored.status_code == 200
+    assert stored.json() == data
+
+    revised = {
+        "steps_to_reproduce": "1. Reload the page.\n2. Retry Login using Enter.",
+        "expected_result": "The dashboard opens after keyboard submission.",
+        "actual_result": "An error appears after keyboard submission.",
+    }
+    response = test_client.patch(url, json=revised, headers=headers)
+    readback = test_client.get(url, headers=headers)
+
+    assert response.status_code == readback.status_code == 200
+    assert readback.json() == response.json()
+    for field, value in revised.items():
+        assert readback.json()[field] == value
+    for field in ["title", "environment", "affected_version", "severity", "priority", "created_at"]:
+        assert readback.json()[field] == data[field]
 
 
 # AC-013.3 — Unauthorized Bug Editing
@@ -1087,6 +1152,65 @@ def test_authorized_member_can_unassign_bug(
     assert data["assignee_id"] is None
     assert data["updated_at"] != original_updated_at
 
+    stored = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_number}",
+        headers={"Authorization": f"Bearer {owner['token']}"}
+    )
+    assert stored.status_code == 200
+    assert stored.json() == data
+
+
+# AC-015.1 — Assign and Unassign Bugs
+@pytest.mark.parametrize("actor_role", ["Project Owner", "QA Analyst", "Developer"])
+@pytest.mark.parametrize("state,detail", [
+    ("Open", "Open bugs must have an assignee."),
+    ("Development", "Development bugs must have a Developer assigned."),
+    ("Testing", "Testing bugs must have a QA Analyst assigned."),
+    ("Closed", "Closed bugs cannot be reassigned."),
+])
+def test_bug_unassignment_is_rejected_outside_triage(
+    test_client, authenticated_user_factory, project_factory, member_factory,
+    actor_role, state, detail,
+):
+    owner = authenticated_user_factory(email="state-owner@example.com")
+    developer = authenticated_user_factory(email="state-developer@example.com")
+    qa = authenticated_user_factory(email="state-qa@example.com")
+    project = project_factory(owner["token"])
+    for user, role in [(developer, "Developer"), (qa, "QA Analyst")]:
+        member_factory(owner["token"], project["id"], user["user"]["email"], role)
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    created = test_client.post(
+        f"/projects/{project['id']}/bugs", headers=owner_headers,
+        json={"title": "Lifecycle unassignment", "assignee_id": developer["user_id"]},
+    )
+    assert created.status_code == 201
+    url = f"/projects/{project['id']}/bugs/{created.json()['bug_number']}"
+    transitions = [{"status": "Open"}]
+    if state != "Open":
+        transitions.append({"status": "Development"})
+    if state in ("Testing", "Closed"):
+        transitions.append({"status": "Testing", "assignee_id": qa["user_id"]})
+    if state == "Closed":
+        transitions.append({"status": "Closed", "testing_outcome": "Passed"})
+    for payload in transitions:
+        transition = test_client.patch(url + "/status", json=payload, headers=owner_headers)
+        assert transition.status_code == 200
+    before = test_client.get(url, headers=owner_headers)
+    assert before.status_code == 200
+    assert before.json()["status"] == state
+    actor = {"Project Owner": owner, "QA Analyst": qa, "Developer": developer}[actor_role]
+
+    response = test_client.patch(
+        url, json={"assignee_id": None},
+        headers={"Authorization": f"Bearer {actor['token']}"},
+    )
+    stored = test_client.get(url, headers=owner_headers)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": detail}
+    assert stored.status_code == 200
+    assert stored.json() == before.json()
+
 
 # AC-015.2 — Invalid Assignment
 @pytest.mark.parametrize("assignee_type", ["Project Owner", "non-member"])
@@ -1154,11 +1278,13 @@ def test_bug_cannot_be_assigned_to_invalid_member(
 
 
 # AC-015.3 — Unauthorized Bug Assignment
+@pytest.mark.parametrize("unassign", [False, True], ids=["assign", "unassign"])
 def test_non_member_cannot_assign_bug(
     test_client,
     authenticated_user_factory,
     project_factory,
-    member_factory
+    member_factory,
+    unassign,
 ):
 
     owner = authenticated_user_factory(
@@ -1191,7 +1317,8 @@ def test_non_member_cannot_assign_bug(
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
         json={
-            "title": "Protected assignment bug"
+            "title": "Protected assignment bug",
+            "assignee_id": target_member["user_id"] if unassign else None,
         },
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -1206,7 +1333,7 @@ def test_non_member_cannot_assign_bug(
     update_response = test_client.patch(
         f"/projects/{project['id']}/bugs/{bug_number}",
         json={
-            "assignee_id": target_member["user_id"]
+            "assignee_id": None if unassign else target_member["user_id"]
         },
         headers={
             "Authorization": f"Bearer {non_member['token']}"
@@ -1218,6 +1345,13 @@ def test_non_member_cannot_assign_bug(
     assert update_response.json() == {
         "detail": "Project not found."
     }
+
+    stored = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_number}",
+        headers={"Authorization": f"Bearer {owner['token']}"},
+    )
+    assert stored.status_code == 200
+    assert stored.json() == create_response.json()
 
 
 # AC-015.4 — Change Bug Assignee

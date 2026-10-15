@@ -701,6 +701,23 @@ def test_removing_member_unassigns_only_their_bugs_in_that_project(
         assert response.json() == expected_bug
 
 
+    # Automatic removal may leave Open unassigned; ordinary edits still cannot.
+    url = f"/projects/{project['id']}/bugs/{bugs[0]['bug_number']}"
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    before = test_client.get(url, headers=owner_headers)
+    assert before.status_code == 200
+    assert before.json()["status"] == "Open"
+    assert before.json()["assignee_id"] is None
+
+    rejected = test_client.patch(url, json={"assignee_id": None}, headers=owner_headers)
+    stored = test_client.get(url, headers=owner_headers)
+
+    assert rejected.status_code == 422
+    assert rejected.json() == {"detail": "Open bugs must have an assignee."}
+    assert stored.status_code == 200
+    assert stored.json() == before.json()
+
+
 # AC-009.2 — Remove Member
 def test_removed_member_can_no_longer_access_project(
     test_client,
@@ -830,10 +847,7 @@ def test_project_member_can_view_project_members(
     project_factory,
     member_factory
 ):
-    owner = authenticated_user_factory(
-        email="members-owner@example.com",
-        password="Password1"
-    )
+    owner = authenticated_user_factory(email="zulu-owner@example.com")
     qa_analyst = authenticated_user_factory(
         email="members-qa@example.com",
         password="Password1"
@@ -882,6 +896,31 @@ def test_project_member_can_view_project_members(
 
     assert members[2]["email"] == developer["user"]["email"]
     assert members[2]["role"] == "Developer"
+
+    # Interleave roles and reverse email order, including equal local parts.
+    added = []
+    for role, email in [
+        ("Developer", "alpha.dev@example.net"),
+        ("QA Analyst", "alpha.qa@example.net"),
+        ("Developer", "alpha.dev@example.com"),
+        ("QA Analyst", "alpha.qa@example.com"),
+    ]:
+        user = authenticated_user_factory(email=email)
+        added.append(member_factory(owner["token"], project["id"], email, role))
+
+    response = test_client.get(
+        f"/projects/{project['id']}/members",
+        headers={"Authorization": f"Bearer {qa_analyst['token']}"}
+    )
+
+    assert response.status_code == 200
+    expected = [(owner["user"]["email"], "Project Owner")]
+    for role, original in [("QA Analyst", qa_analyst), ("Developer", developer)]:
+        emails = [original["user"]["email"]] + [
+            member["email"] for member in added if member["role"] == role
+        ]
+        expected.extend((email, role) for email in sorted(emails))
+    assert [(member["email"], member["role"]) for member in response.json()] == expected
 
 
 # Additional security test — Project Owner Self-Removal
