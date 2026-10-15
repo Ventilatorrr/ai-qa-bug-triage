@@ -10,12 +10,12 @@ from app.schemas import AiAssistRequest
 
 
 @pytest.fixture
-def response_context(test_client):
+def response_context(test_client, test_database):
     # Import database-dependent context models after disposable fixture setup.
     from app.ai_context import AiTriageContext, AssignableMemberContext, HistoricalBugContext
     from app.database import DATABASE_NAME
 
-    assert DATABASE_NAME == "test_bugtriage.db"
+    assert DATABASE_NAME == str(test_database)
     form = AiAssistRequest(
         title="Unsaved title", affected_version="", environment="",
         description="Current draft", steps_to_reproduce="",

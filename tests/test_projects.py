@@ -1121,6 +1121,11 @@ def test_non_owner_cannot_manage_project_members(
         "Developer"
     )
 
+    members_url = f"/projects/{project['id']}/members"
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    before = test_client.get(members_url, headers=owner_headers)
+    assert before.status_code == 200
+
     response = test_client.post(
         f"/projects/{project['id']}/members",
         json={
@@ -1134,6 +1139,10 @@ def test_non_owner_cannot_manage_project_members(
 
     assert response.status_code == 404
 
+    after_add = test_client.get(members_url, headers=owner_headers)
+    assert after_add.status_code == 200
+    assert after_add.json() == before.json()
+
     response = test_client.delete(
         f"/projects/{project['id']}/members/{existing_member_data['user_id']}",
         headers={
@@ -1142,6 +1151,10 @@ def test_non_owner_cannot_manage_project_members(
     )
 
     assert response.status_code == 404
+
+    after_remove = test_client.get(members_url, headers=owner_headers)
+    assert after_remove.status_code == 200
+    assert after_remove.json() == before.json()
 
 
 # AC-010.5 — Unauthorized Project Actions

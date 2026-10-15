@@ -15,11 +15,11 @@ def blank_snapshot():
 
 
 @pytest.fixture
-def disposable_database(test_client, monkeypatch):
+def disposable_database(test_client, test_database, monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     from app.database import DATABASE_NAME
 
-    assert DATABASE_NAME == "test_bugtriage.db"
+    assert DATABASE_NAME == str(test_database)
 
 
 @pytest.fixture
@@ -69,7 +69,7 @@ def request_context(client, context, snapshot, captured, bug_number=None):
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("populated", [False, True])
 def test_ai_context_preserves_submitted_form_and_persisted_bugs(
-    test_client, context_project, blank_snapshot, captured_contexts, edit, populated,
+    test_client, test_database, context_project, blank_snapshot, captured_contexts, edit, populated,
 ):
     from app.ai_context import build_triage_context
 
@@ -81,7 +81,7 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
     # creating an invalid report through the API. Only use the disposable DB.
     from app import database
 
-    assert database.DATABASE_NAME == "test_bugtriage.db"
+    assert database.DATABASE_NAME == str(test_database)
     with closing(database.get_connection()) as conn:
         conn.execute("UPDATE bugs SET fix_version=? WHERE id=?", ("0.2", stored["id"]))
         conn.commit()

@@ -8,12 +8,12 @@ from app.schemas import AiAssistRequest, BugCreate
 
 
 @pytest.fixture
-def generation_context(test_client):
+def generation_context(test_client, test_database):
     # Database-dependent models are imported only after disposable fixture setup.
     from app.ai_context import AiTriageContext, AssignableMemberContext, HistoricalBugContext
     from app.database import DATABASE_NAME
 
-    assert DATABASE_NAME == "test_bugtriage.db"
+    assert DATABASE_NAME == str(test_database)
     form = {
         "title": "  Unsaved title  ", "affected_version": "0.4", "environment": "",
         "description": "Unsaved\ncontent", "steps_to_reproduce": "1. Click",

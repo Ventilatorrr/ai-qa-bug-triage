@@ -297,6 +297,7 @@ The refinement's `git diff --check` passed. The real `bugtriage.db` fingerprint 
 | REQ-013 | AC-013.2 — Optional Bug Information | `test_nonfixed_bug_edit_clears_legacy_fix_version` | API | Partial |
 | REQ-013 | AC-013.3 — Unauthorized Bug Editing | `test_non_member_cannot_edit_bug_report` | API / Security | Covered |
 | REQ-013 | — | `test_bug_update_rejected_with_null_title` | API / Validation | Covered |
+| REQ-013 | AC — | `test_bug_update_response_readback_after_commit` | API / Database Integration | Covered |
 
 **Coverage note:** AC-013.2 includes updating the optional free-text Environment field.
 
@@ -1047,6 +1048,62 @@ AC-021.1 evidence do not establish full increment or release completion.
 
 ## Technical and infrastructure evidence
 
+### Test-suite preparation — 15 October 2026
+
+This preparation pass changes test support, representative assertions, and
+documentation only. Production application code, requirements, dependencies,
+and existing test organization are unchanged. Playwright is not installed or
+configured, and no E2E tests are introduced.
+
+The function-scoped `test_database` fixture uses a fresh absolute path beneath
+pytest's `tmp_path`. It verifies that its generated path is absent, configures
+the environment before application import, explicitly rebinds the cached
+`app.database.DATABASE_NAME`, and verifies the effective setting before lifespan
+startup. `test_client` clears inherited provider credentials; configured AI tests
+still explicitly supply mocked clients and dummy keys. Client shutdown precedes
+database removal in fixture teardown. Existing migration and subprocess fixtures
+retain their separate temporary databases. Tests remain serial.
+
+`test_client_rebinds_cached_database_before_startup` simulates an earlier cached
+setting using a synthetic temporary path. Its SQLite guard rejects every file
+target except the expected disposable path before opening it, while allowing the
+existing in-memory schema reference. It also verifies database removal after
+client teardown. `test_client_starts_with_fresh_database` runs twice, registering
+the same fictional email and checking an initially empty project list each time.
+Filename-dependent tests now compare against the fixture path; password-hash
+verification connects directly to that disposable path.
+
+Authorized API readback now proves unchanged bug data after rejected edit and
+deletion, and unchanged membership after each rejected addition/removal. Existing
+parameterized roles and request prerequisites are preserved. The previously
+unlisted `test_bug_update_response_readback_after_commit` is recorded under
+REQ-013 as technical API/database integration evidence. Feature AC statuses and
+broader UI/manual gaps are unchanged.
+
+Current execution evidence (all commands run from the repository root):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_database_isolation.py tests/test_database_lifecycle.py tests/test_jwt_secret.py tests/test_bug.py::test_non_member_cannot_edit_bug_report tests/test_bug.py::test_unauthorized_member_cannot_delete_bug tests/test_projects.py::test_non_owner_cannot_manage_project_members -q
+.\.venv\Scripts\python.exe -m pytest
+node --test tests/frontend/*.test.cjs
+node --check tests/frontend/native-input-server.cjs
+git diff --check
+```
+
+The corrected focused run passed **25 tests in 22.05s**. Its first run had
+**1 failed, 24 passed in 21.70s** because the new test guard incorrectly rejected
+the application's disposable `:memory:` schema reference; correcting that test
+instrumentation required no application change. The subsequent complete Python
+suite passed **557 tests in 317.71s**, with **0 failures and 0 skips**. All frontend
+JavaScript tests passed: **94 passed, 0 failed, 0 skipped, 326.4404ms**. Static
+fixture-server syntax and `git diff --check` passed.
+
+The static helper and README now use approved origin `http://127.0.0.1:8148`.
+A listener inventory found no listener on 8148; no server was started or reused.
+No browser/manual verification was performed in this pass. No real/non-test
+application database or genuine dogfooding record was opened, inspected, or
+accessed. Earlier dated results below remain historical evidence.
+
 Final pre-commit review on 13 October 2026 passed the full backend suite
 (**544 passed, 0 failed, 0 skipped**) and full frontend suite
 (**80 passed, 0 failed, 0 skipped**), plus the existing native fixtures
@@ -1066,6 +1123,8 @@ These tests protect implementation quality without a dedicated requirement or AC
 | --- | --- | --- | --- | --- |
 | — | AC — | `test_importing_application_does_not_create_database` | Subprocess / Database Lifecycle | Covered |
 | — | AC — | `test_application_lifespan_initializes_schema_before_requests` | Subprocess / API / Database Lifecycle | Covered |
+| — | AC — | `test_client_rebinds_cached_database_before_startup` | Test Infrastructure / Database Isolation | Covered |
+| — | AC — | `test_client_starts_with_fresh_database` | API / Database Isolation | Covered |
 | — | AC — | `test_fresh_database_creates_numbering_schema` | Database / Migration | Covered |
 | — | AC — | `test_legacy_backfill_preserves_every_field_and_is_idempotent` | Database / Migration | Covered |
 | — | AC — | `test_migration_failure_rolls_back_schema_data_and_version` | Database / Migration | Covered |

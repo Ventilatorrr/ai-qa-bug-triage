@@ -146,13 +146,13 @@ def test_registration_rejects_invalid_password_for_existing_email(test_client, u
 
 
 # AC-001.5 — Password Security
-def test_password_is_not_stored_as_plain_text(test_client, user_factory):
+def test_password_is_not_stored_as_plain_text(test_client, test_database, user_factory):
     user = user_factory(
         email="security@example.com",
         password="Password1"
     )
 
-    conn = sqlite3.connect("test_bugtriage.db")
+    conn = sqlite3.connect(test_database)
 
     row = conn.execute(
         "SELECT password_hash FROM users WHERE email = ?",

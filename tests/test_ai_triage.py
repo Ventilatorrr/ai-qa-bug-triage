@@ -10,11 +10,11 @@ from tests.test_ai_assist import ai_project, blank_form, headers, request_url
 
 
 @pytest.fixture
-def offline_provider(test_client, monkeypatch):
+def offline_provider(test_client, test_database, monkeypatch):
     from app import ai_triage
     from app.database import DATABASE_NAME
 
-    assert DATABASE_NAME == "test_bugtriage.db"
+    assert DATABASE_NAME == str(test_database)
     monkeypatch.setenv("OPENAI_API_KEY", "integration-test-key")
     state = {"raw": {"suggestions": []}, "requests": [], "clients": [], "keys": []}
 
