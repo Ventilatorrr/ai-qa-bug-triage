@@ -341,6 +341,7 @@ test("test_project_deletion_succeeds_when_sort_storage_is_unavailable", async ()
     }
 });
 
+// TC-348 (severity), TC-349 (priority), TC-350 (status) | AC-012.4 — Complete rank sorting in both directions
 for (const [column, values, ascending, descending] of [
     ["severity", ["Major", "Minor", "Blocker", "Moderate"],
         ["Minor", "Moderate", "Major", "Blocker"], ["Blocker", "Major", "Moderate", "Minor"]],
@@ -350,7 +351,6 @@ for (const [column, values, ascending, descending] of [
         ["Triage", "Open", "Development", "Testing", "Closed"],
         ["Closed", "Testing", "Development", "Open", "Triage"]],
 ]) {
-    // TC-348, TC-349, TC-350 | AC-012.4 — Complete Severity/Priority/Status ranks in both directions
     test(`test_bug_sort_complete_${column}_rank_order`, async () => {
         const reports = values.map((value, index) => ({
             ...bugs[0], id: 100 + index, bug_number: index + 1, [column]: value
