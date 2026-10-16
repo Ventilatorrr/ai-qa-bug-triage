@@ -35,6 +35,7 @@ async function assertRetryUsesEditedValues(f, prefix) {
     assert.match(f.message.textContent, /ready for review/);
 }
 
+// TC-229 | AC-020.2, AC-020.4 — AI native text input mismatches are excluded before use or use all
 test("test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all", async function test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         for (const action of ["Use", "Use All"]) {
@@ -62,6 +63,7 @@ test("test_ai_native_text_input_mismatches_are_excluded_before_use_or_use_all", 
     }
 });
 
+// TC-230 | AC-019.4, AC-023.2 — AI all native input mismatches allow manual work and retry
 test("test_ai_all_native_input_mismatches_allow_manual_work_and_retry", async function test_ai_all_native_input_mismatches_allow_manual_work_and_retry() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -76,6 +78,7 @@ test("test_ai_all_native_input_mismatches_allow_manual_work_and_retry", async fu
     }
 });
 
+// TC-231 | AC-018.3 — Collect AI context preserves blank and unsaved values
 test("test_collect_ai_context_preserves_blank_and_unsaved_values", function test_collect_ai_context_preserves_blank_and_unsaved_values() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const {runtime, inputs, form} = fixture(prefix);
@@ -107,6 +110,7 @@ test("test_collect_ai_context_preserves_blank_and_unsaved_values", function test
     }
 });
 
+// TC-232 | AC-018.2, AC-023.1 — Submit AI context limits requests and reports unavailable
 test("test_submit_ai_context_limits_requests_and_reports_unavailable", async function test_submit_ai_context_limits_requests_and_reports_unavailable() {
     const {runtime, inputs, form, button, message} = fixture("edit-bug-");
     inputs["#edit-bug-title"].value = "Unsaved edit";
@@ -135,6 +139,7 @@ test("test_submit_ai_context_limits_requests_and_reports_unavailable", async fun
     await retry;
 });
 
+// TC-233 | AC-023.1 — Submit AI context recovers from network failure
 test("test_submit_ai_context_recovers_from_network_failure", async function test_submit_ai_context_recovers_from_network_failure() {
     const {runtime, form, button, message} = fixture("bug-");
     await runtime.submitAiAssist(form, "bug-", "/projects/1/ai-assist", button, message, async () => {
@@ -144,6 +149,7 @@ test("test_submit_ai_context_recovers_from_network_failure", async function test
     assert.equal(message.textContent, "Unable to request AI assistance. Please try again.");
 });
 
+// TC-234 | Technical — AI classification suggestions keep semantic value classes
 test("test_ai_classification_suggestions_keep_semantic_value_classes", async function test_ai_classification_suggestions_keep_semantic_value_classes() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         for (const [field, label, values] of [
@@ -165,6 +171,7 @@ test("test_ai_classification_suggestions_keep_semantic_value_classes", async fun
     }
 });
 
+// TC-235 | AC-020.1, AC-021.1, AC-022.3 — AI suggestions review separates values and follows form order
 test("test_ai_suggestions_review_separates_values_and_follows_form_order", async function test_ai_suggestions_review_separates_values_and_follows_form_order() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -216,6 +223,7 @@ test("test_ai_suggestions_review_separates_values_and_follows_form_order", async
     }
 });
 
+// TC-236 | AC-021.1 — AI pending guidance uses bottom status and clears after review
 test("test_ai_pending_guidance_uses_bottom_status_and_clears_after_review", async function test_ai_pending_guidance_uses_bottom_status_and_clears_after_review() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -254,6 +262,7 @@ test("test_ai_pending_guidance_uses_bottom_status_and_clears_after_review", asyn
     }
 });
 
+// TC-237 | AC-020.1 — AI review tracks current values after manual edits
 test("test_ai_review_tracks_current_values_after_manual_edits", async function test_ai_review_tracks_current_values_after_manual_edits() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -271,6 +280,7 @@ test("test_ai_review_tracks_current_values_after_manual_edits", async function t
     }
 });
 
+// TC-238 | AC-020.2, AC-021.1 — AI use replaces value removes pending and remains editable
 test("test_ai_use_replaces_value_removes_pending_and_remains_editable", async function test_ai_use_replaces_value_removes_pending_and_remains_editable() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -297,6 +307,7 @@ test("test_ai_use_replaces_value_removes_pending_and_remains_editable", async fu
     }
 });
 
+// TC-239 | AC-020.3 — AI dismiss preserves form and excludes field from use all
 test("test_ai_dismiss_preserves_form_and_excludes_field_from_use_all", async function test_ai_dismiss_preserves_form_and_excludes_field_from_use_all() {
     const f = fixture("bug-");
     f.inputs["#bug-title"].value = "Keep this";
@@ -313,6 +324,7 @@ test("test_ai_dismiss_preserves_form_and_excludes_field_from_use_all", async fun
     assert.equal(f.footer.hidden, true);
 });
 
+// TC-240 | AC-020.4, AC-021.1 — AI use all applies only pending values without reapplying used fields
 test("test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields", async function test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -336,6 +348,7 @@ test("test_ai_use_all_applies_only_pending_values_without_reapplying_used_fields
     }
 });
 
+// TC-241 | AC-020.5 — AI dismiss all preserves used and other form values
 test("test_ai_dismiss_all_preserves_used_and_other_form_values", async function test_ai_dismiss_all_preserves_used_and_other_form_values() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -351,6 +364,7 @@ test("test_ai_dismiss_all_preserves_used_and_other_form_values", async function 
     }
 });
 
+// TC-242 | AC-020.6 — AI repeat request waits for resolution and uses latest form
 test("test_ai_repeat_request_waits_for_resolution_and_uses_latest_form", async function test_ai_repeat_request_waits_for_resolution_and_uses_latest_form() {
     const f = fixture("edit-bug-");
     await f.submit(async () => success({title: "Same suggestion", severity: "Major"}));
@@ -369,6 +383,7 @@ test("test_ai_repeat_request_waits_for_resolution_and_uses_latest_form", async f
     assert.ok(f.card("Severity"));
 });
 
+// TC-243 | AC-023.2 — AI no usable suggestions is success and allows manual work and retry
 test("test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry", async function test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -388,6 +403,7 @@ test("test_ai_no_usable_suggestions_is_success_and_allows_manual_work_and_retry"
     }
 });
 
+// TC-244 | AC-023.1, AC-023.2 — AI failed or malformed responses preserve form and allow retry
 test("test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry", async function test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry() {
     const failures = [
         async () => { throw new Error("Offline"); },
@@ -432,6 +448,7 @@ test("test_ai_failed_or_malformed_responses_preserve_form_and_allow_retry", asyn
     }
 });
 
+// TC-245 | AC-020.8 — AI cancel discards pending and detached actions cannot apply
 test("test_ai_cancel_discards_pending_and_detached_actions_cannot_apply", async function test_ai_cancel_discards_pending_and_detached_actions_cannot_apply() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -454,6 +471,7 @@ test("test_ai_cancel_discards_pending_and_detached_actions_cannot_apply", async 
     }
 });
 
+// TC-246 | AC-020.8, AC-023.1 — AI late success or error cannot populate reopened session
 test("test_ai_late_success_or_error_cannot_populate_reopened_session", async function test_ai_late_success_or_error_cannot_populate_reopened_session() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         for (const outcome of ["success", "error", "rejection"]) {
@@ -476,6 +494,7 @@ test("test_ai_late_success_or_error_cannot_populate_reopened_session", async fun
     }
 });
 
+// TC-247 | AC-020.8, AC-023.1 — AI late JSON cannot replace later results
 test("test_ai_late_json_cannot_replace_later_results", async function test_ai_late_json_cannot_replace_later_results() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         for (const outcome of ["success", "error", "rejection"]) {
@@ -498,6 +517,7 @@ test("test_ai_late_json_cannot_replace_later_results", async function test_ai_la
     }
 });
 
+// TC-248 | AC-020.8 — AI results do not populate hidden or disconnected forms
 test("test_ai_results_do_not_populate_hidden_or_disconnected_forms", async function test_ai_results_do_not_populate_hidden_or_disconnected_forms() {
     for (const property of ["hidden", "isConnected"]) {
         const f = fixture("bug-");
@@ -511,6 +531,7 @@ test("test_ai_results_do_not_populate_hidden_or_disconnected_forms", async funct
     }
 });
 
+// TC-249 | AC-020.8 — AI sessions are isolated between new and edit forms
 test("test_ai_sessions_are_isolated_between_new_and_edit_forms", async function test_ai_sessions_are_isolated_between_new_and_edit_forms() {
     const newBug = fixture("bug-"), editBug = fixture("edit-bug-", newBug.runtime);
     const response = deferred();
@@ -523,6 +544,7 @@ test("test_ai_sessions_are_isolated_between_new_and_edit_forms", async function 
     assert.equal(editBug.card("Title").querySelector(".ai-suggestion-value").textContent, "Edit suggestion");
 });
 
+// TC-250 | AC-020.7, AC-021.1, AC-022.3 — AI use all maps every supported field without persistence
 test("test_ai_use_all_maps_every_supported_field_without_persistence", async function test_ai_use_all_maps_every_supported_field_without_persistence() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);
@@ -545,6 +567,7 @@ test("test_ai_use_all_maps_every_supported_field_without_persistence", async fun
     }
 });
 
+// TC-251 | AC-020.2 — AI validated assignee missing from dropdown is reviewable and usable
 test("test_ai_validated_assignee_missing_from_dropdown_is_reviewable_and_usable", async function test_ai_validated_assignee_missing_from_dropdown_is_reviewable_and_usable() {
     for (const prefix of ["bug-", "edit-bug-"]) {
         const f = fixture(prefix);

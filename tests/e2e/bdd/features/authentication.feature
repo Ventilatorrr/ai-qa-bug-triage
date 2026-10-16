@@ -23,28 +23,28 @@ When I register with an invalid email address
 Then registration should be rejected
 And I should be informed that the email address is invalid
 
-# AC-001.4 — Invalid Password: Minimum Length
+# AC-001.4 — Invalid Password
 Scenario: Register with a password that is too short
 Given I am on the registration page
 When I register with a password containing fewer than 8 characters
 Then registration should be rejected
 And I should be informed that the password must contain at least 8 characters
 
-# AC-001.5 — Invalid Password: Uppercase Required
+# AC-001.4 — Invalid Password
 Scenario: Register with a password without an uppercase letter
 Given I am on the registration page
 When I register with a password that does not contain an uppercase letter
 Then registration should be rejected
 And I should be informed that an uppercase letter is required
 
-# AC-001.6 — Invalid Password: Lowercase Required
+# AC-001.4 — Invalid Password
 Scenario: Register with a password without a lowercase letter
 Given I am on the registration page
 When I register with a password that does not contain a lowercase letter
 Then registration should be rejected
 And I should be informed that a lowercase letter is required
 
-# AC-001.7 — Invalid Password: Number Required
+# AC-001.4 — Invalid Password
 
 Scenario: Register with a password without a number
 Given I am on the registration page
@@ -52,7 +52,7 @@ When I register with a password that does not contain a number
 Then registration should be rejected
 And I should be informed that a number is required
 
-# AC-001.8 — Password Security
+# AC-001.5 — Password Security
 # Covered by a regular security/database test rather than BDD.
 
 # REQ-002 — User Login

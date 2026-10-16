@@ -5,6 +5,7 @@ from playwright.sync_api import Page, expect
 from tests.e2e.helpers import login
 
 
+# TC-329 | AC-001.1, AC-002.1, AC-003.1, AC-003.2, AC-004.1, AC-004.2 — Registration login logout
 def test_registration_login_logout(page: Page, e2e_base_url):
     email = f"e2e-{uuid4().hex}@example.com"
     password = "TestPassword123!"
@@ -33,6 +34,7 @@ def test_registration_login_logout(page: Page, e2e_base_url):
     expect(page).to_have_url(f"{e2e_base_url}/login.html")
 
 
+# TC-330 | AC-002.2 — Invalid login feedback allows correction
 def test_invalid_login_feedback_allows_correction(page, account_factory):
     account = account_factory()
 

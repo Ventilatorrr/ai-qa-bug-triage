@@ -40,6 +40,7 @@ for (const [mode, page, formId, prefix] of [
     ["new", "project.html", "bug-form", "new-bug"],
     ["edit", "bugs.html", "edit-bug-form", "edit-bug"]
 ]) {
+    // TC-252, TC-253 | AC-022.2 — Verify separately registered form variants
     test(`test_${mode}_bug_ai_disclosure_is_near_and_describes_ai_assist`, () => {
         const html = fs.readFileSync(path.join(root, page), "utf8");
         const form = html.match(new RegExp(`<form\\b[^>]*id="${formId}"[^>]*>[\\s\\S]*?</form>`))[0];
@@ -61,6 +62,7 @@ for (const [mode, page, formId, prefix] of [
     });
 }
 
+// TC-254 | AC-022.2 — AI notice availability and dismissal update accessible description
 test("test_ai_notice_availability_and_dismissal_update_accessible_description", () => {
     for (const prefix of ["new-bug", "edit-bug"]) {
         const f = noticeFixture(prefix);
@@ -81,6 +83,7 @@ test("test_ai_notice_availability_and_dismissal_update_accessible_description", 
     }
 });
 
+// TC-255 | AC-022.2 — AI notice dismissal persists across new edit and reload
 test("test_ai_notice_dismissal_persists_across_new_edit_and_reload", () => {
     for (const [first, second] of [["new-bug", "edit-bug"], ["edit-bug", "new-bug"]]) {
         const stored = new Map([["theme", "light"], ["access_token", "synthetic-fixture-token"]]);
@@ -97,6 +100,7 @@ test("test_ai_notice_dismissal_persists_across_new_edit_and_reload", () => {
     }
 });
 
+// TC-256 | AC-022.2 — AI notice dismissal preserves focus during AI loading or review
 test("test_ai_notice_dismissal_preserves_focus_during_ai_loading_or_review", () => {
     for (const pending of [false, true]) {
         const f = noticeFixture();
@@ -110,6 +114,7 @@ test("test_ai_notice_dismissal_preserves_focus_during_ai_loading_or_review", () 
     }
 });
 
+// TC-257 | AC-022.2 — AI notice restores preference on cached navigation and storage events
 test("test_ai_notice_restores_preference_on_cached_navigation_and_storage_events", () => {
     const f = noticeFixture();
     f.stored.set(preferenceKey, "1");
@@ -126,6 +131,7 @@ test("test_ai_notice_restores_preference_on_cached_navigation_and_storage_events
     assert.equal(f.button.getAttribute("aria-describedby"), null);
 });
 
+// TC-258 | AC-022.2 — AI notice storage failure still allows in page dismissal
 test("test_ai_notice_storage_failure_still_allows_in_page_dismissal", () => {
     const f = noticeFixture("edit-bug", new Map(), true);
     assert.equal(f.notice.hidden, false);
@@ -138,6 +144,7 @@ test("test_ai_notice_storage_failure_still_allows_in_page_dismissal", () => {
     assert.equal(noticeFixture("edit-bug", new Map(), true).notice.hidden, false, "unavailable storage cannot promise persistence");
 });
 
+// TC-259 | Technical — Privacy policy links cover all page footers
 test("test_privacy_policy_links_cover_all_page_footers", () => {
     for (const page of fs.readdirSync(root).filter(name => name.endsWith(".html"))) {
         const html = fs.readFileSync(path.join(root, page), "utf8");
@@ -153,6 +160,7 @@ test("test_privacy_policy_links_cover_all_page_footers", () => {
     assert.doesNotMatch(privacy, /js\/(?:project|projects|bugs|login|register)\.js|http-equiv="refresh"/);
 });
 
+// TC-260 | Technical — Registration subtitle links only privacy without extra paragraphs
 test("test_registration_subtitle_links_only_privacy_without_extra_paragraphs", () => {
     const html = fs.readFileSync(path.join(root, "register.html"), "utf8");
     const main = html.match(/<main>[\s\S]*?<\/main>/)[0];
@@ -162,6 +170,7 @@ test("test_registration_subtitle_links_only_privacy_without_extra_paragraphs", (
     assert.equal((html.match(/href="\/privacy.html"/g) || []).length, 2, "subtitle and footer both link to the policy");
 });
 
+// TC-261 | Technical — About navigation preserves guest and authenticated controls
 test("test_about_navigation_preserves_guest_and_authenticated_controls", () => {
     const about = fs.readFileSync(path.join(root, "about.html"), "utf8");
     assert.doesNotMatch(about, /href="\/about.html"/);

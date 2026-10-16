@@ -129,10 +129,12 @@ async function check_manual_save_after_ai_failure_or_no_usable_outcome(edit) {
     }
 }
 
+// TC-289 | AC-023.2 — New create after AI failure or no usable outcome
 test("test_new_create_after_ai_failure_or_no_usable_outcome", async function test_new_create_after_ai_failure_or_no_usable_outcome() {
     await check_manual_save_after_ai_failure_or_no_usable_outcome(false);
 });
 
+// TC-290 | AC-023.2 — Edit save after AI failure or no usable outcome
 test("test_edit_save_after_ai_failure_or_no_usable_outcome", async function test_edit_save_after_ai_failure_or_no_usable_outcome() {
     await check_manual_save_after_ai_failure_or_no_usable_outcome(true);
 });
@@ -203,18 +205,22 @@ async function check_late_json_preserves_newer_pending_submission(edit) {
 }
 
 
+// TC-291 | AC-020.8 — New create late success preserves reopened form and AI
 test("test_new_create_late_success_preserves_reopened_form_and_ai", async function test_new_create_late_success_preserves_reopened_form_and_ai() {
     await check_late_success_preserves_reopened_form_and_ai(false);
 });
 
+// TC-292 | AC-020.8 — Edit save late success preserves reopened form and AI
 test("test_edit_save_late_success_preserves_reopened_form_and_ai", async function test_edit_save_late_success_preserves_reopened_form_and_ai() {
     await check_late_success_preserves_reopened_form_and_ai(true);
 });
 
+// TC-293 | AC-020.7 — New create current success closes form and discards AI
 test("test_new_create_current_success_closes_form_and_discards_ai", async function test_new_create_current_success_closes_form_and_discards_ai() {
     await check_current_success_closes_form_and_discards_ai(false);
 });
 
+// TC-294 | Technical — New create invalid number response preserves form
 test("test_new_create_invalid_number_response_preserves_form", async () => {
     for (const bug_number of [undefined, null, 0, -1, 1.5, "11"]) {
         const f = pageFixture(false);
@@ -229,27 +235,33 @@ test("test_new_create_invalid_number_response_preserves_form", async () => {
     }
 });
 
+// TC-295 | AC-020.7 — Edit save current success closes form and discards AI
 test("test_edit_save_current_success_closes_form_and_discards_ai", async function test_edit_save_current_success_closes_form_and_discards_ai() {
     await check_current_success_closes_form_and_discards_ai(true);
 });
 
+// TC-296 | AC-020.8 — New create late error does not overwrite reopened messages
 test("test_new_create_late_error_does_not_overwrite_reopened_messages", async function test_new_create_late_error_does_not_overwrite_reopened_messages() {
     await check_late_error_does_not_overwrite_reopened_messages(false);
 });
 
+// TC-297 | AC-020.8 — Edit save late error does not overwrite reopened messages
 test("test_edit_save_late_error_does_not_overwrite_reopened_messages", async function test_edit_save_late_error_does_not_overwrite_reopened_messages() {
     await check_late_error_does_not_overwrite_reopened_messages(true);
 });
 
+// TC-298 | AC-020.8 — New create late JSON preserves newer pending submission
 test("test_new_create_late_json_preserves_newer_pending_submission", async function test_new_create_late_json_preserves_newer_pending_submission() {
     await check_late_json_preserves_newer_pending_submission(false);
 });
 
+// TC-299 | AC-020.8 — Edit save late JSON preserves newer pending submission
 test("test_edit_save_late_json_preserves_newer_pending_submission", async function test_edit_save_late_json_preserves_newer_pending_submission() {
     await check_late_json_preserves_newer_pending_submission(true);
 });
 
 
+// TC-300 | AC-020.8 — Edit save late rejection preserves newer session
 test("test_edit_save_late_rejection_preserves_newer_session", async function test_edit_save_late_rejection_preserves_newer_session() {
     const f = pageFixture(true), old = deferred();
     await f.open();
@@ -293,6 +305,7 @@ async function check_stale_create_list_refresh_failure_preserves_newer_feedback(
     assert.equal(f.inputs[`#${f.prefix}title`].value, "");
 }
 
+// TC-301 | AC-020.8 — New create stale list refresh failure preserves newer feedback
 test("test_new_create_stale_list_refresh_failure_preserves_newer_feedback", async function test_new_create_stale_list_refresh_failure_preserves_newer_feedback() {
     await check_stale_create_list_refresh_failure_preserves_newer_feedback(false);
 });
@@ -320,6 +333,7 @@ async function check_current_create_list_refresh_failure_shows_error(edit) {
         "normal current-session list-refresh failure must show its error");
 }
 
+// TC-302 | AC-020.7 — New create current list refresh failure shows error
 test("test_new_create_current_list_refresh_failure_shows_error", async function test_new_create_current_list_refresh_failure_shows_error() {
     await check_current_create_list_refresh_failure_shows_error(false);
 });
@@ -385,10 +399,12 @@ async function check_delayed_create_list_refresh_preserves_newer_session(boundar
     }
 }
 
+// TC-303 | AC-020.8 — New create delayed list refresh response preserves newer session
 test("test_new_create_delayed_list_refresh_response_preserves_newer_session", async function test_new_create_delayed_list_refresh_response_preserves_newer_session() {
     await check_delayed_create_list_refresh_preserves_newer_session("response");
 });
 
+// TC-304 | AC-020.8 — New create delayed list refresh JSON preserves newer session
 test("test_new_create_delayed_list_refresh_json_preserves_newer_session", async function test_new_create_delayed_list_refresh_json_preserves_newer_session() {
     await check_delayed_create_list_refresh_preserves_newer_session("json");
 });

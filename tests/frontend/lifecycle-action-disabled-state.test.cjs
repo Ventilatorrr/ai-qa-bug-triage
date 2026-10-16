@@ -72,6 +72,7 @@ const resolution = "#lifecycle-resolution";
 const close = "#lifecycle-close-button";
 const request = payload => [{url: "/projects/1/bugs/2/status", method: "PATCH", payload}];
 
+// TC-305 | AC-017.1 — Bug action feedback follows controls
 test("test_bug_action_feedback_follows_controls", () => {
     const html = fs.readFileSync(path.join(__dirname, "../../frontend/bugs.html"), "utf8");
     assert.match(html,
@@ -81,6 +82,7 @@ test("test_bug_action_feedback_follows_controls", () => {
         "The feedback live region is not duplicated");
 });
 
+// TC-306 | AC-017.2 — Move to open requires eligible selection and resets after transition
 test("test_move_to_open_requires_eligible_selection_and_resets_after_transition", async () => {
     for (const [role, selected] of [["Project Owner", "2"], ["Project Owner", "3"], ["QA Analyst", "2"]]) {
         const f = await page("Triage", role);
@@ -107,6 +109,7 @@ test("test_move_to_open_requires_eligible_selection_and_resets_after_transition"
     }
 });
 
+// TC-307 | AC-017.3 — Move to development requires developer selection and resets after transition
 test("test_move_to_development_requires_developer_selection_and_resets_after_transition", async () => {
     for (const [role, currentAssignee] of [["Project Owner", 3], ["Developer", 2]]) {
         const f = await page("Open", role, currentAssignee);
@@ -136,6 +139,7 @@ test("test_move_to_development_requires_developer_selection_and_resets_after_tra
     }
 });
 
+// TC-308 | AC-017.4, AC-017.6 — Send to testing and close retain required selection behavior
 test("test_send_to_testing_and_close_retain_required_selection_behavior", async () => {
     for (const [selector, button, selected, payload] of [
         [qa, action, "3", {status: "Testing", assignee_id: 3}],

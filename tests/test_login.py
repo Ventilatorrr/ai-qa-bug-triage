@@ -1,4 +1,4 @@
-# AC-002.1 — Successful Login
+# TC-177 | AC-002.1 — Successful login
 def test_successful_login(test_client, user_factory):
     user = user_factory(
         email="login@example.com",
@@ -18,7 +18,7 @@ def test_successful_login(test_client, user_factory):
     assert response_data["token_type"] == "bearer"
 
 
-# AC-002.2 — Invalid Credentials
+# TC-178 | AC-002.2 — Login with incorrect password
 def test_login_with_incorrect_password(test_client, user_factory):
     user = user_factory(
         email="wrong-password@example.com",
@@ -41,7 +41,7 @@ def test_login_with_incorrect_password(test_client, user_factory):
     }
 
 
-# AC-002.2 — Invalid Credentials
+# TC-179 | AC-002.2 — Login with unknown email
 def test_login_with_unknown_email(test_client):
     user = {
         "email": "unknown@example.com",
@@ -59,7 +59,7 @@ def test_login_with_unknown_email(test_client):
     }
 
 
-# AC-003.1 — Authenticated Access
+# TC-180 | AC-003.1 — Authenticated user can access protected endpoint
 def test_authenticated_user_can_access_protected_endpoint(test_client, authenticated_user_factory):
     authenticated_user = authenticated_user_factory(
         email="protected@example.com",
@@ -80,14 +80,14 @@ def test_authenticated_user_can_access_protected_endpoint(test_client, authentic
     assert response_data["message"] == "You are authenticated."
 
 
-# AC-003.2 — Unauthenticated Access
+# TC-181 | AC-003.2 — Unauthenticated user cannot access protected endpoint
 def test_unauthenticated_user_cannot_access_protected_endpoint(test_client):
     response = test_client.get("/protected")
 
     assert response.status_code == 401
 
 
-# AC-003.3 — Invalid Authentication
+# TC-182 | AC-003.3 — Invalid token cannot access protected endpoint
 def test_invalid_token_cannot_access_protected_endpoint(test_client):
     response = test_client.get(
         "/protected",

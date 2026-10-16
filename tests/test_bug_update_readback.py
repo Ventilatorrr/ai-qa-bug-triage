@@ -4,6 +4,7 @@ import sqlite3
 import pytest
 
 
+# TC-139, TC-140 | Technical — Bug update response readback after commit
 @pytest.mark.parametrize("operation", ["edit", "status"])
 @pytest.mark.parametrize("delete_before_readback", [False, True], ids=["normal", "deleted"])
 def test_bug_update_response_readback_after_commit(

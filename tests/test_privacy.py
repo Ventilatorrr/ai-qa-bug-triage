@@ -1,3 +1,4 @@
+# TC-183 | Technical — Privacy policy is public without authentication
 def test_privacy_policy_is_public_without_authentication(test_client, test_database):
     from app.database import DATABASE_NAME
 

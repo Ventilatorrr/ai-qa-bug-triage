@@ -8,6 +8,7 @@
 <script>
 // Serve this file alongside frontend/ on an isolated local HTTP server.
 // Import actual form markup: native value sanitization is tested without substitutes.
+// TC-340 | AC-020.2, AC-020.4 — AI native input browser review and apply consistency
 document.querySelector("#run").addEventListener("click", async function test_ai_native_input_browser_review_and_apply_consistency() {
     const result = document.querySelector("#result");
     const fixtures = document.querySelector("#fixtures");

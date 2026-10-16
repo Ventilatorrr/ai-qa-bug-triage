@@ -24,6 +24,7 @@ function page(search = "?project_id=3&bug_number=7") {
     return {runtime, node, document, feedback, calls, bug, destination: () => destination};
 }
 
+// TC-262 | AC-012.2 — Bug details and deletion use local resource number
 test("test_bug_details_and_deletion_use_local_resource_number", async () => {
     const f = page();
     f.runtime.renderBug(f.bug);
@@ -36,6 +37,7 @@ test("test_bug_details_and_deletion_use_local_resource_number", async () => {
     assert.equal(f.destination(), "/project.html?id=3");
 });
 
+// TC-263 | AC-014.1 — Bug deletion requires confirmation and preserves cancelled report
 test("test_bug_deletion_requires_confirmation_and_preserves_cancelled_report", async function test_bug_deletion_requires_confirmation_and_preserves_cancelled_report() {
     for (const confirmed of [false, true]) {
         const f = page();
@@ -58,6 +60,7 @@ test("test_bug_deletion_requires_confirmation_and_preserves_cancelled_report", a
     }
 });
 
+// TC-264 | AC-012.2 — Bug response validates project and local resource number
 test("test_bug_response_validates_project_and_local_resource_number", () => {
     const f = page();
     assert.equal(f.runtime.isValidBugResponse(f.bug), true);
@@ -72,6 +75,7 @@ test("test_bug_response_validates_project_and_local_resource_number", () => {
     assert.equal(f.runtime.isValidBugResponse({...f.bug, project_id: 4}), false);
 });
 
+// TC-265 | Technical — Project navigation preserves full name as text and focus tooltip
 test("test_project_navigation_preserves_full_name_as_text_and_focus_tooltip", async () => {
     const f = page();
     const name = 'A very long project name with <literal markup> and "quotes"';
@@ -85,6 +89,7 @@ test("test_project_navigation_preserves_full_name_as_text_and_focus_tooltip", as
     assert.equal(link.hidden, false);
 });
 
+// TC-266 | AC-012.2 — Bug detail get and AI assist use local resource number
 test("test_bug_detail_get_and_ai_assist_use_local_resource_number", async () => {
     const f = page();
     f.runtime.localStorage.getItem = () => "token";
@@ -101,6 +106,7 @@ test("test_bug_detail_get_and_ai_assist_use_local_resource_number", async () => 
     assert.deepEqual(f.calls[1], ["/projects/3/bugs/7/ai-assist", "POST"]);
 });
 
+// TC-267 | AC-012.2 — Bug number query rejects invalid missing and legacy identity
 test("test_bug_number_query_rejects_invalid_missing_and_legacy_identity", async () => {
     for (const search of [
         "?project_id=3", "?project_id=3&bug_id=42", "?project_id=3&bug_number=",

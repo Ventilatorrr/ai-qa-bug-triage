@@ -3,6 +3,7 @@ from playwright.sync_api import expect
 from tests.e2e.helpers import api_call, bug_path, login, open_bug, seed_bug
 
 
+# TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5 — Owner manages membership and removed user loses access
 def test_owner_manages_membership_and_removed_user_loses_access(
     page, e2e_api, workspace, account_factory,
 ):
@@ -44,6 +45,7 @@ def test_owner_manages_membership_and_removed_user_loses_access(
     api_call(e2e_api, "GET", f"/projects/{project['id']}", member, expected=404)
 
 
+# TC-332 | AC-012.3, AC-014.2, AC-022.1 — Developer cannot delete or request AI and outsider cannot open bug
 def test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug(
     page, e2e_api, workspace, account_factory,
 ):

@@ -58,6 +58,7 @@ def persisted_state(client, project):
     return [response.json() for response in responses]
 
 
+# TC-052 | AC-023.1 — AI triage duplicate JSON is safe failure before validation
 @pytest.mark.parametrize("edit", [False, True])
 def test_ai_triage_duplicate_json_is_safe_failure_before_validation(
     test_client, ai_project, blank_form, offline_provider, monkeypatch, caplog, edit,
@@ -82,6 +83,7 @@ def test_ai_triage_duplicate_json_is_safe_failure_before_validation(
     assert persisted_state(test_client, ai_project) == before
 
 
+# TC-053 | AC-018.4, AC-019.1, AC-019.2, AC-019.3, AC-019.4, AC-022.2, AC-022.3 — AI triage configured pipeline preserves form and returns validated suggestions
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("role", ["Project Owner", "QA Analyst"])
 def test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions(
@@ -142,6 +144,7 @@ def test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_sugg
     assert persisted_state(test_client, ai_project) == before
 
 
+# TC-054 | AC-022.3 — AI valid suggestion cannot modify bug without user save
 def test_ai_valid_suggestion_cannot_modify_bug_without_user_save(
     test_client, ai_project, blank_form, offline_provider, monkeypatch,
 ):
@@ -183,6 +186,7 @@ def test_ai_valid_suggestion_cannot_modify_bug_without_user_save(
     assert all(method == "GET" for method, _ in requests[1:])
 
 
+# TC-055 | AC-023.1 — AI triage unconfigured requests keep 503 without provider work
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("key", [None, "", "   "])
 def test_ai_triage_unconfigured_requests_keep_503_without_provider_work(
@@ -205,6 +209,7 @@ def test_ai_triage_unconfigured_requests_keep_503_without_provider_work(
     assert offline_provider["keys"] == offline_provider["requests"] == []
 
 
+# TC-056 | AC-018.4, AC-019.4, AC-023.2 — AI triage returns distinct no usable suggestions
 @pytest.mark.parametrize("raw", [{"suggestions": []}, {"suggestions": [
     {"field": "title", "value": " "}, {"field": "priority", "value": "Invalid"},
 ]}])
@@ -218,6 +223,7 @@ def test_ai_triage_returns_distinct_no_usable_suggestions(test_client, ai_projec
     assert persisted_state(test_client, ai_project) == before
 
 
+# TC-057 | AC-019.3, AC-022.2 — AI triage revalidates current member eligibility
 def test_ai_triage_revalidates_current_member_eligibility(
     test_client, ai_project, blank_form, offline_provider, authenticated_user_factory, project_factory, member_factory,
 ):
@@ -238,6 +244,7 @@ def test_ai_triage_revalidates_current_member_eligibility(
         assert context["eligible_assignees"] == []
 
 
+# TC-058 | AC-019.3 — AI triage excludes assignee removed during generation
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
 def test_ai_triage_excludes_assignee_removed_during_generation(
@@ -270,6 +277,7 @@ def test_ai_triage_excludes_assignee_removed_during_generation(
     assert persisted_state(test_client, ai_project) == after_removal[0]
 
 
+# TC-059 | AC-022.1 — AI triage configured requests authorize before any pipeline work
 @pytest.mark.parametrize("edit,rejection,status", [
     (edit, rejection, status)
     for edit in (False, True)
@@ -302,6 +310,7 @@ def test_ai_triage_configured_requests_authorize_before_any_pipeline_work(
     assert offline_provider["keys"] == offline_provider["requests"] == []
 
 
+# TC-060 | AC-022.1 — AI triage rechecks changed role before provider invocation
 @pytest.mark.parametrize("edit", [False, True])
 def test_ai_triage_rechecks_changed_role_before_provider_invocation(
     test_client, ai_project, blank_form, offline_provider, monkeypatch,
@@ -338,6 +347,7 @@ def test_ai_triage_rechecks_changed_role_before_provider_invocation(
     assert len(offline_provider["requests"]) == 2
 
 
+# TC-061 | AC-022.3 — AI triage instruction like content and output cannot perform actions
 @pytest.mark.parametrize("edit", [False, True])
 def test_ai_triage_instruction_like_content_and_output_cannot_perform_actions(
     test_client, ai_project, blank_form, offline_provider, edit,
@@ -374,6 +384,7 @@ def test_ai_triage_instruction_like_content_and_output_cannot_perform_actions(
     assert len(offline_provider["requests"]) == 1
 
 
+# TC-062 | AC-018.4, AC-019.4, AC-023.1 — AI triage failures are safe errors without persistence
 @pytest.mark.parametrize("failure", ["transport", "malformed", "client"])
 @pytest.mark.parametrize("edit", [False, True])
 def test_ai_triage_failures_are_safe_errors_without_persistence(
@@ -403,6 +414,7 @@ def test_ai_triage_failures_are_safe_errors_without_persistence(
     assert len(offline_provider["requests"]) == (0 if failure == "client" else 1)
 
 
+# TC-063 | AC-023.1 — AI triage timeout is safe without retries or persistence
 @pytest.mark.parametrize("edit", [False, True])
 def test_ai_triage_timeout_is_safe_without_retries_or_persistence(
     test_client, ai_project, blank_form, offline_provider, caplog, edit,
@@ -420,6 +432,7 @@ def test_ai_triage_timeout_is_safe_without_retries_or_persistence(
     assert offline_provider["clients"][0].is_closed()
 
 
+# TC-064 | Technical — AI triage configuration is checked on each request
 def test_ai_triage_configuration_is_checked_on_each_request(test_client, ai_project, blank_form, offline_provider, monkeypatch):
     url = request_url(ai_project, False)
     auth = headers(ai_project[0])
@@ -435,6 +448,7 @@ def test_ai_triage_configuration_is_checked_on_each_request(test_client, ai_proj
     assert len(offline_provider["requests"]) == 2
 
 
+# TC-065 | Technical — AI triage client factory disables retries without reading credentials
 def test_ai_triage_client_factory_disables_retries_without_reading_credentials(test_client, monkeypatch):
     from unittest.mock import Mock
     from app import ai_triage

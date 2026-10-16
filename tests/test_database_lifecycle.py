@@ -24,6 +24,7 @@ def run_application_script(tmp_path, script):
     return database_path
 
 
+# TC-143 | Technical — Importing application does not create database
 def test_importing_application_does_not_create_database(tmp_path):
     database_path = run_application_script(tmp_path, """
         import app.main
@@ -33,6 +34,7 @@ def test_importing_application_does_not_create_database(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
+# TC-144 | Technical — Application lifespan initializes schema before requests
 def test_application_lifespan_initializes_schema_before_requests(tmp_path):
     database_path = run_application_script(tmp_path, """
         from contextlib import closing

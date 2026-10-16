@@ -3,6 +3,7 @@ from playwright.sync_api import expect
 from tests.e2e.helpers import api_call, login, unique_name
 
 
+# TC-339 | AC-005.1, AC-005.2, AC-007.1, AC-008.1 — Project create rename and confirmed delete
 def test_project_create_rename_and_confirmed_delete(page, e2e_api, account_factory):
     owner = account_factory()
 

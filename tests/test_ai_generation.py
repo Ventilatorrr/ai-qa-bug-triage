@@ -33,6 +33,7 @@ def generation_context(test_client, test_database):
     )
 
 
+# TC-017 | AC-019.2, AC-022.2 — AI generation preserves separate context without mutation
 def test_ai_generation_preserves_separate_context_without_mutation(generation_context, monkeypatch):
     from app import ai_context
 
@@ -54,6 +55,7 @@ def test_ai_generation_preserves_separate_context_without_mutation(generation_co
     assert generation_context.model_dump(mode="json") == before
 
 
+# TC-018 | AC-019.1 — AI generation defines only supported output fields
 def test_ai_generation_defines_only_supported_output_fields(generation_context):
     contract = build_generation_input(generation_context)["output_contract"]
     expected = {
@@ -68,6 +70,7 @@ def test_ai_generation_defines_only_supported_output_fields(generation_context):
         assert contract["field_rules"][field] == {"type": "string"}
 
 
+# TC-019 | AC-019.3 — AI generation classification rules match application
 @pytest.mark.parametrize("field,values", [
     ("severity", {"Blocker", "Major", "Moderate", "Minor"}),
     ("priority", {"Urgent", "High", "Medium", "Low"}),
@@ -83,6 +86,7 @@ def test_ai_generation_classification_rules_match_application(generation_context
         ).suggestions == {field: value}
 
 
+# TC-020 | AC-019.3 — AI generation limits assignees to supplied eligible context
 @pytest.mark.parametrize("empty", [False, True])
 def test_ai_generation_limits_assignees_to_supplied_eligible_context(generation_context, empty):
     if empty:
@@ -95,6 +99,7 @@ def test_ai_generation_limits_assignees_to_supplied_eligible_context(generation_
     assert 99 not in result["output_contract"]["field_rules"]["assignee_id"]["allowed_values"]
 
 
+# TC-021 | AC-019.2, AC-022.3 — AI generation instructions define context and safety boundaries
 def test_ai_generation_instructions_define_context_and_safety_boundaries(generation_context):
     instructions = build_generation_input(generation_context)["instructions"]
     # Check meaningful clauses, not a full prompt snapshot.
@@ -115,6 +120,7 @@ def test_ai_generation_instructions_define_context_and_safety_boundaries(generat
         assert clause in instructions
 
 
+# TC-022 | AC-019.4 — AI generation reuses suggestion envelope and allows zero suggestions
 def test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions(generation_context):
     result = build_generation_input(generation_context)
     schema = result["output_contract"]["schema"]
@@ -134,6 +140,7 @@ def test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions(ge
     assert validate_suggestions({"suggestions": []}, eligible_assignee_ids=set()).outcome == "no_usable_suggestions"
 
 
+# TC-023 | AC-022.2 — AI generation does not introduce account information or secrets
 def test_ai_generation_does_not_introduce_account_information_or_secrets(generation_context, monkeypatch):
     secrets = {
         "AI_API_KEY": "test-secret-not-for-context",

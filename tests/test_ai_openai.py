@@ -44,6 +44,7 @@ def fake_client(raw, *, status="completed", output=None):
     return SimpleNamespace(responses=SimpleNamespace(create=Mock(return_value=response)))
 
 
+# TC-024 | AC-019.2, AC-022.2 — AI openai sends existing contract with SDK without network or database
 def test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database(provider_input, monkeypatch):
     from app import ai_context, database
 
@@ -102,6 +103,7 @@ def test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database(
         assert secret not in serialized
 
 
+# TC-025 | AC-019.4 — AI openai returns raw data without domain validation
 @pytest.mark.parametrize("raw", [
     {"suggestions": [{"field": "title", "value": "Suggested title"}]},
     {"suggestions": []},
@@ -117,6 +119,7 @@ def test_ai_openai_returns_raw_data_without_domain_validation(provider_input, ra
     client.responses.create.assert_called_once()
 
 
+# TC-026 | Technical — AI openai does not expose mutable input to client
 def test_ai_openai_does_not_expose_mutable_input_to_client(provider_input):
     before = deepcopy(provider_input)
     client = fake_client({"suggestions": []})
@@ -130,6 +133,7 @@ def test_ai_openai_does_not_expose_mutable_input_to_client(provider_input):
     assert provider_input == before
 
 
+# TC-027 | AC-019.4, AC-023.1 — AI openai rejects uncompleted output
 @pytest.mark.parametrize("status", ["incomplete", "failed", "cancelled", "queued", "in_progress"])
 def test_ai_openai_rejects_uncompleted_output(provider_input, status):
     client = fake_client({"suggestions": []}, status=status)
@@ -137,6 +141,7 @@ def test_ai_openai_rejects_uncompleted_output(provider_input, status):
         request_openai_suggestions(provider_input, client=client)
 
 
+# TC-028 | AC-019.4, AC-023.1 — AI openai rejects refusal instead of returning suggestions
 def test_ai_openai_rejects_refusal_instead_of_returning_suggestions(provider_input):
     output = [SimpleNamespace(type="message", content=[SimpleNamespace(type="refusal")])]
     client = fake_client({"suggestions": []}, output=output)
@@ -144,6 +149,7 @@ def test_ai_openai_rejects_refusal_instead_of_returning_suggestions(provider_inp
         request_openai_suggestions(provider_input, client=client)
 
 
+# TC-029 | AC-019.4, AC-023.1 — AI openai rejects missing or unparseable JSON
 @pytest.mark.parametrize("text", ["", "not JSON", '{"suggestions": [', '```json\n{"suggestions": []}\n```'])
 def test_ai_openai_rejects_missing_or_unparseable_json(provider_input, text):
     client = fake_client({"suggestions": []})
@@ -152,6 +158,7 @@ def test_ai_openai_rejects_missing_or_unparseable_json(provider_input, text):
         request_openai_suggestions(provider_input, client=client)
 
 
+# TC-030 | AC-019.3 — AI openai rejects duplicate JSON properties at any depth
 @pytest.mark.parametrize("text", [
     '{"suggestions": [], "suggestions": []}',
     '{"suggestions": [{"field": "title", "value": "First", "value": "Second"}]}',
@@ -168,6 +175,7 @@ def test_ai_openai_rejects_duplicate_json_properties_at_any_depth(provider_input
         request_openai_suggestions(provider_input, client=client)
 
 
+# TC-031 | AC-023.1 — AI openai propagates request failure without fake suggestions
 def test_ai_openai_propagates_request_failure_without_fake_suggestions(provider_input):
     client = fake_client({"suggestions": []})
     failure = RuntimeError("Simulated client failure")

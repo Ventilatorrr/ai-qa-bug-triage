@@ -1,6 +1,7 @@
 from app.version import APP_VERSION
 
 
+# TC-227 | Technical — Application version is shared by openapi and endpoint
 def test_application_version_is_shared_by_openapi_and_endpoint(test_client):
     assert APP_VERSION == "1.0.0-dev"
 
@@ -13,6 +14,7 @@ def test_application_version_is_shared_by_openapi_and_endpoint(test_client):
     assert version_response.json() == {"version": APP_VERSION}
 
 
+# TC-228 | Technical — About page includes application version loader
 def test_about_page_includes_application_version_loader(test_client):
     response = test_client.get("/about.html")
 
