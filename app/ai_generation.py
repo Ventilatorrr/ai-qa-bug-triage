@@ -14,9 +14,16 @@ recent_bugs are same-project supporting context only, not automatically verified
 for the current bug. Keep them separate from current_form. Do not fabricate missing
 factual details merely to fill fields. Omit a field when neither current_form nor
 permitted supporting context provides a reasonable basis for a suggestion.
+Relevant historical reports may support proposed Environment, Affected Version,
+Severity, Priority or eligible Assignee values even when current fields are empty.
+Proposed values do not assert current verification.
 Existing user-entered values may be improved, normalized, summarized, expanded,
 or restructured where appropriate; do not treat historical values as mandatory replacements.
 Suggest only the fields listed in output_contract.field_rules, using their value rules.
+Return only the proposed field value. Do not append explanations, source references,
+uncertainty notes, or provenance in parentheses or other prose within field values.
+In particular, Affected Version must contain only the version identifier, and
+Environment must contain only the environment value.
 Do not suggest Fix Version, Status, Resolution, Created, Updated, or any other field.
 Assignee suggestions must use only user_id values from eligible_assignees. Do not
 invent or expose assignees outside that list; historical assignee IDs grant no eligibility.

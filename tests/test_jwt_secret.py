@@ -18,6 +18,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 # --- Normal auth flow uses configured secret ---
 
+# TC-169 | AC-002.1 — Login and access with configured secret
 def test_login_and_access_with_configured_secret(
     test_client, authenticated_user_factory
 ):
@@ -37,6 +38,7 @@ def test_login_and_access_with_configured_secret(
     assert response.json()["user_id"] == auth["user_id"]
 
 
+# TC-170 | Technical — Token signed with configured secret
 @pytest.mark.parametrize("secret", [TEST_JWT_SECRET, f"  {TEST_JWT_SECRET}  "])
 def test_token_signed_with_configured_secret(
     test_client, authenticated_user_factory, monkeypatch, secret
@@ -59,6 +61,7 @@ def test_token_signed_with_configured_secret(
 
 # --- Old repository-known secret rejected ---
 
+# TC-171 | AC-003.3 — Forged token with old secret is rejected
 def test_forged_token_with_old_secret_is_rejected(test_client, user_factory):
     """A token forged with the old published secret must be rejected
     when the application uses a different configured secret."""
@@ -82,8 +85,43 @@ def test_forged_token_with_old_secret_is_rejected(test_client, user_factory):
     assert response.json()["detail"] == "Invalid or expired token."
 
 
+
+# TC-172 | AC-003.3 — Correctly signed expired token is rejected
+@pytest.mark.parametrize("endpoint", ["/protected", "/projects"])
+def test_correctly_signed_expired_token_is_rejected(
+    test_client, authenticated_user_factory, endpoint
+):
+    auth = authenticated_user_factory(email="expired-token@example.com")
+    payload = {
+        "user_id": auth["user_id"],
+        "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
+    }
+    token = jwt.encode(payload, key=TEST_JWT_SECRET, algorithm="HS256")
+
+    # Verify the signature independently; expiry is the only disabled check.
+    decoded = jwt.decode(
+        token, key=TEST_JWT_SECRET, algorithms=["HS256"],
+        options={"verify_exp": False},
+    )
+    assert decoded["user_id"] == auth["user_id"]
+    with pytest.raises(jwt.ExpiredSignatureError):
+        jwt.decode(token, key=TEST_JWT_SECRET, algorithms=["HS256"])
+
+    valid = test_client.get(
+        endpoint, headers={"Authorization": f"Bearer {auth['token']}"}
+    )
+    response = test_client.get(
+        endpoint, headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert valid.status_code == 200
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid or expired token."}
+
+
 # --- Missing configuration fails securely ---
 
+# TC-173 | Technical — Missing or blank JWT secret key rejects authentication
 @pytest.mark.parametrize(
     "secret", [None, "", " " * 32, "\t\r\n" * 12],
     ids=["missing", "empty", "spaces", "mixed-whitespace"],
@@ -144,6 +182,7 @@ def test_missing_or_blank_jwt_secret_key_rejects_authentication(
 
 # --- Secret not exposed in HTTP responses ---
 
+# TC-174 | Technical — Secret not in login response
 def test_secret_not_in_login_response(
     test_client, authenticated_user_factory
 ):
@@ -165,6 +204,7 @@ def test_secret_not_in_login_response(
     assert TEST_JWT_SECRET not in response_text
 
 
+# TC-175 | Technical — Secret not in protected response
 def test_secret_not_in_protected_response(
     test_client, authenticated_user_factory
 ):
@@ -183,6 +223,7 @@ def test_secret_not_in_protected_response(
     assert TEST_JWT_SECRET not in response_text
 
 
+# TC-176 | Technical — Secret not in error response
 def test_secret_not_in_error_response(test_client):
     """The JWT secret must not appear in 401 error responses."""
     response = test_client.get(

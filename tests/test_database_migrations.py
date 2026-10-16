@@ -64,6 +64,7 @@ def snapshot(database):
         return connection.execute("PRAGMA user_version").fetchone()[0], tuple(connection.iterdump())
 
 
+# TC-145 | Technical — Fresh database creates numbering schema
 def test_fresh_database_creates_numbering_schema(database):
     database.create_tables()
     with closing(database.get_connection()) as connection:
@@ -74,6 +75,7 @@ def test_fresh_database_creates_numbering_schema(database):
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
+# TC-146 | Technical — Legacy backfill preserves every field and is idempotent
 @pytest.mark.parametrize("appended", [False, True], ids=["source-order", "actual-legacy-order"])
 def test_legacy_backfill_preserves_every_field_and_is_idempotent(database, appended):
     legacy_database(database, appended)
@@ -102,6 +104,7 @@ def test_legacy_backfill_preserves_every_field_and_is_idempotent(database, appen
     assert snapshot(database) == after_deletion
 
 
+# TC-147 | Technical — Migration failure rolls back schema data and version
 @pytest.mark.parametrize("failure_point", ["before-drop", "before-commit"])
 def test_migration_failure_rolls_back_schema_data_and_version(database, monkeypatch, failure_point):
     legacy_database(database)
@@ -153,6 +156,7 @@ def test_migration_failure_rolls_back_schema_data_and_version(database, monkeypa
         assert connection.execute("SELECT id,next_bug_number FROM projects ORDER BY id").fetchall() == [(1, 3), (2, 3), (3, 1)]
 
 
+# TC-148, TC-149, TC-150 | Technical — Migration rejects unexpected partial or inconsistent legacy schema
 @pytest.mark.parametrize("mutation", [
     "ALTER TABLE bugs ADD COLUMN bug_number INTEGER",
     "ALTER TABLE projects ADD COLUMN next_bug_number INTEGER",
@@ -175,6 +179,7 @@ def test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema(data
     assert snapshot(database) == before
 
 
+# TC-151, TC-152 | Technical — Numbering constraints reject invalid storage
 @pytest.mark.parametrize("field,value", [
     ("bug_number", None), ("bug_number", 0), ("bug_number", -1), ("bug_number", 1.5), ("bug_number", "invalid"),
     ("next_bug_number", None), ("next_bug_number", 0), ("next_bug_number", -1), ("next_bug_number", 1.5),
@@ -190,6 +195,7 @@ def test_numbering_constraints_reject_invalid_storage(database, field, value):
                 connection.execute("UPDATE projects SET next_bug_number=? WHERE id=1", (value,))
 
 
+# TC-153 | Technical — Numbering uniqueness is scoped to project
 def test_numbering_uniqueness_is_scoped_to_project(database):
     legacy_database(database)
     database.create_tables()
@@ -199,6 +205,7 @@ def test_numbering_uniqueness_is_scoped_to_project(database):
             connection.execute("UPDATE bugs SET bug_number=1 WHERE id=11")
 
 
+# TC-154 | Technical — Current schema rejects invalid counter without repair
 def test_current_schema_rejects_invalid_counter_without_repair(database):
     legacy_database(database)
     database.create_tables()

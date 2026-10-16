@@ -1,7 +1,7 @@
 import pytest
 
 
-# AC-011.1 — Successful Bug Creation
+# TC-066 | AC-011.1 — Project member can create bug
 def test_project_member_can_create_bug(
     test_client,
     authenticated_user_factory,
@@ -60,7 +60,7 @@ def test_project_member_can_create_bug(
     assert viewed_bug["created_by"] == user["user_id"]
 
 
-# AC-011.2 — Missing Bug Title
+# TC-067 | AC-011.2 — Bug creation rejected without title
 def test_bug_creation_rejected_without_title(
     test_client,
     authenticated_user_factory,
@@ -91,7 +91,7 @@ def test_bug_creation_rejected_without_title(
     assert "Bug title is required." in response.json()["detail"][0]["msg"]
 
 
-# AC-011.3 — Unauthorized Bug Creation
+# TC-068 | AC-011.3 — Non member cannot create bug
 def test_non_member_cannot_create_bug(
     test_client,
     authenticated_user_factory,
@@ -128,7 +128,7 @@ def test_non_member_cannot_create_bug(
     }
 
 
-# AC-011.4 — Optional Bug Information
+# TC-069 | AC-011.4 — Bug can be created with optional information
 @pytest.mark.parametrize("severity", ["Blocker", "Major", "Moderate", "Minor"])
 def test_bug_can_be_created_with_optional_information(
     test_client,
@@ -204,7 +204,7 @@ def test_bug_can_be_created_with_optional_information(
 
 
 
-# AC-012.1 — View Bug List
+# TC-070 | AC-012.1 — Project member can view bug list
 def test_project_member_can_view_bug_list(
     test_client,
     authenticated_user_factory,
@@ -257,7 +257,7 @@ def test_project_member_can_view_bug_list(
     assert bugs[0]["updated_at"] is not None
 
 
-# AC-012.2 — Open Bug Report
+# TC-071 | AC-012.2 — Project member can open bug report
 def test_project_member_can_open_bug_report(
     test_client,
     authenticated_user_factory,
@@ -363,7 +363,7 @@ def test_project_member_can_open_bug_report(
     assert data["updated_at"] is not None
 
 
-# AC-012.3 — Unauthorized Bug Access
+# TC-072 | AC-012.3 — Non member cannot open bug report
 def test_non_member_cannot_open_bug_report(
     test_client,
     authenticated_user_factory,
@@ -412,7 +412,46 @@ def test_non_member_cannot_open_bug_report(
     }
 
 
-# AC-012.4 — Sort Bug Reports
+# TC-073 | AC-012.3 — Non member cannot retrieve another projects bug collection
+def test_non_member_cannot_retrieve_another_projects_bug_collection(
+    test_client, authenticated_user_factory, project_factory
+):
+    owner = authenticated_user_factory(email="collection-owner@example.com")
+    outsider = authenticated_user_factory(email="collection-outsider@example.com")
+    private_project = project_factory(owner["token"], name="Private fictional project")
+    own_project = project_factory(outsider["token"], name="Outsider's own project")
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    outsider_headers = {"Authorization": f"Bearer {outsider['token']}"}
+    created = []
+    for project, headers, title in [
+        (private_project, owner_headers, "Private synthetic report"),
+        (own_project, outsider_headers, "Accessible synthetic report"),
+    ]:
+        response = test_client.post(
+            f"/projects/{project['id']}/bugs", json={"title": title}, headers=headers
+        )
+        assert response.status_code == 201
+        created.append(response.json())
+
+    denied = test_client.get(
+        f"/projects/{private_project['id']}/bugs", headers=outsider_headers
+    )
+    accessible = test_client.get(
+        f"/projects/{own_project['id']}/bugs", headers=outsider_headers
+    )
+    private = test_client.get(
+        f"/projects/{private_project['id']}/bugs", headers=owner_headers
+    )
+
+    assert denied.status_code == 404
+    assert denied.json() == {"detail": "Project not found."}
+    assert accessible.status_code == private.status_code == 200
+    assert [bug["id"] for bug in accessible.json()] == [created[1]["id"]]
+    assert [bug["id"] for bug in private.json()] == [created[0]["id"]]
+    assert created[0]["bug_number"] == created[1]["bug_number"] == 1
+
+
+# TC-074 | AC-012.4 — Bug list defaults to most recently updated first
 def test_bug_list_defaults_to_most_recently_updated_first(
     test_client,
     authenticated_user_factory,
@@ -501,7 +540,7 @@ def test_bug_list_defaults_to_most_recently_updated_first(
     assert bugs[1]["title"] == "Second bug"
 
 
-# AC-013.1 — Edit Bug Report
+# TC-075 | AC-013.1 — Project member can edit bug report
 def test_project_member_can_edit_bug_report(
     test_client,
     authenticated_user_factory,
@@ -557,6 +596,7 @@ def test_project_member_can_edit_bug_report(
 
 
 # Additional validation regression — Null title during bug editing
+# TC-076 | Technical — Bug update rejected with null title
 def test_bug_update_rejected_with_null_title(
     test_client,
     authenticated_user_factory,
@@ -617,7 +657,7 @@ def test_bug_update_rejected_with_null_title(
     assert get_response.json() == original_bug
 
 
-# AC-013.2 — Optional Bug Information
+# TC-077 | AC-013.2 — Project member can update optional bug information
 def test_project_member_can_update_optional_bug_information(
     test_client,
     authenticated_user_factory,
@@ -653,6 +693,9 @@ def test_project_member_can_update_optional_bug_information(
         json={
             "affected_version": "1.2.0",
             "environment": "macOS Sonoma, Safari",
+            "steps_to_reproduce": "1. Open the page.\n2. Select Login.",
+            "expected_result": "The account dashboard is displayed.",
+            "actual_result": "The login page remains visible.",
             "severity": "Blocker",
             "priority": "High"
         },
@@ -667,12 +710,36 @@ def test_project_member_can_update_optional_bug_information(
 
     assert data["affected_version"] == "1.2.0"
     assert data["environment"] == "macOS Sonoma, Safari"
+    assert data["steps_to_reproduce"] == "1. Open the page.\n2. Select Login."
+    assert data["expected_result"] == "The account dashboard is displayed."
+    assert data["actual_result"] == "The login page remains visible."
     assert data["severity"] == "Blocker"
     assert data["priority"] == "High"
     assert data["fix_version"] is None
 
+    url = f"/projects/{project['id']}/bugs/{bug_number}"
+    headers = {"Authorization": f"Bearer {user['token']}"}
+    stored = test_client.get(url, headers=headers)
+    assert stored.status_code == 200
+    assert stored.json() == data
 
-# AC-013.3 — Unauthorized Bug Editing
+    revised = {
+        "steps_to_reproduce": "1. Reload the page.\n2. Retry Login using Enter.",
+        "expected_result": "The dashboard opens after keyboard submission.",
+        "actual_result": "An error appears after keyboard submission.",
+    }
+    response = test_client.patch(url, json=revised, headers=headers)
+    readback = test_client.get(url, headers=headers)
+
+    assert response.status_code == readback.status_code == 200
+    assert readback.json() == response.json()
+    for field, value in revised.items():
+        assert readback.json()[field] == value
+    for field in ["title", "environment", "affected_version", "severity", "priority", "created_at"]:
+        assert readback.json()[field] == data[field]
+
+
+# TC-078 | AC-013.3 — Non member cannot edit bug report
 def test_non_member_cannot_edit_bug_report(
     test_client,
     authenticated_user_factory,
@@ -731,7 +798,7 @@ def test_non_member_cannot_edit_bug_report(
     assert stored.json() == create_response.json()
 
 
-# AC-014.1 — Successful Bug Deletion
+# TC-079 | AC-014.1 — Authorized member can delete bug
 @pytest.mark.parametrize("role", ["Project Owner", "QA Analyst"])
 def test_authorized_member_can_delete_bug(
     test_client,
@@ -804,7 +871,7 @@ def test_authorized_member_can_delete_bug(
     }
 
 
-# AC-014.2 — Unauthorized Bug Deletion
+# TC-080, TC-081 | AC-014.2 — Unauthorized member cannot delete bug
 @pytest.mark.parametrize("role", ["Developer", "non-member"])
 def test_unauthorized_member_cannot_delete_bug(
     test_client,
@@ -877,7 +944,7 @@ def test_unauthorized_member_cannot_delete_bug(
     assert stored.json() == create_response.json()
 
 
-# AC-015.1 — Assign and Unassign Bugs
+# TC-082 | AC-015.1 — Authorized member can assign bug
 @pytest.mark.parametrize(
     "actor_role, assignee_role",
     [
@@ -986,7 +1053,7 @@ def test_authorized_member_can_assign_bug(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-015.1 — Assign and Unassign Bugs
+# TC-083 | AC-015.1 — Authorized member can unassign bug
 @pytest.mark.parametrize(
     "actor_role",
     ["Project Owner", "QA Analyst", "Developer"]
@@ -1087,8 +1154,67 @@ def test_authorized_member_can_unassign_bug(
     assert data["assignee_id"] is None
     assert data["updated_at"] != original_updated_at
 
+    stored = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_number}",
+        headers={"Authorization": f"Bearer {owner['token']}"}
+    )
+    assert stored.status_code == 200
+    assert stored.json() == data
 
-# AC-015.2 — Invalid Assignment
+
+# TC-084 | AC-015.1 — Bug unassignment is rejected outside triage
+@pytest.mark.parametrize("actor_role", ["Project Owner", "QA Analyst", "Developer"])
+@pytest.mark.parametrize("state,detail", [
+    ("Open", "Open bugs must have an assignee."),
+    ("Development", "Development bugs must have a Developer assigned."),
+    ("Testing", "Testing bugs must have a QA Analyst assigned."),
+    ("Closed", "Closed bugs cannot be reassigned."),
+])
+def test_bug_unassignment_is_rejected_outside_triage(
+    test_client, authenticated_user_factory, project_factory, member_factory,
+    actor_role, state, detail,
+):
+    owner = authenticated_user_factory(email="state-owner@example.com")
+    developer = authenticated_user_factory(email="state-developer@example.com")
+    qa = authenticated_user_factory(email="state-qa@example.com")
+    project = project_factory(owner["token"])
+    for user, role in [(developer, "Developer"), (qa, "QA Analyst")]:
+        member_factory(owner["token"], project["id"], user["user"]["email"], role)
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    created = test_client.post(
+        f"/projects/{project['id']}/bugs", headers=owner_headers,
+        json={"title": "Lifecycle unassignment", "assignee_id": developer["user_id"]},
+    )
+    assert created.status_code == 201
+    url = f"/projects/{project['id']}/bugs/{created.json()['bug_number']}"
+    transitions = [{"status": "Open"}]
+    if state != "Open":
+        transitions.append({"status": "Development"})
+    if state in ("Testing", "Closed"):
+        transitions.append({"status": "Testing", "assignee_id": qa["user_id"]})
+    if state == "Closed":
+        transitions.append({"status": "Closed", "testing_outcome": "Passed"})
+    for payload in transitions:
+        transition = test_client.patch(url + "/status", json=payload, headers=owner_headers)
+        assert transition.status_code == 200
+    before = test_client.get(url, headers=owner_headers)
+    assert before.status_code == 200
+    assert before.json()["status"] == state
+    actor = {"Project Owner": owner, "QA Analyst": qa, "Developer": developer}[actor_role]
+
+    response = test_client.patch(
+        url, json={"assignee_id": None},
+        headers={"Authorization": f"Bearer {actor['token']}"},
+    )
+    stored = test_client.get(url, headers=owner_headers)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": detail}
+    assert stored.status_code == 200
+    assert stored.json() == before.json()
+
+
+# TC-085 | AC-015.2 — Bug cannot be assigned to invalid member
 @pytest.mark.parametrize("assignee_type", ["Project Owner", "non-member"])
 def test_bug_cannot_be_assigned_to_invalid_member(
     test_client,
@@ -1153,12 +1279,14 @@ def test_bug_cannot_be_assigned_to_invalid_member(
     }
 
 
-# AC-015.3 — Unauthorized Bug Assignment
+# TC-086 | AC-015.1, AC-015.3 — Non member cannot assign bug
+@pytest.mark.parametrize("unassign", [False, True], ids=["assign", "unassign"])
 def test_non_member_cannot_assign_bug(
     test_client,
     authenticated_user_factory,
     project_factory,
-    member_factory
+    member_factory,
+    unassign,
 ):
 
     owner = authenticated_user_factory(
@@ -1191,7 +1319,8 @@ def test_non_member_cannot_assign_bug(
     create_response = test_client.post(
         f"/projects/{project['id']}/bugs",
         json={
-            "title": "Protected assignment bug"
+            "title": "Protected assignment bug",
+            "assignee_id": target_member["user_id"] if unassign else None,
         },
         headers={
             "Authorization": f"Bearer {owner['token']}"
@@ -1206,7 +1335,7 @@ def test_non_member_cannot_assign_bug(
     update_response = test_client.patch(
         f"/projects/{project['id']}/bugs/{bug_number}",
         json={
-            "assignee_id": target_member["user_id"]
+            "assignee_id": None if unassign else target_member["user_id"]
         },
         headers={
             "Authorization": f"Bearer {non_member['token']}"
@@ -1219,8 +1348,15 @@ def test_non_member_cannot_assign_bug(
         "detail": "Project not found."
     }
 
+    stored = test_client.get(
+        f"/projects/{project['id']}/bugs/{bug_number}",
+        headers={"Authorization": f"Bearer {owner['token']}"},
+    )
+    assert stored.status_code == 200
+    assert stored.json() == create_response.json()
 
-# AC-015.4 — Change Bug Assignee
+
+# TC-087 | AC-015.4 — Authorized member can reassign bug
 def test_authorized_member_can_reassign_bug(
     test_client,
     authenticated_user_factory,
@@ -1297,7 +1433,7 @@ def test_authorized_member_can_reassign_bug(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-016.1 — Set Bug Severity
+# TC-088 | AC-016.1 — Project member can set bug severity
 @pytest.mark.parametrize(
     "actor_role",
     ["Project Owner", "QA Analyst", "Developer"]
@@ -1389,7 +1525,7 @@ def test_project_member_can_set_bug_severity(
     assert data["severity"] == severity
 
 
-# AC-016.2 — Set Bug Priority
+# TC-089 | AC-016.2 — Project member can set bug priority
 @pytest.mark.parametrize(
     "actor_role",
     ["Project Owner", "QA Analyst", "Developer"]
@@ -1481,7 +1617,7 @@ def test_project_member_can_set_bug_priority(
     assert data["priority"] == priority
 
 
-# AC-016.3 — Update Bug Classification
+# TC-090 | AC-016.3 — Project member can update bug classification
 @pytest.mark.parametrize(
     "actor_role",
     ["Project Owner", "QA Analyst", "Developer"]
@@ -1574,7 +1710,7 @@ def test_project_member_can_update_bug_classification(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-016.4 — Unauthorized Bug Classification
+# TC-091 | AC-016.4 — Non member cannot update bug classification
 def test_non_member_cannot_update_bug_classification(
     test_client,
     authenticated_user_factory,
@@ -1630,6 +1766,7 @@ def test_non_member_cannot_update_bug_classification(
 
 
 # Additional Validation Test
+# TC-092 | Technical — Bug rejects invalid severity
 @pytest.mark.parametrize(
     "severity",
     ["High", "Urgent", "Invalid", "Critical"]
@@ -1701,6 +1838,7 @@ def test_bug_rejects_invalid_severity(
 
 
 # Additional Validation Test
+# TC-093 | Technical — Bug rejects invalid priority
 @pytest.mark.parametrize(
     "priority",
     ["Moderate", "Blocker", "Invalid"]
@@ -1755,7 +1893,7 @@ def test_bug_rejects_invalid_priority(
     assert "Invalid priority." in detail[0]["msg"]
 
 
-# AC-017.1 — Bug Status
+# TC-094 | AC-017.1 — New bug starts in triage
 def test_new_bug_starts_in_triage(
     test_client,
     authenticated_user_factory,
@@ -1789,7 +1927,7 @@ def test_new_bug_starts_in_triage(
     assert data["resolution"] is None
 
 
-# AC-017.2 — Triage to Open
+# TC-095 | AC-017.2 — Project owner or QA can move bug from triage to open
 @pytest.mark.parametrize(
     "actor_role",
     ["Project Owner", "QA Analyst"]
@@ -1874,7 +2012,7 @@ def test_project_owner_or_qa_can_move_bug_from_triage_to_open(
     assert data["assignee_id"] == developer_member["user_id"]
 
 
-# AC-017.2 — Triage to Open
+# TC-096 | AC-017.2 — Triage to open can assign eligible project member
 @pytest.mark.parametrize("assignee_role", ["QA Analyst", "Developer"])
 def test_triage_to_open_can_assign_eligible_project_member(
     test_client,
@@ -1924,7 +2062,7 @@ def test_triage_to_open_can_assign_eligible_project_member(
     assert update_response.json()["assignee_id"] == member["user_id"]
 
 
-# AC-017.2 — Triage to Open
+# TC-097 | AC-017.2 — Triage to open rejects ineligible assignee
 @pytest.mark.parametrize("invalid_assignee", ["project_owner", "non_member"])
 def test_triage_to_open_rejects_ineligible_assignee(
     test_client,
@@ -1973,7 +2111,7 @@ def test_triage_to_open_rejects_ineligible_assignee(
     }
 
 
-# AC-017.2 — Triage to Open
+# TC-098 | AC-017.2 — Developer cannot move bug from triage to open
 def test_developer_cannot_move_bug_from_triage_to_open(
     test_client,
     authenticated_user_factory,
@@ -2037,7 +2175,7 @@ def test_developer_cannot_move_bug_from_triage_to_open(
     }
 
 
-# AC-017.2 — Triage to Open
+# TC-099 | AC-017.2 — Bug without assignee cannot move from triage to open
 def test_bug_without_assignee_cannot_move_from_triage_to_open(
     test_client,
     authenticated_user_factory,
@@ -2085,7 +2223,7 @@ def test_bug_without_assignee_cannot_move_from_triage_to_open(
     }
 
 
-# AC-017.3 — Open to Development
+# TC-100 | AC-017.3 — QA analyst cannot move bug from open to development
 def test_qa_analyst_cannot_move_bug_from_open_to_development(
     test_client,
     authenticated_user_factory,
@@ -2171,7 +2309,7 @@ def test_qa_analyst_cannot_move_bug_from_open_to_development(
     }
 
 
-# AC-017.3 — Open to Development
+# TC-101 | AC-017.3 — Project owner can move bug from open to development
 def test_project_owner_can_move_bug_from_open_to_development(
     test_client,
     authenticated_user_factory,
@@ -2259,7 +2397,7 @@ def test_project_owner_can_move_bug_from_open_to_development(
     assert data["assignee_id"] == developer_member["user_id"]
 
 
-# AC-017.3 — Open to Development
+# TC-102 | AC-017.3 — Open to development requires valid developer assignee
 @pytest.mark.parametrize("selected_assignee", ["missing", "qa_analyst"])
 def test_open_to_development_requires_valid_developer_assignee(
     test_client,
@@ -2325,7 +2463,7 @@ def test_open_to_development_requires_valid_developer_assignee(
     }
 
 
-# AC-017.3 — Open to Development
+# TC-103 | AC-017.3 — Non assigned developer cannot move bug from open to development
 def test_non_assigned_developer_cannot_move_bug_from_open_to_development(
     test_client,
     authenticated_user_factory,
@@ -2411,7 +2549,7 @@ def test_non_assigned_developer_cannot_move_bug_from_open_to_development(
     }
 
 
-# AC-017.4 — Development to Testing
+# TC-104 | AC-017.4 — Assigned developer can move bug from development to testing
 def test_assigned_developer_can_move_bug_from_development_to_testing(
     test_client,
     authenticated_user_factory,
@@ -2515,7 +2653,7 @@ def test_assigned_developer_can_move_bug_from_development_to_testing(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-017.4 — Development to Testing
+# TC-105 | AC-017.4 — Project owner can move bug from development to testing
 def test_project_owner_can_move_bug_from_development_to_testing(
     test_client,
     authenticated_user_factory,
@@ -2610,7 +2748,7 @@ def test_project_owner_can_move_bug_from_development_to_testing(
     assert data["assignee_id"] == qa_member["user_id"]
 
 
-# AC-017.4 — Development to Testing
+# TC-106 | AC-017.4 — Non assigned developer cannot move bug from development to testing
 def test_non_assigned_developer_cannot_move_bug_from_development_to_testing(
     test_client,
     authenticated_user_factory,
@@ -2721,7 +2859,7 @@ def test_non_assigned_developer_cannot_move_bug_from_development_to_testing(
     }
 
 
-# AC-017.4 — Development to Testing
+# TC-107 | AC-017.4 — Bug cannot move to testing with developer assignee
 def test_bug_cannot_move_to_testing_with_developer_assignee(
     test_client,
     authenticated_user_factory,
@@ -2820,7 +2958,7 @@ def test_bug_cannot_move_to_testing_with_developer_assignee(
     }
 
 
-# AC-017.5 — Testing Outcome
+# TC-108 | AC-017.5 — Assigned QA can pass bug and close it
 def test_assigned_qa_can_pass_bug_and_close_it(
     test_client,
     authenticated_user_factory,
@@ -2960,7 +3098,7 @@ def test_assigned_qa_can_pass_bug_and_close_it(
     assert list_response.json()[0]["resolution"] == "Fixed"
 
 
-# AC-017.5 — Testing Outcome
+# TC-109 | AC-017.5 — Project owner can pass bug and close it
 def test_project_owner_can_pass_bug_and_close_it(
     test_client,
     authenticated_user_factory,
@@ -3061,7 +3199,7 @@ def test_project_owner_can_pass_bug_and_close_it(
     assert data["assignee_id"] == qa_member["user_id"]
 
 
-# AC-017.5 — Testing Outcome
+# TC-110 | AC-017.5 — Assigned QA can fail bug and return it to development
 def test_assigned_qa_can_fail_bug_and_return_it_to_development(
     test_client,
     authenticated_user_factory,
@@ -3174,7 +3312,7 @@ def test_assigned_qa_can_fail_bug_and_return_it_to_development(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-017.5 — Testing Outcome
+# TC-111 | AC-017.5 — Project owner can fail bug and return it to development
 def test_project_owner_can_fail_bug_and_return_it_to_development(
     test_client,
     authenticated_user_factory,
@@ -3274,7 +3412,7 @@ def test_project_owner_can_fail_bug_and_return_it_to_development(
     assert data["assignee_id"] == developer_member["user_id"]
 
 
-# AC-017.5 — Testing Outcome
+# TC-112 | AC-017.5 — Failed testing requires valid developer assignee
 @pytest.mark.parametrize(
     ("failed_update", "expected_detail"),
     [
@@ -3391,7 +3529,7 @@ def test_failed_testing_requires_valid_developer_assignee(
     assert response.json() == {"detail": expected_detail}
 
 
-# AC-017.5 — Testing Outcome
+# TC-113 | AC-017.5 — Non assigned QA cannot record testing outcome
 def test_non_assigned_qa_cannot_record_testing_outcome(
     test_client,
     authenticated_user_factory,
@@ -3510,7 +3648,7 @@ def test_non_assigned_qa_cannot_record_testing_outcome(
     }
 
 
-# AC-017.5 — Testing Outcome
+# TC-114 | AC-017.5 — Testing outcome is required
 @pytest.mark.parametrize(
     "status",
     ["Closed", "Development"]
@@ -3632,7 +3770,7 @@ def test_testing_outcome_is_required(
     }
 
 
-# AC-017.5 — Testing Outcome
+# TC-115 | AC-017.5 — Invalid testing outcome is rejected
 def test_invalid_testing_outcome_is_rejected(
     test_client,
     authenticated_user_factory,
@@ -3745,7 +3883,7 @@ def test_invalid_testing_outcome_is_rejected(
     assert "Input should be 'Passed' or 'Failed'" in detail[0]["msg"]
 
 
-# AC-017.6 — Close Without Fixing
+# TC-116 | AC-017.6 — Assigned developer can close bug without fixing
 @pytest.mark.parametrize(
     "resolution",
     ["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"]
@@ -3842,7 +3980,7 @@ def test_assigned_developer_can_close_bug_without_fixing(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-017.6 — Close Without Fixing
+# TC-117 | AC-017.6 — Project owner can close bug without fixing
 @pytest.mark.parametrize(
     "resolution",
     ["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"]
@@ -3939,7 +4077,7 @@ def test_project_owner_can_close_bug_without_fixing(
     assert data["updated_at"] != original_updated_at
 
 
-# AC-017.6 — Close Without Fixing
+# TC-118 | AC-017.6 — Non assigned developer cannot close bug without fixing
 def test_non_assigned_developer_cannot_close_bug_without_fixing(
     test_client,
     authenticated_user_factory,
@@ -4026,7 +4164,7 @@ def test_non_assigned_developer_cannot_close_bug_without_fixing(
     }
 
 
-# AC-017.6 — Close Without Fixing
+# TC-119 | AC-017.6 — Bug cannot be closed without resolution
 def test_bug_cannot_be_closed_without_resolution(
     test_client,
     authenticated_user_factory,
@@ -4112,7 +4250,7 @@ def test_bug_cannot_be_closed_without_resolution(
     }
 
 
-# AC-017.6 — Close Without Fixing
+# TC-120 | AC-017.6 — Fixed resolution cannot be manually selected when closing bug
 def test_fixed_resolution_cannot_be_manually_selected_when_closing_bug(
     test_client,
     authenticated_user_factory,
@@ -4204,7 +4342,6 @@ def test_fixed_resolution_cannot_be_manually_selected_when_closing_bug(
     assert "Not a Bug" in detail[0]["msg"]
 
 
-# AC-017.7 — Closed Bugs
 def _create_closed_bug_for_lifecycle_test(
     test_client,
     authenticated_user_factory,
@@ -4361,7 +4498,7 @@ def _create_closed_bug_for_lifecycle_test(
     }
 
 
-# AC-017.7 — Closed Bugs
+# TC-121 | AC-017.7 — Project owner can move closed bug to triage
 @pytest.mark.parametrize("resolution", ["Fixed", "Duplicate"])
 def test_project_owner_can_move_closed_bug_to_triage(
     test_client,
@@ -4398,7 +4535,7 @@ def test_project_owner_can_move_closed_bug_to_triage(
     assert data["updated_at"] != setup["closed_bug"]["updated_at"]
 
 
-# AC-017.7 — Closed Bugs
+# TC-122 | AC-017.7 — Project owner can move unassigned closed bug to triage
 def test_project_owner_can_move_unassigned_closed_bug_to_triage(
     test_client,
     authenticated_user_factory,
@@ -4431,7 +4568,7 @@ def test_project_owner_can_move_unassigned_closed_bug_to_triage(
     assert data["updated_at"] != setup["closed_bug"]["updated_at"]
 
 
-# AC-017.7 — Closed Bugs
+# TC-123 | AC-017.7 — Unauthorized user cannot move closed bug to triage
 @pytest.mark.parametrize(
     ("actor", "expected_status", "expected_detail"),
     [
@@ -4494,7 +4631,7 @@ def test_unauthorized_user_cannot_move_closed_bug_to_triage(
     }
 
 
-# AC-017.7 — Closed Bugs
+# TC-124 | AC-017.7 — Closed bug rejects invalid direct transition
 @pytest.mark.parametrize("requested_status", ["Open", "Development", "Testing"])
 def test_closed_bug_rejects_invalid_direct_transition(
     test_client,
@@ -4527,7 +4664,7 @@ def test_closed_bug_rejects_invalid_direct_transition(
     }
 
 
-# AC-017.7 — Closed Bugs
+# TC-125 | AC-017.7 — Closed to triage rejects extra transition data
 @pytest.mark.parametrize(
     "extra_data",
     ["assignee_id", "testing_outcome", "resolution"]
@@ -4573,7 +4710,7 @@ def test_closed_to_triage_rejects_extra_transition_data(
     }
 
 
-# AC-017.8 — Invalid Status Transitions
+# TC-126 | AC-017.8 — Bug cannot skip from triage to development
 def test_bug_cannot_skip_from_triage_to_development(
     test_client,
     authenticated_user_factory,
@@ -4635,7 +4772,7 @@ def test_bug_cannot_skip_from_triage_to_development(
     }
 
 
-# AC-017.8 — Invalid Status Transitions
+# TC-127 | AC-017.8 — Bug cannot skip from open to testing
 def test_bug_cannot_skip_from_open_to_testing(
     test_client,
     authenticated_user_factory,
@@ -4722,7 +4859,7 @@ def test_bug_cannot_skip_from_open_to_testing(
     }
 
 
-# AC-017.8 — Invalid Status Transitions
+# TC-128 | AC-017.8 — Bug cannot move from development back to open
 def test_bug_cannot_move_from_development_back_to_open(
     test_client,
     authenticated_user_factory,
@@ -4808,7 +4945,7 @@ def test_bug_cannot_move_from_development_back_to_open(
     }
 
 
-# AC-017.8 — Invalid Status Transitions
+# TC-129 | AC-017.8 — Bug cannot move from testing back to open
 def test_bug_cannot_move_from_testing_back_to_open(
     test_client,
     authenticated_user_factory,
@@ -4919,7 +5056,7 @@ def test_bug_cannot_move_from_testing_back_to_open(
     }
 
 
-# AC-017.8 — Invalid Status Transitions
+# TC-130 | AC-017.8 — Bug cannot move from testing back to triage
 def test_bug_cannot_move_from_testing_back_to_triage(
     test_client,
     authenticated_user_factory,
@@ -5030,7 +5167,7 @@ def test_bug_cannot_move_from_testing_back_to_triage(
     }
 
 
-# AC-017.9 — Status Update Timestamp
+# TC-131 | AC-017.9 — Changing bug status updates last updated timestamp
 def test_changing_bug_status_updates_last_updated_timestamp(
     test_client,
     authenticated_user_factory,

@@ -30,7 +30,7 @@ def _get_secret_key():
 
 
 def create_access_token(user_id):
-    expiration = datetime.now(timezone.utc) + timedelta(hours=1)
+    expiration = datetime.now(timezone.utc) + timedelta(hours=8)
     payload = {
         "user_id": user_id,
         "exp": expiration

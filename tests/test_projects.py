@@ -1,7 +1,7 @@
 import pytest
 
 
-# AC-005.1 — Successful Project Creation
+# TC-184 | AC-005.1 — Create project
 def test_create_project(test_client, authenticated_user_factory, project_factory):
     authenticated_user = authenticated_user_factory(
         email="project@example.com",
@@ -16,7 +16,7 @@ def test_create_project(test_client, authenticated_user_factory, project_factory
     assert project["name"] == "QA Bug Triage"
 
 
-# AC-005.2 — Invalid Project Name
+# TC-185 | AC-005.2 — Create project with empty name
 def test_create_project_with_empty_name(test_client, authenticated_user_factory):
     authenticated_user = authenticated_user_factory(
         email="invalid-project@example.com",
@@ -39,7 +39,7 @@ def test_create_project_with_empty_name(test_client, authenticated_user_factory)
     }
 
 
-# AC-005.2 — Invalid Project Name
+# TC-186 | AC-005.2 — Project creation rejects whitespace only name
 def test_project_creation_rejects_whitespace_only_name(
     test_client,
     authenticated_user_factory
@@ -63,7 +63,7 @@ def test_project_creation_rejects_whitespace_only_name(
     assert response.json()["detail"] == "Project name is required."
 
 
-# AC-005.2 — Invalid Project Name
+# TC-187 | AC-005.2 — Project creation rejects non string name
 @pytest.mark.parametrize("name", [123, True, ["QA"], {"name": "QA"}, None])
 def test_project_creation_rejects_non_string_name(
     test_client, authenticated_user_factory, name
@@ -80,7 +80,7 @@ def test_project_creation_rejects_non_string_name(
     assert response.json() == {"detail": "Project name is required."}
 
 
-# AC-005.1 — Successful Project Creation
+# TC-188 | AC-005.1 — Project creation preserves padded name
 def test_project_creation_preserves_padded_name(test_client, authenticated_user_factory):
     user = authenticated_user_factory()
     headers = {"Authorization": f"Bearer {user['token']}"}
@@ -95,7 +95,7 @@ def test_project_creation_preserves_padded_name(test_client, authenticated_user_
     assert stored.json()["name"] == name
 
 
-# AC-005.3 — Unauthenticated User
+# TC-189 | AC-005.3 — Unauthenticated user cannot create project
 def test_unauthenticated_user_cannot_create_project(test_client):
     response = test_client.post(
         "/projects",
@@ -110,7 +110,7 @@ def test_unauthenticated_user_cannot_create_project(test_client):
     }
 
 
-# AC-006.1 — View Project List
+# TC-190 | AC-006.1 — Get projects
 def test_get_projects(test_client, authenticated_user_factory, project_factory):
     authenticated_user = authenticated_user_factory(
         email="projects@example.com",
@@ -137,7 +137,7 @@ def test_get_projects(test_client, authenticated_user_factory, project_factory):
     assert projects[0]["name"] == "QA Bug Triage"
 
 
-# AC-006.2 — Project List Authorization
+# TC-191 | AC-006.2 — User only sees own projects
 def test_user_only_sees_own_projects(
     test_client,
     authenticated_user_factory,
@@ -176,7 +176,7 @@ def test_user_only_sees_own_projects(
     assert projects[0]["name"] == "User 1 Project"
 
 
-# AC-006.3 — Open Project
+# TC-192 | AC-006.3 — Get project
 def test_get_project(test_client, authenticated_user_factory, project_factory):
     authenticated_user = authenticated_user_factory(
         email="single-project@example.com",
@@ -205,7 +205,7 @@ def test_get_project(test_client, authenticated_user_factory, project_factory):
     assert project["name"] == "Single Project"
 
 
-# AC-006.4 — Unauthorized Project Access
+# TC-193 | AC-006.4 — User cannot access another users project
 def test_user_cannot_access_another_users_project(
     test_client,
     authenticated_user_factory,
@@ -235,7 +235,7 @@ def test_user_cannot_access_another_users_project(
     assert response.status_code == 404
 
 
-# AC-007.1 — Successful Project Name Editing
+# TC-194 | AC-007.1 — Edit project name
 def test_edit_project_name(test_client, authenticated_user_factory, project_factory):
     authenticated_user = authenticated_user_factory(
         email="edit-project@example.com",
@@ -265,7 +265,7 @@ def test_edit_project_name(test_client, authenticated_user_factory, project_fact
     assert data["name"] == "Updated Project"
 
 
-# AC-007.3 — Invalid Project Name Editing
+# TC-195 | AC-007.3 — Project edit rejects empty or whitespace only name
 @pytest.mark.parametrize("name", ["", "   ", "\t\n"])
 def test_project_edit_rejects_empty_or_whitespace_only_name(
     test_client, authenticated_user_factory, project_factory, name
@@ -285,7 +285,7 @@ def test_project_edit_rejects_empty_or_whitespace_only_name(
     assert response.json() == {"detail": "Project name is required."}
 
 
-# AC-007.3 — Invalid Project Name Editing
+# TC-196 | AC-007.3 — Project edit rejects non string name
 @pytest.mark.parametrize("name", [123, True, ["QA"], {"name": "QA"}, None])
 def test_project_edit_rejects_non_string_name(
     test_client, authenticated_user_factory, project_factory, name
@@ -305,7 +305,7 @@ def test_project_edit_rejects_non_string_name(
     assert response.json() == {"detail": "Project name is required."}
 
 
-# AC-007.1 — Successful Project Name Editing
+# TC-197 | AC-007.1 — Project edit preserves padded name
 def test_project_edit_preserves_padded_name(
     test_client, authenticated_user_factory, project_factory
 ):
@@ -325,7 +325,7 @@ def test_project_edit_preserves_padded_name(
     assert stored.json()["name"] == name
 
 
-# AC-007.2 — Unauthorized Project Name Editing
+# TC-198 | AC-007.2 — User cannot edit another users project name
 def test_user_cannot_edit_another_users_project_name(
     test_client,
     authenticated_user_factory,
@@ -368,7 +368,7 @@ def test_user_cannot_edit_another_users_project_name(
     assert get_response.json()["name"] == "Original Project"
 
 
-# AC-008.1 — Successful Project Deletion
+# TC-199 | AC-008.1 — Delete project
 def test_delete_project(test_client, authenticated_user_factory, project_factory):
     authenticated_user = authenticated_user_factory(
         email="delete-project@example.com",
@@ -403,7 +403,7 @@ def test_delete_project(test_client, authenticated_user_factory, project_factory
     assert get_response.status_code == 404
 
 
-# AC-008.1 — Successful Project Deletion
+# TC-200 | AC-008.1 — New project owner cannot access bugs from deleted project
 def test_new_project_owner_cannot_access_bugs_from_deleted_project(
     test_client,
     authenticated_user_factory,
@@ -462,7 +462,7 @@ def test_new_project_owner_cannot_access_bugs_from_deleted_project(
     assert response.json() == []
 
 
-# AC-008.2 — Unauthorized Project Deletion
+# TC-201 | AC-008.2 — User cannot delete another users project
 def test_user_cannot_delete_another_users_project(
     test_client,
     authenticated_user_factory,
@@ -502,7 +502,7 @@ def test_user_cannot_delete_another_users_project(
     assert get_response.json()["name"] == "Protected Project"
 
 
-# AC-009.1 — Add Member
+# TC-202 | AC-009.1 — Owner can add project member
 def test_owner_can_add_project_member(
     test_client,
     authenticated_user_factory,
@@ -536,7 +536,7 @@ def test_owner_can_add_project_member(
     assert member_data["role"] == "QA Analyst"
 
 
-# AC-009.1 — Add Member
+# TC-203 | AC-009.1 — Added member can access project
 def test_added_member_can_access_project(
     test_client,
     authenticated_user_factory,
@@ -576,7 +576,7 @@ def test_added_member_can_access_project(
     assert response.json()["name"] == "Member Access Project"
 
 
-# AC-009.2 — Remove Member
+# TC-204 | AC-009.2 — Owner can remove project member
 def test_owner_can_remove_project_member(
     test_client,
     authenticated_user_factory,
@@ -614,7 +614,7 @@ def test_owner_can_remove_project_member(
     assert response.status_code == 200
 
 
-# AC-009.2 — Remove Member
+# TC-205 | AC-009.2, AC-015.1 — Removing member unassigns only their bugs in that project
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
 def test_removing_member_unassigns_only_their_bugs_in_that_project(
     test_client,
@@ -701,7 +701,24 @@ def test_removing_member_unassigns_only_their_bugs_in_that_project(
         assert response.json() == expected_bug
 
 
-# AC-009.2 — Remove Member
+    # Automatic removal may leave Open unassigned; ordinary edits still cannot.
+    url = f"/projects/{project['id']}/bugs/{bugs[0]['bug_number']}"
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    before = test_client.get(url, headers=owner_headers)
+    assert before.status_code == 200
+    assert before.json()["status"] == "Open"
+    assert before.json()["assignee_id"] is None
+
+    rejected = test_client.patch(url, json={"assignee_id": None}, headers=owner_headers)
+    stored = test_client.get(url, headers=owner_headers)
+
+    assert rejected.status_code == 422
+    assert rejected.json() == {"detail": "Open bugs must have an assignee."}
+    assert stored.status_code == 200
+    assert stored.json() == before.json()
+
+
+# TC-206 | AC-009.2 — Removed member can no longer access project
 def test_removed_member_can_no_longer_access_project(
     test_client,
     authenticated_user_factory,
@@ -748,7 +765,7 @@ def test_removed_member_can_no_longer_access_project(
     assert response.status_code == 404
 
 
-# AC-009.3 — Invalid Member
+# TC-207 | AC-009.3 — Project owner cannot add user who does not have an account
 def test_project_owner_cannot_add_user_who_does_not_have_an_account(
     test_client,
     authenticated_user_factory,
@@ -779,7 +796,7 @@ def test_project_owner_cannot_add_user_who_does_not_have_an_account(
     assert response.json()["detail"] == "User not found."
 
 
-# AC-009.4 — Duplicate Member
+# TC-208 | AC-009.4 — Project owner cannot add same user more than once
 def test_project_owner_cannot_add_same_user_more_than_once(
     test_client,
     authenticated_user_factory,
@@ -823,17 +840,14 @@ def test_project_owner_cannot_add_same_user_more_than_once(
     assert second_response.json()["detail"] == "This user is already a member of this project."
 
 
-# AC-009.5 — View Project Members
+# TC-209 | AC-009.5 — Project member can view project members
 def test_project_member_can_view_project_members(
     test_client,
     authenticated_user_factory,
     project_factory,
     member_factory
 ):
-    owner = authenticated_user_factory(
-        email="members-owner@example.com",
-        password="Password1"
-    )
+    owner = authenticated_user_factory(email="zulu-owner@example.com")
     qa_analyst = authenticated_user_factory(
         email="members-qa@example.com",
         password="Password1"
@@ -883,8 +897,34 @@ def test_project_member_can_view_project_members(
     assert members[2]["email"] == developer["user"]["email"]
     assert members[2]["role"] == "Developer"
 
+    # Interleave roles and reverse email order, including equal local parts.
+    added = []
+    for role, email in [
+        ("Developer", "alpha.dev@example.net"),
+        ("QA Analyst", "alpha.qa@example.net"),
+        ("Developer", "alpha.dev@example.com"),
+        ("QA Analyst", "alpha.qa@example.com"),
+    ]:
+        user = authenticated_user_factory(email=email)
+        added.append(member_factory(owner["token"], project["id"], email, role))
+
+    response = test_client.get(
+        f"/projects/{project['id']}/members",
+        headers={"Authorization": f"Bearer {qa_analyst['token']}"}
+    )
+
+    assert response.status_code == 200
+    expected = [(owner["user"]["email"], "Project Owner")]
+    for role, original in [("QA Analyst", qa_analyst), ("Developer", developer)]:
+        emails = [original["user"]["email"]] + [
+            member["email"] for member in added if member["role"] == role
+        ]
+        expected.extend((email, role) for email in sorted(emails))
+    assert [(member["email"], member["role"]) for member in response.json()] == expected
+
 
 # Additional security test — Project Owner Self-Removal
+# TC-210 | Technical — Project owner cannot remove themselves
 def test_project_owner_cannot_remove_themselves(
     test_client,
     authenticated_user_factory,
@@ -949,7 +989,7 @@ def test_project_owner_cannot_remove_themselves(
     assert owner_member["role"] == "Project Owner"
 
 
-# AC-010.1 — Project Owner Role
+# TC-211 | AC-010.1 — Project creator is project owner
 def test_project_creator_is_project_owner(
     test_client,
     authenticated_user_factory,
@@ -985,7 +1025,7 @@ def test_project_creator_is_project_owner(
     assert owner["role"] == "Project Owner"
 
 
-# AC-010.2 — QA Analyst Role
+# TC-212 | AC-010.2 — QA analyst can access project
 def test_qa_analyst_can_access_project(
     test_client,
     authenticated_user_factory,
@@ -1030,7 +1070,7 @@ def test_qa_analyst_can_access_project(
     assert project_data["name"] == "QA Analyst Access Project"
 
 
-# AC-010.3 — Developer Role
+# TC-213 | AC-010.3 — Developer can access project
 def test_developer_can_access_project(
     test_client,
     authenticated_user_factory,
@@ -1075,7 +1115,7 @@ def test_developer_can_access_project(
     assert project_data["name"] == "Developer Access Project"
 
 
-# AC-010.4 — Unauthorized Project Member Management
+# TC-214 | AC-010.4 — Non owner cannot manage project members
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
 def test_non_owner_cannot_manage_project_members(
     test_client,
@@ -1157,7 +1197,7 @@ def test_non_owner_cannot_manage_project_members(
     assert after_remove.json() == before.json()
 
 
-# AC-010.5 — Unauthorized Project Actions
+# TC-215 | AC-010.5 — Non owner cannot edit project
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
 def test_non_owner_cannot_edit_project(
     test_client,
@@ -1210,7 +1250,7 @@ def test_non_owner_cannot_edit_project(
     assert get_response.json()["name"] == "Protected Edit Project"
 
 
-# AC-010.5 — Unauthorized Project Actions
+# TC-216 | AC-010.5 — Non owner cannot delete project
 @pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
 def test_non_owner_cannot_delete_project(
     test_client,

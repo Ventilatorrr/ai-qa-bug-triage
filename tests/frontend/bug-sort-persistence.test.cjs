@@ -97,6 +97,7 @@ function assertDefault(f) {
     assert.deepEqual(f.active(), [{column: "updated_at", direction: "descending", label: "Last Updated ↓"}]);
 }
 
+// TC-268 | AC-012.6 — Page size invalid or unavailable reads fall back to ten
 test("test_page_size_invalid_or_unavailable_reads_fall_back_to_ten", async () => {
     const reports = Array.from({length: 21}, (_, i) => ({...bugs[0], id: i + 1, bug_number: i + 1}));
     for (const value of [null, "", "0", "15", "-1", "20.0", "{}", "null"]) {
@@ -117,6 +118,7 @@ test("test_page_size_invalid_or_unavailable_reads_fall_back_to_ten", async () =>
     assert.equal(f.node("#bug-page-indicator").textContent, "Page 2 of 3");
 });
 
+// TC-269 | AC-012.6 — Page size blocked writes preserve current pagination and sort
 test("test_page_size_blocked_writes_preserve_current_pagination_and_sort", async () => {
     const reports = Array.from({length: 51}, (_, i) => ({...bugs[0], id: i + 1, bug_number: i + 1}));
     const preferences = {
@@ -139,10 +141,12 @@ test("test_page_size_blocked_writes_preserve_current_pagination_and_sort", async
     assert.equal(reloaded.order().length, 10);
 });
 
+// TC-270 | AC-012.4 — Bug sort first visit defaults to last updated descending
 test("test_bug_sort_first_visit_defaults_to_last_updated_descending", async () => {
     assertDefault(await page());
 });
 
+// TC-271 | AC-012.1 — Bug mobile labels and header relationships survive sorting
 test("test_bug_mobile_labels_and_header_relationships_survive_sorting", async () => {
     const f = await page();
     for (const column of columns) {
@@ -161,6 +165,7 @@ test("test_bug_mobile_labels_and_header_relationships_survive_sorting", async ()
     }
 });
 
+// TC-272 | Technical — Bug list rejects invalid number response
 test("test_bug_list_rejects_invalid_number_response", async () => {
     for (const bug_number of [undefined, null, 0, -1, 1.5, "11"]) {
         const f = await page({reports: [{...bugs[0], bug_number}]});
@@ -169,6 +174,7 @@ test("test_bug_list_rejects_invalid_number_response", async () => {
     }
 });
 
+// TC-273 | AC-012.4 — Bug sort saves column and direction on header click
 test("test_bug_sort_saves_column_and_direction_on_header_click", async () => {
     const session = storage(), f = await page({session});
     f.sort("title");
@@ -177,6 +183,7 @@ test("test_bug_sort_saves_column_and_direction_on_header_click", async () => {
     assert.deepEqual(JSON.parse(session.getItem(key())), {column: "title", direction: "descending"});
 });
 
+// TC-274 | AC-012.4 — Mobile sort controls reuse all columns direction and preferences
 test("test_mobile_sort_controls_reuse_all_columns_direction_and_preferences", async () => {
     const session = storage(), f = await page({session});
     for (const column of columns) {
@@ -199,6 +206,7 @@ test("test_mobile_sort_controls_reuse_all_columns_direction_and_preferences", as
     assert.equal(restored.node("#bug-sort-direction").textContent, "↑ Ascending");
 });
 
+// TC-275 | AC-012.4, AC-012.5 — Mobile sort resets pagination and empty list hides toolbar
 test("test_mobile_sort_resets_pagination_and_empty_list_hides_toolbar", async () => {
     const reports = Array.from({length: 11}, (_, i) => ({...bugs[0], id: i + 1, bug_number: i + 1}));
     const f = await page({reports});
@@ -210,6 +218,7 @@ test("test_mobile_sort_resets_pagination_and_empty_list_hides_toolbar", async ()
     assert.equal((await page({reports: []})).node("#bug-mobile-sort").hidden, true);
 });
 
+// TC-276 | AC-012.4 — Bug sort reinitialization restores order indicators and links
 test("test_bug_sort_reinitialization_restores_order_indicators_and_links", async () => {
     const session = storage(), first = await page({session});
     first.sort("id");
@@ -223,6 +232,7 @@ test("test_bug_sort_reinitialization_restores_order_indicators_and_links", async
     assert.deepEqual(reloaded.active(), returned.active());
 });
 
+// TC-277 | AC-012.4 — Bug sort restores every supported column and direction
 test("test_bug_sort_restores_every_supported_column_and_direction", async () => {
     const ascending = {
         id: [4, 9, 2], title: [2, 4, 9], severity: [9, 4, 2], priority: [9, 4, 2],
@@ -240,6 +250,7 @@ test("test_bug_sort_restores_every_supported_column_and_direction", async () => 
     }
 });
 
+// TC-278 | AC-012.4 — Bug sort preferences are isolated by project
 test("test_bug_sort_preferences_are_isolated_by_project", async () => {
     const session = storage(), a = await page({session, project: 1}), b = await page({session, project: 2});
     a.sort("title");
@@ -249,6 +260,7 @@ test("test_bug_sort_preferences_are_isolated_by_project", async () => {
     assert.deepEqual((await page({session, project: 2})).active()[0], {column: "severity", direction: "descending", label: "Severity ↓"});
 });
 
+// TC-279 | AC-012.4 — Bug sort preferences are isolated by user
 test("test_bug_sort_preferences_are_isolated_by_user", async () => {
     const session = storage(), a = await page({session, user: 1});
     a.sort("title");
@@ -260,6 +272,7 @@ test("test_bug_sort_preferences_are_isolated_by_user", async () => {
     assert.equal((await page({session, user: 2})).active()[0].column, "status");
 });
 
+// TC-280 | AC-012.4 — Bug sort invalid storage falls back to default
 test("test_bug_sort_invalid_storage_falls_back_to_default", async () => {
     for (const saved of ["{", "null", "123", "[]", "{}", JSON.stringify({column: "created_at", direction: "ascending"}),
         JSON.stringify({column: "title", direction: "asc"}), JSON.stringify({column: 123, direction: "descending"}),
@@ -270,6 +283,7 @@ test("test_bug_sort_invalid_storage_falls_back_to_default", async () => {
     }
 });
 
+// TC-281 | AC-012.4 — Bug sort storage failures preserve working default and header sorting
 test("test_bug_sort_storage_failures_preserve_working_default_and_header_sorting", async () => {
     const throwing = () => { throw new Error("Storage unavailable"); };
     for (const session of [null, "throwing-getter", {getItem: throwing, setItem: throwing, removeItem: throwing},
@@ -283,6 +297,7 @@ test("test_bug_sort_storage_failures_preserve_working_default_and_header_sorting
     }
 });
 
+// TC-282 | AC-012.4 — Bug sort back forward refresh preserves preference
 test("test_bug_sort_back_forward_refresh_preserves_preference", async () => {
     const session = storage(), f = await page({session});
     f.sort("title");
@@ -292,6 +307,7 @@ test("test_bug_sort_back_forward_refresh_preserves_preference", async () => {
     assert.equal(f.active()[0].direction, "descending");
 });
 
+// TC-283 | Technical — Project deletion clears only current users project sort preference
 test("test_project_deletion_clears_only_current_users_project_sort_preference", async () => {
     const session = storage();
     for (const entry of [key(1, 1), key(1, 2), key(2, 1), "unrelated"]) session.setItem(entry, "saved");
@@ -303,6 +319,7 @@ test("test_project_deletion_clears_only_current_users_project_sort_preference", 
     for (const entry of [key(1, 2), key(2, 1), "unrelated"]) assert.equal(session.getItem(entry), "saved");
 });
 
+// TC-284 | Technical — Failed project deletion preserves sort preference
 test("test_failed_project_deletion_preserves_sort_preference", async () => {
     const session = storage();
     session.setItem(key(), "saved");
@@ -311,6 +328,7 @@ test("test_failed_project_deletion_preserves_sort_preference", async () => {
     assert.equal(session.getItem(key()), "saved");
 });
 
+// TC-285 | Technical — Project deletion succeeds when sort storage is unavailable
 test("test_project_deletion_succeeds_when_sort_storage_is_unavailable", async () => {
     for (const session of [null, "throwing-getter", {removeItem() { throw new Error("Storage blocked"); }, getItem: () => null}]) {
         const f = await page({session, script: "projects.js"});
@@ -322,3 +340,33 @@ test("test_project_deletion_succeeds_when_sort_storage_is_unavailable", async ()
         assert.match(f.node("#message").textContent, /deleted successfully/);
     }
 });
+
+// TC-348 (severity), TC-349 (priority), TC-350 (status) | AC-012.4 — Complete rank sorting in both directions
+for (const [column, values, ascending, descending] of [
+    ["severity", ["Major", "Minor", "Blocker", "Moderate"],
+        ["Minor", "Moderate", "Major", "Blocker"], ["Blocker", "Major", "Moderate", "Minor"]],
+    ["priority", ["High", "Low", "Urgent", "Medium"],
+        ["Low", "Medium", "High", "Urgent"], ["Urgent", "High", "Medium", "Low"]],
+    ["status", ["Testing", "Triage", "Closed", "Open", "Development"],
+        ["Triage", "Open", "Development", "Testing", "Closed"],
+        ["Closed", "Testing", "Development", "Open", "Triage"]],
+]) {
+    test(`test_bug_sort_complete_${column}_rank_order`, async () => {
+        const reports = values.map((value, index) => ({
+            ...bugs[0], id: 100 + index, bug_number: index + 1, [column]: value
+        }));
+        const f = await page({reports});
+        const displayedValues = () => f.node("#bugs").querySelector("tbody").children
+            .map(row => row.children[columns.indexOf(column)].textContent);
+
+        f.sort(column);
+
+        assert.deepEqual(displayedValues(), ascending);
+        assert.deepEqual(f.order(), ascending.map(value => `BUG-${values.indexOf(value) + 1}`));
+
+        f.sort(column);
+
+        assert.deepEqual(displayedValues(), descending);
+        assert.deepEqual(f.order(), descending.map(value => `BUG-${values.indexOf(value) + 1}`));
+    });
+}

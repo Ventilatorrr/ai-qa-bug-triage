@@ -51,6 +51,7 @@ def lifecycle_bug(test_client, test_database, authenticated_user_factory, projec
     return create
 
 
+# TC-155, TC-156, TC-157 | AC-017.5 — Passed transition persists optional fix version
 @pytest.mark.parametrize("actor,current_version,version_payload,expected", [
     pytest.param("qa", None, {"fix_version": "1.3.0"}, "1.3.0", id="qa-supplied"),
     pytest.param("owner", None, {"fix_version": "1.3.0"}, "1.3.0", id="owner-supplied"),
@@ -88,6 +89,7 @@ def test_passed_transition_persists_optional_fix_version(
     assert stored.json() == result
 
 
+# TC-158 | AC-017.5 — Failed transition clears legacy fix version
 def test_failed_transition_clears_legacy_fix_version(test_client, lifecycle_bug):
     url, before, actors = lifecycle_bug(fix_version="1.2.0")
     headers = {"Authorization": f"Bearer {actors['qa']['token']}"}
@@ -110,6 +112,7 @@ def test_failed_transition_clears_legacy_fix_version(test_client, lifecycle_bug)
     assert stored.json() == result
 
 
+# TC-159 | AC-017.5 — Fix version is rejected outside passed transition
 @pytest.mark.parametrize("state,payload,fix_version", [
     ("Triage", {"status": "Open"}, "2.0.0"),
     ("Open", {"status": "Development"}, None),
@@ -136,6 +139,7 @@ def test_fix_version_is_rejected_outside_passed_transition(
     assert stored.json() == before
 
 
+# TC-160 | AC-011.4 — Bug creation allows empty fix version
 @pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
 def test_bug_creation_allows_empty_fix_version(test_client, lifecycle_bug, version_payload):
     url, _, actors = lifecycle_bug("Triage")
@@ -149,6 +153,7 @@ def test_bug_creation_allows_empty_fix_version(test_client, lifecycle_bug, versi
     assert test_client.get(f"{url.rsplit('/', 1)[0]}/{result['bug_number']}", headers=headers).json() == result
 
 
+# TC-161 | AC-011.4 — Bug creation rejects nonempty fix version
 @pytest.mark.parametrize("fix_version", ["1.3.0", " \t "])
 def test_bug_creation_rejects_nonempty_fix_version(test_client, lifecycle_bug, fix_version):
     url, before, actors = lifecycle_bug("Triage")
@@ -166,6 +171,7 @@ def test_bug_creation_rejects_nonempty_fix_version(test_client, lifecycle_bug, f
     assert valid.json()["bug_number"] == before["bug_number"] + 1
 
 
+# TC-162 | AC-013.2 — Unresolved bug edit rejects nonempty fix version
 @pytest.mark.parametrize("state", ["Triage", "Open", "Development", "Testing"])
 def test_unresolved_bug_edit_rejects_nonempty_fix_version(test_client, lifecycle_bug, state):
     url, before, actors = lifecycle_bug(state)
@@ -176,6 +182,7 @@ def test_unresolved_bug_edit_rejects_nonempty_fix_version(test_client, lifecycle
     assert test_client.get(url, headers=headers).json() == before
 
 
+# TC-163 | AC-013.2 — Unresolved bug edit clears legacy fix version
 @pytest.mark.parametrize("state", ["Triage", "Open", "Development", "Testing"])
 @pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
 def test_unresolved_bug_edit_clears_legacy_fix_version(test_client, lifecycle_bug, state, version_payload):
@@ -191,6 +198,7 @@ def test_unresolved_bug_edit_clears_legacy_fix_version(test_client, lifecycle_bu
     assert test_client.get(url, headers=headers).json() == result
 
 
+# TC-164 | AC-013.2 — Closed fixed bug fix version can be edited and cleared
 def test_closed_fixed_bug_fix_version_can_be_edited_and_cleared(test_client, lifecycle_bug):
     url, before, actors = lifecycle_bug("Closed", fix_version="1.2.0")
     # Ordinary bug editing remains available to every project member.
@@ -208,6 +216,7 @@ def test_closed_fixed_bug_fix_version_can_be_edited_and_cleared(test_client, lif
         assert test_client.get(url, headers=headers).json() == result
 
 
+# TC-165 | AC-017.7 — Reopening clears resolution and fix version
 def test_reopening_clears_resolution_and_fix_version(test_client, lifecycle_bug):
     url, before, actors = lifecycle_bug("Closed", fix_version="1.2.0")
     headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
@@ -223,6 +232,7 @@ def test_reopening_clears_resolution_and_fix_version(test_client, lifecycle_bug)
     assert test_client.get(url, headers=headers).json() == result
 
 
+# TC-166 | AC-017.6 — Nonfixed closure clears fix version and rejects assignment
 @pytest.mark.parametrize("resolution", ["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"])
 def test_nonfixed_closure_clears_fix_version_and_rejects_assignment(test_client, lifecycle_bug, resolution):
     url, before, actors = lifecycle_bug("Development", fix_version="1.2.0")
@@ -239,6 +249,7 @@ def test_nonfixed_closure_clears_fix_version_and_rejects_assignment(test_client,
     assert test_client.get(url, headers=headers).json() == closed
 
 
+# TC-167 | AC-013.2 — Nonfixed bug edit clears legacy fix version
 @pytest.mark.parametrize("version_payload", [{}, {"fix_version": None}, {"fix_version": ""}])
 def test_nonfixed_bug_edit_clears_legacy_fix_version(test_client, test_database, lifecycle_bug, version_payload):
     from app import database
@@ -260,6 +271,7 @@ def test_nonfixed_bug_edit_clears_legacy_fix_version(test_client, test_database,
     assert test_client.get(url, headers=headers).json() == result
 
 
+# TC-168 | AC-017.5 — Passed fix version preserves authorization
 @pytest.mark.parametrize("actor,expected_status", [("developer", 403), ("non_member", 404)])
 def test_passed_fix_version_preserves_authorization(
     test_client, lifecycle_bug, authenticated_user_factory, actor, expected_status,

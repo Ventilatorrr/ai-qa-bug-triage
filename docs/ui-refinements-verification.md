@@ -3,6 +3,8 @@
 **Verification period:** 12–13 October 2026; final verification on 13 October.
 **Baseline:** About-page commit `80e5e29` plus reviewed frontend refinements.
 This report consolidates recorded evidence; its editorial revision adds no test runs.
+This is a historical snapshot, not the current suite inventory or AC assessment;
+see [current coverage](traceability-matrix.md) and [execution records](test-execution.md).
 
 ## Scope and traceability
 
@@ -106,8 +108,10 @@ These manually launched browser assertions are separate from Node/pytest counts 
 | `test_ai_native_input_browser_review_and_apply_consistency` | **12/12 passed**: New/Edit × Use/Use All × LF/CR/CRLF |
 
 To repeat: run `node tests/frontend/native-input-server.cjs`, open
-`http://127.0.0.1:8128/ui-style.test.html` and select **Run UI style regressions**;
-use `http://127.0.0.1:8128/` for native input checks. Stop with Ctrl+C.
+`http://127.0.0.1:8148/ui-style.test.html` and select **Run UI style regressions**;
+use `http://127.0.0.1:8148/` for native input checks. Stop with Ctrl+C.
+These repetition instructions use the current agent-approved port; older dated
+environment descriptions below retain their historical provenance.
 [UI style fixture](../tests/frontend/ui-style.test.html) and
 [native input fixture](../tests/frontend/native-input.test.html) load real markup
 without application handlers or database access. Their inline scripts passed syntax checks.

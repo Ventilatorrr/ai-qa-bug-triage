@@ -23,6 +23,7 @@ def create(test_client, project_id, headers, **fields):
     return response.json()
 
 
+# TC-132 | AC-011.1 — Bug numbers are independent and routes use local numbers
 def test_bug_numbers_are_independent_and_routes_use_local_numbers(
     test_client, numbering_project, project_factory,
 ):
@@ -52,6 +53,7 @@ def test_bug_numbers_are_independent_and_routes_use_local_numbers(
         assert {bug["id"] for bug in listed} == {bug["id"] for bug in reports if bug["project_id"] == current["id"]}
 
 
+# TC-133 | AC-011.1 — Deleted bug numbers are not reused
 @pytest.mark.parametrize("delete_all", [False, True])
 def test_deleted_bug_numbers_are_not_reused(test_client, numbering_project, delete_all):
     project, headers = numbering_project
@@ -63,6 +65,7 @@ def test_deleted_bug_numbers_are_not_reused(test_client, numbering_project, dele
     assert create(test_client, project["id"], headers)["bug_number"] == 4
 
 
+# TC-134 | AC-013.1 — Bug number is preserved on edit
 def test_bug_number_is_preserved_on_edit(test_client, numbering_project):
     project, headers = numbering_project
     bug = create(test_client, project["id"], headers)
@@ -74,6 +77,7 @@ def test_bug_number_is_preserved_on_edit(test_client, numbering_project):
     assert test_client.get(url, headers=headers).json() == response.json()
 
 
+# TC-135, TC-136 | AC-012.2, AC-019.2, AC-022.2 — Public bug routes use local number and isolate projects
 @pytest.mark.parametrize("operation", ["details", "edit", "status", "delete", "ai-assist"])
 def test_public_bug_routes_use_local_number_and_isolate_projects(
     test_client, numbering_project, project_factory, authenticated_user_factory,
@@ -132,6 +136,7 @@ def test_public_bug_routes_use_local_number_and_isolate_projects(
     assert test_client.get(f"/projects/{project['id']}/bugs/1", headers=headers).json() == first
 
 
+# TC-137 | Technical — Failed creation rolls back bug and counter
 @pytest.mark.parametrize("failure_point", ["before-counter-update", "before-commit"])
 def test_failed_creation_rolls_back_bug_and_counter(test_client, numbering_project, monkeypatch, failure_point):
     from app import database
@@ -175,6 +180,7 @@ def test_failed_creation_rolls_back_bug_and_counter(test_client, numbering_proje
     assert len(test_client.get(f"/projects/{project['id']}/bugs", headers=headers).json()) == 2
 
 
+# TC-138 | AC-011.1 — Concurrent creation allocates unique bug numbers
 def test_concurrent_creation_allocates_unique_bug_numbers(
     test_client, test_database, numbering_project, tmp_path, monkeypatch,
 ):

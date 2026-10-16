@@ -54,6 +54,7 @@ def request_url(context, edit):
     return (f"{context[4]}/bugs/{context[3]['bug_number']}" if edit else context[4]) + "/ai-assist"
 
 
+# TC-001, TC-002, TC-003 | AC-018.1, AC-022.1 — AI assist requires authorized project role
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("role", ["Project Owner", "QA Analyst", "Developer", "non-member"])
 def test_ai_assist_requires_authorized_project_role(
@@ -80,6 +81,7 @@ def test_ai_assist_requires_authorized_project_role(
         assert service_calls == []
 
 
+# TC-004 | AC-018.1, AC-022.1 — AI assist requires authentication
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("authorization", [None, "Bearer invalid"])
 def test_ai_assist_requires_authentication(test_client, ai_project, blank_form, service_calls, edit, authorization):
@@ -91,6 +93,7 @@ def test_ai_assist_requires_authentication(test_client, ai_project, blank_form, 
     assert service_calls == []
 
 
+# TC-005 | AC-018.1, AC-022.1 — AI assist checks current bug status
 @pytest.mark.parametrize("status", ["Open", "Development", "Testing", "Closed", "Triage"])
 def test_ai_assist_checks_current_bug_status(
     test_client, ai_project, blank_form, service_calls,
@@ -116,6 +119,7 @@ def test_ai_assist_checks_current_bug_status(
     assert len(service_calls) == (1 if status == "Triage" else 0)
 
 
+# TC-006 | AC-018.1, AC-022.1 — AI assist rechecks membership
 def test_ai_assist_rechecks_membership(test_client, ai_project, blank_form, service_calls, authenticated_user_factory, member_factory):
     owner, _, project, _, base = ai_project
     qa = authenticated_user_factory(email="qa@example.com")
@@ -130,6 +134,7 @@ def test_ai_assist_rechecks_membership(test_client, ai_project, blank_form, serv
     assert service_calls == []
 
 
+# TC-007 | AC-018.1, AC-022.1 — AI assist rejects bug outside project
 def test_ai_assist_rejects_bug_outside_project(test_client, ai_project, project_factory, blank_form, service_calls):
     owner, _, _, bug, _ = ai_project
     other = project_factory(owner["token"], name="Other project")
@@ -141,6 +146,7 @@ def test_ai_assist_rejects_bug_outside_project(test_client, ai_project, project_
     assert service_calls == []
 
 
+# TC-008 | AC-018.3, AC-023.1 — AI assist preserves current form without saving
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("populated", [False, True])
 def test_ai_assist_preserves_current_form_without_saving(test_client, ai_project, blank_form, service_calls, edit, populated):
@@ -159,6 +165,7 @@ def test_ai_assist_preserves_current_form_without_saving(test_client, ai_project
     assert len(bugs) == 1
 
 
+# TC-009, TC-010 | AC-018.3 — AI assist rejects invalid context
 @pytest.mark.parametrize("field,value", [
     ("fix_version", "1.0"), ("status", "Triage"), ("resolution", "Fixed"),
     ("created_at", "today"), ("updated_at", "today"), ("title", 12),
@@ -170,6 +177,7 @@ def test_ai_assist_rejects_invalid_context(test_client, ai_project, blank_form, 
     assert service_calls == []
 
 
+# TC-011 | AC-018.3 — AI assist requires complete snapshot
 def test_ai_assist_requires_complete_snapshot(test_client, ai_project, blank_form, service_calls):
     del blank_form["description"]
     response = test_client.post(request_url(ai_project, True), headers=headers(ai_project[0]), json=blank_form)

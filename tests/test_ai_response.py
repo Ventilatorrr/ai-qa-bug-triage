@@ -34,6 +34,7 @@ def response_context(test_client, test_database):
     )
 
 
+# TC-032 | AC-019.3, AC-022.3 — AI response delegates to validator and returns its result
 def test_ai_response_delegates_to_validator_and_returns_its_result(response_context, monkeypatch):
     raw = {"suggestions": [{"field": "title", "value": "Suggested title"}]}
     validated = validate_suggestions(raw, eligible_assignee_ids={7, 8})
@@ -50,6 +51,7 @@ def test_ai_response_delegates_to_validator_and_returns_its_result(response_cont
     assert calls[0][1] == response_context.eligible_assignee_ids
 
 
+# TC-033 | AC-019.4 — AI response retains partial valid suggestions
 def test_ai_response_retains_partial_valid_suggestions(response_context):
     raw = {"suggestions": [
         {"field": "title", "value": "Better title"},
@@ -63,6 +65,7 @@ def test_ai_response_retains_partial_valid_suggestions(response_context):
     assert result.suggestions == {"title": "Better title", "priority": "High"}
 
 
+# TC-034 | AC-019.3 — AI response uses only context assignee eligibility
 @pytest.mark.parametrize("assignee_id,accepted", [(7, True), (8, True), (99, False), (98, False)])
 def test_ai_response_uses_only_context_assignee_eligibility(response_context, assignee_id, accepted):
     # 99 appears in history; 98 represents a no-longer-eligible member.
@@ -76,6 +79,7 @@ def test_ai_response_uses_only_context_assignee_eligibility(response_context, as
         assert ai_response.process_provider_response(response_context, raw).outcome == "no_usable_suggestions"
 
 
+# TC-035 | AC-019.4 — AI response preserves no usable suggestions outcome
 @pytest.mark.parametrize("entries", [[], [
     {"field": "title", "value": " "},
     {"field": "environment", "value": None},
@@ -87,6 +91,7 @@ def test_ai_response_preserves_no_usable_suggestions_outcome(response_context, e
     assert result.suggestions == {}
 
 
+# TC-036 | AC-019.4, AC-022.3, AC-023.1 — AI response propagates malformed response
 @pytest.mark.parametrize("raw", [None, {"suggestions": {}}, {"suggestions": ["title"]}, {
     "suggestions": [{"field": "assignee_id", "value": 99}], "eligible_assignee_ids": [99],
 }])
@@ -95,6 +100,7 @@ def test_ai_response_propagates_malformed_response(response_context, raw):
         ai_response.process_provider_response(response_context, raw)
 
 
+# TC-037 | AC-019.3 — AI response preserves conflicting duplicate behavior
 def test_ai_response_preserves_conflicting_duplicate_behavior(response_context):
     result = ai_response.process_provider_response(response_context, {"suggestions": [
         {"field": "title", "value": "First title"},
@@ -104,6 +110,7 @@ def test_ai_response_preserves_conflicting_duplicate_behavior(response_context):
     assert result.suggestions == {"severity": "Minor"}
 
 
+# TC-038 | AC-022.3 — AI response has no mutation database or provider side effects
 def test_ai_response_has_no_mutation_database_or_provider_side_effects(response_context, monkeypatch):
     from app import ai_context, ai_triage, database
 

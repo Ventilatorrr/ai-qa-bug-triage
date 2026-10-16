@@ -5,6 +5,7 @@ import sqlite3
 import pytest
 
 
+# TC-141 | Technical — Client rebinds cached database before startup
 def test_client_rebinds_cached_database_before_startup(tmp_path, monkeypatch, request):
     # Simulate an earlier import with another setting, using only a synthetic path.
     stale_path = tmp_path / "must-not-open.db"
@@ -38,6 +39,7 @@ def test_client_rebinds_cached_database_before_startup(tmp_path, monkeypatch, re
     assert client.get("/version").status_code == 200
 
 
+# TC-142 | Technical — Client starts with fresh database
 @pytest.mark.parametrize("attempt", [1, 2])
 def test_client_starts_with_fresh_database(test_client, test_database, authenticated_user_factory, attempt):
     # Both cases register the same account and create the same project. Each

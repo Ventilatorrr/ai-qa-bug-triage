@@ -4,6 +4,7 @@ from playwright.sync_api import expect
 from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_bug, unique_name
 
 
+# TC-325 | AC-018.2, AC-018.3, AC-020.1, AC-020.2, AC-020.3, AC-020.4, AC-020.7 — New AI review applies only selected suggestions before create
 def test_new_ai_review_applies_only_selected_suggestions_before_create(
     page, e2e_api, workspace,
 ):
@@ -54,6 +55,7 @@ def test_new_ai_review_applies_only_selected_suggestions_before_create(
     expect(detail(page, "Priority")).to_have_text("High")
 
 
+# TC-326 | AC-020.5, AC-020.7, AC-020.8 — Edit AI cancel discards changes then save persists review
 def test_edit_ai_cancel_discards_changes_then_save_persists_review(page, e2e_api, workspace):
     bug = seed_bug(e2e_api, workspace, description="Stored description", severity="Minor")
 
@@ -91,6 +93,7 @@ def test_edit_ai_cancel_discards_changes_then_save_persists_review(page, e2e_api
     )["title"] == revised
 
 
+# TC-327, TC-328 | AC-018.4, AC-019.4, AC-023.1, AC-023.2 — AI failure or empty result preserves manual work and allows retry
 @pytest.mark.parametrize(
     "outcome,message",
     [

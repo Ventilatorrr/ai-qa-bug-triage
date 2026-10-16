@@ -66,6 +66,7 @@ def request_context(client, context, snapshot, captured, bug_number=None):
     return captured[-1]
 
 
+# TC-012 | AC-019.2, AC-022.2 — AI context preserves submitted form and persisted bugs
 @pytest.mark.parametrize("edit", [False, True])
 @pytest.mark.parametrize("populated", [False, True])
 def test_ai_context_preserves_submitted_form_and_persisted_bugs(
@@ -113,6 +114,7 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
     assert form.model_dump() == snapshot
 
 
+# TC-013 | AC-019.2, AC-022.2 — AI context retrieves bounded deterministic same project history
 @pytest.mark.parametrize("edit", [False, True])
 def test_ai_context_retrieves_bounded_deterministic_same_project_history(
     test_client, context_project, project_factory, blank_snapshot, captured_contexts, edit,
@@ -147,6 +149,7 @@ def test_ai_context_retrieves_bounded_deterministic_same_project_history(
     assert test_client.get(f"{context_project['base']}/bugs", headers=context_project["headers"]).json() == before
 
 
+# TC-014 | AC-019.2, AC-022.2 — AI context includes only current assignable project members
 def test_ai_context_includes_only_current_assignable_project_members(
     test_client, context_project, authenticated_user_factory, project_factory, member_factory,
     blank_snapshot, captured_contexts,
@@ -176,6 +179,7 @@ def test_ai_context_includes_only_current_assignable_project_members(
             assert result.suggestions == ({"assignee_id": user["user_id"]} if user["user_id"] in {member["user_id"] for member in expected} else {})
 
 
+# TC-015 | AC-019.2 — AI context supports empty project history and assignees
 def test_ai_context_supports_empty_project_history_and_assignees(
     test_client, authenticated_user_factory, project_factory, blank_snapshot, captured_contexts,
 ):
@@ -191,6 +195,7 @@ def test_ai_context_supports_empty_project_history_and_assignees(
     assert context.eligible_assignee_ids == set()
 
 
+# TC-016 | AC-019.2 — AI context is not constructed for rejected requests
 @pytest.mark.parametrize("rejection,status", [
     ("missing_token", 401), ("invalid_token", 401), ("developer", 403),
     ("non_member", 404), ("removed_member", 404), ("wrong_project_bug", 404), ("non_triage", 409),

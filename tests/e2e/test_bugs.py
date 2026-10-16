@@ -3,6 +3,7 @@ from playwright.sync_api import expect
 from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_bug, unique_name
 
 
+# TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 — Bug create edit assign and confirmed delete
 def test_bug_create_edit_assign_and_confirmed_delete(page, e2e_api, workspace):
     login(page, workspace["owner"])
     page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
@@ -48,6 +49,7 @@ def test_bug_create_edit_assign_and_confirmed_delete(page, e2e_api, workspace):
     api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"], expected=404)
 
 
+# TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 — Bug handoff pass and reopen
 def test_bug_handoff_pass_and_reopen(page, e2e_api, workspace):
     bug = seed_bug(e2e_api, workspace)
 
@@ -92,6 +94,7 @@ def test_bug_handoff_pass_and_reopen(page, e2e_api, workspace):
     assert saved["assignee_id"] == workspace["qa"]["id"]
 
 
+# TC-337 | AC-017.5 — Failed testing returns to selected developer
 def test_failed_testing_returns_to_selected_developer(page, e2e_api, workspace):
     bug = seed_bug(e2e_api, workspace, assignee_id=workspace["developer"]["id"])
     for payload in [
@@ -119,6 +122,7 @@ def test_failed_testing_returns_to_selected_developer(page, e2e_api, workspace):
     assert saved["status"] == "Development" and saved["resolution"] is None
 
 
+# TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 — Fix version eligibility persistence and form reset
 def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, workspace):
     owner = workspace["owner"]
     title = unique_name("Fix Version eligibility")

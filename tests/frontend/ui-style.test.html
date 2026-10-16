@@ -32,6 +32,7 @@ async function bugFixture(width) {
     return {doc, style: node => frame.contentWindow.getComputedStyle(node)};
 }
 
+// TC-341 | AC-012.2 — Bug details dividers preserve metadata rows
 async function test_bug_details_dividers_preserve_metadata_rows() {
     let cases = 0;
     for (const width of [1000, 680, 390]) {
@@ -74,6 +75,7 @@ function luminance(color) {
         .map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
     return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
 }
+// TC-342 | Technical — Destructive buttons preserve focus and disabled states
 async function test_destructive_buttons_preserve_focus_and_disabled_states() {
     const {doc, style} = await bugFixture(1000);
     const edit = doc.querySelector('#edit-bug-form');

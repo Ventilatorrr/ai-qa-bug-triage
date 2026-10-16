@@ -76,6 +76,7 @@ function projectPage() {
 }
 
 for (const edit of [false, true]) {
+    // TC-309, TC-314 | AC-005.2, AC-007.3 — Verify separately registered form variants
     test(edit ? "test_project_edit_validation_feedback_tracks_input" : "test_project_creation_validation_feedback_tracks_input", async () => {
         for (const correction of ["QA Project", "  Pasted Project  "]) {
             const page = projectPage();
@@ -90,6 +91,7 @@ for (const edit of [false, true]) {
         }
     });
 
+    // TC-310, TC-315 | AC-005.2, AC-007.3 — Verify separately registered form variants
     test(edit ? "test_project_edit_cancel_clears_form_feedback" : "test_project_creation_cancel_clears_form_feedback", async () => {
         const page = projectPage();
         page.open(edit);
@@ -100,6 +102,7 @@ for (const edit of [false, true]) {
         assert.equal(page.node("#message").textContent, "");
     });
 
+    // TC-311, TC-316 | AC-005.2, AC-007.3 — Verify separately registered form variants
     test(edit ? "test_project_edit_open_clears_previous_form_feedback" : "test_project_creation_open_clears_previous_form_feedback", async () => {
         for (const previous of ["create-validation", "edit-validation", "create-success"]) {
             const page = projectPage();
@@ -113,6 +116,7 @@ for (const edit of [false, true]) {
         }
     });
 
+    // TC-312, TC-317 | AC-005.2, AC-007.3 — Verify separately registered form variants
     test(edit ? "test_project_edit_preserves_unrelated_feedback" : "test_project_creation_preserves_unrelated_feedback", async () => {
         for (const error of ["Unable to load projects.", "Network unavailable.", "Authentication required."]) {
             const page = projectPage();
@@ -143,6 +147,7 @@ for (const edit of [false, true]) {
         }
     });
 
+    // TC-313, TC-318 | AC-005.2, AC-007.3 — Verify separately registered form variants
     test(edit ? "test_project_edit_server_validation_feedback_clears_on_correction" : "test_project_creation_server_validation_feedback_clears_on_correction", async () => {
         const page = projectPage();
         page.open(edit);
@@ -154,6 +159,7 @@ for (const edit of [false, true]) {
     });
 }
 
+// TC-319 | AC-007.3 — Project edit success clears prior validation feedback
 test("test_project_edit_success_clears_prior_validation_feedback", async () => {
     const page = projectPage();
     page.open(true);
@@ -165,6 +171,7 @@ test("test_project_edit_success_clears_prior_validation_feedback", async () => {
     assert.equal(page.node("#message").textContent, "");
 });
 
+// TC-320 | AC-005.2, AC-007.3 — Project name input preserves other form feedback
 test("test_project_name_input_preserves_other_form_feedback", async () => {
     const page = projectPage();
     page.open(true);
@@ -178,6 +185,7 @@ test("test_project_name_input_preserves_other_form_feedback", async () => {
 });
 
 for (const edit of [false, true]) {
+    // TC-321, TC-323 | AC-005.2, AC-007.3 — Verify separately registered form variants
     test(edit ? "test_project_edit_blocks_blank_name_submission" : "test_project_creation_blocks_blank_name_submission", async () => {
         for (const name of ["", "   ", "\t"]) {
             const page = projectPage();
@@ -187,6 +195,7 @@ for (const edit of [false, true]) {
         }
     });
 
+    // TC-322, TC-324 | AC-005.1, AC-007.1 — Verify separately registered form variants
     test(edit ? "test_project_edit_submits_valid_name_unchanged" : "test_project_creation_submits_valid_name_unchanged", async () => {
         for (const name of ["QA Project", "  QA Project  "]) {
             const page = projectPage();

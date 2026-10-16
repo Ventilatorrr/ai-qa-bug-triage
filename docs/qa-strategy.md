@@ -261,14 +261,14 @@ Where practical, test data should be created as part of test setup rather than r
 
 ## 9. Traceability
 
-Requirements, acceptance criteria, test references, test layers, and coverage status are connected through the project's Traceability Matrix. User stories remain in the requirements specification.
+Requirements and acceptance criteria connect to stable test case IDs through the project's Traceability Matrix. User stories remain in the requirements specification.
 
 The current matrix structure is:
 
-| REQ | AC | Test Reference | Test Layer | Status |
-| --- | -- | -------------- | ---------- | ------ |
+| REQ | AC | TC IDs | Test Type | Overall Coverage |
+| --- | -- | ------ | --------- | ---------------- |
 
-The `Test Layer` field is used to identify the relevant testing layer and/or purpose, for example:
+The `Test Type` field identifies the contributing verification layers and/or purposes, for example:
 
 * UI
 * API
@@ -279,9 +279,9 @@ The `Test Layer` field is used to identify the relevant testing layer and/or pur
 * API + UI
 * API + Database
 
-The Traceability Matrix also records additional tests that may not map directly to an acceptance criterion, such as technical, security, or edge-case tests.
+The RTM contains exactly one overall assessment per AC. The [test case catalogue](test-cases.md) owns stable global TC IDs, exact implementation references and parameter selectors, including technical, security and infrastructure cases without a business AC mapping. Equivalent parameter variants share an ID; distinct conceptual outcomes may share an implementation with explicit selectors.
 
-BDD scenarios are maintained separately as behavioural specifications and are not required to appear as a column in the main traceability matrix.
+The [execution record](test-execution.md) separates dated suite results, structured manual groups and exploratory observations. The [defect summary](defect-summary.md) indexes only verified tracker information. BDD scenarios remain nonexecutable specifications in the catalogue appendix; they receive no duplicate execution TC IDs.
 
 Layer coverage will be reviewed over time rather than assuming that every acceptance criterion requires UI, API, and Database tests.
 
@@ -369,14 +369,14 @@ Current implementation status (15 October 2026; execution evidence is dated sepa
 * Project membership and role-based authorization have been implemented and tested.
 * The frontend has been developed alongside the existing API functionality.
 * Automated API coverage is currently the strongest test layer.
-* A focused Python Playwright E2E suite is implemented under `tests/e2e/`, with explicit collection opt-in, unique fictional data, a dedicated server with a temporary SQLite database, and deterministic mocked AI responses. README documents separate backend, frontend, and browser commands; traceability records execution evidence and limitations.
+* A focused Python Playwright E2E suite is implemented under `tests/e2e/`, with explicit collection opt-in, unique fictional data, a dedicated server with a temporary SQLite database, and deterministic mocked AI responses. README documents separate backend, frontend, and browser commands; the catalogue and execution record identify evidence and limitations.
 * Increment 2 has not yet been formally reviewed and completed.
 * Increment 2 APIs are implemented through REQ-017. Frontend bug creation, viewing, editing, deletion, assignment, lifecycle actions, sorting, and pagination are implemented. Maintained JavaScript tests and dated browser checks provide partial UI evidence; broader browser coverage remains outstanding.
 * Increment 3 AI-assisted triage is implemented, including validated suggestions, user-controlled review, and failure handling. Automated provider integration uses mocked responses; real-model evaluation remains deferred.
 * Existing API tests use fresh per-test SQLite paths under pytest temporary directories, with cached configuration rebound before application startup. Migration and subprocess tests retain separate temporary databases. Test suites remain serial.
 * Historical evidence (10 September 2026): pytest passed 148 cases in 114.52 seconds after the member-removal timestamp fix. The 38 temporary frontend validation-message checks recorded then were not a maintained regression suite. These historical results are not the current suite inventory or a new execution result.
-* Current maintained frontend coverage runs with `node --test tests/frontend/*.test.cjs`. Exact preparation-pass execution results are recorded in the traceability matrix.
-* About and Bugs have theme and Logout controls. Dated isolated browser/theme checks are recorded in traceability; broader cross-browser and accessibility verification remains outstanding.
+* Current maintained frontend coverage runs with `node --test tests/frontend/*.test.cjs`. Exact recorded suite results are in [test execution](test-execution.md).
+* About and Bugs have theme and Logout controls. Dated isolated browser/theme checks are linked from the execution record; broader cross-browser and accessibility verification remains outstanding.
 * Versioning update (8 October 2026): `APP_VERSION` in `app/version.py` reports `1.0.0-dev` through FastAPI metadata, `/version`, and the About page. The annotated tag and published GitHub Release `v0.1.0` remain the first stable release. `0.1.0-dev` is only a retrospective development-period label, not an actual release or Git tag.
 * The Semantic Versioning workflow is current development `1.0.0-dev` -> planned first release candidate `1.0.0-rc.1` -> planned stable release `v1.0.0`. No release candidate or new Git tag has been created yet.
 * Affected Version identifies the version where a defect was observed or reproduced, including an observed development build such as `1.0.0-dev`, not necessarily where it was introduced. It is not populated automatically. Fix Version identifies the actual released version containing the fix. Leave these fields blank when no appropriate observed or released version is known; do not assign planned release numbers to fixes or released versions to defects found only in unreleased feature work.

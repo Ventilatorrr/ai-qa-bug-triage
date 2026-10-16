@@ -5,6 +5,7 @@ from playwright.sync_api import expect
 from tests.e2e.helpers import api_call, login, seed_bug, unique_name
 
 
+# TC-333 | AC-012.2, AC-012.4, AC-012.5, AC-012.6 — Sort pagination and page size survive navigation and reload
 def test_sort_pagination_and_page_size_survive_navigation_and_reload(page, e2e_api, workspace):
     for number in range(11):
         seed_bug(e2e_api, workspace, title=f"Synthetic report {number:02d}")
@@ -49,6 +50,7 @@ def test_sort_pagination_and_page_size_survive_navigation_and_reload(page, e2e_a
     expect(page.get_by_role("table").get_by_role("row")).to_have_count(12)
 
 
+# TC-334 | AC-012.5, AC-012.6 — Page size preferences persist and are isolated by user
 def test_page_size_preferences_persist_and_are_isolated_by_user(page, e2e_api, workspace):
     owner = workspace["owner"]
     second = api_call(

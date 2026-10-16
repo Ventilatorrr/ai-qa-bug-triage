@@ -60,6 +60,7 @@ async function page({role = "QA Analyst", status = "Testing", fixVersion = null,
     return {node, click, requests, bug};
 }
 
+// TC-286 | AC-017.5 — Passed fix version input visible and sends value
 test("test_passed_fix_version_input_visible_and_sends_value", async () => {
     const html = fs.readFileSync(path.join(__dirname, "../../frontend/bugs.html"), "utf8");
     const input = html.match(/<input\b[^>]*id="lifecycle-pass-fix-version"[^>]*>/)?.[0];
@@ -102,6 +103,7 @@ test("test_passed_fix_version_input_visible_and_sends_value", async () => {
     }
 });
 
+// TC-287 | AC-017.5 — Passed fix version respects eligibility
 test("test_passed_fix_version_respects_eligibility", async () => {
     for (const settings of [{status: "Closed"}, {status: "Development"}, {role: "Developer"}, {assigned: false}]) {
         const f = await page(settings);
@@ -112,6 +114,7 @@ test("test_passed_fix_version_respects_eligibility", async () => {
     }
 });
 
+// TC-288 | AC-017.5 — Failed flow does not use fix version
 test("test_failed_flow_does_not_use_fix_version", async () => {
     const f = await page({fixVersion: "1.2.0"});
     f.node("#lifecycle-pass-fix-version").value = "Do not apply";

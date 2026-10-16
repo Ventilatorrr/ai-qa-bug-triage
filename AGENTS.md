@@ -105,12 +105,25 @@ it when files change or assumptions need verification.
 - Keep affected implementation, tests, traceability, and documentation
   consistent within the authorized task scope.
 - Traceability matrix columns are:
-  `REQ | AC | Test Reference | Test Layer | Status`.
-- Each automated test gets its own matrix row using its exact function name.
-- Additional security, technical, or edge-risk tests may use `AC —`.
+  `REQ | AC | TC IDs | Test Type | Overall Coverage`.
+- Keep exactly one authoritative RTM row per AC. Assess collective evidence;
+  do not assign overall AC coverage to individual test contributions.
+- Catalogue every maintained automated case and structured manual group in
+  `docs/test-cases.md` using the global `TC-001`, `TC-002`, ... sequence.
+  Never renumber or reuse an assigned ID; consult the catalogue's next ID.
+- Keep exact implementation references and concise TC/AC comments in test source.
+  Equivalent parameter variants share an ID. Approved distinct conceptual cases
+  may share a function; record exact selectors and all applicable IDs without
+  refactoring the function merely for documentation. Report new ambiguities.
+- Technical/security/infrastructure cases still receive IDs and may use `—`
+  for their AC mapping. Do not invent requirements to justify tests.
+- Record suite-level results and manual/exploratory provenance in
+  `docs/test-execution.md`; retain M01–M05 as manual aliases. Keep genuine defect
+  references in `docs/defect-summary.md`, with the application as source of truth.
 - Required UI or manual gaps prevent an AC from being marked fully `Covered`.
-- Do not assign artificial manual test-case IDs to automated tests.
-  Future formal manual cases may use identifiers such as `TC-PROJ-001`.
+- Separate Covered/Partial/Not Covered AC assessments from execution results.
+  BDD specifications without executable bindings receive no execution TC IDs
+  and do not count as passing automation.
 - Passing automated tests or implementing a page does not establish increment
   completion; use the Definition of Done.
 - BDD is not the normal implementation or traceability workflow for this
