@@ -23,7 +23,7 @@ from tests.ai_evaluation.scenarios import DATASET_VERSION, load_scenarios
 
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_ROOT = ROOT / "test-results" / "ai-evaluation"
+OUTPUT_ROOT = ROOT / "ai-evaluation-results"
 DIMENSIONS = ("factual_grounding", "current_form_primacy", "history_use", "abstention", "schema_validity")
 SPEND_PAUSE_USD = 0.10  # Observed usage threshold, not a per-request monetary cap.
 
@@ -120,7 +120,6 @@ class RecordingResponses:
             "response_id": response.id, "request_id": getattr(response, "_request_id", None),
             "model": response.model, "status": response.status,
             "output_text": response.output_text,
-            "output": [item.model_dump(mode="json") for item in response.output],
             "usage": response.usage.model_dump(mode="json") if response.usage else None,
         }
         return response
@@ -152,7 +151,7 @@ def new_output_directory(requested):
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
     )).resolve()
     if not path.is_relative_to(OUTPUT_ROOT.resolve()) or path == OUTPUT_ROOT.resolve():
-        raise ValueError("Output must be a new child directory under test-results/ai-evaluation.")
+        raise ValueError("Output must be a new child directory under ai-evaluation-results.")
     path.mkdir(parents=True, exist_ok=False)
     return path
 
@@ -259,7 +258,7 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--offline", action="store_true", help="Default: synthetic responses, no external network.")
     mode.add_argument("--live", action="store_true", help="Requires separate human approval and explicit environment opt-in.")
-    parser.add_argument("--output", help="New child directory under test-results/ai-evaluation.")
+    parser.add_argument("--output", help="New child directory under ai-evaluation-results.")
     parser.add_argument("--pass-number", type=int, choices=(1, 2), default=1)
     args = parser.parse_args(argv)
     if args.live:

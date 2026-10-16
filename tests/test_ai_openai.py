@@ -14,7 +14,7 @@ from app.ai_openai import OpenAiSuggestionResponseError, request_openai_suggesti
 
 
 @pytest.fixture
-def provider_input(test_client, test_database):
+def provider_input(test_database):
     # Database-dependent models are imported only after disposable fixture setup.
     from app.ai_context import AiTriageContext, AssignableMemberContext, HistoricalBugContext
     from app.database import DATABASE_NAME
@@ -89,6 +89,11 @@ def test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database(
     assert body["store"] is False
     instructions, rules = body["instructions"].split("\noutput_contract.field_rules:\n")
     assert instructions == provider_input["instructions"]
+    assert "Severity, Priority or eligible Assignee values even when current fields are empty" in instructions
+    assert "Proposed values do not assert current verification" in instructions
+    assert "Return only the proposed field value" in instructions
+    assert "Affected Version must contain only the version identifier" in instructions
+    assert "Environment must contain only the environment value" in instructions
     assert json.loads(rules) == provider_input["output_contract"]["field_rules"]
     assert len(body["input"]) == 1
     assert body["input"][0]["role"] == "user"

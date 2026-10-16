@@ -8,7 +8,7 @@ from app.schemas import AiAssistRequest, BugCreate
 
 
 @pytest.fixture
-def generation_context(test_client, test_database):
+def generation_context(test_database):
     # Database-dependent models are imported only after disposable fixture setup.
     from app.ai_context import AiTriageContext, AssignableMemberContext, HistoricalBugContext
     from app.database import DATABASE_NAME
@@ -107,6 +107,14 @@ def test_ai_generation_instructions_define_context_and_safety_boundaries(generat
         "current_form is the primary source of truth", "including unsaved user-entered values",
         "same-project supporting context only, not automatically verified facts",
         "Do not fabricate missing", "factual details merely to fill fields",
+        "Relevant historical reports may support proposed Environment, Affected Version",
+        "Severity, Priority or eligible Assignee values even when current fields are empty",
+        "Proposed values do not assert current verification",
+        "Return only the proposed field value",
+        "Do not append explanations, source references",
+        "uncertainty notes, or provenance in parentheses or other prose within field values",
+        "Affected Version must contain only the version identifier",
+        "Environment must contain only the environment value",
         "improved, normalized, summarized, expanded", "or restructured where appropriate",
         "Do not suggest Fix Version, Status, Resolution, Created, Updated",
         "Assignee suggestions must use only user_id values from eligible_assignees",

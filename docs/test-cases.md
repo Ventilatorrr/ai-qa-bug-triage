@@ -20,7 +20,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | --- | ---: | ---: | --- |
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 7 | 7 | 23 cases; no real provider calls |
-| Opt-in real-model evaluation | 6 | 6 | Six cases; live execution pending |
+| Opt-in real-model evaluation | 6 | 6 | Six cases; 30 live executions across three prompt stages, reviewed |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 14 functions | 15 | 15 Chromium scenarios |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -69,21 +69,21 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-019"></a>TC-019 | AC-019.3 | AI generation classification rules match application | Python unit / AI (offline) | [`test_ai_generation_classification_rules_match_application`](../tests/test_ai_generation.py#L78); All variants |
 | <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/test_ai_generation.py#L91); All variants |
 | <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/test_ai_generation.py#L103); All variants |
-| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/test_ai_generation.py#L124); All variants |
-| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/test_ai_generation.py#L144); All variants |
+| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/test_ai_generation.py#L132); All variants |
+| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/test_ai_generation.py#L152); All variants |
 
 ## tests/test_ai_openai.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-024"></a>TC-024 | AC-019.2, AC-022.2 | AI openai sends existing contract with SDK without network or database | Python unit / AI (offline) | [`test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database`](../tests/test_ai_openai.py#L48); All variants |
-| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/test_ai_openai.py#L116); All variants |
-| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/test_ai_openai.py#L123); All variants |
-| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/test_ai_openai.py#L138); All variants |
-| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/test_ai_openai.py#L145); All variants |
-| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/test_ai_openai.py#L154); All variants |
-| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/test_ai_openai.py#L171); All variants |
-| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/test_ai_openai.py#L179); All variants |
+| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/test_ai_openai.py#L121); All variants |
+| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/test_ai_openai.py#L128); All variants |
+| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/test_ai_openai.py#L143); All variants |
+| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/test_ai_openai.py#L150); All variants |
+| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/test_ai_openai.py#L159); All variants |
+| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/test_ai_openai.py#L176); All variants |
+| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/test_ai_openai.py#L184); All variants |
 
 ## tests/test_ai_response.py
 
@@ -572,18 +572,23 @@ unassignment state/role matrix each retain one ID.
 ## AC-019.2 opt-in evaluation
 
 Inputs and criteria were established in Stage B1 before any live execution.
-See the [frozen protocol](ai-testing-strategy.md) and [execution record](test-execution.md).
-Offline fixture responses do not establish real-model coverage. AC-019.2 remains Partial.
+See the [frozen protocol](ai-testing-strategy.md) and
+[final evaluation review](test-execution.md#ac-0192-final-evaluation-review).
+Offline fixture responses do not establish real-model coverage. AC-019.2 is
+Covered by collective deterministic and reviewed live evidence: 12 original-prompt,
+12 historical-clarification and six final-formatting executions on 16 October 2026.
+Review provenance is Codex-assisted, with user-directed closure; raw review templates
+remain unchanged. Only one six-case run uses the final formatting instruction.
 The CLI selects all six scenarios once per invocation; repeats retain the same IDs.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-351"></a>TC-351 | AC-019.2 | Sparse current information without supporting history | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_A`](../tests/ai_evaluation/scenarios.py); EVAL-A |
-| <a id="tc-352"></a>TC-352 | AC-019.2 | Improve supported reproduction without fabricating facts | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_B`](../tests/ai_evaluation/scenarios.py); EVAL-B |
-| <a id="tc-353"></a>TC-353 | AC-019.2 | Current unsaved retest takes precedence over conflicting history | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_C`](../tests/ai_evaluation/scenarios.py); EVAL-C |
-| <a id="tc-354"></a>TC-354 | AC-019.2 | Relevant history supports proposed values in empty current fields | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_D`](../tests/ai_evaluation/scenarios.py); EVAL-D |
-| <a id="tc-355"></a>TC-355 | AC-019.2 | Preserve uncertainty without inventing missing factual evidence | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_E`](../tests/ai_evaluation/scenarios.py); EVAL-E |
-| <a id="tc-356"></a>TC-356 | AC-019.2 | Irrelevant same-project history does not contaminate suggestions | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_F`](../tests/ai_evaluation/scenarios.py); EVAL-F |
+| <a id="tc-351"></a>TC-351 | AC-019.2 | Sparse current information without supporting history | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_A`](../tests/ai_evaluation/scenarios.py); EVAL-A |
+| <a id="tc-352"></a>TC-352 | AC-019.2 | Improve supported reproduction without fabricating facts | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_B`](../tests/ai_evaluation/scenarios.py); EVAL-B |
+| <a id="tc-353"></a>TC-353 | AC-019.2 | Current unsaved retest takes precedence over conflicting history | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_C`](../tests/ai_evaluation/scenarios.py); EVAL-C |
+| <a id="tc-354"></a>TC-354 | AC-019.2 | Relevant history supports proposed values in empty current fields | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_D`](../tests/ai_evaluation/scenarios.py); EVAL-D |
+| <a id="tc-355"></a>TC-355 | AC-019.2 | Preserve uncertainty without inventing missing factual evidence | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_E`](../tests/ai_evaluation/scenarios.py); EVAL-E |
+| <a id="tc-356"></a>TC-356 | AC-019.2 | Irrelevant same-project history does not contaminate suggestions | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_F`](../tests/ai_evaluation/scenarios.py); EVAL-F |
 
 ## tests/test_ai_evaluation.py
 

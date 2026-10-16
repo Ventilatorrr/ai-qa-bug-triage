@@ -2,6 +2,7 @@ working-notes.md
 requirements_old.md
 bugtriage.db
 test-results/
+ai-evaluation-results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

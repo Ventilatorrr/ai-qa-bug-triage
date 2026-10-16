@@ -1,8 +1,18 @@
 # AC-019.2 real-model evaluation — protocol v1
 
-Stage B1 implements and validates the harness **offline only**. No live outputs
-have been evaluated. AC-019.2 remains Partial; current RTM counts remain
-**87 Covered / 1 Partial / 0 Not Covered**.
+Stage B1 validated the harness offline. On 16 October 2026, 30 live evaluations
+completed: 12 original-prompt, 12 historical-context clarification and six final
+formatting-correction requests. The [execution report](test-execution.md#ac-0192-final-evaluation-review)
+records the final A–F rubric assessment, historical observations and limitations.
+User-directed closure based on Codex-assisted review marks AC-019.2 Covered;
+current RTM counts are **88 Covered / 0 Partial / 0 Not Covered**. Raw review
+templates remain unchanged; independent human scoring is not claimed.
+
+The original protocol is preserved at commit `aa6977b` and within baseline run
+snapshots (protocol SHA256 `21b83707749ef6f6918bd80bd8505a4b7035a6ac18d5ab370086bb65bd8afc1d`).
+The dataset, rubric and closure criteria below are unchanged. Current procedural
+updates move future evidence outside pytest cleanup and distinguish prompt-change
+verification from the original runs; they do not retrospectively regrade results.
 
 ## Scope and frozen inputs
 
@@ -25,8 +35,9 @@ names, expected results, review instructions or offline fixture responses.
 
 The exact executable input data is authoritative. Historical records contain
 only supported bug fields and internal IDs, without extra expertise, provenance
-or confidence properties. TC-351–TC-356 are evaluation definitions, **not executed
-real-model passes**. Synthetic offline responses only exercise the harness.
+or confidence properties. TC-351–TC-356 retain the same IDs across all five live
+invocations; the execution report separates baseline limitations from the final
+review. Synthetic offline responses only exercise the harness.
 
 ## Rubric fixed before live execution
 
@@ -77,9 +88,9 @@ transport and blocked outgoing socket connections. No credential file is loaded.
 .\.venv\Scripts\python.exe -m pytest tests/test_ai_evaluation.py -q
 ```
 
-Live invocation is **proposed only; requires the user's next approval**. Supply an
+Any further live invocation **requires separate approval**. Supply an
 API key locally through the environment, never chat, source, CLI arguments or logs.
-The first invocation makes at most **six serial attempts**, A–F once each:
+Each invocation makes at most **six serial attempts**, A–F once each:
 
 ```powershell
 $env:AI_EVALUATION_ALLOW_LIVE = '1'
@@ -101,7 +112,8 @@ recorder captures the actual SDK arguments/response without substituting prompts
 or generation settings: gpt-6-luna, strict schema, store=False, 60-second timeout,
 zero SDK retries; no explicit output cap, temperature, seed or reasoning effort.
 Record returned model as well as the requested alias; a dated alias snapshot is
-accepted and recorded. No new dependencies or application code changes are needed.
+accepted and recorded. No new dependencies or changes to the provider adapter,
+output schema or validator are required.
 
 The runner never starts FastAPI, calls application APIs or calls the database-backed
 `request_suggestions` orchestration. It constructs fictional context models directly.
@@ -113,17 +125,25 @@ Production history selection, authorization and membership-change handling retai
 their existing deterministic tests rather than being duplicated here.
 
 Each invocation writes to a **new** directory under ignored
-`test-results/ai-evaluation/`; existing directories and paths outside that root are
-rejected. Artifacts contain fictional input and untrusted generated text. Do not
+`ai-evaluation-results/`; existing directories and paths outside that root are
+rejected. This is outside pytest-playwright's default `test-results/` cleanup root.
+Existing runs are never migrated or deleted by the runner. Do not point pytest's
+`--output` at evaluation evidence. Legacy reports still under `test-results/` remain
+vulnerable to default plugin cleanup; use a separate disposable pytest `--output`
+directory while preserving them. Artifacts contain fictional input and untrusted generated text. Do not
 execute rendered text; review unexpected sensitive-looking output before sharing.
 No auth headers, API key values or raw exception messages are captured.
 
 ## Requests, costs and stop rules
 
-Planned total: 12 attempts, two batches of six. Human review of batch 1 and renewed
-approval precede batch 2 (`--pass-number 2`). Compare all repeats, not only the best
-output. A pass number labels evidence; it does not automate approval or prevent a
-human from deliberately invoking another process. There are no SDK/harness retries.
+Historical follow-up plan: up to 12 additional attempts in two batches of six,
+separately from the 12 original-prompt requests, with review/renewed approval
+between batches (`--pass-number 2`). Actual execution then added a separately
+authorized six-request formatting check; all 30 results remain in the execution
+report. The two historical-clarification invocations both record `pass_number=1`;
+their unique timestamps identify the repeat. Compare all repeats, not only the
+best output. A pass number labels evidence; it does not automate approval or
+prevent another invocation. There are no SDK/harness retries.
 
 Stage A planning estimates were 18–27k input tokens and 6–48k billed output tokens
 over twelve calls. At published Standard short-context gpt-6-luna rates checked on

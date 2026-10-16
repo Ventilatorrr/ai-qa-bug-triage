@@ -15,6 +15,9 @@ from tests.ai_evaluation import run_evaluation as runner
 from tests.ai_evaluation.scenarios import load_scenarios
 
 
+DEFAULT_OUTPUT_ROOT = runner.OUTPUT_ROOT
+
+
 @pytest.fixture(autouse=True)
 def offline_only(monkeypatch, tmp_path):
     # Independent protection around the runner's own guards, even with inherited keys.
@@ -226,6 +229,9 @@ def test_evaluation_review_flags_are_prompts_not_semantic_scores(index, suggesti
 # TC-362 | AC — — Evidence output refuses overwrites and paths outside its owned root.
 @pytest.mark.parametrize("destination", ["existing", "root", "outside"])
 def test_evaluation_output_directory_is_new_and_confined(destination, tmp_path):
+    assert DEFAULT_OUTPUT_ROOT == runner.ROOT / "ai-evaluation-results"
+    assert not DEFAULT_OUTPUT_ROOT.is_relative_to(runner.ROOT / "test-results")
+
     runner.OUTPUT_ROOT.mkdir()
     existing = runner.OUTPUT_ROOT / "existing"
     existing.mkdir()
