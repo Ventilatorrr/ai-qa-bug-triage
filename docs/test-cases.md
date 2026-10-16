@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-351**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-364**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -19,11 +19,13 @@ own results. Test bodies and parameter data remain the executable specification.
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
+| Offline evaluation harness pytest (1 module) | 7 | 7 | 23 cases; no real provider calls |
+| Opt-in real-model evaluation | 6 | 6 | Six cases; live execution pending |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 14 functions | 15 | 15 Chromium scenarios |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
-| Total | 338 | **350** | Definition, conceptual-case and execution counts differ |
+| Total | 351 | **363** | Definition, conceptual-case and execution counts differ |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -566,6 +568,37 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-345"></a>TC-345 | AC-012.5 | Pagination and responsive layout | Structured manual / user-reported | [M03](test-execution.md#m03); Manually executable checks; see recorded limitations |
 | <a id="tc-346"></a>TC-346 | AC-017.1 | Lifecycle scrolling | Structured manual / user-reported | [M04](test-execution.md#m04); Manually executable checks; see recorded limitations |
 | <a id="tc-347"></a>TC-347 | AC-020.8 | Pending AI suggestion lifetime | Structured manual / user-reported | [M05](test-execution.md#m05); Manually executable checks; see recorded limitations |
+
+## AC-019.2 opt-in evaluation
+
+Inputs and criteria were established in Stage B1 before any live execution.
+See the [frozen protocol](ai-testing-strategy.md) and [execution record](test-execution.md).
+Offline fixture responses do not establish real-model coverage. AC-019.2 remains Partial.
+The CLI selects all six scenarios once per invocation; repeats retain the same IDs.
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-351"></a>TC-351 | AC-019.2 | Sparse current information without supporting history | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_A`](../tests/ai_evaluation/scenarios.py); EVAL-A |
+| <a id="tc-352"></a>TC-352 | AC-019.2 | Improve supported reproduction without fabricating facts | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_B`](../tests/ai_evaluation/scenarios.py); EVAL-B |
+| <a id="tc-353"></a>TC-353 | AC-019.2 | Current unsaved retest takes precedence over conflicting history | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_C`](../tests/ai_evaluation/scenarios.py); EVAL-C |
+| <a id="tc-354"></a>TC-354 | AC-019.2 | Relevant history supports proposed values in empty current fields | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_D`](../tests/ai_evaluation/scenarios.py); EVAL-D |
+| <a id="tc-355"></a>TC-355 | AC-019.2 | Preserve uncertainty without inventing missing factual evidence | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_E`](../tests/ai_evaluation/scenarios.py); EVAL-E |
+| <a id="tc-356"></a>TC-356 | AC-019.2 | Irrelevant same-project history does not contaminate suggestions | Real-model evaluation / human scored; not yet executed live | [`SCENARIO_F`](../tests/ai_evaluation/scenarios.py); EVAL-F |
+
+## tests/test_ai_evaluation.py
+
+These are technical harness checks, not live-model AC passes. Normal pytest may
+run them safely; each uses an in-memory transport and independently blocks sockets/SQLite.
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-357"></a>TC-357 | — | Default offline CLI records production contracts and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/test_ai_evaluation.py); All six synthetic responses |
+| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/test_ai_evaluation.py); All five gate variants; CLI and programmatic entry points |
+| <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/test_ai_evaluation.py); All variants |
+| <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/test_ai_evaluation.py); All eight failure variants; clients close on failure |
+| <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/test_ai_evaluation.py); All four variants |
+| <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/test_ai_evaluation.py); All three path variants |
+| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/test_ai_evaluation.py); Synthetic usage only |
 
 ## BDD specification appendix
 
