@@ -134,3 +134,55 @@ the checker and the complete syntax check then passed. This was not a test or
 application failure. `git diff --check` passed. The 17 BDD scenario bodies remain
 unchanged/specification-only and contribute no executed count. No full regression
 suite was rerun for these documentation/comment changes.
+
+## Deterministic AC closure — 16 October 2026
+
+Baseline: `27c46ac` on `test/ac-coverage`, plus this test-only change. Production
+code, fixtures, test server and dependencies are unchanged. The earlier execution
+and manual records above remain historical; they are not relabelled as new runs.
+
+- **AC-009.5 / TC-331:** extended the existing membership workflow. Four additional
+  fictional accounts are inserted in descending email order with interleaved
+  QA/Developer roles. A non-owner member reads the visible member panel; its full
+  rendered text sequence must contain the Owner first, all QA Analysts next and
+  all Developers last, with alphabetic email order within each role. Expected
+  values come from setup inputs, not the member-list API response. Existing
+  browser addition/removal and lost-access checks remain.
+- **AC-012.4 / TC-348–TC-350:** three generated frontend cases exercise all four
+  Severity/Priority ranks and all five Status ranks from deliberately unsorted
+  input. Actual rendered cell values and report-number order are asserted in
+  both directions. Existing column/preference/storage tests remain unchanged.
+
+| Current command | Result |
+| --- | --- |
+| `node --test --test-name-pattern=test_bug_sort_complete_ tests/frontend/bug-sort-persistence.test.cjs` | **3 passed**, 0 failures/skips; 207.4846ms |
+| `.\.venv\Scripts\python.exe -m pytest tests/e2e/test_authorization.py --e2e --e2e-port 8148 --browser chromium -q -k owner_manages_membership --tracing retain-on-failure --screenshot only-on-failure` | **1 passed, 1 deselected in 9.88s** |
+| `node --test tests/frontend/*.test.cjs` | **99 passed**, 0 failures/skips/cancellations; 313.0891ms |
+| `.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium -q --tracing retain-on-failure --screenshot only-on-failure` | **15 passed in 57.44s**, no failures/skips/teardown errors |
+
+The initial sandboxed focused pytest invocation produced no output or completed
+result and was interrupted (exit 1). The same command then passed outside the
+sandbox. No application defect was identified, and no assertions, delays or
+retries were changed to address that invocation issue. Subsequent suites ran
+serially; there were no concurrent pytest suites.
+
+The project reports Playwright package **1.64.0**; `playwright install --list`
+confirmed installed Chromium/headless-shell **revision 1248**, matching the
+package's browsers.json manifest. No browser installation was required. Browser
+execution was headless Chromium on the approved **127.0.0.1:8148** origin using
+the existing dedicated test server. Its readiness handshake verifies PID,
+identity, bound address, fresh absolute temporary SQLite path and cached database
+configuration before browser/API interaction. AI transport remains mocked and
+external connections blocked. No real database or genuine records were accessed.
+
+Port checks found no listener before startup; the fixture also refuses occupied
+ports. Before/after full-run directory inventories found no `ai-qa-e2e-*`
+directories remaining, and an exclusive socket bind confirmed 8148 was released.
+No unrelated process was terminated or reused.
+
+The catalogue now has **350 TCs**; existing IDs are unchanged and next available
+is TC-351. AC-009.5 and AC-012.4 are Covered using the new assertions plus their
+existing complementary evidence. Overall coverage is **87 Covered / 1 Partial /
+0 Not Covered**. AC-019.2 real-model grounding remains deferred. No unrelated
+backend regression run, new manual observation, other-engine or visual/theme
+verification is claimed for this pass.

@@ -9,6 +9,17 @@ def test_owner_manages_membership_and_removed_user_loses_access(
 ):
     member = account_factory()
     project = workspace["project"]
+    added = sorted(
+        [account_factory() for _ in range(4)],
+        key=lambda account: account["email"], reverse=True,
+    )
+    # Interleave roles and insert both additional email pairs in descending order.
+    for account, role in zip(added, ["QA Analyst", "Developer", "QA Analyst", "Developer"]):
+        api_call(
+            e2e_api, "POST", f"/projects/{project['id']}/members",
+            workspace["owner"], expected=201,
+            data={"email": account["email"], "role": role},
+        )
 
     login(page, workspace["owner"])
     page.get_by_role("link", name=project["name"], exact=True).click()
@@ -25,6 +36,18 @@ def test_owner_manages_membership_and_removed_user_loses_access(
     expect(page.get_by_role("heading", name=project["name"], exact=True)).to_be_visible()
     page.get_by_role("button", name="Show Members").click()
     expect(page.get_by_role("button", name="Add Member", exact=True)).to_be_hidden()
+
+    qa_emails = sorted([workspace["qa"]["email"], added[0]["email"], added[2]["email"]])
+    developer_emails = sorted([
+        workspace["developer"]["email"], member["email"], added[1]["email"], added[3]["email"],
+    ])
+    expected_members = [f"{workspace['owner']['email']} (Project Owner)"]
+    expected_members += [f"{email} (QA Analyst)" for email in qa_emails]
+    expected_members += [f"{email} (Developer)" for email in developer_emails]
+
+    # Member entries have no named container role; assert their rendered text/order.
+    expect(page.locator("#members")).to_be_visible()
+    expect(page.locator("#members > div")).to_have_text(expected_members)
 
     login(page, workspace["owner"])
     page.get_by_role("link", name=project["name"], exact=True).click()

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-348**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-351**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -19,11 +19,11 @@ own results. Test bodies and parameter data remain the executable specification.
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
-| Frontend Node (8 files) | 96 registered tests | 96 | Internal loops are variants |
+| Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 14 functions | 15 | 15 Chromium scenarios |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
-| Total | 335 | **347** | Definition, conceptual-case and execution counts differ |
+| Total | 338 | **350** | Definition, conceptual-case and execution counts differ |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -436,6 +436,9 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-283"></a>TC-283 | — | Project deletion clears only current users project sort preference | Frontend JS / DOM substitutes | [`test_project_deletion_clears_only_current_users_project_sort_preference`](../tests/frontend/bug-sort-persistence.test.cjs#L311); All variants |
 | <a id="tc-284"></a>TC-284 | — | Failed project deletion preserves sort preference | Frontend JS / DOM substitutes | [`test_failed_project_deletion_preserves_sort_preference`](../tests/frontend/bug-sort-persistence.test.cjs#L323); All variants |
 | <a id="tc-285"></a>TC-285 | — | Project deletion succeeds when sort storage is unavailable | Frontend JS / DOM substitutes | [`test_project_deletion_succeeds_when_sort_storage_is_unavailable`](../tests/frontend/bug-sort-persistence.test.cjs#L332); All variants |
+| <a id="tc-348"></a>TC-348 | AC-012.4 | Sort all four Severity ranks from unsorted input in both directions | Frontend JS / DOM substitutes | [`test_bug_sort_complete_severity_rank_order`](../tests/frontend/bug-sort-persistence.test.cjs#L354); column=severity; ascending and descending |
+| <a id="tc-349"></a>TC-349 | AC-012.4 | Sort all four Priority ranks from unsorted input in both directions | Frontend JS / DOM substitutes | [`test_bug_sort_complete_priority_rank_order`](../tests/frontend/bug-sort-persistence.test.cjs#L354); column=priority; ascending and descending |
+| <a id="tc-350"></a>TC-350 | AC-012.4 | Sort all five lifecycle Status ranks from unsorted input in both directions | Frontend JS / DOM substitutes | [`test_bug_sort_complete_status_rank_order`](../tests/frontend/bug-sort-persistence.test.cjs#L354); column=status; ascending and descending |
 
 ## tests/frontend/fix-version-on-pass.test.cjs
 
@@ -516,8 +519,8 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-331"></a>TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5 | Owner manages membership and removed user loses access | Playwright / Chromium | [`test_owner_manages_membership_and_removed_user_loses_access`](../tests/e2e/test_authorization.py#L7); All variants |
-| <a id="tc-332"></a>TC-332 | AC-012.3, AC-014.2, AC-022.1 | Developer cannot delete or request AI and outsider cannot open bug | Playwright / Chromium (mocked AI) | [`test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug`](../tests/e2e/test_authorization.py#L49); All variants |
+| <a id="tc-331"></a>TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5 | Manage membership, verify displayed email/role grouping and alphabetical order after unsorted insertion, and revoke removed-user access | Playwright / Chromium | [`test_owner_manages_membership_and_removed_user_loses_access`](../tests/e2e/test_authorization.py#L7); All variants |
+| <a id="tc-332"></a>TC-332 | AC-012.3, AC-014.2, AC-022.1 | Developer cannot delete or request AI and outsider cannot open bug | Playwright / Chromium (mocked AI) | [`test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug`](../tests/e2e/test_authorization.py#L72); All variants |
 
 ## tests/e2e/test_bug_list.py
 

@@ -3,9 +3,10 @@
 One authoritative overall assessment per acceptance criterion in [requirements](requirements.md).
 TC definitions and precise selectors are in the [catalogue](test-cases.md); execution
 provenance is in [test-execution](test-execution.md). Assessed on 16 October 2026
-against `ec567dd`, with user-reported M01–M05 results for `1.0.0-dev`.
+against `27c46ac` plus the deterministic coverage additions, with user-reported
+M01–M05 results for `1.0.0-dev`.
 
-**85 Covered / 3 Partial / 0 Not Covered / 88 total.**
+**87 Covered / 1 Partial / 0 Not Covered / 88 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -42,7 +43,7 @@ against `ec567dd`, with user-reported M01–M05 results for `1.0.0-dev`.
 | REQ-009 | AC-009.2 — Remove Member | [TC-204](test-cases.md#tc-204), [TC-205](test-cases.md#tc-205), [TC-206](test-cases.md#tc-206), [TC-331](test-cases.md#tc-331) | API; Playwright | Covered |
 | REQ-009 | AC-009.3 — Invalid Member | [TC-207](test-cases.md#tc-207) | API | Covered |
 | REQ-009 | AC-009.4 — Duplicate Member | [TC-208](test-cases.md#tc-208) | API | Covered |
-| REQ-009 | AC-009.5 — View Project Members | [TC-209](test-cases.md#tc-209), [TC-331](test-cases.md#tc-331) | API; Playwright | Partial |
+| REQ-009 | AC-009.5 — View Project Members | [TC-209](test-cases.md#tc-209), [TC-331](test-cases.md#tc-331) | API; Playwright | Covered |
 | REQ-010 | AC-010.1 — Project Owner Role | [TC-211](test-cases.md#tc-211) | API | Covered |
 | REQ-010 | AC-010.2 — QA Analyst Role | [TC-212](test-cases.md#tc-212) | API | Covered |
 | REQ-010 | AC-010.3 — Developer Role | [TC-213](test-cases.md#tc-213) | API | Covered |
@@ -55,7 +56,7 @@ against `ec567dd`, with user-reported M01–M05 results for `1.0.0-dev`.
 | REQ-012 | AC-012.1 — View Bug List | [TC-070](test-cases.md#tc-070), [TC-271](test-cases.md#tc-271), [TC-343](test-cases.md#tc-343) | API; Frontend JS; Manual | Covered |
 | REQ-012 | AC-012.2 — Open Bug Report | [TC-071](test-cases.md#tc-071), [TC-135](test-cases.md#tc-135), [TC-262](test-cases.md#tc-262), [TC-264](test-cases.md#tc-264), [TC-266](test-cases.md#tc-266), [TC-267](test-cases.md#tc-267), [TC-333](test-cases.md#tc-333), [TC-341](test-cases.md#tc-341), [TC-343](test-cases.md#tc-343), [TC-344](test-cases.md#tc-344) | API; Browser fixture; Frontend JS; Manual; Playwright | Covered |
 | REQ-012 | AC-012.3 — Unauthorized Bug Access | [TC-072](test-cases.md#tc-072), [TC-073](test-cases.md#tc-073), [TC-332](test-cases.md#tc-332) | API; Playwright | Covered |
-| REQ-012 | AC-012.4 — Sort Bug Reports | [TC-074](test-cases.md#tc-074), [TC-270](test-cases.md#tc-270), [TC-273](test-cases.md#tc-273), [TC-274](test-cases.md#tc-274), [TC-275](test-cases.md#tc-275), [TC-276](test-cases.md#tc-276), [TC-277](test-cases.md#tc-277), [TC-278](test-cases.md#tc-278), [TC-279](test-cases.md#tc-279), [TC-280](test-cases.md#tc-280), [TC-281](test-cases.md#tc-281), [TC-282](test-cases.md#tc-282), [TC-333](test-cases.md#tc-333) | API; Frontend JS; Playwright | Partial |
+| REQ-012 | AC-012.4 — Sort Bug Reports | [TC-074](test-cases.md#tc-074), [TC-270](test-cases.md#tc-270), [TC-273](test-cases.md#tc-273), [TC-274](test-cases.md#tc-274), [TC-275](test-cases.md#tc-275), [TC-276](test-cases.md#tc-276), [TC-277](test-cases.md#tc-277), [TC-278](test-cases.md#tc-278), [TC-279](test-cases.md#tc-279), [TC-280](test-cases.md#tc-280), [TC-281](test-cases.md#tc-281), [TC-282](test-cases.md#tc-282), [TC-333](test-cases.md#tc-333), [TC-348](test-cases.md#tc-348), [TC-349](test-cases.md#tc-349), [TC-350](test-cases.md#tc-350) | API; Frontend JS; Playwright | Covered |
 | REQ-012 | AC-012.5 — Paginate Bug Reports | [TC-275](test-cases.md#tc-275), [TC-333](test-cases.md#tc-333), [TC-334](test-cases.md#tc-334), [TC-345](test-cases.md#tc-345) | Frontend JS; Manual; Playwright | Covered |
 | REQ-012 | AC-012.6 — Remember Bug Page Size | [TC-268](test-cases.md#tc-268), [TC-269](test-cases.md#tc-269), [TC-333](test-cases.md#tc-333), [TC-334](test-cases.md#tc-334) | Frontend JS; Playwright | Covered |
 | REQ-013 | AC-013.1 — Edit Bug Report | [TC-075](test-cases.md#tc-075), [TC-134](test-cases.md#tc-134), [TC-335](test-cases.md#tc-335) | API; Playwright | Covered |
@@ -105,15 +106,12 @@ against `ec567dd`, with user-reported M01–M05 results for `1.0.0-dev`.
 
 ## Unresolved gaps
 
-- **AC-009.5 — View Project Members:** API grouping/alphabetic ordering is verified. Explicit assertions for displayed member roles and displayed role/email order remain missing.
-- **AC-012.4 — Sort Bug Reports:** maintained rank datasets omit Moderate severity, High priority, and Development/Testing status. Historical diagnostics do not document those complete expected sequences. Add focused frontend rank cases.
 - **AC-019.2 — Use Bug and Project Context:** mocked tests verify context boundaries and prompt contracts; actual model grounding, current-form primacy and abstention from unsupported factual suggestions require a small real-model evaluation.
 
-The prior 80/8 audit is reconciled with the reported M01/M02 presentation/native checks,
-M03 pagination layout, M04 lifecycle scrolling and M05 form lifetime checks. Existing
-JavaScript race assertions supply M05’s manually unreproduced ordering case.
-These are user-reported passes combined with existing evidence, not new agent browser
-observations or invented measurements. See the execution record for provenance and limits.
+Manual contributions remain user-reported; existing JavaScript assertions supply
+M05’s manually unreproduced race case. The member-display and complete sorting-rank
+gaps are closed by current automated execution. See the [execution record](test-execution.md)
+for exact results, provenance and limitations.
 
 Broader cross-browser/accessibility and release criteria belong to the
 [QA strategy](qa-strategy.md) and [Definition of Done](definition-of-done.md);

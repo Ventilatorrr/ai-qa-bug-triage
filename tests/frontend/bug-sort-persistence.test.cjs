@@ -340,3 +340,33 @@ test("test_project_deletion_succeeds_when_sort_storage_is_unavailable", async ()
         assert.match(f.node("#message").textContent, /deleted successfully/);
     }
 });
+
+for (const [column, values, ascending, descending] of [
+    ["severity", ["Major", "Minor", "Blocker", "Moderate"],
+        ["Minor", "Moderate", "Major", "Blocker"], ["Blocker", "Major", "Moderate", "Minor"]],
+    ["priority", ["High", "Low", "Urgent", "Medium"],
+        ["Low", "Medium", "High", "Urgent"], ["Urgent", "High", "Medium", "Low"]],
+    ["status", ["Testing", "Triage", "Closed", "Open", "Development"],
+        ["Triage", "Open", "Development", "Testing", "Closed"],
+        ["Closed", "Testing", "Development", "Open", "Triage"]],
+]) {
+    // TC-348, TC-349, TC-350 | AC-012.4 — Complete Severity/Priority/Status ranks in both directions
+    test(`test_bug_sort_complete_${column}_rank_order`, async () => {
+        const reports = values.map((value, index) => ({
+            ...bugs[0], id: 100 + index, bug_number: index + 1, [column]: value
+        }));
+        const f = await page({reports});
+        const displayedValues = () => f.node("#bugs").querySelector("tbody").children
+            .map(row => row.children[columns.indexOf(column)].textContent);
+
+        f.sort(column);
+
+        assert.deepEqual(displayedValues(), ascending);
+        assert.deepEqual(f.order(), ascending.map(value => `BUG-${values.indexOf(value) + 1}`));
+
+        f.sort(column);
+
+        assert.deepEqual(displayedValues(), descending);
+        assert.deepEqual(f.order(), descending.map(value => `BUG-${values.indexOf(value) + 1}`));
+    });
+}
