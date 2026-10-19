@@ -42,3 +42,10 @@
 | BUG-34 | Success message overflows the viewport when creating a bug with an extremely long title | Minor | Low | Triage | — |
 
 **Status note:** BUG-33 was shown as Open in the screenshots; the user subsequently confirmed closing it as Fixed. BUG-34 remains in Triage. Update this snapshot after future tracker changes.
+
+**BUG-34 verification (19 October 2026):** a focused CSS correction and TC-378
+browser regression passed at desktop and narrow viewports; see the
+[execution evidence](test-execution.md#bug-34-success-confirmation-overflow--19-october-2026).
+The user's current task confirms Affected Version `1.0.0-dev` and tracker status
+Triage. Closure awaits review; no Fix Version has been assigned and no genuine
+tracker record was accessed or changed by the agent.

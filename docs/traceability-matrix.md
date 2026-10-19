@@ -6,6 +6,8 @@ provenance is in [test-execution](test-execution.md). Assessed on 16 October 202
 against `27c46ac` plus the deterministic coverage additions, with user-reported
 M01–M05 results for `1.0.0-dev`. AC-019.2 additionally incorporates the reviewed
 16 October live evaluations at `aa6977b` / `061fcef` plus recorded local changes.
+AC-011.1 additionally includes TC-378's BUG-34 browser regression on 19 October
+2026; see the [execution evidence](test-execution.md#bug-34-success-confirmation-overflow--19-october-2026).
 
 **88 Covered / 0 Partial / 0 Not Covered / 88 total.**
 
@@ -50,7 +52,7 @@ M01–M05 results for `1.0.0-dev`. AC-019.2 additionally incorporates the review
 | REQ-010 | AC-010.3 — Developer Role | [TC-213](test-cases.md#tc-213) | API | Covered |
 | REQ-010 | AC-010.4 — Unauthorized Project Member Management | [TC-214](test-cases.md#tc-214) | API | Covered |
 | REQ-010 | AC-010.5 — Unauthorized Project Actions | [TC-215](test-cases.md#tc-215), [TC-216](test-cases.md#tc-216) | API | Covered |
-| REQ-011 | AC-011.1 — Successful Bug Creation | [TC-066](test-cases.md#tc-066), [TC-132](test-cases.md#tc-132), [TC-133](test-cases.md#tc-133), [TC-138](test-cases.md#tc-138), [TC-335](test-cases.md#tc-335) | API; Playwright | Covered |
+| REQ-011 | AC-011.1 — Successful Bug Creation | [TC-066](test-cases.md#tc-066), [TC-132](test-cases.md#tc-132), [TC-133](test-cases.md#tc-133), [TC-138](test-cases.md#tc-138), [TC-335](test-cases.md#tc-335), [TC-378](test-cases.md#tc-378) | API; Playwright | Covered |
 | REQ-011 | AC-011.2 — Missing Bug Title | [TC-067](test-cases.md#tc-067) | API | Covered |
 | REQ-011 | AC-011.3 — Unauthorized Bug Creation | [TC-068](test-cases.md#tc-068) | API | Covered |
 | REQ-011 | AC-011.4 — Optional Bug Information | [TC-069](test-cases.md#tc-069), [TC-160](test-cases.md#tc-160), [TC-161](test-cases.md#tc-161), [TC-338](test-cases.md#tc-338) | API; Playwright | Covered |

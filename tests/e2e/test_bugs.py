@@ -1,6 +1,75 @@
+import json
+
+import pytest
+
 from playwright.sync_api import expect
 
 from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_bug, unique_name
+
+
+# TC-378 | AC-011.1 — BUG-34 creation confirmation wraps without overflow
+@pytest.mark.parametrize("width", [1280, 375], ids=["desktop", "narrow"])
+@pytest.mark.parametrize("title", ["Synthetic bug", "W" * 2000], ids=["normal", "unbroken"])
+def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, width, title):
+    page.set_viewport_size({"width": width, "height": 900})
+    login(page, workspace["owner"])
+    page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
+    page.get_by_role("button", name="New Bug", exact=True).click()
+    page.get_by_label("Title:", exact=True).fill(title)
+
+    collection = f"/projects/{workspace['project']['id']}/bugs"
+    with page.expect_response(
+        lambda response: response.request.method == "POST"
+        and response.url.endswith(collection)
+    ) as created:
+        page.get_by_role("button", name="Create", exact=True).click()
+    assert created.value.status == 201
+    bug = created.value.json()
+    message = page.locator("#bug-message")
+    expect(message).to_have_text(f'BUG-{bug["bug_number"]} "{title}" created successfully.')
+    expect(message).to_be_visible()
+    expect(page.locator("#bug-form")).to_be_hidden()
+    expect(page.get_by_role("link", name=f'BUG-{bug["bug_number"]}', exact=True)).to_be_visible()
+    assert api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"])["title"] == title
+
+    # Check actual text line boxes: a fitting paragraph alone cannot prove readability.
+    layout = message.evaluate("""element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const box = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+            viewport: document.documentElement.clientWidth,
+            pageWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+            left: box.left, right: box.right,
+            clientWidth: element.clientWidth, scrollWidth: element.scrollWidth,
+            clientHeight: element.clientHeight, scrollHeight: element.scrollHeight,
+            whiteSpace: style.whiteSpace, overflowX: style.overflowX, overflowY: style.overflowY,
+            textOverflow: style.textOverflow, textAlign: style.textAlign,
+            lines: Array.from(range.getClientRects(), rect => ({
+                left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom
+            })),
+            top: box.top, bottom: box.bottom
+        };
+    }""")
+    (tmp_path / "confirmation-layout.json").write_text(json.dumps(layout, indent=2), encoding="utf-8")
+    assert layout["pageWidth"] <= layout["viewport"], layout
+    assert 0 <= layout["left"] < layout["right"] <= layout["viewport"], layout
+    assert layout["scrollWidth"] <= layout["clientWidth"], layout
+    assert layout["scrollHeight"] <= layout["clientHeight"], layout
+    assert layout["whiteSpace"] == "normal"
+    assert layout["overflowX"] == layout["overflowY"] == "visible"
+    assert layout["textOverflow"] != "ellipsis"
+    assert layout["textAlign"] == "center"
+    assert "message-success" in message.get_attribute("class").split()
+    assert layout["lines"]
+    for line in layout["lines"]:
+        assert layout["left"] - 1 <= line["left"] < line["right"] <= layout["right"] + 1, layout
+        assert layout["top"] - 1 <= line["top"] < line["bottom"] <= layout["bottom"] + 1, layout
+    if len(title) == 2000:
+        assert len(layout["lines"]) > 1
+    else:
+        assert len(layout["lines"]) == 1
 
 
 # TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 — Bug create edit assign and confirmed delete
