@@ -8,6 +8,118 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## BDD feature cleanup — 19 October 2026
+
+Continued on `test/executable-bdd` after the initial implementation below.
+Removed the 15 unbound specification scenarios and grouped the same five
+executable scenarios into four feature files: `authentication.feature` (one),
+`project_management.feature` (two), `bug_lifecycle.feature` (one), and
+`ai_review.feature` (one). No specifications-only scenarios remain.
+The two obsolete project feature files were removed after migration.
+
+TC-386–TC-390, their AC mappings, executable Gherkin steps, and Python step
+definitions are unchanged. Only the project `@scenario` paths changed. Catalogue,
+RTM, README and QA strategy references now describe this layout. README also
+correctly identifies real-model evaluation as completed and reviewed.
+
+Commands from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium --collect-only -q
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium -q
+git diff --check
+```
+
+| Check | Result |
+| --- | --- |
+| BDD collection after cleanup | **5 tests collected in 0.06s**, exit 0 |
+| Combined Chromium regression after cleanup | **24 passed in 99.61s**, exit 0; all five BDD cases and all 19 existing Playwright cases, no failures/skips/teardown errors |
+| Structural/reference checks | Four feature files, five scenarios, exactly one binding per scenario, no orphans; all ten BDD source links/line references valid; five TC/AC mappings preserved. Python step definitions and executable Gherkin steps match the pre-cleanup snapshots. |
+| Whitespace and teardown checks | `git diff --check`: exit 0; port 8148 available after owned-server shutdown |
+
+The existing disposable-database, owned-server/identity, local-only browser and
+mocked-provider safeguards remain unchanged. Runs use port 8148, fictional data
+and no live OpenAI calls. Production source and all existing API/Playwright tests
+are unchanged. No product behavior or dependency change is part of this cleanup;
+overall RTM assessments remain **88 Covered / 0 Partial / 0 Not Covered**.
+The initial execution results below retain the earlier inventory and outcomes.
+No product defects were discovered. No manual visual or cross-browser assessment
+is claimed by this cleanup run.
+
+## Executable BDD — 19 October 2026
+
+Historical initial implementation, before the feature cleanup above. Its results
+and inventory describe the layout that existed during those runs.
+
+Baseline: clean `main` and `origin/main` at `f2a28c2` (PR #49); work on
+`test/executable-bdd`. `pytest-bdd==8.1.0` was already installed and is now pinned
+in `requirements-e2e.txt`. TC-386–TC-390 bind exactly five scenarios through
+ordinary step functions and the existing Python Playwright infrastructure.
+See the [catalogue](test-cases.md#executable-bdd--testse2ebddtest_workflowspy)
+for names, feature references, exact Python selectors and AC mappings.
+
+Commands from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium --collect-only -q
+.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium -vv
+.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium -q
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium -q
+
+$bddCases = @('test_review_ai_suggestions', 'test_qa_bug_lifecycle', 'test_non_owner_cannot_modify_project', 'test_successful_project_creation', 'test_successful_registration')
+foreach ($bddCase in $bddCases) {
+    Write-Output "Independent scenario: $bddCase"
+    & .\.venv\Scripts\python.exe -m pytest "tests/e2e/bdd/test_workflows.py::$bddCase" --e2e --e2e-port 8148 --browser chromium -q
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+
+| Check | Result |
+| --- | --- |
+| Explicit BDD collection | **5 tests collected in 0.06s**, exit 0 |
+| First completed BDD run (`-vv`) | **4 passed, 1 failed in 14.68s**, exit 1; owner identity selector matched header and member list. Test selector scoped to `#members`; no application change. |
+| Corrected BDD run (`-q`) | **5 passed in 13.61s**, exit 0 |
+| Combined Playwright regression | **24 passed in 61.41s**, exit 0; all 19 existing browser cases plus five BDD cases |
+| Independent invocations, reverse order | **1 passed each**: AI 5.18s; lifecycle 5.89s; authorization 4.50s; project creation 3.82s; registration 4.75s (24.14s summed pytest durations); all exit 0, each with a fresh server/database |
+| Repository checks | `git diff --check`: exit 0. Inventory validation: five bindings, 20 feature scenarios, original 17 unchanged, 15 specifications only, 390 unique catalogue IDs, 88 unique RTM rows. Port 8148 bind check succeeded after teardown. |
+
+The first sandbox browser invocation was interrupted before producing output;
+completed browser runs used elevated process access. Each completed invocation
+used headless Chromium and an owned server at `http://127.0.0.1:8148`. Source
+inspection verified the existing test fixtures before startup: fresh absolute
+temporary database path, effective database/port/PID/identity verification before
+HTTP interaction, local browser routing, explicit owned-server shutdown and
+temporary-directory cleanup. Scenario-specific fictional users/projects and
+fresh browser contexts isolate scenarios within a combined run.
+
+Reused fixtures: `e2e_base_url`, `base_url`, `local_browser_only`, `page`,
+`e2e_api`, `account_factory`, `workspace`; helpers: `api_call`, `login`,
+`unique_name`, `seed_bug`, `bug_path`, `open_bug`, `detail`. The existing test
+server replaces `create_openai_client` with an SDK client using in-memory
+`httpx2.MockTransport`, strips inherited credentials and blocks outbound socket
+connections. If the mock is missing, outbound provider access fails closed.
+No real database or genuine records were accessed; no live provider evaluation
+ran, and historical `ai-evaluation-results/` was not used or modified.
+
+Registration verifies new credentials after the expected login redirect. Project
+creation verifies reload/API persistence and creator ownership. The non-owner
+scenario checks absent edit controls, valid PUT/DELETE denials with the existing
+404 contract, unchanged owner readback and continued member visibility. Lifecycle
+uses real QA/Developer UI handoffs through Triage → Open → Development → Testing
+→ Closed/Fixed, with persisted QA assignment and no released Fix Version.
+AI review checks unchanged persisted data after generation and Use/Dismiss,
+then verifies accepted Title and unchanged Description after Save/reload.
+
+At this initial milestone, all 17 original Gherkin definitions were unchanged:
+two were executable, and three new definitions gave **20 total: five executable, 15 specifications
+only**. The anticipated 12 remaining specifications was an inventory mismatch.
+The catalogue then listed all 15. This was representative Chromium automation, not
+exhaustive lifecycle/authorization/AI coverage, real-model quality evidence,
+cross-browser or manual visual verification. No product defects were discovered.
+Overall RTM assessment remains **88 Covered / 0 Partial / 0 Not Covered**;
+increment completion is not claimed. Production changes, broader BDD conversion,
+documentation cleanup and CI/CD remain deferred.
+
 ## BUG-34 success confirmation overflow — 19 October 2026
 
 Baseline: clean `main` / freshly fetched `origin/main` at `e5193e4` (PR #47,
@@ -485,8 +597,10 @@ supersede intermediate implementation runs, not unresolved failures.
 Manual evidence reconciliation moved coverage from **80 Covered / 8 Partial** to
 **85 / 3**; member-ordering and complete sorting-rank execution then supported
 **87 / 1**. Stage B1 did not close the remaining real-model gap; the reviewed live
-evaluation now supports **88 / 0** with the limitations above. The 17 BDD scenarios
-remain specifications without executable bindings and contribute no passing tests.
+evaluation now supports **88 / 0** with the limitations above. At that milestone
+the 17 BDD scenarios
+were specifications without executable bindings and contributed no passing tests.
+See the later [executable BDD results](#executable-bdd--19-october-2026).
 
 Exploratory notes are session evidence, not retrospective formal cases or current
 defect statuses; consult the [defect summary](defect-summary.md). Coverage does not

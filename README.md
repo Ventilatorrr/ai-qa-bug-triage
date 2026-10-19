@@ -3,7 +3,7 @@ Bug triage application built as a QA portfolio project with FastAPI, SQLite, and
 
 Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The frontend supports bug creation, viewing, editing, deletion, lifecycle actions, sorting, and pagination. Increment 3 AI Assist is implemented with explicit suggestion review and normal Create/Save persistence. Broader browser verification and increment completion remain outstanding; see traceability for evidence and gaps.
 
-Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite. BDD feature files are specification examples, not executable tests. Postman, real-model evaluation, and CI/CD remain planned work.
+Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite including five executable pytest-bdd scenarios across four feature files. All five BDD scenarios are executable; see the [catalogue](docs/test-cases.md#executable-bdd--testse2ebddtest_workflowspy). Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). Postman and CI/CD remain planned work.
 
 See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Historical working notes and requirements_old.md are not the current specification.
 
@@ -148,6 +148,24 @@ Agent-driven runs must explicitly use approved port 8148:
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium
 ```
+
+The optional E2E dependencies include `pytest-bdd==8.1.0`. Exactly five scenarios
+are explicitly bound in `tests/e2e/bdd/test_workflows.py`: successful registration,
+project creation, non-owner project protection, QA/Developer bug lifecycle, and
+AI suggestion review/save. Run or collect just these scenarios with:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium --collect-only -q
+.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium -q
+```
+
+The four feature files contain **five scenarios total, all executable**:
+`authentication.feature` (registration), `project_management.feature` (creation
+and non-owner protection), `bug_lifecycle.feature`, and `ai_review.feature`.
+There are no specifications-only BDD scenarios.
+BDD uses the same fixtures, server and provider mock described below. It covers
+representative workflows, not every AC variant or real-model quality. Results and
+limitations are in the [cleanup execution record](docs/test-execution.md#bdd-feature-cleanup--19-october-2026).
 
 Run suites serially. The fixture refuses an occupied port without contacting or
 terminating its listener. Identify any existing owner/configuration before
