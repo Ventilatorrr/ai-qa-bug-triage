@@ -6,13 +6,13 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-386**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-391**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
 - `—` means no business AC mapping, not an omitted test. Source comments point back here.
 - Source/framework helpers and server launchers support cases; they are not standalone test cases.
-- Manual aliases M01–M05 remain stable. Historical exploratory sessions and nonexecutable BDD do not inflate executed TC counts.
+- Manual aliases M01–M05 remain stable. Historical exploratory sessions do not inflate executed TC counts.
 
 ## Inventory
 
@@ -23,9 +23,10 @@ own results. Test bodies and parameter data remain the executable specification.
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
+| Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
-| Total | 373 | **385** | Definition, conceptual-case and execution counts differ |
+| Total | 378 | **390** | Definition, conceptual-case and execution counts differ |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -683,29 +684,18 @@ ceiling and stop-on-error; existing TC-359/TC-376 cover database/evidence guards
 Existing TC-358/TC-363/TC-375/TC-381 also exercise the new explicit mode without
 new IDs; TC-357/TC-359/TC-376/TC-382 retain default, DB, evidence and cost checks.
 
-## BDD specification appendix
+## Executable BDD — tests/e2e/bdd/test_workflows.py
 
-These **17 scenarios are specifications only**, with no executable step bindings or
-execution TC IDs. Related TCs below are links to existing implementations, not claims
-that those implementations execute the feature files. Password examples map to the
-current AC-001.4; password security is AC-001.5 and has no BDD scenario.
+The four feature files contain five scenarios total, all executable; none remain
+specifications only. Explicit `@scenario` bindings collect exactly five cases.
+Ordinary step functions reuse the E2E browser/server/database fixtures and helpers; the AI transport is
+mocked only at the provider boundary. See [run commands](../README.md#python-playwright-e2e-tests)
+and [execution evidence](test-execution.md#bdd-feature-cleanup--19-october-2026).
 
-| Specification reference | Current AC mapping | Related maintained TC |
-| --- | --- | --- |
-| [Successfully register an account](../tests/e2e/bdd/features/authentication.feature#L6) | AC-001.1 | [TC-217](test-cases.md#tc-217) |
-| [Register with an already registered email address](../tests/e2e/bdd/features/authentication.feature#L12) | AC-001.2 | [TC-218](test-cases.md#tc-218) |
-| [Register with an invalid email address](../tests/e2e/bdd/features/authentication.feature#L20) | AC-001.3 | [TC-219](test-cases.md#tc-219) |
-| [Register with a password that is too short](../tests/e2e/bdd/features/authentication.feature#L27) | AC-001.4 | [TC-220](test-cases.md#tc-220) |
-| [Register with a password without an uppercase letter](../tests/e2e/bdd/features/authentication.feature#L34) | AC-001.4 | [TC-221](test-cases.md#tc-221) |
-| [Register with a password without a lowercase letter](../tests/e2e/bdd/features/authentication.feature#L41) | AC-001.4 | [TC-222](test-cases.md#tc-222) |
-| [Register with a password without a number](../tests/e2e/bdd/features/authentication.feature#L49) | AC-001.4 | [TC-223](test-cases.md#tc-223) |
-| [Successfully log in](../tests/e2e/bdd/features/authentication.feature#L61) | AC-002.1 | [TC-177](test-cases.md#tc-177) |
-| [Log in with invalid credentials](../tests/e2e/bdd/features/authentication.feature#L68) | AC-002.2 | [TC-178](test-cases.md#tc-178) |
-| [Authenticated user accesses a protected area](../tests/e2e/bdd/features/authentication.feature#L77) | AC-003.1 | [TC-180](test-cases.md#tc-180) |
-| [Unauthenticated user accesses a protected area](../tests/e2e/bdd/features/authentication.feature#L83) | AC-003.2 | [TC-329](test-cases.md#tc-329) |
-| [User accesses a protected area with invalid authentication](../tests/e2e/bdd/features/authentication.feature#L90) | AC-003.3 | [TC-182](test-cases.md#tc-182) |
-| [Successfully log out](../tests/e2e/bdd/features/authentication.feature#L99) | AC-004.1 | [TC-329](test-cases.md#tc-329) |
-| [Attempt to access a protected area after logging out](../tests/e2e/bdd/features/authentication.feature#L106) | AC-004.2 | [TC-329](test-cases.md#tc-329) |
-| [Successfully create a project](../tests/e2e/bdd/features/project_creation.feature#L6) | AC-005.1 | [TC-184](test-cases.md#tc-184) |
-| [Create a project with an empty name](../tests/e2e/bdd/features/project_creation.feature#L13) | AC-005.2 | [TC-185](test-cases.md#tc-185) |
-| [Unauthenticated user attempts to create a project](../tests/e2e/bdd/features/project_creation.feature#L20) | AC-005.3 | [TC-189](test-cases.md#tc-189) |
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-386"></a>TC-386 | AC-001.1 | [Successfully register an account](../tests/e2e/bdd/features/authentication.feature#L4) | BDD / Playwright / Chromium | [`test_successful_registration`](../tests/e2e/bdd/test_workflows.py); registration POST 201, login redirect and usable new credentials |
+| <a id="tc-387"></a>TC-387 | AC-005.1 | [Successfully create a project](../tests/e2e/bdd/features/project_management.feature#L4) | BDD / Playwright / Chromium | [`test_successful_project_creation`](../tests/e2e/bdd/test_workflows.py); UI create, reload/API name readback, creator membership and displayed Project Owner role |
+| <a id="tc-388"></a>TC-388 | AC-007.2, AC-008.2, AC-010.5 | [Non-owner cannot modify a project](../tests/e2e/bdd/features/project_management.feature#L11) | BDD / Playwright / API | [`test_non_owner_cannot_modify_project`](../tests/e2e/bdd/test_workflows.py); QA Analyst sees no edit control; valid rename PUT and DELETE rejected with 404; owner readback and member UI remain unchanged |
+| <a id="tc-389"></a>TC-389 | AC-011.1, AC-017.2, AC-017.3, AC-017.4, AC-017.5 | [QA Analyst manages a bug lifecycle](../tests/e2e/bdd/features/bug_lifecycle.feature#L4) | BDD / Playwright / Chromium | [`test_qa_bug_lifecycle`](../tests/e2e/bdd/test_workflows.py); QA creates Triage, assigns Developer/Open, Developer moves Development/Testing with QA handoff, QA Pass closes Fixed; reload/API persistence, no released Fix Version |
+| <a id="tc-390"></a>TC-390 | AC-018.1, AC-018.2, AC-020.1, AC-020.2, AC-020.3, AC-020.7 | [Review and apply AI suggestions](../tests/e2e/bdd/features/ai_review.feature#L4) | BDD / Playwright / mocked provider | [`test_review_ai_suggestions`](../tests/e2e/bdd/test_workflows.py); QA edits Triage, explicit request, separate suggestions, Use Title/Dismiss Description, unchanged API readback after generation and review, Save/reload persists only accepted value |
