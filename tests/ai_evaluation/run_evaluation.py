@@ -20,12 +20,36 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from tests.ai_evaluation.scenarios import DATASET_VERSION, load_scenarios
+from tests.ai_evaluation.quality_scenarios import QUALITY_DATASET_VERSION, load_quality_scenarios
 
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_ROOT = ROOT / "ai-evaluation-results"
 DIMENSIONS = ("factual_grounding", "current_form_primacy", "history_use", "abstention", "schema_validity")
 SPEND_PAUSE_USD = 0.10  # Observed usage threshold, not a per-request monetary cap.
+REQUEST_LIMIT = 6
+SCENARIO_SETS = {
+    "baseline": tuple(f"EVAL-{letter}" for letter in "ABCDEF"),
+    "quality-batch-1": ("Q1", "Q2", "Q3", "Q4", "Q5", "Q6"),
+    "quality-batch-2": ("Q7", "Q11", "Q12", "Q11"),
+}
+
+
+def select_scenarios(*, scenario_set=None, scenario_ids=None):
+    """Validate a single invocation before any IO; preserve explicit order/repeats."""
+    if scenario_set is not None and scenario_ids is not None:
+        raise ValueError("Select a named set or explicit scenario IDs, not both.")
+    if scenario_ids is None:
+        name = "baseline" if scenario_set is None else scenario_set
+        if not isinstance(name, str) or name not in SCENARIO_SETS:
+            raise ValueError("Unknown scenario set.")
+        scenario_ids = SCENARIO_SETS[name]
+    if not isinstance(scenario_ids, (list, tuple)) or not 1 <= len(scenario_ids) <= REQUEST_LIMIT:
+        raise ValueError("Select between one and six scenario executions per invocation.")
+    available = {case["id"]: case for case in load_scenarios() + load_quality_scenarios()}
+    if any(not isinstance(identifier, str) or identifier not in available for identifier in scenario_ids):
+        raise ValueError("Unknown scenario ID.")
+    return [deepcopy(available[identifier]) for identifier in scenario_ids]
 
 
 def blocked_io(*args, **kwargs):
@@ -156,25 +180,40 @@ def new_output_directory(requested):
     return path
 
 
-def run_evaluation(output, *, live, pass_number):
+def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids=None):
     """Six serial attempts at most. All semantic assessments begin unassessed."""
     if live:
         require_live_authorization()
-    scenarios = load_scenarios()
+    scenarios = select_scenarios(scenario_set=scenario_set, scenario_ids=scenario_ids)
+    occurrences = {}
+    execution_plan = []
+    for case in scenarios:
+        identifier = case["id"]
+        occurrences[identifier] = occurrences.get(identifier, 0) + 1
+        execution_plan.append({
+            "execution_id": f"{identifier}:{occurrences[identifier]}",
+            "scenario_id": identifier, "tc_id": case["tc_id"],
+            "occurrence": occurrences[identifier],
+        })
     protocol = (ROOT / "docs" / "ai-testing-strategy.md").read_text(encoding="utf-8")
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip()
     dirty = subprocess.run(["git", "diff", "--quiet", "HEAD"], cwd=ROOT).returncode != 0
     report = {
         "mode": "live" if live else "offline", "live_model_evaluated": False,
         "date_utc": datetime.now(timezone.utc).isoformat(), "revision": revision, "tracked_changes": dirty,
-        "sdk_version": version("openai"), "dataset_version": DATASET_VERSION,
+        "sdk_version": version("openai"),
+        "dataset_version": QUALITY_DATASET_VERSION if any(case["id"].startswith("Q") for case in scenarios) else DATASET_VERSION,
         "dataset_sha256": fingerprint(scenarios), "protocol_sha256": sha256(protocol.encode()).hexdigest(),
         "scenarios": [{key: value for key, value in case.items() if key != "offline_suggestions"} for case in scenarios],
-        "protocol": protocol, "pass_number": pass_number, "request_limit": 6,
+        "protocol": protocol, "pass_number": pass_number, "request_limit": REQUEST_LIMIT,
+        "selection": {"scenario_set": scenario_set or ("baseline" if scenario_ids is None else None),
+                      "scenario_ids": [case["id"] for case in scenarios]},
+        "execution_plan": execution_plan,
         "client_config": {"timeout_seconds": 60.0, "max_retries": 0},
         "cost_assumption": "USD, Standard short context, $0.10/M input + $0.50/M output; 2026-10-16 public pricing; offline usage synthetic",
-        "coverage": "AC-019.2 remains Partial pending live execution and human review.",
+        "coverage": "Existing RTM: 88 Covered / 0 Partial / 0 Not Covered. Additional evaluations do not reassess AC coverage; no new semantic pass claimed.",
         "attempts": [], "not_run": [case["id"] for case in scenarios],
+        "not_run_execution_ids": [item["execution_id"] for item in execution_plan],
         "estimated_cost_usd": 0.0, "stop_reason": None,
     }
     with isolated_application(live=live) as database_path:
@@ -183,16 +222,16 @@ def run_evaluation(output, *, live, pass_number):
         from app.ai_openai import request_openai_suggestions
         from app.ai_response import process_provider_response
 
-        if len(scenarios) != 6:
-            raise RuntimeError("This protocol requires exactly six scenarios.")
         contexts = [AiTriageContext.model_validate(case["context"]) for case in scenarios]
-        for scenario, context in zip(scenarios, contexts, strict=True):
+        for scenario, context, execution in zip(scenarios, contexts, execution_plan, strict=True):
             record = {
-                "scenario_id": scenario["id"], "tc_id": scenario["tc_id"],
+                **execution,
                 "date_utc": datetime.now(timezone.utc).isoformat(),
                 "purpose": scenario["purpose"], "review_guidance": scenario["review"],
                 "assessment": {"status": "pending_human_review" if live else "offline_fixture_only",
-                               "dimensions": {name: {"status": "Not assessed", "rationale": ""} for name in DIMENSIONS},
+                               "dimensions": {name: {"status": "Not assessed", "rationale": ""} for name in (
+                                   DIMENSIONS + tuple(scenario.get("additional_review_dimensions", ()))
+                               )},
                                "critical_failure": None, "reviewer": None},
             }
             report["attempts"].append(record)
@@ -246,6 +285,9 @@ def run_evaluation(output, *, live, pass_number):
             if report["estimated_cost_usd"] >= SPEND_PAUSE_USD:
                 report["stop_reason"] = "Observed estimated spend reached pause threshold; no further request."
             report["not_run"] = [case["id"] for case in scenarios[len(report["attempts"]):]]
+            report["not_run_execution_ids"] = [
+                item["execution_id"] for item in execution_plan[len(report["attempts"]):]
+            ]
             report["database_created"] = database_path.exists()
             (output / "run.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             if report["stop_reason"]:
@@ -258,6 +300,9 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--offline", action="store_true", help="Default: synthetic responses, no external network.")
     mode.add_argument("--live", action="store_true", help="Requires separate human approval and explicit environment opt-in.")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--scenario-set", choices=tuple(SCENARIO_SETS), help="One named batch; default: baseline A–F.")
+    selection.add_argument("--scenarios", nargs="+", help="One to six scenario IDs in execution order; repeats are explicit.")
     parser.add_argument("--output", help="New child directory under ai-evaluation-results.")
     parser.add_argument("--pass-number", type=int, choices=(1, 2), default=1)
     args = parser.parse_args(argv)
@@ -267,13 +312,21 @@ def main(argv=None):
         except RuntimeError as error:
             parser.error(str(error))
     try:
+        select_scenarios(scenario_set=args.scenario_set, scenario_ids=args.scenarios)
+    except ValueError as error:
+        parser.error(str(error))
+    try:
         output = new_output_directory(args.output)
-        report = run_evaluation(output, live=args.live, pass_number=args.pass_number)
+        report = run_evaluation(
+            output, live=args.live, pass_number=args.pass_number,
+            scenario_set=args.scenario_set, scenario_ids=args.scenarios,
+        )
     except Exception as error:
         print(f"Evaluation stopped: {type(error).__name__}; no exception details logged.", file=sys.stderr)
         return 2
-    print(f"{report['mode']}: {len(report['attempts'])}/6 attempts; evidence: {output / 'run.json'}")
-    print("No semantic pass claimed; AC-019.2 remains Partial.")
+    print(f"{report['mode']}: {len(report['attempts'])}/{len(report['execution_plan'])} selected attempts "
+          f"(maximum {REQUEST_LIMIT}); evidence: {output / 'run.json'}")
+    print("No new semantic pass claimed; existing RTM remains 88 Covered / 0 Partial / 0 Not Covered.")
     return 1 if report["stop_reason"] else 0
 
 
