@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-364**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-378**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -19,13 +19,13 @@ own results. Test bodies and parameter data remain the executable specification.
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
-| Offline evaluation harness pytest (1 module) | 7 | 7 | 23 cases; no real provider calls |
-| Opt-in real-model evaluation | 6 | 6 | Six cases; 30 live executions across three prompt stages, reviewed |
+| Offline evaluation harness pytest (1 module) | 12 | 12 | 40 cases; no real provider calls |
+| Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 14 functions | 15 | 15 Chromium scenarios |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
-| Total | 351 | **363** | Definition, conceptual-case and execution counts differ |
+| Total | 365 | **377** | Definition, conceptual-case and execution counts differ |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -579,7 +579,9 @@ Covered by collective deterministic and reviewed live evidence: 12 original-prom
 12 historical-clarification and six final-formatting executions on 16 October 2026.
 Review provenance is Codex-assisted, with user-directed closure; raw review templates
 remain unchanged. Only one six-case run uses the final formatting instruction.
-The CLI selects all six scenarios once per invocation; repeats retain the same IDs.
+The default/baseline CLI selects all six A–F scenarios once per invocation;
+explicit subsets may select one to six attempts. Repeats retain canonical IDs
+and receive separate invocation-local execution IDs.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
@@ -604,6 +606,47 @@ run them safely; each uses an in-memory transport and independently blocks socke
 | <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/test_ai_evaluation.py); All four variants |
 | <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/test_ai_evaluation.py); All three path variants |
 | <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/test_ai_evaluation.py); Synthetic usage only |
+
+## Additional AI quality/security evaluation — reviewed live evidence
+
+These cases extend risk-based testing rather than acceptance-criteria coverage.
+The RTM remains 88 Covered / 0 Partial / 0 Not Covered. The
+[quality-1 protocol](ai-testing-strategy.md#additional-ai-qualitysecurity-evaluations--protocol-quality-1)
+defines inputs, pass/fail/exercise criteria, limitations and separately approved
+six/four-request batches. **Ten live executions completed on 19 October 2026**;
+user-directed Codex-assisted review found no critical semantic failure. See the
+[combined execution/review record](test-execution.md#combined-quality-evaluation-conclusions--19-october-2026)
+for per-dimension results and unexercised optional fields. Q5 remains Pass with
+its minor wording observation. Offline fixture responses exercise infrastructure
+only. Q2 is historical injection; Q3 is forged
+authority. Q8, Q9 and Q10 remain deferred. Q11:1/Q11:2 share TC-371 and identical input.
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-364"></a>TC-364 | — | Q1 — Current-form prompt injection | Real-model quality/security evaluation / assisted review; completed | [`SCENARIO_Q1`](../tests/ai_evaluation/quality_scenarios.py); Q1 |
+| <a id="tc-365"></a>TC-365 | — | Q2 — Historical-report prompt injection | Real-model quality/security evaluation / assisted review; completed | [`SCENARIO_Q2`](../tests/ai_evaluation/quality_scenarios.py); Q2 |
+| <a id="tc-366"></a>TC-366 | — | Q3 — Forged system role and output contract | Real-model quality/security evaluation / assisted review; completed | [`SCENARIO_Q3`](../tests/ai_evaluation/quality_scenarios.py); Q3 |
+| <a id="tc-367"></a>TC-367 | — | Q4 — Plausible technical hallucination | Real-model quality evaluation / assisted review; completed | [`SCENARIO_Q4`](../tests/ai_evaluation/quality_scenarios.py); Q4 |
+| <a id="tc-368"></a>TC-368 | — | Q5 — Contradictions within current information | Real-model quality evaluation / assisted review; completed | [`SCENARIO_Q5`](../tests/ai_evaluation/quality_scenarios.py); Q5 |
+| <a id="tc-369"></a>TC-369 | — | Q6 — Disagreeing relevant historical reports | Real-model quality evaluation / assisted review; completed | [`SCENARIO_Q6`](../tests/ai_evaluation/quality_scenarios.py); Q6 |
+| <a id="tc-370"></a>TC-370 | — | Q7 — Relevant history mixed with misleading decoys | Real-model quality evaluation / assisted review; completed | [`SCENARIO_Q7`](../tests/ai_evaluation/quality_scenarios.py); Q7 |
+| <a id="tc-371"></a>TC-371 | — | Q11 — Useful and grounded rewriting, including identical-input consistency repeat | Real-model quality evaluation / assisted review; both executions completed | [`SCENARIO_Q11`](../tests/ai_evaluation/quality_scenarios.py); Q11, execution IDs Q11:1 and Q11:2 in quality-batch-2 |
+| <a id="tc-372"></a>TC-372 | — | Q12 — Correct field-value formatting | Real-model quality evaluation / assisted review; completed | [`SCENARIO_Q12`](../tests/ai_evaluation/quality_scenarios.py); Q12 |
+
+## Additional offline harness checks — tests/test_ai_evaluation.py
+
+Completed execution is recorded in [test-execution](test-execution.md#additional-ai-qualitysecurity-offline-verification--19-october-2026).
+These five conceptual checks expand to 17 pytest variants, alongside the existing
+23 harness variants. The module's autouse fixture independently blocks outgoing
+sockets and SQLite and confines generated evidence to pytest temporary directories.
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/test_ai_evaluation.py); All nine quality fixtures and original A–F fingerprint |
+| <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/test_ai_evaluation.py); Five selection variants |
+| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/test_ai_evaluation.py); Six variants; CLI and programmatic runner |
+| <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/test_ai_evaluation.py); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
+| <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/test_ai_evaluation.py); failure=filtered, malformed |
 
 ## BDD specification appendix
 
