@@ -6,6 +6,9 @@ This report consolidates recorded evidence; its editorial revision adds no test 
 This is a historical snapshot, not the current suite inventory or AC assessment;
 see [current coverage](traceability-matrix.md) and [execution records](test-execution.md).
 
+Historical commands below retain their original paths. Since 19 October 2026,
+the referenced backend modules are in `tests/backend/` with unchanged filenames.
+
 ## Scope and traceability
 
 Verification covered both permanent themes, Bug List/Details, form controls,

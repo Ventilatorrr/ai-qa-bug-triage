@@ -89,7 +89,7 @@ transport and blocked outgoing socket connections. No credential file is loaded.
 
 ```powershell
 .\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --offline
-.\.venv\Scripts\python.exe -m pytest tests/test_ai_evaluation.py -q
+.\.venv\Scripts\python.exe -m pytest tests/ai_evaluation/test_ai_evaluation.py -q
 ```
 
 Any further live invocation **requires separate approval**. Supply an

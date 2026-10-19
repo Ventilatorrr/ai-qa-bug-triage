@@ -17,7 +17,7 @@ BUG_COLUMNS = (
 def database(tmp_path, monkeypatch):
     # Load independently so migration tests cannot change the API module's cached database path.
     monkeypatch.setenv("DATABASE_NAME", str(tmp_path / "migration.db"))
-    path = Path(__file__).resolve().parents[1] / "app" / "database.py"
+    path = Path(__file__).resolve().parents[2] / "app" / "database.py"
     spec = importlib.util.spec_from_file_location("migration_test_database", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

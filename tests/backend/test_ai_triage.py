@@ -6,7 +6,7 @@ import httpx2
 from openai import OpenAI
 import pytest
 
-from tests.test_ai_assist import ai_project, blank_form, headers, request_url
+from tests.backend.test_ai_assist import ai_project, blank_form, headers, request_url
 
 
 @pytest.fixture

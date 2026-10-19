@@ -54,6 +54,13 @@ cached database configuration before lifespan startup, and removes its database
 after the client closes. Migration and subprocess tests use their own temporary
 paths. Keep test suites serial; never point tests at a real application database.
 
+Tests are grouped in `tests/backend/` (API, database, security and mocked AI),
+`tests/frontend/` (JavaScript and standalone browser fixtures), `tests/e2e/`
+(Playwright, including `bdd/`), and `tests/ai_evaluation/` (evaluation harness,
+scenarios and offline regression tests). Shared fixtures remain in
+`tests/conftest.py`. The default pytest command includes backend and offline
+evaluation tests; E2E still requires the explicit opt-in below.
+
 Formal versioning follows Semantic Versioning. `APP_VERSION` in `app/version.py`
 is the source of truth for FastAPI metadata, `/version`, and the About page.
 
