@@ -8,6 +8,94 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## BUG-34 success confirmation overflow — 19 October 2026
+
+Baseline: clean `main` / freshly fetched `origin/main` at `e5193e4` (PR #47,
+AI quality milestone merged). Work is on `fix/bug-34-success-message-overflow`.
+The application was not used to inspect or update genuine records. BUG-34 remains
+**Triage**, Affected Version **1.0.0-dev**, with no Fix Version assigned; review
+and tracker closure remain pending.
+
+Source inspection found that `project.js` constructs the confirmation from the
+returned bug number/title and renders it through `textContent`. The paragraph
+inside `.bugs-section` has normal whitespace and a constrained block width, but
+no break opportunities within an unbroken title. No flex/grid minimum-width
+constraint was involved. The fix adds `overflow-wrap: anywhere` only to
+`.bugs-section > #bug-message`; list/detail markup, backend logic, title limits,
+and safe rendering are unchanged.
+
+TC-378 / AC-011.1 exercises normal and 2,000-character unbroken titles at
+1280×900 and 375×900 in headless Chromium. It checks POST 201, API readback of
+the full title, form closure, the new list link, exact visible success text,
+each text line's bounds, no clipping/truncation, and document/message widths.
+Equivalent title/viewport variants share one conceptual ID.
+
+| Execution | Result |
+| --- | --- |
+| Before CSS correction: TC-378 | **2 failed, 2 passed, 4 deselected in 15.28s**, exit 1; only the unbroken-title variants failed, at the page-width assertion: 30,276px vs 1280px and 30,228px vs 375px. Both titles were already successfully persisted. |
+| After correction: `test_bugs.py` + `test_bug_list.py` | **10 passed in 36.24s**, exit 0; four TC-378 variants plus six existing workflow/list scenarios, zero failures/errors/skips. |
+| Focused frontend: form sessions, bug numbers, list sorting/persistence | **43 passed, 0 failed/skipped**, 380.9714ms, exit 0. |
+| `git diff --check` | Exit 0; no whitespace errors. |
+
+Observed post-fix layout evidence (`confirmation-layout.json` under the green
+pytest temporary directory):
+
+| Title | Viewport/page width | Message client/scroll width | Text lines |
+| --- | --- | --- | ---: |
+| Normal | 1280 / 1280px | 1160 / 1160px | 1 |
+| Normal | 375 / 375px | 351 / 351px | 1 |
+| Unbroken | 1280 / 1280px | 1160 / 1160px | 28 |
+| Unbroken | 375 / 375px | 351 / 351px | 89 |
+
+Saved desktop and narrow screenshots were visually inspected: text wraps inside
+the page, the narrow confirmation continues vertically through ordinary page
+scrolling, and the normal narrow confirmation retains its centered single-line
+appearance. Browser evidence is Chromium/default dark theme only; this run does
+not claim cross-browser, light-theme, real mobile-device, or live-provider checks.
+No new application defect was found.
+
+The verified existing fixtures use a new absolute disposable database path,
+rebind configuration before lifespan, check port availability, and verify server
+PID/parent, bound address, database path, unique identity, and mocked provider
+before browser/API access. All runs were serial on `http://127.0.0.1:8148`.
+The server blocks external connections; the browser blocks nonlocal requests.
+Owned server cleanup completed and port 8148 had no listener after the run.
+No real database or genuine project/bug report was accessed, and no live OpenAI
+call was made. Output paths are separate from preserved AI evaluation evidence.
+
+Commands (PowerShell; shared environment applied independently to each pytest run):
+
+```powershell
+$verificationRoot = 'D:\Portfolio\ai-qa-bug-triage\test-results\bug-34-20261019-6b891fa2'
+# Created once as a new directory before the first invocation.
+$env:DATABASE_NAME = Join-Path $verificationRoot 'unused-bootstrap.db'
+$env:TEMP = $verificationRoot
+$env:TMP = $verificationRoot
+$env:PYTHONDONTWRITEBYTECODE = '1'
+$env:PYTEST_ADDOPTS = ''
+Remove-Item Env:OPENAI_API_KEY,Env:OPENAI_BASE_URL,Env:OPENAI_ORG_ID,Env:OPENAI_PROJECT_ID,Env:OPENAI_LOG,Env:AI_EVALUATION_ALLOW_LIVE -ErrorAction SilentlyContinue
+.\.venv\Scripts\python.exe -m pytest tests/e2e/test_bugs.py -k test_bug_creation_confirmation_wraps --e2e --e2e-port 8148 --browser chromium -q --basetemp "$verificationRoot\red-temp" --output "$verificationRoot\red-browser" --junitxml "$verificationRoot\red.xml" --screenshot on --tracing retain-on-failure
+.\.venv\Scripts\python.exe -m pytest tests/e2e/test_bugs.py tests/e2e/test_bug_list.py --e2e --e2e-port 8148 --browser chromium -q --basetemp "$verificationRoot\green-temp" --output "$verificationRoot\green-browser" --junitxml "$verificationRoot\green.xml" --screenshot on --tracing retain-on-failure
+node --test tests/frontend/form-session.test.cjs tests/frontend/bug-number-display.test.cjs tests/frontend/bug-sort-persistence.test.cjs
+git diff --check
+```
+
+Evidence: [red JUnit](../test-results/bug-34-20261019-6b891fa2/red.xml),
+[green JUnit](../test-results/bug-34-20261019-6b891fa2/green.xml),
+[desktop screenshot](../test-results/bug-34-20261019-6b891fa2/green-browser/tests-e2e-test-bugs-py-test-bug-creation-confirmation-wraps-chromium-unbroken-desktop/test-finished-1.png),
+[narrow screenshot](../test-results/bug-34-20261019-6b891fa2/green-browser/tests-e2e-test-bugs-py-test-bug-creation-confirmation-wraps-chromium-unbroken-narrow/test-finished-1.png).
+
+Environment-only incomplete attempt: the initial sandbox invocation emitted no
+test output and started no E2E server. Outside-sandbox inspection identified only
+its two owned pytest Python processes; these were stopped after command-line
+verification. No completed result is attributed to that attempt (`before-temp`
+/ `before-browser`). The red and green runs above completed outside the sandbox.
+
+Catalogue: **378 TC IDs, next TC-379; 366 definitions/groups; 19 maintained
+Playwright scenarios**. AC-011.1 gains TC-378; all 88 RTM assessments remain
+Covered. This focused verification does not establish increment/release DoD
+completion or authorize closing BUG-34.
+
 ## Additional AI quality/security offline verification — 19 October 2026
 
 Branch: `test/ai-quality`, baseline `3e9d39d` plus the focused, uncommitted quality

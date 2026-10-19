@@ -681,6 +681,10 @@ body.light-theme #members > .project > button.context-action-button:active:not(:
     scroll-margin-bottom: 16px;
 }
 
+.bugs-section > #bug-message {
+    overflow-wrap: anywhere;
+}
+
 /* =========================================================
    Forms
    ========================================================= */

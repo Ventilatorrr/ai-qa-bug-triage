@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-378**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-379**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -22,10 +22,10 @@ own results. Test bodies and parameter data remain the executable specification.
 | Offline evaluation harness pytest (1 module) | 12 | 12 | 40 cases; no real provider calls |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
-| Playwright (6 modules) | 14 functions | 15 | 15 Chromium scenarios |
+| Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
-| Total | 365 | **377** | Definition, conceptual-case and execution counts differ |
+| Total | 366 | **378** | Definition, conceptual-case and execution counts differ |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -535,10 +535,11 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L7); All variants |
-| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L53); All variants |
-| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L98); All variants |
-| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L126); All variants |
+| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L76); All variants |
+| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L122); All variants |
+| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L167); All variants |
+| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L195); All variants |
+| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L13); title=normal/unbroken (2,000 characters), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
 
 ## tests/e2e/test_projects.py
 
