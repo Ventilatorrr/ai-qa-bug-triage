@@ -35,333 +35,333 @@ denials; and browser AI failure/empty output. The AI pre-pipeline guard and life
 unassignment state/role matrix each retain one ID.
 
 
-## tests/test_ai_assist.py
+## tests/backend/test_ai_assist.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-001"></a>TC-001 | AC-018.1, AC-022.1 | Allow eligible project roles to reach AI Assist | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authorized_project_role`](../tests/test_ai_assist.py#L60); role in {Project Owner, QA Analyst}; edit in {False, True} |
-| <a id="tc-002"></a>TC-002 | AC-018.1, AC-022.1 | Reject Developer AI Assist before service invocation | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authorized_project_role`](../tests/test_ai_assist.py#L60); role=Developer; edit in {False, True} |
-| <a id="tc-003"></a>TC-003 | AC-018.1, AC-022.1 | Reject outsider AI Assist before service invocation | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authorized_project_role`](../tests/test_ai_assist.py#L60); role=non-member; edit in {False, True} |
-| <a id="tc-004"></a>TC-004 | AC-018.1, AC-022.1 | AI assist requires authentication | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authentication`](../tests/test_ai_assist.py#L87); All variants |
-| <a id="tc-005"></a>TC-005 | AC-018.1, AC-022.1 | AI assist checks current bug status | API / AI (mocked or unavailable provider) | [`test_ai_assist_checks_current_bug_status`](../tests/test_ai_assist.py#L98); All variants |
-| <a id="tc-006"></a>TC-006 | AC-018.1, AC-022.1 | AI assist rechecks membership | API / AI (mocked or unavailable provider) | [`test_ai_assist_rechecks_membership`](../tests/test_ai_assist.py#L123); All variants |
-| <a id="tc-007"></a>TC-007 | AC-018.1, AC-022.1 | AI assist rejects bug outside project | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_bug_outside_project`](../tests/test_ai_assist.py#L138); All variants |
-| <a id="tc-008"></a>TC-008 | AC-018.3, AC-023.1 | AI assist preserves current form without saving | API / AI (mocked or unavailable provider) | [`test_ai_assist_preserves_current_form_without_saving`](../tests/test_ai_assist.py#L152); All variants |
-| <a id="tc-009"></a>TC-009 | AC-018.3 | Reject prohibited fields in AI request context | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_invalid_context`](../tests/test_ai_assist.py#L174); field in {fix_version, status, resolution, created_at, updated_at} |
-| <a id="tc-010"></a>TC-010 | AC-018.3 | Reject invalid supported AI context values | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_invalid_context`](../tests/test_ai_assist.py#L174); field in {title, assignee_id, severity, priority} |
-| <a id="tc-011"></a>TC-011 | AC-018.3 | AI assist requires complete snapshot | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_complete_snapshot`](../tests/test_ai_assist.py#L181); All variants |
+| <a id="tc-001"></a>TC-001 | AC-018.1, AC-022.1 | Allow eligible project roles to reach AI Assist | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authorized_project_role`](../tests/backend/test_ai_assist.py#L60); role in {Project Owner, QA Analyst}; edit in {False, True} |
+| <a id="tc-002"></a>TC-002 | AC-018.1, AC-022.1 | Reject Developer AI Assist before service invocation | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authorized_project_role`](../tests/backend/test_ai_assist.py#L60); role=Developer; edit in {False, True} |
+| <a id="tc-003"></a>TC-003 | AC-018.1, AC-022.1 | Reject outsider AI Assist before service invocation | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authorized_project_role`](../tests/backend/test_ai_assist.py#L60); role=non-member; edit in {False, True} |
+| <a id="tc-004"></a>TC-004 | AC-018.1, AC-022.1 | AI assist requires authentication | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_authentication`](../tests/backend/test_ai_assist.py#L87); All variants |
+| <a id="tc-005"></a>TC-005 | AC-018.1, AC-022.1 | AI assist checks current bug status | API / AI (mocked or unavailable provider) | [`test_ai_assist_checks_current_bug_status`](../tests/backend/test_ai_assist.py#L98); All variants |
+| <a id="tc-006"></a>TC-006 | AC-018.1, AC-022.1 | AI assist rechecks membership | API / AI (mocked or unavailable provider) | [`test_ai_assist_rechecks_membership`](../tests/backend/test_ai_assist.py#L123); All variants |
+| <a id="tc-007"></a>TC-007 | AC-018.1, AC-022.1 | AI assist rejects bug outside project | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_bug_outside_project`](../tests/backend/test_ai_assist.py#L138); All variants |
+| <a id="tc-008"></a>TC-008 | AC-018.3, AC-023.1 | AI assist preserves current form without saving | API / AI (mocked or unavailable provider) | [`test_ai_assist_preserves_current_form_without_saving`](../tests/backend/test_ai_assist.py#L152); All variants |
+| <a id="tc-009"></a>TC-009 | AC-018.3 | Reject prohibited fields in AI request context | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_invalid_context`](../tests/backend/test_ai_assist.py#L174); field in {fix_version, status, resolution, created_at, updated_at} |
+| <a id="tc-010"></a>TC-010 | AC-018.3 | Reject invalid supported AI context values | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_invalid_context`](../tests/backend/test_ai_assist.py#L174); field in {title, assignee_id, severity, priority} |
+| <a id="tc-011"></a>TC-011 | AC-018.3 | AI assist requires complete snapshot | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_complete_snapshot`](../tests/backend/test_ai_assist.py#L181); All variants |
 
-## tests/test_ai_context.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-012"></a>TC-012 | AC-019.2, AC-022.2 | AI context preserves submitted form and persisted bugs | API / AI (mocked or unavailable provider) | [`test_ai_context_preserves_submitted_form_and_persisted_bugs`](../tests/test_ai_context.py#L72); All variants |
-| <a id="tc-013"></a>TC-013 | AC-019.2, AC-022.2 | AI context retrieves bounded deterministic same project history | API / AI (mocked or unavailable provider) | [`test_ai_context_retrieves_bounded_deterministic_same_project_history`](../tests/test_ai_context.py#L119); All variants |
-| <a id="tc-014"></a>TC-014 | AC-019.2, AC-022.2 | AI context includes only current assignable project members | API / AI (mocked or unavailable provider) | [`test_ai_context_includes_only_current_assignable_project_members`](../tests/test_ai_context.py#L153); All variants |
-| <a id="tc-015"></a>TC-015 | AC-019.2 | AI context supports empty project history and assignees | API / AI (mocked or unavailable provider) | [`test_ai_context_supports_empty_project_history_and_assignees`](../tests/test_ai_context.py#L183); All variants |
-| <a id="tc-016"></a>TC-016 | AC-019.2 | AI context is not constructed for rejected requests | API / AI (mocked or unavailable provider) | [`test_ai_context_is_not_constructed_for_rejected_requests`](../tests/test_ai_context.py#L203); All variants |
-
-## tests/test_ai_generation.py
+## tests/backend/test_ai_context.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-017"></a>TC-017 | AC-019.2, AC-022.2 | AI generation preserves separate context without mutation | Python unit / AI (offline) | [`test_ai_generation_preserves_separate_context_without_mutation`](../tests/test_ai_generation.py#L37); All variants |
-| <a id="tc-018"></a>TC-018 | AC-019.1 | AI generation defines only supported output fields | Python unit / AI (offline) | [`test_ai_generation_defines_only_supported_output_fields`](../tests/test_ai_generation.py#L59); All variants |
-| <a id="tc-019"></a>TC-019 | AC-019.3 | AI generation classification rules match application | Python unit / AI (offline) | [`test_ai_generation_classification_rules_match_application`](../tests/test_ai_generation.py#L78); All variants |
-| <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/test_ai_generation.py#L91); All variants |
-| <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/test_ai_generation.py#L103); All variants |
-| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/test_ai_generation.py#L132); All variants |
-| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/test_ai_generation.py#L152); All variants |
+| <a id="tc-012"></a>TC-012 | AC-019.2, AC-022.2 | AI context preserves submitted form and persisted bugs | API / AI (mocked or unavailable provider) | [`test_ai_context_preserves_submitted_form_and_persisted_bugs`](../tests/backend/test_ai_context.py#L72); All variants |
+| <a id="tc-013"></a>TC-013 | AC-019.2, AC-022.2 | AI context retrieves bounded deterministic same project history | API / AI (mocked or unavailable provider) | [`test_ai_context_retrieves_bounded_deterministic_same_project_history`](../tests/backend/test_ai_context.py#L119); All variants |
+| <a id="tc-014"></a>TC-014 | AC-019.2, AC-022.2 | AI context includes only current assignable project members | API / AI (mocked or unavailable provider) | [`test_ai_context_includes_only_current_assignable_project_members`](../tests/backend/test_ai_context.py#L153); All variants |
+| <a id="tc-015"></a>TC-015 | AC-019.2 | AI context supports empty project history and assignees | API / AI (mocked or unavailable provider) | [`test_ai_context_supports_empty_project_history_and_assignees`](../tests/backend/test_ai_context.py#L183); All variants |
+| <a id="tc-016"></a>TC-016 | AC-019.2 | AI context is not constructed for rejected requests | API / AI (mocked or unavailable provider) | [`test_ai_context_is_not_constructed_for_rejected_requests`](../tests/backend/test_ai_context.py#L203); All variants |
 
-## tests/test_ai_openai.py
+## tests/backend/test_ai_generation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-024"></a>TC-024 | AC-019.2, AC-022.2 | AI openai sends explicit Medium Fast and existing strict contract without network or database | Python unit / AI (offline) | [`test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database`](../tests/test_ai_openai.py#L48); All variants |
-| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/test_ai_openai.py#L123); All variants |
-| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/test_ai_openai.py#L130); All variants |
-| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/test_ai_openai.py#L145); All variants |
-| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/test_ai_openai.py#L152); All variants |
-| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/test_ai_openai.py#L161); All variants |
-| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/test_ai_openai.py#L178); All variants |
-| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/test_ai_openai.py#L186); All variants |
+| <a id="tc-017"></a>TC-017 | AC-019.2, AC-022.2 | AI generation preserves separate context without mutation | Python unit / AI (offline) | [`test_ai_generation_preserves_separate_context_without_mutation`](../tests/backend/test_ai_generation.py#L37); All variants |
+| <a id="tc-018"></a>TC-018 | AC-019.1 | AI generation defines only supported output fields | Python unit / AI (offline) | [`test_ai_generation_defines_only_supported_output_fields`](../tests/backend/test_ai_generation.py#L59); All variants |
+| <a id="tc-019"></a>TC-019 | AC-019.3 | AI generation classification rules match application | Python unit / AI (offline) | [`test_ai_generation_classification_rules_match_application`](../tests/backend/test_ai_generation.py#L78); All variants |
+| <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/backend/test_ai_generation.py#L91); All variants |
+| <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/backend/test_ai_generation.py#L103); All variants |
+| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/backend/test_ai_generation.py#L132); All variants |
+| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/backend/test_ai_generation.py#L152); All variants |
 
-## tests/test_ai_response.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-032"></a>TC-032 | AC-019.3, AC-022.3 | AI response delegates to validator and returns its result | Python unit / AI (offline) | [`test_ai_response_delegates_to_validator_and_returns_its_result`](../tests/test_ai_response.py#L38); All variants |
-| <a id="tc-033"></a>TC-033 | AC-019.4 | AI response retains partial valid suggestions | Python unit / AI (offline) | [`test_ai_response_retains_partial_valid_suggestions`](../tests/test_ai_response.py#L55); All variants |
-| <a id="tc-034"></a>TC-034 | AC-019.3 | AI response uses only context assignee eligibility | Python unit / AI (offline) | [`test_ai_response_uses_only_context_assignee_eligibility`](../tests/test_ai_response.py#L70); All variants |
-| <a id="tc-035"></a>TC-035 | AC-019.4 | AI response preserves no usable suggestions outcome | Python unit / AI (offline) | [`test_ai_response_preserves_no_usable_suggestions_outcome`](../tests/test_ai_response.py#L88); All variants |
-| <a id="tc-036"></a>TC-036 | AC-019.4, AC-022.3, AC-023.1 | AI response propagates malformed response | Python unit / AI (offline) | [`test_ai_response_propagates_malformed_response`](../tests/test_ai_response.py#L98); All variants |
-| <a id="tc-037"></a>TC-037 | AC-019.3 | AI response preserves conflicting duplicate behavior | Python unit / AI (offline) | [`test_ai_response_preserves_conflicting_duplicate_behavior`](../tests/test_ai_response.py#L104); All variants |
-| <a id="tc-038"></a>TC-038 | AC-022.3 | AI response has no mutation database or provider side effects | Python unit / AI (offline) | [`test_ai_response_has_no_mutation_database_or_provider_side_effects`](../tests/test_ai_response.py#L114); All variants |
-
-## tests/test_ai_suggestions.py
+## tests/backend/test_ai_openai.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-039"></a>TC-039 | AC-019.4 | AI suggestions accept partial set without mutating input | Python unit / AI (offline) | [`test_ai_suggestions_accept_partial_set_without_mutating_input`](../tests/test_ai_suggestions.py#L20); All variants |
-| <a id="tc-040"></a>TC-040 | AC-019.1 | AI suggestions accept all supported fields | Python unit / AI (offline) | [`test_ai_suggestions_accept_all_supported_fields`](../tests/test_ai_suggestions.py#L30); All variants |
-| <a id="tc-041"></a>TC-041 | AC-019.1, AC-022.3 | AI suggestions exclude unsupported or unmapped fields | Python unit / AI (offline) | [`test_ai_suggestions_exclude_unsupported_or_unmapped_fields`](../tests/test_ai_suggestions.py#L39); All variants |
-| <a id="tc-042"></a>TC-042 | AC-019.3, AC-022.3 | AI suggestions exclude non string text without losing valid field | Python unit / AI (offline) | [`test_ai_suggestions_exclude_non_string_text_without_losing_valid_field`](../tests/test_ai_suggestions.py#L47); All variants |
-| <a id="tc-043"></a>TC-043 | AC-019.4 | AI suggestions omit blank values without clearing fields | Python unit / AI (offline) | [`test_ai_suggestions_omit_blank_values_without_clearing_fields`](../tests/test_ai_suggestions.py#L55); All variants |
-| <a id="tc-044"></a>TC-044 | AC-019.3, AC-022.3 | AI suggestions exclude invalid classification without losing valid field | Python unit / AI (offline) | [`test_ai_suggestions_exclude_invalid_classification_without_losing_valid_field`](../tests/test_ai_suggestions.py#L65); All variants |
-| <a id="tc-045"></a>TC-045 | AC-019.3 | AI suggestions accept classification matching bug validation | Python unit / AI (offline) | [`test_ai_suggestions_accept_classification_matching_bug_validation`](../tests/test_ai_suggestions.py#L75); All variants |
-| <a id="tc-046"></a>TC-046 | AC-019.3, AC-022.3 | AI suggestions exclude ineligible or non integer assignee | Python unit / AI (offline) | [`test_ai_suggestions_exclude_ineligible_or_non_integer_assignee`](../tests/test_ai_suggestions.py#L83); All variants |
-| <a id="tc-047"></a>TC-047 | AC-019.3 | AI suggestions exclude conflicting duplicate field | Python unit / AI (offline) | [`test_ai_suggestions_exclude_conflicting_duplicate_field`](../tests/test_ai_suggestions.py#L90); All variants |
-| <a id="tc-048"></a>TC-048 | AC-019.3 | AI suggestions collapse identical duplicates and ignore blank entries | Python unit / AI (offline) | [`test_ai_suggestions_collapse_identical_duplicates_and_ignore_blank_entries`](../tests/test_ai_suggestions.py#L98); All variants |
-| <a id="tc-049"></a>TC-049 | AC-019.4, AC-022.3 | AI suggestions report malformed structure as error | Python unit / AI (offline) | [`test_ai_suggestions_report_malformed_structure_as_error`](../tests/test_ai_suggestions.py#L110); All variants |
-| <a id="tc-050"></a>TC-050 | AC-019.4 | AI suggestions report no usable suggestions for valid structure | Python unit / AI (offline) | [`test_ai_suggestions_report_no_usable_suggestions_for_valid_structure`](../tests/test_ai_suggestions.py#L122); All variants |
-| <a id="tc-051"></a>TC-051 | AC-019.3 | AI suggestions use current assignable project member context | Python unit / AI (offline) | [`test_ai_suggestions_use_current_assignable_project_member_context`](../tests/test_ai_suggestions.py#L129); All variants |
+| <a id="tc-024"></a>TC-024 | AC-019.2, AC-022.2 | AI openai sends explicit Medium Fast and existing strict contract without network or database | Python unit / AI (offline) | [`test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database`](../tests/backend/test_ai_openai.py#L48); All variants |
+| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/backend/test_ai_openai.py#L123); All variants |
+| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/backend/test_ai_openai.py#L130); All variants |
+| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/backend/test_ai_openai.py#L145); All variants |
+| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/backend/test_ai_openai.py#L152); All variants |
+| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/backend/test_ai_openai.py#L161); All variants |
+| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/backend/test_ai_openai.py#L178); All variants |
+| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/backend/test_ai_openai.py#L186); All variants |
 
-## tests/test_ai_triage.py
+## tests/backend/test_ai_response.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-052"></a>TC-052 | AC-023.1 | AI triage duplicate JSON is safe failure before validation | API / AI (mocked or unavailable provider) | [`test_ai_triage_duplicate_json_is_safe_failure_before_validation`](../tests/test_ai_triage.py#L63); All variants |
-| <a id="tc-053"></a>TC-053 | AC-018.4, AC-019.1, AC-019.2, AC-019.3, AC-019.4, AC-022.2, AC-022.3 | AI triage configured pipeline preserves form and returns validated suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions`](../tests/test_ai_triage.py#L89); All variants |
-| <a id="tc-054"></a>TC-054 | AC-022.3 | AI valid suggestion cannot modify bug without user save | API / AI (mocked or unavailable provider) | [`test_ai_valid_suggestion_cannot_modify_bug_without_user_save`](../tests/test_ai_triage.py#L150); All variants |
-| <a id="tc-055"></a>TC-055 | AC-023.1 | AI triage unconfigured requests keep 503 without provider work | API / AI (mocked or unavailable provider) | [`test_ai_triage_unconfigured_requests_keep_503_without_provider_work`](../tests/test_ai_triage.py#L194); All variants |
-| <a id="tc-056"></a>TC-056 | AC-018.4, AC-019.4, AC-023.2 | AI triage returns distinct no usable suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_returns_distinct_no_usable_suggestions`](../tests/test_ai_triage.py#L219); All variants |
-| <a id="tc-057"></a>TC-057 | AC-019.3, AC-022.2 | AI triage revalidates current member eligibility | API / AI (mocked or unavailable provider) | [`test_ai_triage_revalidates_current_member_eligibility`](../tests/test_ai_triage.py#L229); All variants |
-| <a id="tc-058"></a>TC-058 | AC-019.3 | AI triage excludes assignee removed during generation | API / AI (mocked or unavailable provider) | [`test_ai_triage_excludes_assignee_removed_during_generation`](../tests/test_ai_triage.py#L252); All variants |
-| <a id="tc-059"></a>TC-059 | AC-022.1 | AI triage configured requests authorize before any pipeline work | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_requests_authorize_before_any_pipeline_work`](../tests/test_ai_triage.py#L289); All variants |
-| <a id="tc-060"></a>TC-060 | AC-022.1 | AI triage rechecks changed role before provider invocation | API / AI (mocked or unavailable provider) | [`test_ai_triage_rechecks_changed_role_before_provider_invocation`](../tests/test_ai_triage.py#L317); All variants |
-| <a id="tc-061"></a>TC-061 | AC-022.3 | AI triage instruction like content and output cannot perform actions | API / AI (mocked or unavailable provider) | [`test_ai_triage_instruction_like_content_and_output_cannot_perform_actions`](../tests/test_ai_triage.py#L354); All variants |
-| <a id="tc-062"></a>TC-062 | AC-018.4, AC-019.4, AC-023.1 | AI triage failures are safe errors without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_failures_are_safe_errors_without_persistence`](../tests/test_ai_triage.py#L392); All variants |
-| <a id="tc-063"></a>TC-063 | AC-023.1 | AI triage timeout is safe without retries or persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_timeout_is_safe_without_retries_or_persistence`](../tests/test_ai_triage.py#L421); All variants |
-| <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/test_ai_triage.py#L438); All variants |
-| <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/test_ai_triage.py#L454); All variants |
+| <a id="tc-032"></a>TC-032 | AC-019.3, AC-022.3 | AI response delegates to validator and returns its result | Python unit / AI (offline) | [`test_ai_response_delegates_to_validator_and_returns_its_result`](../tests/backend/test_ai_response.py#L38); All variants |
+| <a id="tc-033"></a>TC-033 | AC-019.4 | AI response retains partial valid suggestions | Python unit / AI (offline) | [`test_ai_response_retains_partial_valid_suggestions`](../tests/backend/test_ai_response.py#L55); All variants |
+| <a id="tc-034"></a>TC-034 | AC-019.3 | AI response uses only context assignee eligibility | Python unit / AI (offline) | [`test_ai_response_uses_only_context_assignee_eligibility`](../tests/backend/test_ai_response.py#L70); All variants |
+| <a id="tc-035"></a>TC-035 | AC-019.4 | AI response preserves no usable suggestions outcome | Python unit / AI (offline) | [`test_ai_response_preserves_no_usable_suggestions_outcome`](../tests/backend/test_ai_response.py#L88); All variants |
+| <a id="tc-036"></a>TC-036 | AC-019.4, AC-022.3, AC-023.1 | AI response propagates malformed response | Python unit / AI (offline) | [`test_ai_response_propagates_malformed_response`](../tests/backend/test_ai_response.py#L98); All variants |
+| <a id="tc-037"></a>TC-037 | AC-019.3 | AI response preserves conflicting duplicate behavior | Python unit / AI (offline) | [`test_ai_response_preserves_conflicting_duplicate_behavior`](../tests/backend/test_ai_response.py#L104); All variants |
+| <a id="tc-038"></a>TC-038 | AC-022.3 | AI response has no mutation database or provider side effects | Python unit / AI (offline) | [`test_ai_response_has_no_mutation_database_or_provider_side_effects`](../tests/backend/test_ai_response.py#L114); All variants |
 
-## tests/test_bug.py
+## tests/backend/test_ai_suggestions.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-066"></a>TC-066 | AC-011.1 | Project member can create bug | API / integration | [`test_project_member_can_create_bug`](../tests/test_bug.py#L5); All variants |
-| <a id="tc-067"></a>TC-067 | AC-011.2 | Bug creation rejected without title | API / integration | [`test_bug_creation_rejected_without_title`](../tests/test_bug.py#L64); All variants |
-| <a id="tc-068"></a>TC-068 | AC-011.3 | Non member cannot create bug | API / integration | [`test_non_member_cannot_create_bug`](../tests/test_bug.py#L95); All variants |
-| <a id="tc-069"></a>TC-069 | AC-011.4 | Bug can be created with optional information | API / integration | [`test_bug_can_be_created_with_optional_information`](../tests/test_bug.py#L133); All variants |
-| <a id="tc-070"></a>TC-070 | AC-012.1 | Project member can view bug list | API / integration | [`test_project_member_can_view_bug_list`](../tests/test_bug.py#L208); All variants |
-| <a id="tc-071"></a>TC-071 | AC-012.2 | Project member can open bug report | API / integration | [`test_project_member_can_open_bug_report`](../tests/test_bug.py#L261); All variants |
-| <a id="tc-072"></a>TC-072 | AC-012.3 | Non member cannot open bug report | API / integration | [`test_non_member_cannot_open_bug_report`](../tests/test_bug.py#L367); All variants |
-| <a id="tc-073"></a>TC-073 | AC-012.3 | Non member cannot retrieve another projects bug collection | API / integration | [`test_non_member_cannot_retrieve_another_projects_bug_collection`](../tests/test_bug.py#L416); All variants |
-| <a id="tc-074"></a>TC-074 | AC-012.4 | Bug list defaults to most recently updated first | API / integration | [`test_bug_list_defaults_to_most_recently_updated_first`](../tests/test_bug.py#L455); All variants |
-| <a id="tc-075"></a>TC-075 | AC-013.1 | Project member can edit bug report | API / integration | [`test_project_member_can_edit_bug_report`](../tests/test_bug.py#L544); All variants |
-| <a id="tc-076"></a>TC-076 | — | Bug update rejected with null title | API / integration | [`test_bug_update_rejected_with_null_title`](../tests/test_bug.py#L600); All variants |
-| <a id="tc-077"></a>TC-077 | AC-013.2 | Project member can update optional bug information | API / integration | [`test_project_member_can_update_optional_bug_information`](../tests/test_bug.py#L661); All variants |
-| <a id="tc-078"></a>TC-078 | AC-013.3 | Non member cannot edit bug report | API / integration | [`test_non_member_cannot_edit_bug_report`](../tests/test_bug.py#L743); All variants |
-| <a id="tc-079"></a>TC-079 | AC-014.1 | Authorized member can delete bug | API / integration | [`test_authorized_member_can_delete_bug`](../tests/test_bug.py#L803); All variants |
-| <a id="tc-080"></a>TC-080 | AC-014.2 | Reject Developer bug deletion and preserve the report | API / integration | [`test_unauthorized_member_cannot_delete_bug`](../tests/test_bug.py#L876); role=Developer |
-| <a id="tc-081"></a>TC-081 | AC-014.2 | Reject outsider bug deletion and preserve the report | API / integration | [`test_unauthorized_member_cannot_delete_bug`](../tests/test_bug.py#L876); role=non-member |
-| <a id="tc-082"></a>TC-082 | AC-015.1 | Authorized member can assign bug | API / integration | [`test_authorized_member_can_assign_bug`](../tests/test_bug.py#L959); All variants |
-| <a id="tc-083"></a>TC-083 | AC-015.1 | Authorized member can unassign bug | API / integration | [`test_authorized_member_can_unassign_bug`](../tests/test_bug.py#L1061); All variants |
-| <a id="tc-084"></a>TC-084 | AC-015.1 | Bug unassignment is rejected outside triage | API / integration | [`test_bug_unassignment_is_rejected_outside_triage`](../tests/test_bug.py#L1173); All variants |
-| <a id="tc-085"></a>TC-085 | AC-015.2 | Bug cannot be assigned to invalid member | API / integration | [`test_bug_cannot_be_assigned_to_invalid_member`](../tests/test_bug.py#L1219); All variants |
-| <a id="tc-086"></a>TC-086 | AC-015.1, AC-015.3 | Non member cannot assign bug | API / integration | [`test_non_member_cannot_assign_bug`](../tests/test_bug.py#L1284); All variants |
-| <a id="tc-087"></a>TC-087 | AC-015.4 | Authorized member can reassign bug | API / integration | [`test_authorized_member_can_reassign_bug`](../tests/test_bug.py#L1360); All variants |
-| <a id="tc-088"></a>TC-088 | AC-016.1 | Project member can set bug severity | API / integration | [`test_project_member_can_set_bug_severity`](../tests/test_bug.py#L1445); All variants |
-| <a id="tc-089"></a>TC-089 | AC-016.2 | Project member can set bug priority | API / integration | [`test_project_member_can_set_bug_priority`](../tests/test_bug.py#L1537); All variants |
-| <a id="tc-090"></a>TC-090 | AC-016.3 | Project member can update bug classification | API / integration | [`test_project_member_can_update_bug_classification`](../tests/test_bug.py#L1625); All variants |
-| <a id="tc-091"></a>TC-091 | AC-016.4 | Non member cannot update bug classification | API / integration | [`test_non_member_cannot_update_bug_classification`](../tests/test_bug.py#L1714); All variants |
-| <a id="tc-092"></a>TC-092 | — | Bug rejects invalid severity | API / integration | [`test_bug_rejects_invalid_severity`](../tests/test_bug.py#L1774); All variants |
-| <a id="tc-093"></a>TC-093 | — | Bug rejects invalid priority | API / integration | [`test_bug_rejects_invalid_priority`](../tests/test_bug.py#L1846); All variants |
-| <a id="tc-094"></a>TC-094 | AC-017.1 | New bug starts in triage | API / integration | [`test_new_bug_starts_in_triage`](../tests/test_bug.py#L1897); All variants |
-| <a id="tc-095"></a>TC-095 | AC-017.2 | Project owner or QA can move bug from triage to open | API / integration | [`test_project_owner_or_qa_can_move_bug_from_triage_to_open`](../tests/test_bug.py#L1935); All variants |
-| <a id="tc-096"></a>TC-096 | AC-017.2 | Triage to open can assign eligible project member | API / integration | [`test_triage_to_open_can_assign_eligible_project_member`](../tests/test_bug.py#L2017); All variants |
-| <a id="tc-097"></a>TC-097 | AC-017.2 | Triage to open rejects ineligible assignee | API / integration | [`test_triage_to_open_rejects_ineligible_assignee`](../tests/test_bug.py#L2067); All variants |
-| <a id="tc-098"></a>TC-098 | AC-017.2 | Developer cannot move bug from triage to open | API / integration | [`test_developer_cannot_move_bug_from_triage_to_open`](../tests/test_bug.py#L2115); All variants |
-| <a id="tc-099"></a>TC-099 | AC-017.2 | Bug without assignee cannot move from triage to open | API / integration | [`test_bug_without_assignee_cannot_move_from_triage_to_open`](../tests/test_bug.py#L2179); All variants |
-| <a id="tc-100"></a>TC-100 | AC-017.3 | QA analyst cannot move bug from open to development | API / integration | [`test_qa_analyst_cannot_move_bug_from_open_to_development`](../tests/test_bug.py#L2227); All variants |
-| <a id="tc-101"></a>TC-101 | AC-017.3 | Project owner can move bug from open to development | API / integration | [`test_project_owner_can_move_bug_from_open_to_development`](../tests/test_bug.py#L2313); All variants |
-| <a id="tc-102"></a>TC-102 | AC-017.3 | Open to development requires valid developer assignee | API / integration | [`test_open_to_development_requires_valid_developer_assignee`](../tests/test_bug.py#L2402); All variants |
-| <a id="tc-103"></a>TC-103 | AC-017.3 | Non assigned developer cannot move bug from open to development | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_open_to_development`](../tests/test_bug.py#L2467); All variants |
-| <a id="tc-104"></a>TC-104 | AC-017.4 | Assigned developer can move bug from development to testing | API / integration | [`test_assigned_developer_can_move_bug_from_development_to_testing`](../tests/test_bug.py#L2553); All variants |
-| <a id="tc-105"></a>TC-105 | AC-017.4 | Project owner can move bug from development to testing | API / integration | [`test_project_owner_can_move_bug_from_development_to_testing`](../tests/test_bug.py#L2657); All variants |
-| <a id="tc-106"></a>TC-106 | AC-017.4 | Non assigned developer cannot move bug from development to testing | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_development_to_testing`](../tests/test_bug.py#L2752); All variants |
-| <a id="tc-107"></a>TC-107 | AC-017.4 | Bug cannot move to testing with developer assignee | API / integration | [`test_bug_cannot_move_to_testing_with_developer_assignee`](../tests/test_bug.py#L2863); All variants |
-| <a id="tc-108"></a>TC-108 | AC-017.5 | Assigned QA can pass bug and close it | API / integration | [`test_assigned_qa_can_pass_bug_and_close_it`](../tests/test_bug.py#L2962); All variants |
-| <a id="tc-109"></a>TC-109 | AC-017.5 | Project owner can pass bug and close it | API / integration | [`test_project_owner_can_pass_bug_and_close_it`](../tests/test_bug.py#L3102); All variants |
-| <a id="tc-110"></a>TC-110 | AC-017.5 | Assigned QA can fail bug and return it to development | API / integration | [`test_assigned_qa_can_fail_bug_and_return_it_to_development`](../tests/test_bug.py#L3203); All variants |
-| <a id="tc-111"></a>TC-111 | AC-017.5 | Project owner can fail bug and return it to development | API / integration | [`test_project_owner_can_fail_bug_and_return_it_to_development`](../tests/test_bug.py#L3316); All variants |
-| <a id="tc-112"></a>TC-112 | AC-017.5 | Failed testing requires valid developer assignee | API / integration | [`test_failed_testing_requires_valid_developer_assignee`](../tests/test_bug.py#L3436); All variants |
-| <a id="tc-113"></a>TC-113 | AC-017.5 | Non assigned QA cannot record testing outcome | API / integration | [`test_non_assigned_qa_cannot_record_testing_outcome`](../tests/test_bug.py#L3533); All variants |
-| <a id="tc-114"></a>TC-114 | AC-017.5 | Testing outcome is required | API / integration | [`test_testing_outcome_is_required`](../tests/test_bug.py#L3656); All variants |
-| <a id="tc-115"></a>TC-115 | AC-017.5 | Invalid testing outcome is rejected | API / integration | [`test_invalid_testing_outcome_is_rejected`](../tests/test_bug.py#L3774); All variants |
-| <a id="tc-116"></a>TC-116 | AC-017.6 | Assigned developer can close bug without fixing | API / integration | [`test_assigned_developer_can_close_bug_without_fixing`](../tests/test_bug.py#L3891); All variants |
-| <a id="tc-117"></a>TC-117 | AC-017.6 | Project owner can close bug without fixing | API / integration | [`test_project_owner_can_close_bug_without_fixing`](../tests/test_bug.py#L3988); All variants |
-| <a id="tc-118"></a>TC-118 | AC-017.6 | Non assigned developer cannot close bug without fixing | API / integration | [`test_non_assigned_developer_cannot_close_bug_without_fixing`](../tests/test_bug.py#L4081); All variants |
-| <a id="tc-119"></a>TC-119 | AC-017.6 | Bug cannot be closed without resolution | API / integration | [`test_bug_cannot_be_closed_without_resolution`](../tests/test_bug.py#L4168); All variants |
-| <a id="tc-120"></a>TC-120 | AC-017.6 | Fixed resolution cannot be manually selected when closing bug | API / integration | [`test_fixed_resolution_cannot_be_manually_selected_when_closing_bug`](../tests/test_bug.py#L4254); All variants |
-| <a id="tc-121"></a>TC-121 | AC-017.7 | Project owner can move closed bug to triage | API / integration | [`test_project_owner_can_move_closed_bug_to_triage`](../tests/test_bug.py#L4503); All variants |
-| <a id="tc-122"></a>TC-122 | AC-017.7 | Project owner can move unassigned closed bug to triage | API / integration | [`test_project_owner_can_move_unassigned_closed_bug_to_triage`](../tests/test_bug.py#L4539); All variants |
-| <a id="tc-123"></a>TC-123 | AC-017.7 | Unauthorized user cannot move closed bug to triage | API / integration | [`test_unauthorized_user_cannot_move_closed_bug_to_triage`](../tests/test_bug.py#L4592); All variants |
-| <a id="tc-124"></a>TC-124 | AC-017.7 | Closed bug rejects invalid direct transition | API / integration | [`test_closed_bug_rejects_invalid_direct_transition`](../tests/test_bug.py#L4636); All variants |
-| <a id="tc-125"></a>TC-125 | AC-017.7 | Closed to triage rejects extra transition data | API / integration | [`test_closed_to_triage_rejects_extra_transition_data`](../tests/test_bug.py#L4672); All variants |
-| <a id="tc-126"></a>TC-126 | AC-017.8 | Bug cannot skip from triage to development | API / integration | [`test_bug_cannot_skip_from_triage_to_development`](../tests/test_bug.py#L4714); All variants |
-| <a id="tc-127"></a>TC-127 | AC-017.8 | Bug cannot skip from open to testing | API / integration | [`test_bug_cannot_skip_from_open_to_testing`](../tests/test_bug.py#L4776); All variants |
-| <a id="tc-128"></a>TC-128 | AC-017.8 | Bug cannot move from development back to open | API / integration | [`test_bug_cannot_move_from_development_back_to_open`](../tests/test_bug.py#L4863); All variants |
-| <a id="tc-129"></a>TC-129 | AC-017.8 | Bug cannot move from testing back to open | API / integration | [`test_bug_cannot_move_from_testing_back_to_open`](../tests/test_bug.py#L4949); All variants |
-| <a id="tc-130"></a>TC-130 | AC-017.8 | Bug cannot move from testing back to triage | API / integration | [`test_bug_cannot_move_from_testing_back_to_triage`](../tests/test_bug.py#L5060); All variants |
-| <a id="tc-131"></a>TC-131 | AC-017.9 | Changing bug status updates last updated timestamp | API / integration | [`test_changing_bug_status_updates_last_updated_timestamp`](../tests/test_bug.py#L5171); All variants |
+| <a id="tc-039"></a>TC-039 | AC-019.4 | AI suggestions accept partial set without mutating input | Python unit / AI (offline) | [`test_ai_suggestions_accept_partial_set_without_mutating_input`](../tests/backend/test_ai_suggestions.py#L20); All variants |
+| <a id="tc-040"></a>TC-040 | AC-019.1 | AI suggestions accept all supported fields | Python unit / AI (offline) | [`test_ai_suggestions_accept_all_supported_fields`](../tests/backend/test_ai_suggestions.py#L30); All variants |
+| <a id="tc-041"></a>TC-041 | AC-019.1, AC-022.3 | AI suggestions exclude unsupported or unmapped fields | Python unit / AI (offline) | [`test_ai_suggestions_exclude_unsupported_or_unmapped_fields`](../tests/backend/test_ai_suggestions.py#L39); All variants |
+| <a id="tc-042"></a>TC-042 | AC-019.3, AC-022.3 | AI suggestions exclude non string text without losing valid field | Python unit / AI (offline) | [`test_ai_suggestions_exclude_non_string_text_without_losing_valid_field`](../tests/backend/test_ai_suggestions.py#L47); All variants |
+| <a id="tc-043"></a>TC-043 | AC-019.4 | AI suggestions omit blank values without clearing fields | Python unit / AI (offline) | [`test_ai_suggestions_omit_blank_values_without_clearing_fields`](../tests/backend/test_ai_suggestions.py#L55); All variants |
+| <a id="tc-044"></a>TC-044 | AC-019.3, AC-022.3 | AI suggestions exclude invalid classification without losing valid field | Python unit / AI (offline) | [`test_ai_suggestions_exclude_invalid_classification_without_losing_valid_field`](../tests/backend/test_ai_suggestions.py#L65); All variants |
+| <a id="tc-045"></a>TC-045 | AC-019.3 | AI suggestions accept classification matching bug validation | Python unit / AI (offline) | [`test_ai_suggestions_accept_classification_matching_bug_validation`](../tests/backend/test_ai_suggestions.py#L75); All variants |
+| <a id="tc-046"></a>TC-046 | AC-019.3, AC-022.3 | AI suggestions exclude ineligible or non integer assignee | Python unit / AI (offline) | [`test_ai_suggestions_exclude_ineligible_or_non_integer_assignee`](../tests/backend/test_ai_suggestions.py#L83); All variants |
+| <a id="tc-047"></a>TC-047 | AC-019.3 | AI suggestions exclude conflicting duplicate field | Python unit / AI (offline) | [`test_ai_suggestions_exclude_conflicting_duplicate_field`](../tests/backend/test_ai_suggestions.py#L90); All variants |
+| <a id="tc-048"></a>TC-048 | AC-019.3 | AI suggestions collapse identical duplicates and ignore blank entries | Python unit / AI (offline) | [`test_ai_suggestions_collapse_identical_duplicates_and_ignore_blank_entries`](../tests/backend/test_ai_suggestions.py#L98); All variants |
+| <a id="tc-049"></a>TC-049 | AC-019.4, AC-022.3 | AI suggestions report malformed structure as error | Python unit / AI (offline) | [`test_ai_suggestions_report_malformed_structure_as_error`](../tests/backend/test_ai_suggestions.py#L110); All variants |
+| <a id="tc-050"></a>TC-050 | AC-019.4 | AI suggestions report no usable suggestions for valid structure | Python unit / AI (offline) | [`test_ai_suggestions_report_no_usable_suggestions_for_valid_structure`](../tests/backend/test_ai_suggestions.py#L122); All variants |
+| <a id="tc-051"></a>TC-051 | AC-019.3 | AI suggestions use current assignable project member context | Python unit / AI (offline) | [`test_ai_suggestions_use_current_assignable_project_member_context`](../tests/backend/test_ai_suggestions.py#L129); All variants |
 
-## tests/test_bug_numbers.py
+## tests/backend/test_ai_triage.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-132"></a>TC-132 | AC-011.1 | Bug numbers are independent and routes use local numbers | API / integration | [`test_bug_numbers_are_independent_and_routes_use_local_numbers`](../tests/test_bug_numbers.py#L27); All variants |
-| <a id="tc-133"></a>TC-133 | AC-011.1 | Deleted bug numbers are not reused | API / integration | [`test_deleted_bug_numbers_are_not_reused`](../tests/test_bug_numbers.py#L58); All variants |
-| <a id="tc-134"></a>TC-134 | AC-013.1 | Bug number is preserved on edit | API / integration | [`test_bug_number_is_preserved_on_edit`](../tests/test_bug_numbers.py#L69); All variants |
-| <a id="tc-135"></a>TC-135 | AC-012.2 | Resolve public bug routes by project and local number | API / integration | [`test_public_bug_routes_use_local_number_and_isolate_projects`](../tests/test_bug_numbers.py#L82); operation in {details, edit, status, delete, ai-assist} |
-| <a id="tc-136"></a>TC-136 | AC-019.2, AC-022.2 | Keep AI history exclusion tied to internal identity after public resolution | API / integration | [`test_public_bug_routes_use_local_number_and_isolate_projects`](../tests/test_bug_numbers.py#L82); operation=ai-assist |
-| <a id="tc-137"></a>TC-137 | — | Failed creation rolls back bug and counter | API / integration | [`test_failed_creation_rolls_back_bug_and_counter`](../tests/test_bug_numbers.py#L141); All variants |
-| <a id="tc-138"></a>TC-138 | AC-011.1 | Concurrent creation allocates unique bug numbers | API / integration | [`test_concurrent_creation_allocates_unique_bug_numbers`](../tests/test_bug_numbers.py#L184); All variants |
+| <a id="tc-052"></a>TC-052 | AC-023.1 | AI triage duplicate JSON is safe failure before validation | API / AI (mocked or unavailable provider) | [`test_ai_triage_duplicate_json_is_safe_failure_before_validation`](../tests/backend/test_ai_triage.py#L63); All variants |
+| <a id="tc-053"></a>TC-053 | AC-018.4, AC-019.1, AC-019.2, AC-019.3, AC-019.4, AC-022.2, AC-022.3 | AI triage configured pipeline preserves form and returns validated suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions`](../tests/backend/test_ai_triage.py#L89); All variants |
+| <a id="tc-054"></a>TC-054 | AC-022.3 | AI valid suggestion cannot modify bug without user save | API / AI (mocked or unavailable provider) | [`test_ai_valid_suggestion_cannot_modify_bug_without_user_save`](../tests/backend/test_ai_triage.py#L150); All variants |
+| <a id="tc-055"></a>TC-055 | AC-023.1 | AI triage unconfigured requests keep 503 without provider work | API / AI (mocked or unavailable provider) | [`test_ai_triage_unconfigured_requests_keep_503_without_provider_work`](../tests/backend/test_ai_triage.py#L194); All variants |
+| <a id="tc-056"></a>TC-056 | AC-018.4, AC-019.4, AC-023.2 | AI triage returns distinct no usable suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_returns_distinct_no_usable_suggestions`](../tests/backend/test_ai_triage.py#L219); All variants |
+| <a id="tc-057"></a>TC-057 | AC-019.3, AC-022.2 | AI triage revalidates current member eligibility | API / AI (mocked or unavailable provider) | [`test_ai_triage_revalidates_current_member_eligibility`](../tests/backend/test_ai_triage.py#L229); All variants |
+| <a id="tc-058"></a>TC-058 | AC-019.3 | AI triage excludes assignee removed during generation | API / AI (mocked or unavailable provider) | [`test_ai_triage_excludes_assignee_removed_during_generation`](../tests/backend/test_ai_triage.py#L252); All variants |
+| <a id="tc-059"></a>TC-059 | AC-022.1 | AI triage configured requests authorize before any pipeline work | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_requests_authorize_before_any_pipeline_work`](../tests/backend/test_ai_triage.py#L289); All variants |
+| <a id="tc-060"></a>TC-060 | AC-022.1 | AI triage rechecks changed role before provider invocation | API / AI (mocked or unavailable provider) | [`test_ai_triage_rechecks_changed_role_before_provider_invocation`](../tests/backend/test_ai_triage.py#L317); All variants |
+| <a id="tc-061"></a>TC-061 | AC-022.3 | AI triage instruction like content and output cannot perform actions | API / AI (mocked or unavailable provider) | [`test_ai_triage_instruction_like_content_and_output_cannot_perform_actions`](../tests/backend/test_ai_triage.py#L354); All variants |
+| <a id="tc-062"></a>TC-062 | AC-018.4, AC-019.4, AC-023.1 | AI triage failures are safe errors without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_failures_are_safe_errors_without_persistence`](../tests/backend/test_ai_triage.py#L392); All variants |
+| <a id="tc-063"></a>TC-063 | AC-023.1 | AI triage timeout is safe without retries or persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_timeout_is_safe_without_retries_or_persistence`](../tests/backend/test_ai_triage.py#L421); All variants |
+| <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/backend/test_ai_triage.py#L438); All variants |
+| <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/backend/test_ai_triage.py#L454); All variants |
 
-## tests/test_bug_update_readback.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-139"></a>TC-139 | — | Return committed edit/status data through durable readback | API / integration | [`test_bug_update_response_readback_after_commit`](../tests/test_bug_update_readback.py#L10); delete_before_readback=False; operation in {edit, status} |
-| <a id="tc-140"></a>TC-140 | — | Return consistent not-found feedback if deleted before readback | API / integration | [`test_bug_update_response_readback_after_commit`](../tests/test_bug_update_readback.py#L10); delete_before_readback=True; operation in {edit, status} |
-
-## tests/test_database_isolation.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-141"></a>TC-141 | — | Client rebinds cached database before startup | Database / infrastructure | [`test_client_rebinds_cached_database_before_startup`](../tests/test_database_isolation.py#L9); All variants |
-| <a id="tc-142"></a>TC-142 | — | Client starts with fresh database | Database / infrastructure | [`test_client_starts_with_fresh_database`](../tests/test_database_isolation.py#L44); All variants |
-
-## tests/test_database_lifecycle.py
+## tests/backend/test_bug.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-143"></a>TC-143 | — | Importing application does not create database | Database / infrastructure | [`test_importing_application_does_not_create_database`](../tests/test_database_lifecycle.py#L28); All variants |
-| <a id="tc-144"></a>TC-144 | — | Application lifespan initializes schema before requests | Database / infrastructure | [`test_application_lifespan_initializes_schema_before_requests`](../tests/test_database_lifecycle.py#L38); All variants |
+| <a id="tc-066"></a>TC-066 | AC-011.1 | Project member can create bug | API / integration | [`test_project_member_can_create_bug`](../tests/backend/test_bug.py#L5); All variants |
+| <a id="tc-067"></a>TC-067 | AC-011.2 | Bug creation rejected without title | API / integration | [`test_bug_creation_rejected_without_title`](../tests/backend/test_bug.py#L64); All variants |
+| <a id="tc-068"></a>TC-068 | AC-011.3 | Non member cannot create bug | API / integration | [`test_non_member_cannot_create_bug`](../tests/backend/test_bug.py#L95); All variants |
+| <a id="tc-069"></a>TC-069 | AC-011.4 | Bug can be created with optional information | API / integration | [`test_bug_can_be_created_with_optional_information`](../tests/backend/test_bug.py#L133); All variants |
+| <a id="tc-070"></a>TC-070 | AC-012.1 | Project member can view bug list | API / integration | [`test_project_member_can_view_bug_list`](../tests/backend/test_bug.py#L208); All variants |
+| <a id="tc-071"></a>TC-071 | AC-012.2 | Project member can open bug report | API / integration | [`test_project_member_can_open_bug_report`](../tests/backend/test_bug.py#L261); All variants |
+| <a id="tc-072"></a>TC-072 | AC-012.3 | Non member cannot open bug report | API / integration | [`test_non_member_cannot_open_bug_report`](../tests/backend/test_bug.py#L367); All variants |
+| <a id="tc-073"></a>TC-073 | AC-012.3 | Non member cannot retrieve another projects bug collection | API / integration | [`test_non_member_cannot_retrieve_another_projects_bug_collection`](../tests/backend/test_bug.py#L416); All variants |
+| <a id="tc-074"></a>TC-074 | AC-012.4 | Bug list defaults to most recently updated first | API / integration | [`test_bug_list_defaults_to_most_recently_updated_first`](../tests/backend/test_bug.py#L455); All variants |
+| <a id="tc-075"></a>TC-075 | AC-013.1 | Project member can edit bug report | API / integration | [`test_project_member_can_edit_bug_report`](../tests/backend/test_bug.py#L544); All variants |
+| <a id="tc-076"></a>TC-076 | — | Bug update rejected with null title | API / integration | [`test_bug_update_rejected_with_null_title`](../tests/backend/test_bug.py#L600); All variants |
+| <a id="tc-077"></a>TC-077 | AC-013.2 | Project member can update optional bug information | API / integration | [`test_project_member_can_update_optional_bug_information`](../tests/backend/test_bug.py#L661); All variants |
+| <a id="tc-078"></a>TC-078 | AC-013.3 | Non member cannot edit bug report | API / integration | [`test_non_member_cannot_edit_bug_report`](../tests/backend/test_bug.py#L743); All variants |
+| <a id="tc-079"></a>TC-079 | AC-014.1 | Authorized member can delete bug | API / integration | [`test_authorized_member_can_delete_bug`](../tests/backend/test_bug.py#L803); All variants |
+| <a id="tc-080"></a>TC-080 | AC-014.2 | Reject Developer bug deletion and preserve the report | API / integration | [`test_unauthorized_member_cannot_delete_bug`](../tests/backend/test_bug.py#L876); role=Developer |
+| <a id="tc-081"></a>TC-081 | AC-014.2 | Reject outsider bug deletion and preserve the report | API / integration | [`test_unauthorized_member_cannot_delete_bug`](../tests/backend/test_bug.py#L876); role=non-member |
+| <a id="tc-082"></a>TC-082 | AC-015.1 | Authorized member can assign bug | API / integration | [`test_authorized_member_can_assign_bug`](../tests/backend/test_bug.py#L959); All variants |
+| <a id="tc-083"></a>TC-083 | AC-015.1 | Authorized member can unassign bug | API / integration | [`test_authorized_member_can_unassign_bug`](../tests/backend/test_bug.py#L1061); All variants |
+| <a id="tc-084"></a>TC-084 | AC-015.1 | Bug unassignment is rejected outside triage | API / integration | [`test_bug_unassignment_is_rejected_outside_triage`](../tests/backend/test_bug.py#L1173); All variants |
+| <a id="tc-085"></a>TC-085 | AC-015.2 | Bug cannot be assigned to invalid member | API / integration | [`test_bug_cannot_be_assigned_to_invalid_member`](../tests/backend/test_bug.py#L1219); All variants |
+| <a id="tc-086"></a>TC-086 | AC-015.1, AC-015.3 | Non member cannot assign bug | API / integration | [`test_non_member_cannot_assign_bug`](../tests/backend/test_bug.py#L1284); All variants |
+| <a id="tc-087"></a>TC-087 | AC-015.4 | Authorized member can reassign bug | API / integration | [`test_authorized_member_can_reassign_bug`](../tests/backend/test_bug.py#L1360); All variants |
+| <a id="tc-088"></a>TC-088 | AC-016.1 | Project member can set bug severity | API / integration | [`test_project_member_can_set_bug_severity`](../tests/backend/test_bug.py#L1445); All variants |
+| <a id="tc-089"></a>TC-089 | AC-016.2 | Project member can set bug priority | API / integration | [`test_project_member_can_set_bug_priority`](../tests/backend/test_bug.py#L1537); All variants |
+| <a id="tc-090"></a>TC-090 | AC-016.3 | Project member can update bug classification | API / integration | [`test_project_member_can_update_bug_classification`](../tests/backend/test_bug.py#L1625); All variants |
+| <a id="tc-091"></a>TC-091 | AC-016.4 | Non member cannot update bug classification | API / integration | [`test_non_member_cannot_update_bug_classification`](../tests/backend/test_bug.py#L1714); All variants |
+| <a id="tc-092"></a>TC-092 | — | Bug rejects invalid severity | API / integration | [`test_bug_rejects_invalid_severity`](../tests/backend/test_bug.py#L1774); All variants |
+| <a id="tc-093"></a>TC-093 | — | Bug rejects invalid priority | API / integration | [`test_bug_rejects_invalid_priority`](../tests/backend/test_bug.py#L1846); All variants |
+| <a id="tc-094"></a>TC-094 | AC-017.1 | New bug starts in triage | API / integration | [`test_new_bug_starts_in_triage`](../tests/backend/test_bug.py#L1897); All variants |
+| <a id="tc-095"></a>TC-095 | AC-017.2 | Project owner or QA can move bug from triage to open | API / integration | [`test_project_owner_or_qa_can_move_bug_from_triage_to_open`](../tests/backend/test_bug.py#L1935); All variants |
+| <a id="tc-096"></a>TC-096 | AC-017.2 | Triage to open can assign eligible project member | API / integration | [`test_triage_to_open_can_assign_eligible_project_member`](../tests/backend/test_bug.py#L2017); All variants |
+| <a id="tc-097"></a>TC-097 | AC-017.2 | Triage to open rejects ineligible assignee | API / integration | [`test_triage_to_open_rejects_ineligible_assignee`](../tests/backend/test_bug.py#L2067); All variants |
+| <a id="tc-098"></a>TC-098 | AC-017.2 | Developer cannot move bug from triage to open | API / integration | [`test_developer_cannot_move_bug_from_triage_to_open`](../tests/backend/test_bug.py#L2115); All variants |
+| <a id="tc-099"></a>TC-099 | AC-017.2 | Bug without assignee cannot move from triage to open | API / integration | [`test_bug_without_assignee_cannot_move_from_triage_to_open`](../tests/backend/test_bug.py#L2179); All variants |
+| <a id="tc-100"></a>TC-100 | AC-017.3 | QA analyst cannot move bug from open to development | API / integration | [`test_qa_analyst_cannot_move_bug_from_open_to_development`](../tests/backend/test_bug.py#L2227); All variants |
+| <a id="tc-101"></a>TC-101 | AC-017.3 | Project owner can move bug from open to development | API / integration | [`test_project_owner_can_move_bug_from_open_to_development`](../tests/backend/test_bug.py#L2313); All variants |
+| <a id="tc-102"></a>TC-102 | AC-017.3 | Open to development requires valid developer assignee | API / integration | [`test_open_to_development_requires_valid_developer_assignee`](../tests/backend/test_bug.py#L2402); All variants |
+| <a id="tc-103"></a>TC-103 | AC-017.3 | Non assigned developer cannot move bug from open to development | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_open_to_development`](../tests/backend/test_bug.py#L2467); All variants |
+| <a id="tc-104"></a>TC-104 | AC-017.4 | Assigned developer can move bug from development to testing | API / integration | [`test_assigned_developer_can_move_bug_from_development_to_testing`](../tests/backend/test_bug.py#L2553); All variants |
+| <a id="tc-105"></a>TC-105 | AC-017.4 | Project owner can move bug from development to testing | API / integration | [`test_project_owner_can_move_bug_from_development_to_testing`](../tests/backend/test_bug.py#L2657); All variants |
+| <a id="tc-106"></a>TC-106 | AC-017.4 | Non assigned developer cannot move bug from development to testing | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_development_to_testing`](../tests/backend/test_bug.py#L2752); All variants |
+| <a id="tc-107"></a>TC-107 | AC-017.4 | Bug cannot move to testing with developer assignee | API / integration | [`test_bug_cannot_move_to_testing_with_developer_assignee`](../tests/backend/test_bug.py#L2863); All variants |
+| <a id="tc-108"></a>TC-108 | AC-017.5 | Assigned QA can pass bug and close it | API / integration | [`test_assigned_qa_can_pass_bug_and_close_it`](../tests/backend/test_bug.py#L2962); All variants |
+| <a id="tc-109"></a>TC-109 | AC-017.5 | Project owner can pass bug and close it | API / integration | [`test_project_owner_can_pass_bug_and_close_it`](../tests/backend/test_bug.py#L3102); All variants |
+| <a id="tc-110"></a>TC-110 | AC-017.5 | Assigned QA can fail bug and return it to development | API / integration | [`test_assigned_qa_can_fail_bug_and_return_it_to_development`](../tests/backend/test_bug.py#L3203); All variants |
+| <a id="tc-111"></a>TC-111 | AC-017.5 | Project owner can fail bug and return it to development | API / integration | [`test_project_owner_can_fail_bug_and_return_it_to_development`](../tests/backend/test_bug.py#L3316); All variants |
+| <a id="tc-112"></a>TC-112 | AC-017.5 | Failed testing requires valid developer assignee | API / integration | [`test_failed_testing_requires_valid_developer_assignee`](../tests/backend/test_bug.py#L3436); All variants |
+| <a id="tc-113"></a>TC-113 | AC-017.5 | Non assigned QA cannot record testing outcome | API / integration | [`test_non_assigned_qa_cannot_record_testing_outcome`](../tests/backend/test_bug.py#L3533); All variants |
+| <a id="tc-114"></a>TC-114 | AC-017.5 | Testing outcome is required | API / integration | [`test_testing_outcome_is_required`](../tests/backend/test_bug.py#L3656); All variants |
+| <a id="tc-115"></a>TC-115 | AC-017.5 | Invalid testing outcome is rejected | API / integration | [`test_invalid_testing_outcome_is_rejected`](../tests/backend/test_bug.py#L3774); All variants |
+| <a id="tc-116"></a>TC-116 | AC-017.6 | Assigned developer can close bug without fixing | API / integration | [`test_assigned_developer_can_close_bug_without_fixing`](../tests/backend/test_bug.py#L3891); All variants |
+| <a id="tc-117"></a>TC-117 | AC-017.6 | Project owner can close bug without fixing | API / integration | [`test_project_owner_can_close_bug_without_fixing`](../tests/backend/test_bug.py#L3988); All variants |
+| <a id="tc-118"></a>TC-118 | AC-017.6 | Non assigned developer cannot close bug without fixing | API / integration | [`test_non_assigned_developer_cannot_close_bug_without_fixing`](../tests/backend/test_bug.py#L4081); All variants |
+| <a id="tc-119"></a>TC-119 | AC-017.6 | Bug cannot be closed without resolution | API / integration | [`test_bug_cannot_be_closed_without_resolution`](../tests/backend/test_bug.py#L4168); All variants |
+| <a id="tc-120"></a>TC-120 | AC-017.6 | Fixed resolution cannot be manually selected when closing bug | API / integration | [`test_fixed_resolution_cannot_be_manually_selected_when_closing_bug`](../tests/backend/test_bug.py#L4254); All variants |
+| <a id="tc-121"></a>TC-121 | AC-017.7 | Project owner can move closed bug to triage | API / integration | [`test_project_owner_can_move_closed_bug_to_triage`](../tests/backend/test_bug.py#L4503); All variants |
+| <a id="tc-122"></a>TC-122 | AC-017.7 | Project owner can move unassigned closed bug to triage | API / integration | [`test_project_owner_can_move_unassigned_closed_bug_to_triage`](../tests/backend/test_bug.py#L4539); All variants |
+| <a id="tc-123"></a>TC-123 | AC-017.7 | Unauthorized user cannot move closed bug to triage | API / integration | [`test_unauthorized_user_cannot_move_closed_bug_to_triage`](../tests/backend/test_bug.py#L4592); All variants |
+| <a id="tc-124"></a>TC-124 | AC-017.7 | Closed bug rejects invalid direct transition | API / integration | [`test_closed_bug_rejects_invalid_direct_transition`](../tests/backend/test_bug.py#L4636); All variants |
+| <a id="tc-125"></a>TC-125 | AC-017.7 | Closed to triage rejects extra transition data | API / integration | [`test_closed_to_triage_rejects_extra_transition_data`](../tests/backend/test_bug.py#L4672); All variants |
+| <a id="tc-126"></a>TC-126 | AC-017.8 | Bug cannot skip from triage to development | API / integration | [`test_bug_cannot_skip_from_triage_to_development`](../tests/backend/test_bug.py#L4714); All variants |
+| <a id="tc-127"></a>TC-127 | AC-017.8 | Bug cannot skip from open to testing | API / integration | [`test_bug_cannot_skip_from_open_to_testing`](../tests/backend/test_bug.py#L4776); All variants |
+| <a id="tc-128"></a>TC-128 | AC-017.8 | Bug cannot move from development back to open | API / integration | [`test_bug_cannot_move_from_development_back_to_open`](../tests/backend/test_bug.py#L4863); All variants |
+| <a id="tc-129"></a>TC-129 | AC-017.8 | Bug cannot move from testing back to open | API / integration | [`test_bug_cannot_move_from_testing_back_to_open`](../tests/backend/test_bug.py#L4949); All variants |
+| <a id="tc-130"></a>TC-130 | AC-017.8 | Bug cannot move from testing back to triage | API / integration | [`test_bug_cannot_move_from_testing_back_to_triage`](../tests/backend/test_bug.py#L5060); All variants |
+| <a id="tc-131"></a>TC-131 | AC-017.9 | Changing bug status updates last updated timestamp | API / integration | [`test_changing_bug_status_updates_last_updated_timestamp`](../tests/backend/test_bug.py#L5171); All variants |
 
-## tests/test_database_migrations.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-145"></a>TC-145 | — | Fresh database creates numbering schema | Database / infrastructure | [`test_fresh_database_creates_numbering_schema`](../tests/test_database_migrations.py#L68); All variants |
-| <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/test_database_migrations.py#L80); All variants |
-| <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/test_database_migrations.py#L109); All variants |
-| <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/test_database_migrations.py#L171); mutation starts with ALTER or CREATE (7 variants) |
-| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/test_database_migrations.py#L171); mutation=PRAGMA user_version=2 |
-| <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/test_database_migrations.py#L171); mutation=DELETE FROM users WHERE id=2 |
-| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/test_database_migrations.py#L187); field=bug_number; all associated values |
-| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/test_database_migrations.py#L187); field=next_bug_number; all associated values |
-| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/test_database_migrations.py#L199); All variants |
-| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/test_database_migrations.py#L209); All variants |
-
-## tests/test_fix_version_on_pass.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-155"></a>TC-155 | AC-017.5 | Persist a supplied Fix Version during Passed | API / integration | [`test_passed_transition_persists_optional_fix_version`](../tests/test_fix_version_on_pass.py#L68); param IDs: qa-supplied, owner-supplied, unchanged, replace-existing, no-trimming, whitespace-unchanged |
-| <a id="tc-156"></a>TC-156 | AC-017.5 | Preserve the existing Fix Version when Passed omits it | API / integration | [`test_passed_transition_persists_optional_fix_version`](../tests/test_fix_version_on_pass.py#L68); param IDs: omitted-preserves, omitted-blank |
-| <a id="tc-157"></a>TC-157 | AC-017.5 | Clear Fix Version with explicit null or empty Passed input | API / integration | [`test_passed_transition_persists_optional_fix_version`](../tests/test_fix_version_on_pass.py#L68); param IDs: blank, clear-existing, api-empty-string |
-| <a id="tc-158"></a>TC-158 | AC-017.5 | Failed transition clears legacy fix version | API / integration | [`test_failed_transition_clears_legacy_fix_version`](../tests/test_fix_version_on_pass.py#L93); All variants |
-| <a id="tc-159"></a>TC-159 | AC-017.5 | Fix version is rejected outside passed transition | API / integration | [`test_fix_version_is_rejected_outside_passed_transition`](../tests/test_fix_version_on_pass.py#L124); All variants |
-| <a id="tc-160"></a>TC-160 | AC-011.4 | Bug creation allows empty fix version | API / integration | [`test_bug_creation_allows_empty_fix_version`](../tests/test_fix_version_on_pass.py#L144); All variants |
-| <a id="tc-161"></a>TC-161 | AC-011.4 | Bug creation rejects nonempty fix version | API / integration | [`test_bug_creation_rejects_nonempty_fix_version`](../tests/test_fix_version_on_pass.py#L158); All variants |
-| <a id="tc-162"></a>TC-162 | AC-013.2 | Unresolved bug edit rejects nonempty fix version | API / integration | [`test_unresolved_bug_edit_rejects_nonempty_fix_version`](../tests/test_fix_version_on_pass.py#L176); All variants |
-| <a id="tc-163"></a>TC-163 | AC-013.2 | Unresolved bug edit clears legacy fix version | API / integration | [`test_unresolved_bug_edit_clears_legacy_fix_version`](../tests/test_fix_version_on_pass.py#L188); All variants |
-| <a id="tc-164"></a>TC-164 | AC-013.2 | Closed fixed bug fix version can be edited and cleared | API / integration | [`test_closed_fixed_bug_fix_version_can_be_edited_and_cleared`](../tests/test_fix_version_on_pass.py#L202); All variants |
-| <a id="tc-165"></a>TC-165 | AC-017.7 | Reopening clears resolution and fix version | API / integration | [`test_reopening_clears_resolution_and_fix_version`](../tests/test_fix_version_on_pass.py#L220); All variants |
-| <a id="tc-166"></a>TC-166 | AC-017.6 | Nonfixed closure clears fix version and rejects assignment | API / integration | [`test_nonfixed_closure_clears_fix_version_and_rejects_assignment`](../tests/test_fix_version_on_pass.py#L237); All variants |
-| <a id="tc-167"></a>TC-167 | AC-013.2 | Nonfixed bug edit clears legacy fix version | API / integration | [`test_nonfixed_bug_edit_clears_legacy_fix_version`](../tests/test_fix_version_on_pass.py#L254); All variants |
-| <a id="tc-168"></a>TC-168 | AC-017.5 | Passed fix version preserves authorization | API / integration | [`test_passed_fix_version_preserves_authorization`](../tests/test_fix_version_on_pass.py#L276); All variants |
-
-## tests/test_jwt_secret.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-169"></a>TC-169 | AC-002.1 | Login and access with configured secret | API / integration | [`test_login_and_access_with_configured_secret`](../tests/test_jwt_secret.py#L22); All variants |
-| <a id="tc-170"></a>TC-170 | — | Token signed with configured secret | API / integration | [`test_token_signed_with_configured_secret`](../tests/test_jwt_secret.py#L43); All variants |
-| <a id="tc-171"></a>TC-171 | AC-003.3 | Forged token with old secret is rejected | API / integration | [`test_forged_token_with_old_secret_is_rejected`](../tests/test_jwt_secret.py#L65); All variants |
-| <a id="tc-172"></a>TC-172 | AC-003.3 | Correctly signed expired token is rejected | API / integration | [`test_correctly_signed_expired_token_is_rejected`](../tests/test_jwt_secret.py#L91); All variants |
-| <a id="tc-173"></a>TC-173 | — | Missing or blank JWT secret key rejects authentication | API / integration | [`test_missing_or_blank_jwt_secret_key_rejects_authentication`](../tests/test_jwt_secret.py#L130); All variants |
-| <a id="tc-174"></a>TC-174 | — | Secret not in login response | API / integration | [`test_secret_not_in_login_response`](../tests/test_jwt_secret.py#L186); All variants |
-| <a id="tc-175"></a>TC-175 | — | Secret not in protected response | API / integration | [`test_secret_not_in_protected_response`](../tests/test_jwt_secret.py#L208); All variants |
-| <a id="tc-176"></a>TC-176 | — | Secret not in error response | API / integration | [`test_secret_not_in_error_response`](../tests/test_jwt_secret.py#L227); All variants |
-
-## tests/test_login.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-177"></a>TC-177 | AC-002.1 | Successful login | API / integration | [`test_successful_login`](../tests/test_login.py#L2); All variants |
-| <a id="tc-178"></a>TC-178 | AC-002.2 | Login with incorrect password | API / integration | [`test_login_with_incorrect_password`](../tests/test_login.py#L22); All variants |
-| <a id="tc-179"></a>TC-179 | AC-002.2 | Login with unknown email | API / integration | [`test_login_with_unknown_email`](../tests/test_login.py#L45); All variants |
-| <a id="tc-180"></a>TC-180 | AC-003.1 | Authenticated user can access protected endpoint | API / integration | [`test_authenticated_user_can_access_protected_endpoint`](../tests/test_login.py#L63); All variants |
-| <a id="tc-181"></a>TC-181 | AC-003.2 | Unauthenticated user cannot access protected endpoint | API / integration | [`test_unauthenticated_user_cannot_access_protected_endpoint`](../tests/test_login.py#L84); All variants |
-| <a id="tc-182"></a>TC-182 | AC-003.3 | Invalid token cannot access protected endpoint | API / integration | [`test_invalid_token_cannot_access_protected_endpoint`](../tests/test_login.py#L91); All variants |
-
-## tests/test_privacy.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-183"></a>TC-183 | — | Privacy policy is public without authentication | API / integration | [`test_privacy_policy_is_public_without_authentication`](../tests/test_privacy.py#L2); All variants |
-
-## tests/test_projects.py
-
-| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
-| --- | --- | --- | --- | --- |
-| <a id="tc-184"></a>TC-184 | AC-005.1 | Create project | API / integration | [`test_create_project`](../tests/test_projects.py#L5); All variants |
-| <a id="tc-185"></a>TC-185 | AC-005.2 | Create project with empty name | API / integration | [`test_create_project_with_empty_name`](../tests/test_projects.py#L20); All variants |
-| <a id="tc-186"></a>TC-186 | AC-005.2 | Project creation rejects whitespace only name | API / integration | [`test_project_creation_rejects_whitespace_only_name`](../tests/test_projects.py#L43); All variants |
-| <a id="tc-187"></a>TC-187 | AC-005.2 | Project creation rejects non string name | API / integration | [`test_project_creation_rejects_non_string_name`](../tests/test_projects.py#L68); All variants |
-| <a id="tc-188"></a>TC-188 | AC-005.1 | Project creation preserves padded name | API / integration | [`test_project_creation_preserves_padded_name`](../tests/test_projects.py#L84); All variants |
-| <a id="tc-189"></a>TC-189 | AC-005.3 | Unauthenticated user cannot create project | API / integration | [`test_unauthenticated_user_cannot_create_project`](../tests/test_projects.py#L99); All variants |
-| <a id="tc-190"></a>TC-190 | AC-006.1 | Get projects | API / integration | [`test_get_projects`](../tests/test_projects.py#L114); All variants |
-| <a id="tc-191"></a>TC-191 | AC-006.2 | User only sees own projects | API / integration | [`test_user_only_sees_own_projects`](../tests/test_projects.py#L141); All variants |
-| <a id="tc-192"></a>TC-192 | AC-006.3 | Get project | API / integration | [`test_get_project`](../tests/test_projects.py#L180); All variants |
-| <a id="tc-193"></a>TC-193 | AC-006.4 | User cannot access another users project | API / integration | [`test_user_cannot_access_another_users_project`](../tests/test_projects.py#L209); All variants |
-| <a id="tc-194"></a>TC-194 | AC-007.1 | Edit project name | API / integration | [`test_edit_project_name`](../tests/test_projects.py#L239); All variants |
-| <a id="tc-195"></a>TC-195 | AC-007.3 | Project edit rejects empty or whitespace only name | API / integration | [`test_project_edit_rejects_empty_or_whitespace_only_name`](../tests/test_projects.py#L270); All variants |
-| <a id="tc-196"></a>TC-196 | AC-007.3 | Project edit rejects non string name | API / integration | [`test_project_edit_rejects_non_string_name`](../tests/test_projects.py#L290); All variants |
-| <a id="tc-197"></a>TC-197 | AC-007.1 | Project edit preserves padded name | API / integration | [`test_project_edit_preserves_padded_name`](../tests/test_projects.py#L309); All variants |
-| <a id="tc-198"></a>TC-198 | AC-007.2 | User cannot edit another users project name | API / integration | [`test_user_cannot_edit_another_users_project_name`](../tests/test_projects.py#L329); All variants |
-| <a id="tc-199"></a>TC-199 | AC-008.1 | Delete project | API / integration | [`test_delete_project`](../tests/test_projects.py#L372); All variants |
-| <a id="tc-200"></a>TC-200 | AC-008.1 | New project owner cannot access bugs from deleted project | API / integration | [`test_new_project_owner_cannot_access_bugs_from_deleted_project`](../tests/test_projects.py#L407); All variants |
-| <a id="tc-201"></a>TC-201 | AC-008.2 | User cannot delete another users project | API / integration | [`test_user_cannot_delete_another_users_project`](../tests/test_projects.py#L466); All variants |
-| <a id="tc-202"></a>TC-202 | AC-009.1 | Owner can add project member | API / integration | [`test_owner_can_add_project_member`](../tests/test_projects.py#L506); All variants |
-| <a id="tc-203"></a>TC-203 | AC-009.1 | Added member can access project | API / integration | [`test_added_member_can_access_project`](../tests/test_projects.py#L540); All variants |
-| <a id="tc-204"></a>TC-204 | AC-009.2 | Owner can remove project member | API / integration | [`test_owner_can_remove_project_member`](../tests/test_projects.py#L580); All variants |
-| <a id="tc-205"></a>TC-205 | AC-009.2, AC-015.1 | Removing member unassigns only their bugs in that project | API / integration | [`test_removing_member_unassigns_only_their_bugs_in_that_project`](../tests/test_projects.py#L619); All variants |
-| <a id="tc-206"></a>TC-206 | AC-009.2 | Removed member can no longer access project | API / integration | [`test_removed_member_can_no_longer_access_project`](../tests/test_projects.py#L722); All variants |
-| <a id="tc-207"></a>TC-207 | AC-009.3 | Project owner cannot add user who does not have an account | API / integration | [`test_project_owner_cannot_add_user_who_does_not_have_an_account`](../tests/test_projects.py#L769); All variants |
-| <a id="tc-208"></a>TC-208 | AC-009.4 | Project owner cannot add same user more than once | API / integration | [`test_project_owner_cannot_add_same_user_more_than_once`](../tests/test_projects.py#L800); All variants |
-| <a id="tc-209"></a>TC-209 | AC-009.5 | Project member can view project members | API / integration | [`test_project_member_can_view_project_members`](../tests/test_projects.py#L844); All variants |
-| <a id="tc-210"></a>TC-210 | — | Project owner cannot remove themselves | API / integration | [`test_project_owner_cannot_remove_themselves`](../tests/test_projects.py#L928); All variants |
-| <a id="tc-211"></a>TC-211 | AC-010.1 | Project creator is project owner | API / integration | [`test_project_creator_is_project_owner`](../tests/test_projects.py#L993); All variants |
-| <a id="tc-212"></a>TC-212 | AC-010.2 | QA analyst can access project | API / integration | [`test_qa_analyst_can_access_project`](../tests/test_projects.py#L1029); All variants |
-| <a id="tc-213"></a>TC-213 | AC-010.3 | Developer can access project | API / integration | [`test_developer_can_access_project`](../tests/test_projects.py#L1074); All variants |
-| <a id="tc-214"></a>TC-214 | AC-010.4 | Non owner cannot manage project members | API / integration | [`test_non_owner_cannot_manage_project_members`](../tests/test_projects.py#L1120); All variants |
-| <a id="tc-215"></a>TC-215 | AC-010.5 | Non owner cannot edit project | API / integration | [`test_non_owner_cannot_edit_project`](../tests/test_projects.py#L1202); All variants |
-| <a id="tc-216"></a>TC-216 | AC-010.5 | Non owner cannot delete project | API / integration | [`test_non_owner_cannot_delete_project`](../tests/test_projects.py#L1255); All variants |
-
-## tests/test_registration.py
+## tests/backend/test_bug_numbers.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-217"></a>TC-217 | AC-001.1 | Successful registration | API / integration | [`test_successful_registration`](../tests/test_registration.py#L8); All variants |
-| <a id="tc-218"></a>TC-218 | AC-001.2 | Registration with duplicate email | API / integration | [`test_registration_with_duplicate_email`](../tests/test_registration.py#L26); All variants |
-| <a id="tc-219"></a>TC-219 | AC-001.3 | Registration with invalid email | API / integration | [`test_registration_with_invalid_email`](../tests/test_registration.py#L45); All variants |
-| <a id="tc-220"></a>TC-220 | AC-001.4 | Registration with short password | API / integration | [`test_registration_with_short_password`](../tests/test_registration.py#L64); All variants |
-| <a id="tc-221"></a>TC-221 | AC-001.4 | Registration without uppercase password | API / integration | [`test_registration_without_uppercase_password`](../tests/test_registration.py#L81); All variants |
-| <a id="tc-222"></a>TC-222 | AC-001.4 | Registration without lowercase password | API / integration | [`test_registration_without_lowercase_password`](../tests/test_registration.py#L98); All variants |
-| <a id="tc-223"></a>TC-223 | AC-001.4 | Registration without number password | API / integration | [`test_registration_without_number_password`](../tests/test_registration.py#L115); All variants |
-| <a id="tc-224"></a>TC-224 | — | Registration rejects invalid password for existing email | API / integration | [`test_registration_rejects_invalid_password_for_existing_email`](../tests/test_registration.py#L133); All variants |
-| <a id="tc-225"></a>TC-225 | AC-001.5 | Password is not stored as plain text | Database / security | [`test_password_is_not_stored_as_plain_text`](../tests/test_registration.py#L155); All variants |
-| <a id="tc-226"></a>TC-226 | — | Registration rejects password over bcrypt limit | API / integration | [`test_registration_rejects_password_over_bcrypt_limit`](../tests/test_registration.py#L178); All variants |
+| <a id="tc-132"></a>TC-132 | AC-011.1 | Bug numbers are independent and routes use local numbers | API / integration | [`test_bug_numbers_are_independent_and_routes_use_local_numbers`](../tests/backend/test_bug_numbers.py#L27); All variants |
+| <a id="tc-133"></a>TC-133 | AC-011.1 | Deleted bug numbers are not reused | API / integration | [`test_deleted_bug_numbers_are_not_reused`](../tests/backend/test_bug_numbers.py#L58); All variants |
+| <a id="tc-134"></a>TC-134 | AC-013.1 | Bug number is preserved on edit | API / integration | [`test_bug_number_is_preserved_on_edit`](../tests/backend/test_bug_numbers.py#L69); All variants |
+| <a id="tc-135"></a>TC-135 | AC-012.2 | Resolve public bug routes by project and local number | API / integration | [`test_public_bug_routes_use_local_number_and_isolate_projects`](../tests/backend/test_bug_numbers.py#L82); operation in {details, edit, status, delete, ai-assist} |
+| <a id="tc-136"></a>TC-136 | AC-019.2, AC-022.2 | Keep AI history exclusion tied to internal identity after public resolution | API / integration | [`test_public_bug_routes_use_local_number_and_isolate_projects`](../tests/backend/test_bug_numbers.py#L82); operation=ai-assist |
+| <a id="tc-137"></a>TC-137 | — | Failed creation rolls back bug and counter | API / integration | [`test_failed_creation_rolls_back_bug_and_counter`](../tests/backend/test_bug_numbers.py#L141); All variants |
+| <a id="tc-138"></a>TC-138 | AC-011.1 | Concurrent creation allocates unique bug numbers | API / integration | [`test_concurrent_creation_allocates_unique_bug_numbers`](../tests/backend/test_bug_numbers.py#L184); All variants |
 
-## tests/test_version.py
+## tests/backend/test_bug_update_readback.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-227"></a>TC-227 | — | Application version is shared by openapi and endpoint | API / integration | [`test_application_version_is_shared_by_openapi_and_endpoint`](../tests/test_version.py#L5); All variants |
-| <a id="tc-228"></a>TC-228 | — | About page includes application version loader | API / integration | [`test_about_page_includes_application_version_loader`](../tests/test_version.py#L18); All variants |
+| <a id="tc-139"></a>TC-139 | — | Return committed edit/status data through durable readback | API / integration | [`test_bug_update_response_readback_after_commit`](../tests/backend/test_bug_update_readback.py#L10); delete_before_readback=False; operation in {edit, status} |
+| <a id="tc-140"></a>TC-140 | — | Return consistent not-found feedback if deleted before readback | API / integration | [`test_bug_update_response_readback_after_commit`](../tests/backend/test_bug_update_readback.py#L10); delete_before_readback=True; operation in {edit, status} |
+
+## tests/backend/test_database_isolation.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-141"></a>TC-141 | — | Client rebinds cached database before startup | Database / infrastructure | [`test_client_rebinds_cached_database_before_startup`](../tests/backend/test_database_isolation.py#L9); All variants |
+| <a id="tc-142"></a>TC-142 | — | Client starts with fresh database | Database / infrastructure | [`test_client_starts_with_fresh_database`](../tests/backend/test_database_isolation.py#L44); All variants |
+
+## tests/backend/test_database_lifecycle.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-143"></a>TC-143 | — | Importing application does not create database | Database / infrastructure | [`test_importing_application_does_not_create_database`](../tests/backend/test_database_lifecycle.py#L28); All variants |
+| <a id="tc-144"></a>TC-144 | — | Application lifespan initializes schema before requests | Database / infrastructure | [`test_application_lifespan_initializes_schema_before_requests`](../tests/backend/test_database_lifecycle.py#L38); All variants |
+
+## tests/backend/test_database_migrations.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-145"></a>TC-145 | — | Fresh database creates numbering schema | Database / infrastructure | [`test_fresh_database_creates_numbering_schema`](../tests/backend/test_database_migrations.py#L68); All variants |
+| <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/backend/test_database_migrations.py#L80); All variants |
+| <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/backend/test_database_migrations.py#L109); All variants |
+| <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L171); mutation starts with ALTER or CREATE (7 variants) |
+| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L171); mutation=PRAGMA user_version=2 |
+| <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L171); mutation=DELETE FROM users WHERE id=2 |
+| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L187); field=bug_number; all associated values |
+| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L187); field=next_bug_number; all associated values |
+| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L199); All variants |
+| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L209); All variants |
+
+## tests/backend/test_fix_version_on_pass.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-155"></a>TC-155 | AC-017.5 | Persist a supplied Fix Version during Passed | API / integration | [`test_passed_transition_persists_optional_fix_version`](../tests/backend/test_fix_version_on_pass.py#L68); param IDs: qa-supplied, owner-supplied, unchanged, replace-existing, no-trimming, whitespace-unchanged |
+| <a id="tc-156"></a>TC-156 | AC-017.5 | Preserve the existing Fix Version when Passed omits it | API / integration | [`test_passed_transition_persists_optional_fix_version`](../tests/backend/test_fix_version_on_pass.py#L68); param IDs: omitted-preserves, omitted-blank |
+| <a id="tc-157"></a>TC-157 | AC-017.5 | Clear Fix Version with explicit null or empty Passed input | API / integration | [`test_passed_transition_persists_optional_fix_version`](../tests/backend/test_fix_version_on_pass.py#L68); param IDs: blank, clear-existing, api-empty-string |
+| <a id="tc-158"></a>TC-158 | AC-017.5 | Failed transition clears legacy fix version | API / integration | [`test_failed_transition_clears_legacy_fix_version`](../tests/backend/test_fix_version_on_pass.py#L93); All variants |
+| <a id="tc-159"></a>TC-159 | AC-017.5 | Fix version is rejected outside passed transition | API / integration | [`test_fix_version_is_rejected_outside_passed_transition`](../tests/backend/test_fix_version_on_pass.py#L124); All variants |
+| <a id="tc-160"></a>TC-160 | AC-011.4 | Bug creation allows empty fix version | API / integration | [`test_bug_creation_allows_empty_fix_version`](../tests/backend/test_fix_version_on_pass.py#L144); All variants |
+| <a id="tc-161"></a>TC-161 | AC-011.4 | Bug creation rejects nonempty fix version | API / integration | [`test_bug_creation_rejects_nonempty_fix_version`](../tests/backend/test_fix_version_on_pass.py#L158); All variants |
+| <a id="tc-162"></a>TC-162 | AC-013.2 | Unresolved bug edit rejects nonempty fix version | API / integration | [`test_unresolved_bug_edit_rejects_nonempty_fix_version`](../tests/backend/test_fix_version_on_pass.py#L176); All variants |
+| <a id="tc-163"></a>TC-163 | AC-013.2 | Unresolved bug edit clears legacy fix version | API / integration | [`test_unresolved_bug_edit_clears_legacy_fix_version`](../tests/backend/test_fix_version_on_pass.py#L188); All variants |
+| <a id="tc-164"></a>TC-164 | AC-013.2 | Closed fixed bug fix version can be edited and cleared | API / integration | [`test_closed_fixed_bug_fix_version_can_be_edited_and_cleared`](../tests/backend/test_fix_version_on_pass.py#L202); All variants |
+| <a id="tc-165"></a>TC-165 | AC-017.7 | Reopening clears resolution and fix version | API / integration | [`test_reopening_clears_resolution_and_fix_version`](../tests/backend/test_fix_version_on_pass.py#L220); All variants |
+| <a id="tc-166"></a>TC-166 | AC-017.6 | Nonfixed closure clears fix version and rejects assignment | API / integration | [`test_nonfixed_closure_clears_fix_version_and_rejects_assignment`](../tests/backend/test_fix_version_on_pass.py#L237); All variants |
+| <a id="tc-167"></a>TC-167 | AC-013.2 | Nonfixed bug edit clears legacy fix version | API / integration | [`test_nonfixed_bug_edit_clears_legacy_fix_version`](../tests/backend/test_fix_version_on_pass.py#L254); All variants |
+| <a id="tc-168"></a>TC-168 | AC-017.5 | Passed fix version preserves authorization | API / integration | [`test_passed_fix_version_preserves_authorization`](../tests/backend/test_fix_version_on_pass.py#L276); All variants |
+
+## tests/backend/test_jwt_secret.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-169"></a>TC-169 | AC-002.1 | Login and access with configured secret | API / integration | [`test_login_and_access_with_configured_secret`](../tests/backend/test_jwt_secret.py#L22); All variants |
+| <a id="tc-170"></a>TC-170 | — | Token signed with configured secret | API / integration | [`test_token_signed_with_configured_secret`](../tests/backend/test_jwt_secret.py#L43); All variants |
+| <a id="tc-171"></a>TC-171 | AC-003.3 | Forged token with old secret is rejected | API / integration | [`test_forged_token_with_old_secret_is_rejected`](../tests/backend/test_jwt_secret.py#L65); All variants |
+| <a id="tc-172"></a>TC-172 | AC-003.3 | Correctly signed expired token is rejected | API / integration | [`test_correctly_signed_expired_token_is_rejected`](../tests/backend/test_jwt_secret.py#L91); All variants |
+| <a id="tc-173"></a>TC-173 | — | Missing or blank JWT secret key rejects authentication | API / integration | [`test_missing_or_blank_jwt_secret_key_rejects_authentication`](../tests/backend/test_jwt_secret.py#L130); All variants |
+| <a id="tc-174"></a>TC-174 | — | Secret not in login response | API / integration | [`test_secret_not_in_login_response`](../tests/backend/test_jwt_secret.py#L186); All variants |
+| <a id="tc-175"></a>TC-175 | — | Secret not in protected response | API / integration | [`test_secret_not_in_protected_response`](../tests/backend/test_jwt_secret.py#L208); All variants |
+| <a id="tc-176"></a>TC-176 | — | Secret not in error response | API / integration | [`test_secret_not_in_error_response`](../tests/backend/test_jwt_secret.py#L227); All variants |
+
+## tests/backend/test_login.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-177"></a>TC-177 | AC-002.1 | Successful login | API / integration | [`test_successful_login`](../tests/backend/test_login.py#L2); All variants |
+| <a id="tc-178"></a>TC-178 | AC-002.2 | Login with incorrect password | API / integration | [`test_login_with_incorrect_password`](../tests/backend/test_login.py#L22); All variants |
+| <a id="tc-179"></a>TC-179 | AC-002.2 | Login with unknown email | API / integration | [`test_login_with_unknown_email`](../tests/backend/test_login.py#L45); All variants |
+| <a id="tc-180"></a>TC-180 | AC-003.1 | Authenticated user can access protected endpoint | API / integration | [`test_authenticated_user_can_access_protected_endpoint`](../tests/backend/test_login.py#L63); All variants |
+| <a id="tc-181"></a>TC-181 | AC-003.2 | Unauthenticated user cannot access protected endpoint | API / integration | [`test_unauthenticated_user_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L84); All variants |
+| <a id="tc-182"></a>TC-182 | AC-003.3 | Invalid token cannot access protected endpoint | API / integration | [`test_invalid_token_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L91); All variants |
+
+## tests/backend/test_privacy.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-183"></a>TC-183 | — | Privacy policy is public without authentication | API / integration | [`test_privacy_policy_is_public_without_authentication`](../tests/backend/test_privacy.py#L2); All variants |
+
+## tests/backend/test_projects.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-184"></a>TC-184 | AC-005.1 | Create project | API / integration | [`test_create_project`](../tests/backend/test_projects.py#L5); All variants |
+| <a id="tc-185"></a>TC-185 | AC-005.2 | Create project with empty name | API / integration | [`test_create_project_with_empty_name`](../tests/backend/test_projects.py#L20); All variants |
+| <a id="tc-186"></a>TC-186 | AC-005.2 | Project creation rejects whitespace only name | API / integration | [`test_project_creation_rejects_whitespace_only_name`](../tests/backend/test_projects.py#L43); All variants |
+| <a id="tc-187"></a>TC-187 | AC-005.2 | Project creation rejects non string name | API / integration | [`test_project_creation_rejects_non_string_name`](../tests/backend/test_projects.py#L68); All variants |
+| <a id="tc-188"></a>TC-188 | AC-005.1 | Project creation preserves padded name | API / integration | [`test_project_creation_preserves_padded_name`](../tests/backend/test_projects.py#L84); All variants |
+| <a id="tc-189"></a>TC-189 | AC-005.3 | Unauthenticated user cannot create project | API / integration | [`test_unauthenticated_user_cannot_create_project`](../tests/backend/test_projects.py#L99); All variants |
+| <a id="tc-190"></a>TC-190 | AC-006.1 | Get projects | API / integration | [`test_get_projects`](../tests/backend/test_projects.py#L114); All variants |
+| <a id="tc-191"></a>TC-191 | AC-006.2 | User only sees own projects | API / integration | [`test_user_only_sees_own_projects`](../tests/backend/test_projects.py#L141); All variants |
+| <a id="tc-192"></a>TC-192 | AC-006.3 | Get project | API / integration | [`test_get_project`](../tests/backend/test_projects.py#L180); All variants |
+| <a id="tc-193"></a>TC-193 | AC-006.4 | User cannot access another users project | API / integration | [`test_user_cannot_access_another_users_project`](../tests/backend/test_projects.py#L209); All variants |
+| <a id="tc-194"></a>TC-194 | AC-007.1 | Edit project name | API / integration | [`test_edit_project_name`](../tests/backend/test_projects.py#L239); All variants |
+| <a id="tc-195"></a>TC-195 | AC-007.3 | Project edit rejects empty or whitespace only name | API / integration | [`test_project_edit_rejects_empty_or_whitespace_only_name`](../tests/backend/test_projects.py#L270); All variants |
+| <a id="tc-196"></a>TC-196 | AC-007.3 | Project edit rejects non string name | API / integration | [`test_project_edit_rejects_non_string_name`](../tests/backend/test_projects.py#L290); All variants |
+| <a id="tc-197"></a>TC-197 | AC-007.1 | Project edit preserves padded name | API / integration | [`test_project_edit_preserves_padded_name`](../tests/backend/test_projects.py#L309); All variants |
+| <a id="tc-198"></a>TC-198 | AC-007.2 | User cannot edit another users project name | API / integration | [`test_user_cannot_edit_another_users_project_name`](../tests/backend/test_projects.py#L329); All variants |
+| <a id="tc-199"></a>TC-199 | AC-008.1 | Delete project | API / integration | [`test_delete_project`](../tests/backend/test_projects.py#L372); All variants |
+| <a id="tc-200"></a>TC-200 | AC-008.1 | New project owner cannot access bugs from deleted project | API / integration | [`test_new_project_owner_cannot_access_bugs_from_deleted_project`](../tests/backend/test_projects.py#L407); All variants |
+| <a id="tc-201"></a>TC-201 | AC-008.2 | User cannot delete another users project | API / integration | [`test_user_cannot_delete_another_users_project`](../tests/backend/test_projects.py#L466); All variants |
+| <a id="tc-202"></a>TC-202 | AC-009.1 | Owner can add project member | API / integration | [`test_owner_can_add_project_member`](../tests/backend/test_projects.py#L506); All variants |
+| <a id="tc-203"></a>TC-203 | AC-009.1 | Added member can access project | API / integration | [`test_added_member_can_access_project`](../tests/backend/test_projects.py#L540); All variants |
+| <a id="tc-204"></a>TC-204 | AC-009.2 | Owner can remove project member | API / integration | [`test_owner_can_remove_project_member`](../tests/backend/test_projects.py#L580); All variants |
+| <a id="tc-205"></a>TC-205 | AC-009.2, AC-015.1 | Removing member unassigns only their bugs in that project | API / integration | [`test_removing_member_unassigns_only_their_bugs_in_that_project`](../tests/backend/test_projects.py#L619); All variants |
+| <a id="tc-206"></a>TC-206 | AC-009.2 | Removed member can no longer access project | API / integration | [`test_removed_member_can_no_longer_access_project`](../tests/backend/test_projects.py#L722); All variants |
+| <a id="tc-207"></a>TC-207 | AC-009.3 | Project owner cannot add user who does not have an account | API / integration | [`test_project_owner_cannot_add_user_who_does_not_have_an_account`](../tests/backend/test_projects.py#L769); All variants |
+| <a id="tc-208"></a>TC-208 | AC-009.4 | Project owner cannot add same user more than once | API / integration | [`test_project_owner_cannot_add_same_user_more_than_once`](../tests/backend/test_projects.py#L800); All variants |
+| <a id="tc-209"></a>TC-209 | AC-009.5 | Project member can view project members | API / integration | [`test_project_member_can_view_project_members`](../tests/backend/test_projects.py#L844); All variants |
+| <a id="tc-210"></a>TC-210 | — | Project owner cannot remove themselves | API / integration | [`test_project_owner_cannot_remove_themselves`](../tests/backend/test_projects.py#L928); All variants |
+| <a id="tc-211"></a>TC-211 | AC-010.1 | Project creator is project owner | API / integration | [`test_project_creator_is_project_owner`](../tests/backend/test_projects.py#L993); All variants |
+| <a id="tc-212"></a>TC-212 | AC-010.2 | QA analyst can access project | API / integration | [`test_qa_analyst_can_access_project`](../tests/backend/test_projects.py#L1029); All variants |
+| <a id="tc-213"></a>TC-213 | AC-010.3 | Developer can access project | API / integration | [`test_developer_can_access_project`](../tests/backend/test_projects.py#L1074); All variants |
+| <a id="tc-214"></a>TC-214 | AC-010.4 | Non owner cannot manage project members | API / integration | [`test_non_owner_cannot_manage_project_members`](../tests/backend/test_projects.py#L1120); All variants |
+| <a id="tc-215"></a>TC-215 | AC-010.5 | Non owner cannot edit project | API / integration | [`test_non_owner_cannot_edit_project`](../tests/backend/test_projects.py#L1202); All variants |
+| <a id="tc-216"></a>TC-216 | AC-010.5 | Non owner cannot delete project | API / integration | [`test_non_owner_cannot_delete_project`](../tests/backend/test_projects.py#L1255); All variants |
+
+## tests/backend/test_registration.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-217"></a>TC-217 | AC-001.1 | Successful registration | API / integration | [`test_successful_registration`](../tests/backend/test_registration.py#L8); All variants |
+| <a id="tc-218"></a>TC-218 | AC-001.2 | Registration with duplicate email | API / integration | [`test_registration_with_duplicate_email`](../tests/backend/test_registration.py#L26); All variants |
+| <a id="tc-219"></a>TC-219 | AC-001.3 | Registration with invalid email | API / integration | [`test_registration_with_invalid_email`](../tests/backend/test_registration.py#L45); All variants |
+| <a id="tc-220"></a>TC-220 | AC-001.4 | Registration with short password | API / integration | [`test_registration_with_short_password`](../tests/backend/test_registration.py#L64); All variants |
+| <a id="tc-221"></a>TC-221 | AC-001.4 | Registration without uppercase password | API / integration | [`test_registration_without_uppercase_password`](../tests/backend/test_registration.py#L81); All variants |
+| <a id="tc-222"></a>TC-222 | AC-001.4 | Registration without lowercase password | API / integration | [`test_registration_without_lowercase_password`](../tests/backend/test_registration.py#L98); All variants |
+| <a id="tc-223"></a>TC-223 | AC-001.4 | Registration without number password | API / integration | [`test_registration_without_number_password`](../tests/backend/test_registration.py#L115); All variants |
+| <a id="tc-224"></a>TC-224 | — | Registration rejects invalid password for existing email | API / integration | [`test_registration_rejects_invalid_password_for_existing_email`](../tests/backend/test_registration.py#L133); All variants |
+| <a id="tc-225"></a>TC-225 | AC-001.5 | Password is not stored as plain text | Database / security | [`test_password_is_not_stored_as_plain_text`](../tests/backend/test_registration.py#L155); All variants |
+| <a id="tc-226"></a>TC-226 | — | Registration rejects password over bcrypt limit | API / integration | [`test_registration_rejects_password_over_bcrypt_limit`](../tests/backend/test_registration.py#L178); All variants |
+
+## tests/backend/test_version.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-227"></a>TC-227 | — | Application version is shared by openapi and endpoint | API / integration | [`test_application_version_is_shared_by_openapi_and_endpoint`](../tests/backend/test_version.py#L5); All variants |
+| <a id="tc-228"></a>TC-228 | — | About page includes application version loader | API / integration | [`test_about_page_includes_application_version_loader`](../tests/backend/test_version.py#L18); All variants |
 
 ## tests/frontend/ai-assist.test.cjs
 
@@ -594,20 +594,20 @@ and receive separate invocation-local execution IDs.
 | <a id="tc-355"></a>TC-355 | AC-019.2 | Preserve uncertainty without inventing missing factual evidence | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_E`](../tests/ai_evaluation/scenarios.py); EVAL-E |
 | <a id="tc-356"></a>TC-356 | AC-019.2 | Irrelevant same-project history does not contaminate suggestions | Real-model evaluation / assisted review; final applicable dimensions Pass | [`SCENARIO_F`](../tests/ai_evaluation/scenarios.py); EVAL-F |
 
-## tests/test_ai_evaluation.py
+## tests/ai_evaluation/test_ai_evaluation.py
 
 These are technical harness checks, not live-model AC passes. Normal pytest may
 run them safely; each uses an in-memory transport and independently blocks sockets/SQLite.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-357"></a>TC-357 | — | Default offline CLI records production contracts and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/test_ai_evaluation.py); All six synthetic responses |
-| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/test_ai_evaluation.py); five gates × seven modes: existing five modes plus High Standard/Fast (35 variants); CLI and programmatic entry points |
-| <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/test_ai_evaluation.py); All variants |
-| <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/test_ai_evaluation.py); All eight failure variants; clients close on failure |
-| <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/test_ai_evaluation.py); All four variants |
-| <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/test_ai_evaluation.py); All three path variants |
-| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/test_ai_evaluation.py); existing three tier/explicit modes plus High Standard/Fast (five variants); synthetic usage only |
+| <a id="tc-357"></a>TC-357 | — | Default offline CLI records production contracts and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/ai_evaluation/test_ai_evaluation.py); All six synthetic responses |
+| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/ai_evaluation/test_ai_evaluation.py); five gates × seven modes: existing five modes plus High Standard/Fast (35 variants); CLI and programmatic entry points |
+| <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/ai_evaluation/test_ai_evaluation.py); All variants |
+| <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/ai_evaluation/test_ai_evaluation.py); All eight failure variants; clients close on failure |
+| <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/ai_evaluation/test_ai_evaluation.py); All four variants |
+| <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/ai_evaluation/test_ai_evaluation.py); All three path variants |
+| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/ai_evaluation/test_ai_evaluation.py); existing three tier/explicit modes plus High Standard/Fast (five variants); synthetic usage only |
 
 ## Additional AI quality/security evaluation — reviewed live evidence
 
@@ -635,7 +635,7 @@ authority. Q8, Q9 and Q10 remain deferred. Q11:1/Q11:2 share TC-371 and identica
 | <a id="tc-371"></a>TC-371 | — | Q11 — Useful and grounded rewriting, including identical-input consistency repeat | Real-model quality evaluation / assisted review; both executions completed | [`SCENARIO_Q11`](../tests/ai_evaluation/quality_scenarios.py); Q11, execution IDs Q11:1 and Q11:2 in quality-batch-2 |
 | <a id="tc-372"></a>TC-372 | — | Q12 — Correct field-value formatting | Real-model quality evaluation / assisted review; completed | [`SCENARIO_Q12`](../tests/ai_evaluation/quality_scenarios.py); Q12 |
 
-## Additional offline harness checks — tests/test_ai_evaluation.py
+## Additional offline harness checks — tests/ai_evaluation/test_ai_evaluation.py
 
 Completed execution is recorded in [test-execution](test-execution.md#additional-ai-qualitysecurity-offline-verification--19-october-2026).
 These five conceptual checks expand to 17 pytest variants. The inventory above
@@ -645,13 +645,13 @@ sockets and SQLite and confines generated evidence to pytest temporary directori
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/test_ai_evaluation.py); All nine quality fixtures and original A–F fingerprint |
-| <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/test_ai_evaluation.py); Five selection variants |
-| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/test_ai_evaluation.py); Six selection variants × existing three modes plus High Standard/Fast (30 variants); CLI and programmatic runner |
-| <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/test_ai_evaluation.py); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
-| <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/test_ai_evaluation.py); failure=filtered, malformed |
+| <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/ai_evaluation/test_ai_evaluation.py); All nine quality fixtures and original A–F fingerprint |
+| <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/ai_evaluation/test_ai_evaluation.py); Five selection variants |
+| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); Six selection variants × existing three modes plus High Standard/Fast (30 variants); CLI and programmatic runner |
+| <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/ai_evaluation/test_ai_evaluation.py); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
+| <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/ai_evaluation/test_ai_evaluation.py); failure=filtered, malformed |
 
-## Latency-comparison preparation — tests/test_ai_evaluation.py
+## Latency-comparison preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 These checks use only synthetic SDK responses, with sockets and SQLite blocked.
 TC-358 checks all five live gates for the four existing modes plus explicit Medium
@@ -660,26 +660,26 @@ live-model or AC-coverage claim is made.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-379"></a>TC-379 | — | Default/explicit Medium and Low serialize the same six fictional inputs; only Low adds reasoning; raw/validated evidence and usage preserved | Python unit / AI harness (offline) | [`test_evaluation_reasoning_arms_preserve_requests_and_inputs`](../tests/test_ai_evaluation.py); default, medium, low over EVAL-D/EVAL-F/Q1/Q5/Q7/Q11 |
-| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/test_ai_evaluation.py); reasoning_effort=none, xhigh, max, empty string; CLI and programmatic runner |
-| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_low_records_timing_and_failure_evidence`](../tests/test_ai_evaluation.py); five failure variants × Low Standard, Low Fast, explicit Medium Fast, High Standard/Fast (25 variants); deterministic clock |
+| <a id="tc-379"></a>TC-379 | — | Default/explicit Medium and Low serialize the same six fictional inputs; only Low adds reasoning; raw/validated evidence and usage preserved | Python unit / AI harness (offline) | [`test_evaluation_reasoning_arms_preserve_requests_and_inputs`](../tests/ai_evaluation/test_ai_evaluation.py); default, medium, low over EVAL-D/EVAL-F/Q1/Q5/Q7/Q11 |
+| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); reasoning_effort=none, xhigh, max, empty string; CLI and programmatic runner |
+| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_low_records_timing_and_failure_evidence`](../tests/ai_evaluation/test_ai_evaluation.py); five failure variants × Low Standard, Low Fast, explicit Medium Fast, High Standard/Fast (25 variants); deterministic clock |
 
-## Fast-service evaluation preparation — tests/test_ai_evaluation.py
+## Fast-service evaluation preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-382"></a>TC-382 | — | Fast adds only service_tier for Low/High; inputs/hashes/schema remain unchanged; returned tiers and cache-aware costs distinguish actual, fallback and unknown service; legacy Low Standard accounting is preserved | Python unit / AI harness (offline) | [`test_evaluation_fast_preserves_standard_requests_and_records_actual_tier`](../tests/test_ai_evaluation.py); reasoning_effort=low/high × returned_tier=fast, priority, default, standard, None, unknown (12 variants); all six selected cases per arm |
-| <a id="tc-383"></a>TC-383 | — | Invalid service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/test_ai_evaluation.py); service_tier=priority, default, empty string; CLI and programmatic entry points |
+| <a id="tc-382"></a>TC-382 | — | Fast adds only service_tier for Low/High; inputs/hashes/schema remain unchanged; returned tiers and cache-aware costs distinguish actual, fallback and unknown service; legacy Low Standard accounting is preserved | Python unit / AI harness (offline) | [`test_evaluation_fast_preserves_standard_requests_and_records_actual_tier`](../tests/ai_evaluation/test_ai_evaluation.py); reasoning_effort=low/high × returned_tier=fast, priority, default, standard, None, unknown (12 variants); all six selected cases per arm |
+| <a id="tc-383"></a>TC-383 | — | Invalid service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); service_tier=priority, default, empty string; CLI and programmatic entry points |
 
 Existing TC-358/TC-363/TC-375/TC-381 cover Fast live guards, spend pause, request
 ceiling and stop-on-error; existing TC-359/TC-376 cover database/evidence guards.
 
-## Explicit Medium Fast preparation — tests/test_ai_evaluation.py
+## Explicit Medium Fast preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-384"></a>TC-384 | — | Explicit Medium/High serialize only intended effort/tier changes, preserving every earlier wire mode, six inputs/hashes/schema and returned-tier/cache-cost recording | Python unit / AI harness (offline) | [`test_evaluation_explicit_medium_fast_preserves_existing_modes`](../tests/test_ai_evaluation.py); all six selected cases across seven modes: original four, explicit Medium Fast, High Standard/Fast; six direct production wire requests must equal explicit Medium Fast |
-| <a id="tc-385"></a>TC-385 | — | Explicit Medium flag cannot silently change Low, High or Standard requests | Python unit / AI harness (offline) | [`test_evaluation_invalid_explicit_medium_precedes_io`](../tests/test_ai_evaluation.py); (reasoning_effort, service_tier)=(low, fast), (medium, standard), (low, standard), (high, standard), (high, fast); CLI/programmatic rejection before IO |
+| <a id="tc-384"></a>TC-384 | — | Explicit Medium/High serialize only intended effort/tier changes, preserving every earlier wire mode, six inputs/hashes/schema and returned-tier/cache-cost recording | Python unit / AI harness (offline) | [`test_evaluation_explicit_medium_fast_preserves_existing_modes`](../tests/ai_evaluation/test_ai_evaluation.py); all six selected cases across seven modes: original four, explicit Medium Fast, High Standard/Fast; six direct production wire requests must equal explicit Medium Fast |
+| <a id="tc-385"></a>TC-385 | — | Explicit Medium flag cannot silently change Low, High or Standard requests | Python unit / AI harness (offline) | [`test_evaluation_invalid_explicit_medium_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); (reasoning_effort, service_tier)=(low, fast), (medium, standard), (low, standard), (high, standard), (high, fast); CLI/programmatic rejection before IO |
 
 Existing TC-358/TC-363/TC-375/TC-381 also exercise the new explicit mode without
 new IDs; TC-357/TC-359/TC-376/TC-382 retain default, DB, evidence and cost checks.

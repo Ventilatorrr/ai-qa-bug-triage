@@ -13,7 +13,7 @@ from tests.conftest import TEST_JWT_SECRET
 
 
 OLD_REPO_SECRET = "dev-secret-key-for-local-testing-only"
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 # --- Normal auth flow uses configured secret ---

@@ -8,6 +8,49 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Test organization — 19 October 2026
+
+Branch `refactor/test-organization`, baseline `ca53965` (merged five executable
+BDD workflows). Moved 20 backend modules from `tests/` to `tests/backend/` and
+`test_ai_evaluation.py` to `tests/ai_evaluation/`. Filenames, test bodies,
+parameters, TC IDs and AC mappings are unchanged. Only one fixture import and
+three repository-root path calculations changed; an empty backend package
+initializer was added. The evaluation harness/resources and frontend/E2E layouts
+are unchanged. Historical commands below retain their original paths; use the
+[catalogue](test-cases.md) for current module locations.
+
+| Check | Result |
+| --- | --- |
+| Default Python collection before / after | **724 / 724**, 2.03s / 1.78s; no warnings; exact node inventory preserved after normalizing the 21 moved module paths; no losses/duplicates; final recheck also 724 in 1.17s |
+| Chromium collection before / after | **24 / 24**, 0.08s / 0.05s; identical node IDs, including five BDD cases; no warnings |
+| Full offline Python | **724 passed in 412.41s**, exit 0; 575 backend + 149 offline evaluation cases, no failures/errors/skips |
+| Frontend JavaScript | **99 passed**, 355.8016ms, exit 0; no failures/skips/cancellations/todo |
+| Chromium Playwright + BDD | **24 passed in 64.72s**, exit 0; 19 existing Playwright cases + five BDD cases, no failures/skips/teardown errors |
+
+Passing execution commands from the repository root (provider key and live
+evaluation opt-in removed for the offline Python run):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q --basetemp D:/Portfolio/ai-qa-bug-triage/test-results/test-organization-20261019/offline-final-temp --output test-results/test-organization-20261019/offline-final-browser --junitxml test-results/test-organization-20261019/offline-final.xml
+node --test tests/frontend/*.test.cjs
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium -q --output test-results/test-organization-20261019/e2e-final-browser --junitxml test-results/test-organization-20261019/e2e-final.xml
+```
+
+Two earlier attempts were setup failures: sandbox temporary-directory creation
+produced 116 passes / 608 setup errors in 188.95s; temporary rename-verification
+Python snapshots then caused 21 collection errors in 2.28s. Removed only those
+task-created snapshots, rechecked discovery, and reran outside the restricted
+sandbox with an explicit fresh disposable pytest directory. No assertions or
+application code changed to resolve either issue; no product defect was found.
+
+Suites ran serially. Existing E2E safeguards verified port 8148 availability,
+owned server identity, fresh database configuration, local browser routing and
+mocked provider transport. Offline evaluation tests blocked sockets/SQLite and
+confined generated evidence to temporary directories. No real application
+database or live provider was accessed; historical `ai-evaluation-results/` data
+remains untouched. No live evaluation or load test ran. AC coverage ratings and
+TC-001–TC-390 remain unchanged; no new TC IDs were assigned.
+
 ## BDD feature cleanup — 19 October 2026
 
 Continued on `test/executable-bdd` after the initial implementation below.

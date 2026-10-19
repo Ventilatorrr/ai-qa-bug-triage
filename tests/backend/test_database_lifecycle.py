@@ -5,7 +5,7 @@ import sys
 from textwrap import dedent
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 def run_application_script(tmp_path, script):
