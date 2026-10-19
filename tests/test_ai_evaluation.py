@@ -96,7 +96,12 @@ def test_evaluation_offline_records_production_contracts(monkeypatch):
 
 # TC-358 | AC — — Live mode cannot run under pytest/CI or without explicit opt-in.
 @pytest.mark.parametrize("gate", ["pytest", "pytest_environment", "ci", "no_opt_in", "custom_endpoint"])
-def test_evaluation_live_gates_precede_client_creation(monkeypatch, gate):
+@pytest.mark.parametrize("reasoning_effort,service_tier,explicit_medium", [
+    ("medium", "standard", False), ("medium", "fast", False),
+    ("low", "standard", False), ("low", "fast", False), ("medium", "fast", True),
+    ("high", "standard", False), ("high", "fast", False),
+])
+def test_evaluation_live_gates_precede_client_creation(monkeypatch, gate, reasoning_effort, service_tier, explicit_medium):
     def unexpected(*args, **kwargs):
         pytest.fail("A forbidden live invocation must not construct a client or evidence directory.")
 
@@ -116,13 +121,16 @@ def test_evaluation_live_gates_precede_client_creation(monkeypatch, gate):
         monkeypatch.setenv("OPENAI_BASE_URL", "https://invalid.example/v1")
 
     with pytest.raises(SystemExit) as error:
-        runner.main(["--live"])
+        runner.main(["--live", "--reasoning-effort", reasoning_effort, "--service-tier", service_tier]
+                    + (["--explicit-medium"] if explicit_medium else []))
 
     assert error.value.code == 2
     with pytest.raises(RuntimeError):
         runner.create_client(live=True, scenario=load_scenarios()[0])
     with pytest.raises(RuntimeError):
-        runner.run_evaluation(Path("unused"), live=True, pass_number=1)
+        runner.run_evaluation(Path("unused"), live=True, pass_number=1,
+                              reasoning_effort=reasoning_effort, service_tier=service_tier,
+                              explicit_medium=explicit_medium)
 
 
 # TC-359 | AC — — All SQLite access is blocked, including with cached configuration.
@@ -248,7 +256,11 @@ def test_evaluation_output_directory_is_new_and_confined(destination, tmp_path):
 
 
 # TC-363 | AC — — Stop subsequent requests at the observed-cost pause threshold.
-def test_evaluation_pauses_after_observed_spend_threshold(monkeypatch):
+@pytest.mark.parametrize("reasoning_effort,service_tier,explicit_medium", [
+    ("medium", "standard", False), ("medium", "fast", False), ("medium", "fast", True),
+    ("high", "standard", False), ("high", "fast", False),
+])
+def test_evaluation_pauses_after_observed_spend_threshold(monkeypatch, reasoning_effort, service_tier, explicit_medium):
     original = runner.offline_response
     requests = []
 
@@ -256,16 +268,18 @@ def test_evaluation_pauses_after_observed_spend_threshold(monkeypatch):
         requests.append(request)
         body = original(request, scenario).json()
         body["usage"] = {"input_tokens": 1_000_000, "output_tokens": 0, "total_tokens": 1_000_000}
+        body["service_tier"] = "priority" if service_tier == "fast" else "default"
         return httpx2.Response(200, json=body)
 
     monkeypatch.setattr(runner, "offline_response", expensive)
 
-    assert runner.main([]) == 1
+    assert runner.main(["--reasoning-effort", reasoning_effort, "--service-tier", service_tier]
+                       + (["--explicit-medium"] if explicit_medium else [])) == 1
 
     report = json.loads(next(runner.OUTPUT_ROOT.glob("*/run.json")).read_text(encoding="utf-8"))
     assert len(requests) == len(report["attempts"]) == 1
     assert report["attempts"][0]["execution"] == "completed"
-    assert report["estimated_cost_usd"] == runner.SPEND_PAUSE_USD
+    assert report["estimated_cost_usd"] == runner.SPEND_PAUSE_USD * (2 if service_tier == "fast" else 1)
     assert "spend" in report["stop_reason"]
 
 
@@ -323,7 +337,11 @@ def test_evaluation_selection_preserves_order_and_independent_repeats(selection,
     (["--scenario-set", "baseline", "--scenarios", "Q1"],
      {"scenario_set": "baseline", "scenario_ids": ["Q1"]}),
 ])
-def test_evaluation_invalid_selection_precedes_io(monkeypatch, arguments, selection):
+@pytest.mark.parametrize("reasoning_effort,service_tier,explicit_medium", [
+    ("medium", "standard", False), ("medium", "fast", False), ("medium", "fast", True),
+    ("high", "standard", False), ("high", "fast", False),
+])
+def test_evaluation_invalid_selection_precedes_io(monkeypatch, arguments, selection, reasoning_effort, service_tier, explicit_medium):
     def unexpected(*args, **kwargs):
         pytest.fail("Invalid selection must not perform application, evidence or provider IO.")
 
@@ -331,9 +349,12 @@ def test_evaluation_invalid_selection_precedes_io(monkeypatch, arguments, select
     monkeypatch.setattr(runner, "isolated_application", unexpected)
     monkeypatch.setattr(runner, "create_client", unexpected)
     with pytest.raises(ValueError):
-        runner.run_evaluation(Path("unused"), live=False, pass_number=1, **selection)
+        runner.run_evaluation(Path("unused"), live=False, pass_number=1,
+                              reasoning_effort=reasoning_effort, service_tier=service_tier,
+                              explicit_medium=explicit_medium, **selection)
     with pytest.raises(SystemExit) as error:
-        runner.main(arguments)
+        runner.main(["--reasoning-effort", reasoning_effort, "--service-tier", service_tier]
+                    + (["--explicit-medium"] if explicit_medium else []) + arguments)
     assert error.value.code == 2
     assert not runner.OUTPUT_ROOT.exists()
 
@@ -447,3 +468,320 @@ def test_quality_raw_failures_remain_visible_without_semantic_pass(monkeypatch, 
         assert len(requests) == 1 and report["stop_reason"]
         assert report["not_run"] == ["Q11", "Q11"]
         assert report["not_run_execution_ids"] == ["Q11:1", "Q11:2"]
+
+
+# TC-379 | AC — — Both latency arms preserve identical fictional inputs and strict wire requests.
+def test_evaluation_reasoning_arms_preserve_requests_and_inputs(monkeypatch):
+    identifiers = ["EVAL-D", "EVAL-F", "Q1", "Q5", "Q7", "Q11"]
+    requests = []
+    original = runner.offline_response
+
+    def record(request, scenario):
+        requests.append(json.loads(request.content))
+        body = original(request, scenario).json()
+        body["usage"]["output_tokens_details"] = {"reasoning_tokens": 40}
+        return httpx2.Response(200, json=body)
+
+    monkeypatch.setattr(runner, "offline_response", record)
+    reports = []
+    for label, arguments in (("default", []), ("medium", ["--reasoning-effort", "medium"]),
+                             ("low", ["--reasoning-effort", "low"])):
+        output = runner.OUTPUT_ROOT / label
+        assert runner.main(["--offline", "--output", str(output), "--scenarios", *identifiers, *arguments]) == 0
+        report = json.loads((output / "run.json").read_text(encoding="utf-8"))
+        reports.append(report)
+        assert report["reasoning_effort"] == ("low" if label == "low" else "medium")
+        assert report["selection"]["scenario_ids"] == identifiers
+        assert report["request_limit"] == len(report["attempts"]) == 6
+        assert report["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
+        assert report["database_created"] is report["live_model_evaluated"] is False
+        assert report["not_run"] == [] and report["stop_reason"] is None
+        assert report["total_elapsed_seconds"] >= 0
+        for attempt, wire_request in zip(report["attempts"], requests[-6:], strict=True):
+            assert attempt["request"] == wire_request
+            assert wire_request["model"] == "gpt-6-luna"
+            assert wire_request["text"]["format"]["strict"] is True
+            assert "verbosity" not in wire_request["text"]
+            assert attempt["provider"]["usage"]["input_tokens"] == 1200
+            assert attempt["provider"]["usage"]["output_tokens"] == 120
+            assert attempt["provider"]["usage"]["output_tokens_details"]["reasoning_tokens"] == 40
+            assert json.loads(attempt["provider"]["output_text"]) == attempt["decoded_response"]
+            assert attempt["validator_exclusions"] == []
+            assert attempt["assessment"]["status"] == "offline_fixture_only"
+            assert all(value["status"] == "Not assessed" for value in attempt["assessment"]["dimensions"].values())
+
+    for baseline, explicit_medium, low in zip(*(report["attempts"] for report in reports), strict=True):
+        assert baseline["request"] == explicit_medium["request"]
+        assert set(baseline["request"]) == {"model", "instructions", "input", "text", "store"}
+        low_request = deepcopy(low["request"])
+        assert low_request.pop("reasoning") == {"effort": "low"}
+        assert low_request == baseline["request"]
+        assert baseline["generation_input"] == explicit_medium["generation_input"] == low["generation_input"]
+        assert baseline["generation_sha256"] == low["generation_sha256"]
+        assert baseline["validated_output"] == explicit_medium["validated_output"] == low["validated_output"]
+    assert len({report["dataset_sha256"] for report in reports}) == 1
+    assert len({report["protocol_sha256"] for report in reports}) == 1
+    assert len(requests) == 18
+
+
+# TC-380 | AC — — Unapproved reasoning settings fail before evidence or provider IO.
+@pytest.mark.parametrize("reasoning_effort", ["none", "xhigh", "max", ""])
+def test_evaluation_invalid_reasoning_precedes_io(monkeypatch, reasoning_effort):
+    def unexpected(*args, **kwargs):
+        pytest.fail("Invalid reasoning configuration must not perform IO.")
+
+    monkeypatch.setattr(runner, "new_output_directory", unexpected)
+    monkeypatch.setattr(runner, "isolated_application", unexpected)
+    monkeypatch.setattr(runner, "create_client", unexpected)
+    with pytest.raises(ValueError):
+        runner.run_evaluation(Path("unused"), live=False, pass_number=1, reasoning_effort=reasoning_effort)
+    with pytest.raises(SystemExit) as error:
+        runner.main(["--reasoning-effort", reasoning_effort])
+    assert error.value.code == 2
+    assert not runner.OUTPUT_ROOT.exists()
+
+
+# TC-381 | AC — — SDK latency excludes setup; timing, raw failures and exclusions survive stops.
+@pytest.mark.parametrize("failure", ["success", "filtered", "timeout", "http_error", "malformed"])
+@pytest.mark.parametrize("reasoning_effort,service_tier,explicit_medium", [
+    ("low", "standard", False), ("low", "fast", False), ("medium", "fast", True),
+    ("high", "standard", False), ("high", "fast", False),
+])
+def test_evaluation_low_records_timing_and_failure_evidence(monkeypatch, failure, reasoning_effort, service_tier, explicit_medium):
+    clock = [100.0]
+    requests = []
+    original_response = runner.offline_response
+    original_client = runner.create_client
+    private_text = "fictional-private-error-do-not-log"
+
+    def create_client(**kwargs):
+        clock[0] += 2.0
+        return original_client(**kwargs)
+
+    def respond(request, scenario):
+        requests.append(json.loads(request.content))
+        clock[0] += 3.0
+        if failure == "timeout":
+            raise httpx2.ReadTimeout(private_text, request=request)
+        if failure == "http_error":
+            return httpx2.Response(500, json={"error": {"message": private_text}})
+        body = original_response(request, scenario).json()
+        if failure == "malformed":
+            body["output"][0]["content"][0]["text"] = "not JSON"
+        elif failure == "filtered":
+            raw = json.loads(body["output"][0]["content"][0]["text"])
+            raw["suggestions"].append({"field": "status", "value": "Closed"})
+            body["output"][0]["content"][0]["text"] = json.dumps(raw)
+        return httpx2.Response(200, json=body)
+
+    monkeypatch.setattr(runner, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(runner, "create_client", create_client)
+    monkeypatch.setattr(runner, "offline_response", respond)
+    succeeded = failure in {"success", "filtered"}
+    assert runner.main(["--offline", "--reasoning-effort", reasoning_effort, "--service-tier", service_tier,
+                        "--scenarios", "Q1", "Q11"]
+                       + (["--explicit-medium"] if explicit_medium else [])) == (0 if succeeded else 1)
+    report = json.loads(next(runner.OUTPUT_ROOT.glob("*/run.json")).read_text(encoding="utf-8"))
+    assert len(requests) == len(report["attempts"]) == (2 if succeeded else 1)
+    assert report["total_elapsed_seconds"] == (10.0 if succeeded else 5.0)
+    assert report["not_run"] == ([] if succeeded else ["Q11"])
+    assert report["not_run_execution_ids"] == ([] if succeeded else ["Q11:1"])
+    for attempt in report["attempts"]:
+        assert attempt["provider_call_seconds"] == 3.0
+        assert attempt["elapsed_seconds"] == 5.0
+        assert attempt["request"]["reasoning"] == {"effort": reasoning_effort}
+        if failure in {"timeout", "http_error"}:
+            assert attempt["provider_error"] == attempt["error"]
+            assert attempt["provider_error"]["http_status"] == (500 if failure == "http_error" else None)
+            assert "provider" not in attempt
+        else:
+            assert "provider_error" not in attempt
+            assert "output_text" in attempt["provider"]
+        if failure == "malformed":
+            assert attempt["provider"]["output_text"] == "not JSON"
+        if succeeded:
+            assert attempt["validator_exclusions"] == ([{"field": "status", "value": "Closed"}] if failure == "filtered" else [])
+            assert "status" not in attempt["validated_output"]["suggestions"]
+    assert report["database_created"] is report["live_model_evaluated"] is False
+    assert private_text not in json.dumps(report)
+
+
+# TC-382 | AC — — Fast adds only its tier; actual/default/unknown tier and cache-aware costs survive SDK serialization.
+@pytest.mark.parametrize("returned_tier", ["fast", "priority", "default", "standard", None, "unknown"])
+@pytest.mark.parametrize("reasoning_effort", ["low", "high"])
+def test_evaluation_fast_preserves_standard_requests_and_records_actual_tier(monkeypatch, returned_tier, reasoning_effort):
+    identifiers = ["EVAL-D", "EVAL-F", "Q1", "Q5", "Q7", "Q11"]
+    original_response = runner.offline_response
+    requests = []
+
+    def respond(request, scenario):
+        requests.append(json.loads(request.content))
+        body = original_response(request, scenario).json()
+        if returned_tier is not None:
+            body["service_tier"] = returned_tier
+        body["usage"]["input_tokens_details"] = {"cached_tokens": 200, "cache_write_tokens": 300}
+        return httpx2.Response(200, json=body)
+
+    monkeypatch.setattr(runner, "offline_response", respond)
+    reports = []
+    for tier in ("standard", "fast"):
+        output = runner.OUTPUT_ROOT / tier
+        assert runner.main(["--offline", "--reasoning-effort", reasoning_effort, "--service-tier", tier,
+                            "--output", str(output), "--scenarios", *identifiers]) == 0
+        report = json.loads((output / "run.json").read_text(encoding="utf-8"))
+        reports.append(report)
+        assert report["requested_service_tier"] == ("fast" if tier == "fast" else None)
+        assert len(report["attempts"]) == report["request_limit"] == 6
+        assert report["not_run"] == [] and report["stop_reason"] is None
+        assert report["database_created"] is report["live_model_evaluated"] is False
+        for attempt, request in zip(report["attempts"], requests[-6:], strict=True):
+            assert attempt["request"] == request
+            assert attempt["provider"]["service_tier"] == returned_tier
+            assert attempt["requested_service_tier"] == report["requested_service_tier"]
+            assert attempt["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
+            assert attempt["validator_exclusions"] == [] and all(attempt["mechanical_checks"].values())
+            if tier == "fast" or reasoning_effort == "high":
+                multiplier = 1 if returned_tier in {"default", "standard"} else 2
+                assert attempt["estimated_cost_usd"] == round(multiplier * (
+                    700 * 0.10 + 200 * 0.01 + 300 * 0.125 + 120 * 0.50
+                ) / 1_000_000, 8)
+                assert attempt["cost_estimate_basis"] == (
+                    "returned_service_tier" if returned_tier in {"fast", "priority", "default", "standard"}
+                    else "fast_rate_upper_bound_unconfirmed_tier"
+                )
+            else:
+                assert attempt["estimated_cost_usd"] == 0.00018  # Existing default estimate is unchanged.
+    assert reports[0]["dataset_sha256"] == reports[1]["dataset_sha256"]
+    for baseline, candidate in zip(reports[0]["attempts"], reports[1]["attempts"], strict=True):
+        assert set(baseline["request"]) == {"model", "instructions", "input", "text", "store", "reasoning"}
+        request = deepcopy(candidate["request"])
+        assert request.pop("service_tier") == "fast"
+        assert request == baseline["request"]
+        assert request["text"]["format"]["strict"] is True and "verbosity" not in request["text"]
+        assert request["reasoning"] == {"effort": reasoning_effort} and request["store"] is False
+        assert baseline["generation_input"] == candidate["generation_input"]
+        assert baseline["generation_sha256"] == candidate["generation_sha256"]
+        assert baseline["validated_output"] == candidate["validated_output"]
+    assert len(requests) == 12
+
+
+# TC-383 | AC — — Unapproved service-tier selectors fail before application/evidence/provider IO.
+@pytest.mark.parametrize("service_tier", ["priority", "default", ""])
+def test_evaluation_invalid_service_tier_precedes_io(monkeypatch, service_tier):
+    def unexpected(*args, **kwargs):
+        pytest.fail("Invalid service tier must not perform IO.")
+
+    monkeypatch.setattr(runner, "new_output_directory", unexpected)
+    monkeypatch.setattr(runner, "isolated_application", unexpected)
+    monkeypatch.setattr(runner, "create_client", unexpected)
+    with pytest.raises(ValueError):
+        runner.run_evaluation(Path("unused"), live=False, pass_number=1, service_tier=service_tier)
+    with pytest.raises(SystemExit) as error:
+        runner.main(["--service-tier", service_tier])
+    assert error.value.code == 2
+    assert not runner.OUTPUT_ROOT.exists()
+
+
+# TC-384 | AC — — Historical wire modes/inputs survive; explicit Medium Fast matches production.
+def test_evaluation_explicit_medium_fast_preserves_existing_modes(monkeypatch):
+    ids = ["EVAL-D", "EVAL-F", "Q1", "Q5", "Q7", "Q11"]
+    original = runner.offline_response
+    requests = []
+
+    def respond(request, scenario):
+        wire = json.loads(request.content)
+        requests.append(wire)
+        body = original(request, scenario).json()
+        body["service_tier"] = "priority" if wire.get("service_tier") == "fast" else "default"
+        body["usage"]["input_tokens_details"] = {"cached_tokens": 200, "cache_write_tokens": 300}
+        return httpx2.Response(200, json=body)
+
+    monkeypatch.setattr(runner, "offline_response", respond)
+    modes = [
+        ("medium-standard", "medium", "standard", False),
+        ("low-standard", "low", "standard", False),
+        ("low-fast", "low", "fast", False),
+        ("medium-fast-implicit", "medium", "fast", False),
+        ("medium-fast-explicit", "medium", "fast", True),
+        ("high-standard", "high", "standard", False),
+        ("high-fast", "high", "fast", False),
+    ]
+    reports = {}
+    for name, effort, tier, explicit in modes:
+        output = runner.OUTPUT_ROOT / name
+        assert runner.main(["--offline", "--reasoning-effort", effort, "--service-tier", tier,
+                            "--output", str(output), "--scenarios", *ids]
+                           + (["--explicit-medium"] if explicit else [])) == 0
+        report = json.loads((output / "run.json").read_text(encoding="utf-8"))
+        reports[name] = report
+        assert report["explicit_medium"] is explicit
+        assert [a["scenario_id"] for a in report["attempts"]] == ids
+        assert len(report["attempts"]) == report["request_limit"] == 6
+        assert report["not_run"] == [] and report["stop_reason"] is None
+        assert report["database_created"] is report["live_model_evaluated"] is False
+        for attempt, wire in zip(report["attempts"], requests[-6:], strict=True):
+            assert attempt["request"] == wire
+            assert wire["model"] == "gpt-6-luna" and wire["store"] is False
+            assert wire["text"]["format"]["strict"] is True and "verbosity" not in wire["text"]
+            assert wire.get("reasoning") == ({"effort": effort} if effort in {"low", "high"} or explicit else None)
+            assert wire.get("service_tier") == ("fast" if tier == "fast" else None)
+            assert attempt["requested_service_tier"] == wire.get("service_tier")
+            assert attempt["provider"]["service_tier"] == ("priority" if tier == "fast" else "default")
+            assert attempt["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
+            assert attempt["validator_exclusions"] == [] and all(attempt["mechanical_checks"].values())
+            if tier == "fast":
+                assert attempt["estimated_cost_usd"] == 0.000339
+                assert attempt["cost_estimate_basis"] == "returned_service_tier"
+            elif effort == "high":
+                assert attempt["estimated_cost_usd"] == 0.0001695
+                assert attempt["cost_estimate_basis"] == "returned_service_tier"
+    assert len({r["dataset_sha256"] for r in reports.values()}) == 1
+    from app.ai_openai import request_openai_suggestions
+
+    for index in range(6):
+        attempts = {name: r["attempts"][index] for name, r in reports.items()}
+        assert len({a["generation_sha256"] for a in attempts.values()}) == 1
+        assert all(a["generation_input"] == attempts["low-fast"]["generation_input"] for a in attempts.values())
+        expected = deepcopy(attempts["low-fast"]["request"])
+        expected["reasoning"] = {"effort": "medium"}
+        assert attempts["medium-fast-explicit"]["request"] == expected
+        scenario = runner.select_scenarios(scenario_ids=[ids[index]])[0]
+        with runner.create_client(live=False, scenario=scenario) as client:
+            raw = request_openai_suggestions(
+                deepcopy(attempts["medium-fast-explicit"]["generation_input"]), client=client,
+            )
+        assert requests[-1] == attempts["medium-fast-explicit"]["request"]
+        assert raw == attempts["medium-fast-explicit"]["decoded_response"]
+        high = deepcopy(expected)
+        high["reasoning"] = {"effort": "high"}
+        assert attempts["high-fast"]["request"] == high
+        high.pop("service_tier")
+        assert attempts["high-standard"]["request"] == high
+        expected.pop("reasoning")
+        assert attempts["medium-fast-implicit"]["request"] == expected
+        expected.pop("service_tier")
+        assert attempts["medium-standard"]["request"] == expected
+        expected["reasoning"] = {"effort": "low"}
+        assert attempts["low-standard"]["request"] == expected
+    assert len(requests) == 48
+
+
+# TC-385 | AC — — Explicit Medium cannot silently alter Low or Standard selections.
+@pytest.mark.parametrize("reasoning_effort,service_tier", [
+    ("low", "fast"), ("medium", "standard"), ("low", "standard"),
+    ("high", "standard"), ("high", "fast"),
+])
+def test_evaluation_invalid_explicit_medium_precedes_io(monkeypatch, reasoning_effort, service_tier):
+    def unexpected(*args, **kwargs):
+        pytest.fail("Invalid explicit Medium configuration must fail before IO.")
+
+    monkeypatch.setattr(runner, "new_output_directory", unexpected)
+    monkeypatch.setattr(runner, "isolated_application", unexpected)
+    monkeypatch.setattr(runner, "create_client", unexpected)
+    with pytest.raises(ValueError):
+        runner.run_evaluation(Path("unused"), live=False, pass_number=1, reasoning_effort=reasoning_effort,
+                              service_tier=service_tier, explicit_medium=True)
+    with pytest.raises(SystemExit) as error:
+        runner.main(["--reasoning-effort", reasoning_effort, "--service-tier", service_tier, "--explicit-medium"])
+    assert error.value.code == 2
+    assert not runner.OUTPUT_ROOT.exists()

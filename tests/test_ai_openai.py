@@ -84,8 +84,10 @@ def test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database(
     assert requests[0].method == "POST"
     assert requests[0].url.path == "/v1/responses"
     body = json.loads(requests[0].content)
-    assert set(body) == {"model", "instructions", "input", "text", "store"}
+    assert set(body) == {"model", "reasoning", "service_tier", "instructions", "input", "text", "store"}
     assert body["model"] == "gpt-6-luna"
+    assert body["reasoning"] == {"effort": "medium"}
+    assert body["service_tier"] == "fast"
     assert body["store"] is False
     instructions, rules = body["instructions"].split("\noutput_contract.field_rules:\n")
     assert instructions == provider_input["instructions"]

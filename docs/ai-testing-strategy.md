@@ -333,3 +333,208 @@ labels evidence and does not repeat execution. No EVAL-D reruns are included in
 this evaluation milestone. The historical-context observations remain in
 the original execution report. Use new evidence directories, preserve all failures
 and append subsequent review alongside raw artifacts without editing them.
+
+## Minimal latency comparison — preparation, 19 October 2026
+
+At preparation, no new live requests were authorized or run. The separately
+approved **Medium and Low batches each completed six requests on 19 October 2026**;
+see the [Medium control](test-execution.md#minimal-latency-experiment--medium-control-19-october-2026)
+and [Low comparison and assisted review](test-execution.md#minimal-latency-experiment--low-and-paired-comparison-19-october-2026).
+The Medium/Low comparison recommended Low after focused implementation/regression;
+see the Fast follow-up below for the current service-tier recommendation.
+Production remains unchanged; no additional live requests are authorized.
+Use the existing fictional scenarios in this order: **EVAL-D, EVAL-F, Q1, Q5,
+Q7, Q11**, once per arm (six requests each, **12 total**). Q11 has one output
+per arm here; its historical repeat does not establish repeat consistency for
+this experiment. Retain the existing case/TC identities and quality-1 dataset.
+
+Control uses `--reasoning-effort medium` (also the default): the request still
+omits `reasoning`, preserving production's effective Medium behavior. Candidate
+uses `--reasoning-effort low`, adding only `reasoning={"effort": "low"}` in the
+evaluation recorder. The production adapter, prompt, input data, strict schema,
+validator, omitted verbosity, per-request client lifecycle, 60-second SDK timeout
+and zero retries are unchanged. Default no-argument execution remains offline A–F.
+
+After **separate approval for each batch**, use the following commands from the
+repository. Supply credentials through the local environment as before. For each
+approved command only, set `AI_EVALUATION_ALLOW_LIVE=1` in a `try` block and remove
+it in `finally`; do not automatically proceed to the second batch.
+
+```powershell
+# Control: six requests, only after control-batch approval.
+.\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --live --reasoning-effort medium --scenarios EVAL-D EVAL-F Q1 Q5 Q7 Q11
+
+# Candidate: six requests, only after separate candidate-batch approval.
+.\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --live --reasoning-effort low --scenarios EVAL-D EVAL-F Q1 Q5 Q7 Q11
+```
+
+Evidence adds run-level `reasoning_effort` and `total_elapsed_seconds`, plus
+per-attempt `provider_call_seconds`. Provider-call time surrounds the SDK
+`responses.create` call, including serialization, network and SDK response parsing;
+it excludes client creation/closure and application output parsing/validation.
+Existing per-attempt `elapsed_seconds` retains its meaning. Total run time starts
+at `run_evaluation` entry and includes setup, Git/protocol metadata, attempts,
+intermediate evidence writes and isolation teardown; it excludes CLI argument
+handling/output-directory creation and the final evidence write. Failed SDK calls
+also retain timing and a safe `provider_error` type/HTTP status, without messages
+or headers. Existing raw output, decoded/validated suggestions, exclusions and
+full token usage (including reasoning/cache details when returned) remain intact.
+
+Compare generation/dataset hashes and actual requests across arms: only the Low
+request's `reasoning` property may differ. Compare paired provider times and the
+six-case median, total duration, usage, failures and exclusions. Review every raw
+and validated suggestion under the frozen scenario criteria: D historical support,
+F unrelated-history rejection, Q1 injection resistance, Q5 unresolved conflicting
+counts, Q7 relevant history among decoys and Q11 useful grounded rewriting. No
+critical semantic failure is acceptable. Record minor concerns and any reduced
+usefulness or lost historical support; empty/unchanged output does not demonstrate
+capability. Preserve Pass/Fail/Not exercised distinctions, Q5's historical wording
+observation and unassessed templates. Do not require exact wording/classification.
+Review control before separately approving Low; a critical failure blocks further
+batches. One observation per case/arm is exploratory, not statistical evidence of
+equivalence or a sufficient reason by itself to change production.
+
+Preserved Medium usage for these six cases suggests approximately **$0.0033 USD
+for 12 requests**, allowing for the observed cache-write premium; Low usage and
+service/cache variability are unknown. Standard short-context rates rechecked
+19 October: $0.10/M ordinary input, $0.01/M cached input, $0.125/M cache writes,
+$0.50/M output ([OpenAI pricing](https://developers.openai.com/api/docs/models/gpt-6-luna)).
+Reasoning tokens are included in output. The existing runner estimator's cache-write
+limitation remains unchanged; use returned usage for comparison cost accounting.
+Retain the six-request limit, independent live gates, $0.10 observed-spend pause,
+stop-on-error and zero retries. Offline fixtures verify mechanics, never speed or
+semantic quality. No historical artifact is edited or reused as a new result.
+
+## AI Assist performance roadmap — 19 October 2026
+
+| Option | Status and decision boundary |
+| --- | --- |
+| Low reasoning | Tested: 14.93% lower observed median provider latency in the initial six paired fictional cases. Low was not selected; the approved production configuration is explicit Medium + Fast. |
+| Fast service tier | Six-configuration study complete; Medium + Fast selected and implemented in the working tree. Focused offline regression verifies production/evaluation request equivalence. Review, commit, CI and release remain pending; exploratory timing is not a speed guarantee. |
+| High reasoning | Tested on default and Fast tiers; High Fast's 3.7065s median and 23.74% higher estimated cost than Medium Fast were not justified by its localized Q7/Q11 rewrite gains. Production adoption deferred. |
+| Reasoning None | Deferred; no experiment or production change authorized here. |
+| Client reuse | Deferred; potentially a smaller connection/setup saving, unmeasured. |
+| Prompt caching | Deferred; neither completed latency arm recorded cached-input hits. |
+| Lower output verbosity | Deferred because it may remove useful bug-report detail. |
+
+The Fast comparison uses EVAL-D, EVAL-F, Q1, Q5, Q7, Q11 once each, serially.
+The evaluation-only `--service-tier fast` adds only `service_tier="fast"` to the
+existing Low request; default/`--service-tier standard` leaves the tier omitted.
+Model, prompt, contexts, strict schema, validator, verbosity, store=false,
+per-request client creation/closure, 60-second timeout and zero retries remain
+unchanged. No project-wide setting is changed. Existing live/SQLite/socket guards,
+six-request ceiling, unique ignored output and stop-on-error policy remain active.
+
+Run/attempt evidence records `requested_service_tier` (null means omitted) and
+`provider.service_tier` exactly as returned. Only `fast`/`priority` confirm Fast;
+`default`/`standard` are fallbacks, and missing/other values are unconfirmed.
+The preserved Low baseline did not record returned service tier, so its historical
+"Standard" label and Standard-rate cost are configuration assumptions, not proof
+of its actual processing tier. Do not retrieve or rewrite it to fill that gap.
+
+[Official Fast guidance](https://developers.openai.com/api/docs/guides/fast-mode)
+and [GPT-6 Luna pricing](https://developers.openai.com/api/docs/models/gpt-6-luna)
+were fetched on 19 October: Fast short-context rates are $0.20/M ordinary input,
+$0.02/M cached input, $0.25/M cache writes and $1.00/M output (2x Standard).
+The Fast selection estimates cost from the returned tier and cache details,
+using Standard rates for a returned fallback and conservative Fast rates for an
+unconfirmed tier. This estimate drives the existing $0.10 observed-spend pause.
+Historical artifacts and the default selection's legacy estimator remain intact.
+The six Standard Low outputs imply approximately $0.00269 for a comparable Fast
+batch, subject to actual usage/tier; no output cap or retries are introduced.
+
+After focused offline checks and request-free preflight passed, this separately
+approved invocation ran once. These commands are provenance, not rerun approval:
+
+```powershell
+$env:AI_EVALUATION_ALLOW_LIVE = '1'
+try {
+    .\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --live --reasoning-effort low --service-tier fast --scenarios EVAL-D EVAL-F Q1 Q5 Q7 Q11
+} finally {
+    Remove-Item Env:AI_EVALUATION_ALLOW_LIVE -ErrorAction SilentlyContinue
+}
+```
+
+Review raw and validated values using the frozen six-case criteria and retain
+earlier Q5 observations. Compare paired provider times, total duration, usage,
+actual tier, exclusions and tier-adjusted costs; do not count fallbacks as Fast.
+One output per case/arm, historical baseline tier uncertainty and non-interleaved
+batches limit attribution. This roadmap adds no functional requirements or AC
+coverage. Results belong in the existing execution report, with no rollout here.
+
+The [Fast execution and paired review](test-execution.md#fast-service-experiment-and-low-baseline-comparison--19-october-2026)
+record 2.6905s versus 4.8495s observed median provider time, all six returned tiers
+`fast`, and estimated costs $0.00269970 versus $0.00134485 at assumed Standard
+baseline rates. Q1/Q11 had fewer rewrites, EVAL-F gained a Steps rewrite, and Q5
+retains a minor cross-field wording concern; no critical failure was identified.
+This remains exploratory, with the historical baseline's returned tier unknown.
+
+## Final four-configuration study — explicit Medium Fast
+
+The user approved one final six-request batch on EVAL-D, EVAL-F, Q1, Q5, Q7, Q11,
+in that order. No repeats, replacements, None reasoning or further experiments
+are authorized. Production remains unchanged. Before execution, focused offline
+tests and request-free preflight must pass, including all three supplied artifact
+hashes and paired generation/input/schema equivalence.
+
+The evaluation-only `--explicit-medium` flag is accepted only with medium reasoning
+and Fast service. It adds `reasoning={"effort":"medium"}` explicitly; existing
+Medium Standard (and implicit Medium Fast) continue to omit reasoning. Both Low
+modes and default offline A–F remain unchanged. Evidence records `explicit_medium`
+and the actual request plus requested/returned tier. The only request difference
+from preserved Low Fast is reasoning.effort. Client lifecycle, timeout 60, retries
+0, store=false, omitted verbosity, strict schema, validator, fictional data and
+live/DB/socket/evidence guards stay unchanged. Cost accounting remains tier/cache
+aware for Fast, with the $0.10 observed-spend pause and stop-on-error policy.
+
+The verified command ran once after offline tests and preflight passed; this is
+execution provenance, not authorization to repeat the final batch:
+
+```powershell
+$env:AI_EVALUATION_ALLOW_LIVE = '1'
+try {
+    .\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --live --reasoning-effort medium --service-tier fast --explicit-medium --scenarios EVAL-D EVAL-F Q1 Q5 Q7 Q11 --output D:\Portfolio\ai-qa-bug-triage\ai-evaluation-results\20261019T120120Z-e8edbfb5
+} finally {
+    Remove-Item Env:AI_EVALUATION_ALLOW_LIVE -ErrorAction SilentlyContinue
+}
+```
+
+Compare all four arms using actual recorded timings, usage, cache details and
+tier-adjusted costs. Historical Standard tiers remain nominal; only actual
+fast/priority responses confirm Fast, default/standard are fallbacks, and other
+or missing tiers are unconfirmed. Review every raw/validated output using the
+frozen criteria, especially useful completeness versus Low Fast; more fields or
+text alone do not establish better quality. Preserve previous grades and Q5
+observations, with Pass/Fail/Not exercised and minor/critical findings distinct.
+Record the final comparison and recommendation in the existing execution report.
+One output per case/arm and non-interleaved batches preclude statistical or causal
+proof and guaranteed production latency/quality. No production rollout is part
+of this task and no further live requests follow this final batch.
+
+The [final four-arm results and review](test-execution.md#final-four-configuration-study--explicit-medium-fast-19-october-2026)
+prefer **Medium + Fast**: 0.5195s (19.31%) slower than Low Fast's median, but with
+useful additional rewrites in EVAL-F/Q1/Q11 and cleaner Q5 values in this sample.
+Its estimated six-request cost is $0.00315870 versus Low Fast's $0.00269970.
+Low Fast remains the fastest observed candidate. The final recommendation
+supersedes the earlier provisional Low Fast preference, not its recorded grades.
+Production remains unchanged at implicit Medium/default tier; all earlier
+observations, nominal-Standard qualifications and small-sample limits remain.
+
+## High reasoning completion — six-configuration comparison
+
+The latest approval superseded the previous stop boundary only for two serial
+six-case High batches: Standard (tier omitted), then Fast after the first batch
+passed integrity and critical semantic review. Each used EVAL-D, EVAL-F, Q1, Q5,
+Q7, Q11 once; both completed with no errors/exclusions. No further experiments
+are authorized.
+Evaluation-only `--reasoning-effort high` sends explicit High; existing modes
+remain unchanged. High also uses the existing tier/cache-write-aware estimator,
+preserving legacy Medium/Low Standard estimates. Separate request-free preflights
+and focused offline tests precede live work. Production remains unchanged.
+The [consolidated results and decision](test-execution.md#ai-assist-latency--six-configuration-comparison)
+use Low/Medium/High order, Standard then Fast, with nominal historical tiers
+qualified. The user selected Medium Fast; its production request configuration
+and evaluation-boundary normalization are implemented, with focused offline
+regression recorded [below the study](test-execution.md#production-medium-fast-implementation--19-october-2026).
+Review, commit, CI and release remain pending. No new live request or production
+timing verification was performed; the small-study limits remain.

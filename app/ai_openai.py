@@ -32,6 +32,8 @@ def request_openai_suggestions(generation_input: dict, *, client: "OpenAI") -> o
     contract = generation_input["output_contract"]
     response = client.responses.create(
         model="gpt-6-luna",
+        reasoning={"effort": "medium"},
+        service_tier="fast",
         instructions=(
             generation_input["instructions"]
             + "\noutput_contract.field_rules:\n"

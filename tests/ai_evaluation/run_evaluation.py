@@ -131,18 +131,40 @@ def create_client(*, live, scenario):
 
 
 class RecordingResponses:
-    """Forward the production request unchanged; retain allowlisted evidence only."""
+    """Record requests with evaluation-only reasoning and service-tier overrides."""
 
-    def __init__(self, client, record):
+    def __init__(self, client, record, *, reasoning_effort="medium", service_tier="standard", explicit_medium=False):
         self.client = client
         self.record = record
+        self.reasoning_effort = reasoning_effort
+        self.service_tier = service_tier
+        self.explicit_medium = explicit_medium
 
     def create(self, **kwargs):
+        # Normalize only evaluation selectors so historical modes cannot inherit
+        # production defaults; prompt, context and schema still use the adapter.
+        kwargs.pop("reasoning", None)
+        kwargs.pop("service_tier", None)
+        if self.reasoning_effort in {"low", "high"} or self.explicit_medium:
+            kwargs["reasoning"] = {"effort": self.reasoning_effort}
+        if self.service_tier == "fast":
+            kwargs["service_tier"] = "fast"
         self.record["request"] = deepcopy(kwargs)
-        response = self.client.responses.create(**kwargs)
+        self.record["requested_service_tier"] = kwargs.get("service_tier")
+        started = monotonic()
+        try:
+            response = self.client.responses.create(**kwargs)
+        except (Exception, KeyboardInterrupt) as error:
+            self.record["provider_error"] = {
+                "type": type(error).__name__, "http_status": getattr(error, "status_code", None),
+            }
+            raise
+        finally:
+            self.record["provider_call_seconds"] = round(monotonic() - started, 3)
         self.record["provider"] = {
             "response_id": response.id, "request_id": getattr(response, "_request_id", None),
             "model": response.model, "status": response.status,
+            "service_tier": getattr(response, "service_tier", None),
             "output_text": response.output_text,
             "usage": response.usage.model_dump(mode="json") if response.usage else None,
         }
@@ -180,10 +202,18 @@ def new_output_directory(requested):
     return path
 
 
-def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids=None):
+def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids=None,
+                   reasoning_effort="medium", service_tier="standard", explicit_medium=False):
     """Six serial attempts at most. All semantic assessments begin unassessed."""
+    evaluation_started = monotonic()
     if live:
         require_live_authorization()
+    if reasoning_effort not in ("medium", "low", "high"):
+        raise ValueError("Select medium (unchanged provider default), low or high reasoning effort.")
+    if service_tier not in ("standard", "fast"):
+        raise ValueError("Select standard (omitted service tier) or fast.")
+    if explicit_medium and (reasoning_effort != "medium" or service_tier != "fast"):
+        raise ValueError("Explicit Medium requires medium reasoning and fast service tier.")
     scenarios = select_scenarios(scenario_set=scenario_set, scenario_ids=scenario_ids)
     occurrences = {}
     execution_plan = []
@@ -209,6 +239,9 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
         "selection": {"scenario_set": scenario_set or ("baseline" if scenario_ids is None else None),
                       "scenario_ids": [case["id"] for case in scenarios]},
         "execution_plan": execution_plan,
+        "reasoning_effort": reasoning_effort,
+        "explicit_medium": explicit_medium,
+        "requested_service_tier": "fast" if service_tier == "fast" else None,
         "client_config": {"timeout_seconds": 60.0, "max_retries": 0},
         "cost_assumption": "USD, Standard short context, $0.10/M input + $0.50/M output; 2026-10-16 public pricing; offline usage synthetic",
         "coverage": "Existing RTM: 88 Covered / 0 Partial / 0 Not Covered. Additional evaluations do not reassess AC coverage; no new semantic pass claimed.",
@@ -216,6 +249,12 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
         "not_run_execution_ids": [item["execution_id"] for item in execution_plan],
         "estimated_cost_usd": 0.0, "stop_reason": None,
     }
+    if service_tier == "fast" or reasoning_effort == "high":
+        report["cost_assumption"] = (
+            "USD, short context; Standard input/cached/write/output $0.10/$0.01/$0.125/$0.50 per M; "
+            "Fast/priority 2x; default fallback 1x; unknown tier conservatively 2x; "
+            "2026-10-19 official pricing; offline usage synthetic"
+        )
     with isolated_application(live=live) as database_path:
         from app.ai_context import AiTriageContext
         from app.ai_generation import build_generation_input
@@ -246,7 +285,10 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
                     if record["client_config"] != report["client_config"]:
                         raise RuntimeError("Unexpected client timeout/retry configuration; no request sent.")
                     raw = request_openai_suggestions(
-                        generation_input, client=SimpleNamespace(responses=RecordingResponses(client, record)),
+                        generation_input, client=SimpleNamespace(responses=RecordingResponses(
+                            client, record, reasoning_effort=reasoning_effort, service_tier=service_tier,
+                            explicit_medium=explicit_medium,
+                        )),
                     )
                 record["decoded_response"] = raw
                 result = process_provider_response(context, raw)
@@ -278,6 +320,19 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
             usage = record.get("provider", {}).get("usage")
             if usage and all(type(usage.get(name)) is int and usage[name] >= 0 for name in ("input_tokens", "output_tokens")):
                 record["estimated_cost_usd"] = round((usage["input_tokens"] * 0.10 + usage["output_tokens"] * 0.50) / 1_000_000, 8)
+                if service_tier == "fast" or reasoning_effort == "high":
+                    details = usage.get("input_tokens_details") or {}
+                    cached, writes = details.get("cached_tokens") or 0, details.get("cache_write_tokens") or 0
+                    returned_tier = record["provider"]["service_tier"]
+                    multiplier = 1 if returned_tier in {"default", "standard"} else 2
+                    record["cost_estimate_basis"] = (
+                        "returned_service_tier" if returned_tier in {"default", "standard", "fast", "priority"}
+                        else "fast_rate_upper_bound_unconfirmed_tier"
+                    )
+                    record["estimated_cost_usd"] = round(multiplier * (
+                        (usage["input_tokens"] - cached - writes) * 0.10 + cached * 0.01
+                        + writes * 0.125 + usage["output_tokens"] * 0.50
+                    ) / 1_000_000, 8)
                 report["estimated_cost_usd"] = round(report["estimated_cost_usd"] + record["estimated_cost_usd"], 8)
             if live and "provider" in record:
                 report["live_model_evaluated"] = True
@@ -289,9 +344,12 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
                 item["execution_id"] for item in execution_plan[len(report["attempts"]):]
             ]
             report["database_created"] = database_path.exists()
+            report["total_elapsed_seconds"] = round(monotonic() - evaluation_started, 3)
             (output / "run.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             if report["stop_reason"]:
                 break
+    report["total_elapsed_seconds"] = round(monotonic() - evaluation_started, 3)
+    (output / "run.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return report
 
 
@@ -305,7 +363,15 @@ def main(argv=None):
     selection.add_argument("--scenarios", nargs="+", help="One to six scenario IDs in execution order; repeats are explicit.")
     parser.add_argument("--output", help="New child directory under ai-evaluation-results.")
     parser.add_argument("--pass-number", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--reasoning-effort", choices=("medium", "low", "high"), default="medium",
+                        help="Evaluation only: medium preserves historical omitted reasoning; low/high add an explicit override.")
+    parser.add_argument("--service-tier", choices=("standard", "fast"), default="standard",
+                        help="Evaluation only: standard preserves the omitted tier; fast adds service_tier=fast.")
+    parser.add_argument("--explicit-medium", action="store_true",
+                        help="Evaluation only: explicitly send Medium; requires --reasoning-effort medium --service-tier fast.")
     args = parser.parse_args(argv)
+    if args.explicit_medium and (args.reasoning_effort != "medium" or args.service_tier != "fast"):
+        parser.error("Explicit Medium requires medium reasoning and fast service tier.")
     if args.live:
         try:
             require_live_authorization()
@@ -320,6 +386,9 @@ def main(argv=None):
         report = run_evaluation(
             output, live=args.live, pass_number=args.pass_number,
             scenario_set=args.scenario_set, scenario_ids=args.scenarios,
+            reasoning_effort=args.reasoning_effort,
+            service_tier=args.service_tier,
+            explicit_medium=args.explicit_medium,
         )
     except Exception as error:
         print(f"Evaluation stopped: {type(error).__name__}; no exception details logged.", file=sys.stderr)

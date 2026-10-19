@@ -139,6 +139,8 @@ def test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_sugg
     assert "integration-test-key" not in json.dumps(sent)
     assert owner["token"] not in json.dumps(sent)
     assert sent["model"] == "gpt-6-luna"
+    assert sent["reasoning"] == {"effort": "medium"}
+    assert sent["service_tier"] == "fast"
     assert sent["text"]["format"]["strict"] is True
     assert offline_provider["raw"] == raw_before
     assert persisted_state(test_client, ai_project) == before
@@ -371,7 +373,7 @@ def test_ai_triage_instruction_like_content_and_output_cannot_perform_actions(
         "title": suggested_text, "description": instruction,
     }}
     sent = offline_provider["requests"][0]
-    assert set(sent) == {"model", "instructions", "input", "text", "store"}
+    assert set(sent) == {"model", "reasoning", "service_tier", "instructions", "input", "text", "store"}
     assert json.loads(sent["input"][0]["content"])["current_form"] == form
     assert instruction not in sent["instructions"]
     assert persisted_state(test_client, ai_project) == before

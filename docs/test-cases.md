@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-379**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-386**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -19,13 +19,13 @@ own results. Test bodies and parameter data remain the executable specification.
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
-| Offline evaluation harness pytest (1 module) | 12 | 12 | 40 cases; no real provider calls |
+| Offline evaluation harness pytest (1 module) | 19 | 19 | 149 cases; no real provider calls |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
-| Total | 366 | **378** | Definition, conceptual-case and execution counts differ |
+| Total | 373 | **385** | Definition, conceptual-case and execution counts differ |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -76,14 +76,14 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-024"></a>TC-024 | AC-019.2, AC-022.2 | AI openai sends existing contract with SDK without network or database | Python unit / AI (offline) | [`test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database`](../tests/test_ai_openai.py#L48); All variants |
-| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/test_ai_openai.py#L121); All variants |
-| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/test_ai_openai.py#L128); All variants |
-| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/test_ai_openai.py#L143); All variants |
-| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/test_ai_openai.py#L150); All variants |
-| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/test_ai_openai.py#L159); All variants |
-| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/test_ai_openai.py#L176); All variants |
-| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/test_ai_openai.py#L184); All variants |
+| <a id="tc-024"></a>TC-024 | AC-019.2, AC-022.2 | AI openai sends explicit Medium Fast and existing strict contract without network or database | Python unit / AI (offline) | [`test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database`](../tests/test_ai_openai.py#L48); All variants |
+| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/test_ai_openai.py#L123); All variants |
+| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/test_ai_openai.py#L130); All variants |
+| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/test_ai_openai.py#L145); All variants |
+| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/test_ai_openai.py#L152); All variants |
+| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/test_ai_openai.py#L161); All variants |
+| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/test_ai_openai.py#L178); All variants |
+| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/test_ai_openai.py#L186); All variants |
 
 ## tests/test_ai_response.py
 
@@ -121,18 +121,18 @@ unassignment state/role matrix each retain one ID.
 | --- | --- | --- | --- | --- |
 | <a id="tc-052"></a>TC-052 | AC-023.1 | AI triage duplicate JSON is safe failure before validation | API / AI (mocked or unavailable provider) | [`test_ai_triage_duplicate_json_is_safe_failure_before_validation`](../tests/test_ai_triage.py#L63); All variants |
 | <a id="tc-053"></a>TC-053 | AC-018.4, AC-019.1, AC-019.2, AC-019.3, AC-019.4, AC-022.2, AC-022.3 | AI triage configured pipeline preserves form and returns validated suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions`](../tests/test_ai_triage.py#L89); All variants |
-| <a id="tc-054"></a>TC-054 | AC-022.3 | AI valid suggestion cannot modify bug without user save | API / AI (mocked or unavailable provider) | [`test_ai_valid_suggestion_cannot_modify_bug_without_user_save`](../tests/test_ai_triage.py#L148); All variants |
-| <a id="tc-055"></a>TC-055 | AC-023.1 | AI triage unconfigured requests keep 503 without provider work | API / AI (mocked or unavailable provider) | [`test_ai_triage_unconfigured_requests_keep_503_without_provider_work`](../tests/test_ai_triage.py#L192); All variants |
-| <a id="tc-056"></a>TC-056 | AC-018.4, AC-019.4, AC-023.2 | AI triage returns distinct no usable suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_returns_distinct_no_usable_suggestions`](../tests/test_ai_triage.py#L217); All variants |
-| <a id="tc-057"></a>TC-057 | AC-019.3, AC-022.2 | AI triage revalidates current member eligibility | API / AI (mocked or unavailable provider) | [`test_ai_triage_revalidates_current_member_eligibility`](../tests/test_ai_triage.py#L227); All variants |
-| <a id="tc-058"></a>TC-058 | AC-019.3 | AI triage excludes assignee removed during generation | API / AI (mocked or unavailable provider) | [`test_ai_triage_excludes_assignee_removed_during_generation`](../tests/test_ai_triage.py#L250); All variants |
-| <a id="tc-059"></a>TC-059 | AC-022.1 | AI triage configured requests authorize before any pipeline work | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_requests_authorize_before_any_pipeline_work`](../tests/test_ai_triage.py#L287); All variants |
-| <a id="tc-060"></a>TC-060 | AC-022.1 | AI triage rechecks changed role before provider invocation | API / AI (mocked or unavailable provider) | [`test_ai_triage_rechecks_changed_role_before_provider_invocation`](../tests/test_ai_triage.py#L315); All variants |
-| <a id="tc-061"></a>TC-061 | AC-022.3 | AI triage instruction like content and output cannot perform actions | API / AI (mocked or unavailable provider) | [`test_ai_triage_instruction_like_content_and_output_cannot_perform_actions`](../tests/test_ai_triage.py#L352); All variants |
-| <a id="tc-062"></a>TC-062 | AC-018.4, AC-019.4, AC-023.1 | AI triage failures are safe errors without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_failures_are_safe_errors_without_persistence`](../tests/test_ai_triage.py#L390); All variants |
-| <a id="tc-063"></a>TC-063 | AC-023.1 | AI triage timeout is safe without retries or persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_timeout_is_safe_without_retries_or_persistence`](../tests/test_ai_triage.py#L419); All variants |
-| <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/test_ai_triage.py#L436); All variants |
-| <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/test_ai_triage.py#L452); All variants |
+| <a id="tc-054"></a>TC-054 | AC-022.3 | AI valid suggestion cannot modify bug without user save | API / AI (mocked or unavailable provider) | [`test_ai_valid_suggestion_cannot_modify_bug_without_user_save`](../tests/test_ai_triage.py#L150); All variants |
+| <a id="tc-055"></a>TC-055 | AC-023.1 | AI triage unconfigured requests keep 503 without provider work | API / AI (mocked or unavailable provider) | [`test_ai_triage_unconfigured_requests_keep_503_without_provider_work`](../tests/test_ai_triage.py#L194); All variants |
+| <a id="tc-056"></a>TC-056 | AC-018.4, AC-019.4, AC-023.2 | AI triage returns distinct no usable suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_returns_distinct_no_usable_suggestions`](../tests/test_ai_triage.py#L219); All variants |
+| <a id="tc-057"></a>TC-057 | AC-019.3, AC-022.2 | AI triage revalidates current member eligibility | API / AI (mocked or unavailable provider) | [`test_ai_triage_revalidates_current_member_eligibility`](../tests/test_ai_triage.py#L229); All variants |
+| <a id="tc-058"></a>TC-058 | AC-019.3 | AI triage excludes assignee removed during generation | API / AI (mocked or unavailable provider) | [`test_ai_triage_excludes_assignee_removed_during_generation`](../tests/test_ai_triage.py#L252); All variants |
+| <a id="tc-059"></a>TC-059 | AC-022.1 | AI triage configured requests authorize before any pipeline work | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_requests_authorize_before_any_pipeline_work`](../tests/test_ai_triage.py#L289); All variants |
+| <a id="tc-060"></a>TC-060 | AC-022.1 | AI triage rechecks changed role before provider invocation | API / AI (mocked or unavailable provider) | [`test_ai_triage_rechecks_changed_role_before_provider_invocation`](../tests/test_ai_triage.py#L317); All variants |
+| <a id="tc-061"></a>TC-061 | AC-022.3 | AI triage instruction like content and output cannot perform actions | API / AI (mocked or unavailable provider) | [`test_ai_triage_instruction_like_content_and_output_cannot_perform_actions`](../tests/test_ai_triage.py#L354); All variants |
+| <a id="tc-062"></a>TC-062 | AC-018.4, AC-019.4, AC-023.1 | AI triage failures are safe errors without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_failures_are_safe_errors_without_persistence`](../tests/test_ai_triage.py#L392); All variants |
+| <a id="tc-063"></a>TC-063 | AC-023.1 | AI triage timeout is safe without retries or persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_timeout_is_safe_without_retries_or_persistence`](../tests/test_ai_triage.py#L421); All variants |
+| <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/test_ai_triage.py#L438); All variants |
+| <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/test_ai_triage.py#L454); All variants |
 
 ## tests/test_bug.py
 
@@ -601,12 +601,12 @@ run them safely; each uses an in-memory transport and independently blocks socke
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-357"></a>TC-357 | — | Default offline CLI records production contracts and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/test_ai_evaluation.py); All six synthetic responses |
-| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/test_ai_evaluation.py); All five gate variants; CLI and programmatic entry points |
+| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/test_ai_evaluation.py); five gates × seven modes: existing five modes plus High Standard/Fast (35 variants); CLI and programmatic entry points |
 | <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/test_ai_evaluation.py); All variants |
 | <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/test_ai_evaluation.py); All eight failure variants; clients close on failure |
 | <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/test_ai_evaluation.py); All four variants |
 | <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/test_ai_evaluation.py); All three path variants |
-| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/test_ai_evaluation.py); Synthetic usage only |
+| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/test_ai_evaluation.py); existing three tier/explicit modes plus High Standard/Fast (five variants); synthetic usage only |
 
 ## Additional AI quality/security evaluation — reviewed live evidence
 
@@ -637,17 +637,51 @@ authority. Q8, Q9 and Q10 remain deferred. Q11:1/Q11:2 share TC-371 and identica
 ## Additional offline harness checks — tests/test_ai_evaluation.py
 
 Completed execution is recorded in [test-execution](test-execution.md#additional-ai-qualitysecurity-offline-verification--19-october-2026).
-These five conceptual checks expand to 17 pytest variants, alongside the existing
-23 harness variants. The module's autouse fixture independently blocks outgoing
+These five conceptual checks expand to 17 pytest variants. The inventory above
+also includes subsequent latency checks and expanded live-guard variants.
+The module's autouse fixture independently blocks outgoing
 sockets and SQLite and confines generated evidence to pytest temporary directories.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/test_ai_evaluation.py); All nine quality fixtures and original A–F fingerprint |
 | <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/test_ai_evaluation.py); Five selection variants |
-| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/test_ai_evaluation.py); Six variants; CLI and programmatic runner |
+| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/test_ai_evaluation.py); Six selection variants × existing three modes plus High Standard/Fast (30 variants); CLI and programmatic runner |
 | <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/test_ai_evaluation.py); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
 | <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/test_ai_evaluation.py); failure=filtered, malformed |
+
+## Latency-comparison preparation — tests/test_ai_evaluation.py
+
+These checks use only synthetic SDK responses, with sockets and SQLite blocked.
+TC-358 checks all five live gates for the four existing modes plus explicit Medium
+Fast (25 variants). Default A–F remains covered by TC-357. No new
+live-model or AC-coverage claim is made.
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-379"></a>TC-379 | — | Default/explicit Medium and Low serialize the same six fictional inputs; only Low adds reasoning; raw/validated evidence and usage preserved | Python unit / AI harness (offline) | [`test_evaluation_reasoning_arms_preserve_requests_and_inputs`](../tests/test_ai_evaluation.py); default, medium, low over EVAL-D/EVAL-F/Q1/Q5/Q7/Q11 |
+| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/test_ai_evaluation.py); reasoning_effort=none, xhigh, max, empty string; CLI and programmatic runner |
+| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_low_records_timing_and_failure_evidence`](../tests/test_ai_evaluation.py); five failure variants × Low Standard, Low Fast, explicit Medium Fast, High Standard/Fast (25 variants); deterministic clock |
+
+## Fast-service evaluation preparation — tests/test_ai_evaluation.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-382"></a>TC-382 | — | Fast adds only service_tier for Low/High; inputs/hashes/schema remain unchanged; returned tiers and cache-aware costs distinguish actual, fallback and unknown service; legacy Low Standard accounting is preserved | Python unit / AI harness (offline) | [`test_evaluation_fast_preserves_standard_requests_and_records_actual_tier`](../tests/test_ai_evaluation.py); reasoning_effort=low/high × returned_tier=fast, priority, default, standard, None, unknown (12 variants); all six selected cases per arm |
+| <a id="tc-383"></a>TC-383 | — | Invalid service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/test_ai_evaluation.py); service_tier=priority, default, empty string; CLI and programmatic entry points |
+
+Existing TC-358/TC-363/TC-375/TC-381 cover Fast live guards, spend pause, request
+ceiling and stop-on-error; existing TC-359/TC-376 cover database/evidence guards.
+
+## Explicit Medium Fast preparation — tests/test_ai_evaluation.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-384"></a>TC-384 | — | Explicit Medium/High serialize only intended effort/tier changes, preserving every earlier wire mode, six inputs/hashes/schema and returned-tier/cache-cost recording | Python unit / AI harness (offline) | [`test_evaluation_explicit_medium_fast_preserves_existing_modes`](../tests/test_ai_evaluation.py); all six selected cases across seven modes: original four, explicit Medium Fast, High Standard/Fast; six direct production wire requests must equal explicit Medium Fast |
+| <a id="tc-385"></a>TC-385 | — | Explicit Medium flag cannot silently change Low, High or Standard requests | Python unit / AI harness (offline) | [`test_evaluation_invalid_explicit_medium_precedes_io`](../tests/test_ai_evaluation.py); (reasoning_effort, service_tier)=(low, fast), (medium, standard), (low, standard), (high, standard), (high, fast); CLI/programmatic rejection before IO |
+
+Existing TC-358/TC-363/TC-375/TC-381 also exercise the new explicit mode without
+new IDs; TC-357/TC-359/TC-376/TC-382 retain default, DB, evidence and cost checks.
 
 ## BDD specification appendix
 
