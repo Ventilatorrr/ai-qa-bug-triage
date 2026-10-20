@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    # Keep a failing test command failing when its output is piped through tee.
+    shell: bash
+
+# No repository secrets are supplied. Fixtures use mocked AI responses only.
+env:
+  CI: 'true'
+  OPENAI_API_KEY: ""
+  AI_EVALUATION_ALLOW_LIVE: '0'
+  # A missed SDK mock must fail locally rather than reach the real provider.
+  OPENAI_BASE_URL: http://127.0.0.1:9/v1
+
+jobs:
+  python-tests:
+    name: Python tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run offline Python tests
+        run: python -m pytest -q --junitxml=test-results/python.xml
+
+      - name: Upload Python test report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-test-report
+          path: test-results/python.xml
+          retention-days: 7
+
+  frontend-tests:
+    name: Frontend JavaScript tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Run frontend tests
+        run: |
+          mkdir -p test-results
+          node --test tests/frontend/*.test.cjs 2>&1 | tee test-results/frontend.log
+
+      - name: Upload frontend failure log
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-failure-log
+          path: test-results/frontend.log
+          retention-days: 7
+
+  e2e-tests:
+    name: Playwright and BDD tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-e2e.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run Playwright and BDD tests
+        run: >-
+          python -m pytest tests/e2e/ --e2e --e2e-port 8148 --browser chromium -q
+          --junitxml=test-results/e2e.xml --output=test-results/e2e
+          --tracing retain-on-failure --screenshot only-on-failure
+
+      - name: Upload E2E report and failure artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-test-results
+          path: test-results/
+          retention-days: 7

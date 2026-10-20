@@ -3,7 +3,7 @@ Bug triage application built as a QA portfolio project with FastAPI, SQLite, and
 
 Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The frontend supports bug creation, viewing, editing, deletion, lifecycle actions, sorting, and pagination. Increment 3 AI Assist is implemented with explicit suggestion review and normal Create/Save persistence. Broader browser verification and increment completion remain outstanding; see traceability for evidence and gaps.
 
-Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite including five executable pytest-bdd scenarios across four feature files. All five BDD scenarios are executable; see the [catalogue](docs/test-cases.md#executable-bdd--testse2ebddtest_workflowspy). Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). Postman and CI/CD remain planned work.
+Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite including five executable pytest-bdd scenarios across four feature files. All five BDD scenarios are executable; see the [catalogue](docs/test-cases.md#executable-bdd--testse2ebddtest_workflowspy). Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). GitHub Actions CI is configured below; its first hosted run remains pending. Postman remains planned work.
 
 See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Historical working notes and requirements_old.md are not the current specification.
 
@@ -124,6 +124,33 @@ with no application database, application API, or provider access. Stop only the
 fixture server you started, using Ctrl+C. It does not automate complete page
 workflows. Backend tests mock provider calls and require no real API key. See
 traceability for the REQ-020 browser checks and remaining gaps.
+
+## Continuous integration
+
+[CI](.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to
+`main`, and manual `workflow_dispatch` runs from GitHub's **Actions** tab (once
+the workflow is on the default branch). Three independent Ubuntu 24.04 jobs run:
+
+- Python 3.14: the complete default pytest suite (currently 724 tests), including
+  offline evaluation-harness regression tests, with a JUnit XML report.
+- Node.js 24: all 99 JavaScript tests using Node's built-in test runner; no npm
+  installation is needed.
+- Python 3.14 and Chromium: all 24 opt-in Playwright tests, including the five
+  executable BDD scenarios, on port 8148.
+
+Jobs can run concurrently; tests within each Python job remain serial. Existing
+fixtures create disposable SQLite databases and temporary directories. CI supplies
+no OpenAI credentials, disables live evaluation opt-in and points any unmocked
+SDK client at an unused loopback endpoint. Provider responses are mocked; CI does
+not run live AI evaluations, use historical evaluation evidence or deploy.
+
+Open **Actions → CI → a run** to inspect each job and its step logs. The run
+summary provides `python-test-report` and `e2e-test-results` artifacts, including
+JUnit XML even after test failures. E2E failures retain Playwright traces and
+screenshots; frontend failures upload `frontend-failure-log`. Artifacts expire
+after seven days; cancelled jobs or failures before report creation may have no
+artifacts. Local results and the pending hosted verification are recorded in
+[test execution](docs/test-execution.md#github-actions-ci--20-october-2026).
 
 ## Python Playwright E2E tests
 
