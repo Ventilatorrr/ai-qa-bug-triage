@@ -1,12 +1,332 @@
 # QA test execution report
 
-Reporting date: **19 October 2026**. The [test catalogue](test-cases.md) defines
+Reporting date: **20 October 2026**. The [test catalogue](test-cases.md) defines
 cases; the [RTM](traceability-matrix.md) owns overall AC coverage. Results below
 were obtained at the stated milestones. Executed cases, collection counts and
 planned evaluations are distinct.
 
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
+
+## Postman CLI and GitHub Actions integration — 20 October 2026
+
+### User-confirmed local CLI execution
+
+This is a separate execution from the native desktop Collection Runner results
+below. The user supplied the following evidence for the **final** collection:
+
+| Execution field | Recorded evidence |
+| --- | --- |
+| Date | 20 October 2026 |
+| Application version tested | `1.0.0-dev` |
+| Suite | **AI QA Bug Triage – API Regression Test Suite**; 25 requests in seven folders |
+| Environment | Fresh isolated SQLite database created by `postman/serve.py` |
+| Method / provenance | Official Postman CLI **v1.75.0**, local execution; user-confirmed results |
+| Requests / identity checks | **25 application API requests + 25 additional disposable-server identity checks** |
+| Assertions / result | **50/50 named assertions passed; 0 failures; exit code 0** |
+| Timing | **3.8 seconds** total; **29 ms** average response time |
+| Git commit / release tag | Not supplied; existing uncommitted Postman work was present |
+
+### Workflow implementation and focused verification
+
+[`.github/workflows/postman.yml`](../.github/workflows/postman.yml) adds a separate
+Ubuntu 24.04/Python 3.14 job for pull requests targeting `main` and pushes to
+`main`. The official `postmanlabs/postman-cli-action@v1` installs pinned CLI
+**1.75.0** without login. One Bash step owns launcher startup, a bounded readiness
+check, the quoted local collection command and exit-trap cleanup. Readiness
+uses at most 30 attempts to obtain the fresh environment path from the owned
+launcher's overwritten log, confirm that file exists and receive an HTTP response
+from the unkeyed test-wrapper endpoint (403 is expected). Database isolation and
+per-request identity validation remain in the launcher and collection. The job
+timeout is **10 minutes**. The CLI uses `--environment`, `--ignore-redirects`,
+`--no-report-events` and `--silent`; credentials and response bodies are not
+reported. SIGINT permits normal launcher cleanup, followed by process-exit and
+owned-directory removal checks. `serve.py` is unchanged.
+
+The initial implementation's verification below is historical; its embedded
+Python readiness code was subsequently removed in the simplification recorded
+after this table. Its nine mocked Python cases do not validate the current Bash
+readiness loop.
+
+| Check / command | Actual local result |
+| --- | --- |
+| `test-results/ci-tools/actionlint.exe -shellcheck= -pyflakes= .github/workflows/postman.yml` | **Exit 0; no diagnostics**, actionlint 1.7.12. YAML/workflow validation; optional ShellCheck/Pyflakes integrations disabled |
+| `postman --version`; `postman collection run --help` | CLI **1.75.0** confirmed; environment, redirect, silent and no-report-events options confirmed in installed help |
+| Public npm metadata, `https://registry.npmjs.org/postman-cli/1.75.0` | Package **postman-cli 1.75.0** exists; read-only metadata check succeeded. The action's pinned npm installation was source-inspected, not executed locally |
+| `.venv/Scripts/python.exe test-results/postman-ci-integration/verify.py` | **Exit 0**; inline Python compiled; **9 mocked readiness cases passed**: ready, exited process, timeout, outside runtime, wrong PID/database/origin, missing key and stale identity. Rejected configurations made no HTTP call; no actual application/database interaction |
+| Git Bash `test-results/postman-ci-integration/run-checks.sh` | **Exit 0**; extracted workflow `bash -n` passed; **5 exit-trap probes passed**: success → 0, command failure → 7, launcher failure → 1, startup-timeout simulation → 2, retained owned-directory detection → 1. Expected error messages appeared in the two negative cleanup cases. Disposable shell children only; this is Windows Git Bash, not Linux/Uvicorn execution |
+| Collection structure / preservation | **25 requests / seven folders / 50 named assertions** retained; collection, launcher and existing `ci.yml` hashes unchanged during integration |
+| `git diff --check` | **Exit 0**, no whitespace errors |
+
+### Workflow simplification and verification
+
+Removed the embedded Python JSON parsing, PID/database log comparisons, runtime
+path validation and authenticated identity probe. These duplicated `serve.py`'s
+isolation checks and the collection's per-request identity guard. A short Bash
+loop now checks the owned process, obtains the environment path from its fresh
+log, checks file existence and polls the unkeyed wrapper endpoint with curl.
+There are at most 30 attempts, each with a one-second HTTP timeout and a
+one-second pause on failure. No response body or environment contents are shown.
+The official action, CLI 1.75.0, dependency installation, PR/push triggers,
+SIGINT handling and exit-trap cleanup are preserved. Job timeout increased from
+5 to **10 minutes**. No additional helper scripts or dependencies were added.
+
+| Current simplified workflow check | Actual local result |
+| --- | --- |
+| `test-results/ci-tools/actionlint.exe -shellcheck= -pyflakes= .github/workflows/postman.yml` | **Exit 0; no diagnostics**; actionlint 1.7.12, optional ShellCheck/Pyflakes integrations disabled |
+| Extracted run step piped to Git Bash for `bash -n` and in-memory simulations | **Exit 0; syntax passed; 7/7 simulations passed**: success → 0, Postman failure → 7, startup failure → 1, readiness timeout → 1, stale environment → 1, temporary HTTP unavailability then ready → 0, retained owned directory → 1. Every owned shell process stopped. Postman was not invoked on startup/timeout/stale failures; the unrelated mock stale environment was preserved. Expected error messages appeared for negative cases |
+| Isolation of these simulations | Disposable shell processes and temporary mock files only; launcher, HTTP and Postman commands were replaced in memory. No actual application server, database, HTTP request or new helper file |
+| Preservation checks | Launcher, collection and existing `ci.yml` SHA-256 hashes unchanged; collection remains **25 requests / seven folders / 50 named assertions** |
+| `git diff --check` | **Exit 0**, no whitespace errors |
+
+These Windows Git Bash simulations validate shell control flow, not real Linux
+signal delivery, application startup or Postman execution. **Hosted verification
+remains pending**. No pytest/Playwright suite was rerun. Catalogue/RTM and AC
+coverage are unchanged; no application defect was discovered in this pass.
+
+One-off verification helpers are ignored under `test-results/`; no maintained
+test runner, dependency, application change, catalogue entry or RTM change was
+introduced by this integration. Existing uncommitted work was preserved. No
+pytest/Playwright suite or new application API execution was run for this change.
+
+**Hosted Postman CI has not been executed or verified.** This Windows workstation
+has no installed Linux runtime; real Ubuntu startup, pinned npm installation and
+SIGINT database/directory cleanup still require an actual GitHub Actions run.
+The workflow checks cleanup itself and fails if it cannot complete normally.
+No staging, commit, push, PR, merge or branch-protection change was performed.
+
+The earlier hosted milestone remains **724 Python + 99 frontend JavaScript +
+24 Playwright/BDD = 847 passing executions**, with three required checks. It
+excludes Postman. Neither that milestone nor local CLI/syntax/mocked checks
+establish a successful hosted Postman run. AC coverage and increment completion
+assessments are unchanged.
+
+## Postman native verification and release reporting — 20 October 2026
+
+The user confirmed successful native execution of the simplified collection:
+
+| Execution field | Recorded evidence |
+| --- | --- |
+| Date | 20 October 2026 |
+| Application version tested | `1.0.0-dev` |
+| Suite | **AI QA Bug Triage – API Regression Test Suite**, simplified 25-request/50-assertion collection; display name finalized after this run |
+| Environment | Isolated disposable SQLite test environment |
+| Method / provenance | Actual Postman Collection Runner; user-confirmed results |
+| Requests / assertions | **25 requests; 50/50 named assertions passed** |
+| Result | All tests passed; no reported failures; error/skip counts not separately supplied |
+| Shutdown | User confirmed Ctrl+C completed without a traceback; Codex separately verified owned-runtime cleanup and release of port 8148 during the preceding launcher checks |
+| Timing | Not supplied for this simplified execution; earlier 5-second/85-ms figures do not apply |
+| Git commit / release tag | Not supplied for this native run; do not infer it from the current HEAD |
+
+The suite is reusable across `1.0.0-dev`, `1.0.0` and later compatible releases;
+only executions against the versions explicitly recorded here are evidenced.
+Each future execution should record date, actual application version, suite,
+environment, method, counts, result and commit/tag when available. Version
+confirmation/reporting is manual: the existing `/version` endpoint may be checked
+separately, but the collection does not detect or record the version automatically.
+Testing stable `1.0.0` requires a separate execution record against that release's
+checked-out code and the isolated database, never a live production database.
+
+This scoped metadata cleanup finalized the display name and reusable description,
+and changed only the two `affected_version` request fixtures plus their matching
+Create Bug assertion from `1.0.0-dev` to `postman-fixture`. The 25 requests, seven
+folders and 50 named assertions are preserved. The native run above preceded these
+metadata/fixture edits; no additional native run, API run or pytest/Playwright run
+is claimed for this pass. JSON, exact metadata, fixture/assertion alignment,
+implementation preservation, documentation links, secrets/ignore rules and
+`git diff --check` were verified locally. No application, launcher, test-source,
+dependency or workflow change was made.
+
+At this earlier metadata-cleanup milestone, Postman remained **outside GitHub
+Actions**; the later integration is recorded above. The separate user-confirmed CI
+milestone remains **724 Python + 99 frontend JavaScript + 24 Playwright/BDD = 847
+passing executions**. It does not include Postman; no Postman CLI/Newman CI setup
+or successful Postman CI execution was claimed at that milestone.
+
+## Postman simplification — 20 October 2026
+
+Continued `test/focused-postman-suite` for **1.0.0-dev**, preserving the earlier
+uncommitted implementation. The collection kept the same filename, 25 requests, seven folders
+and saved order. There are **50 named assertions** per complete run: 25 shared HTTP
+checks plus 25 ordinary response/business tests. Seven separate identity test
+labels were merged into their response tests; the underlying identity assertions
+remain. Fifteen duplicate stable-field equalities and the unused `created_bug`
+snapshot were removed. The single `last_bug` snapshot still verifies stable fields,
+timestamps and final readback. This cleanup creates no new conceptual cases;
+TC-391 remains latest and TC-392 next available.
+
+### User-confirmed native baseline
+
+On **20 October 2026**, the user confirmed native Postman Collection Runner results
+for the **pre-simplification** collection against the isolated SQLite test server:
+
+- **25 requests; 57/57 assertions passed; 0 failures, errors or skips.**
+- One iteration; approximately **5 seconds** total and **85 ms** average response time.
+- A further complete run succeeded against the same server without restarting it.
+- After restarting the server, importing its newly generated environment allowed
+  another successful execution. No additional timings/counts are inferred for these reruns.
+
+This historical baseline remains separate from compatibility runs and the
+subsequent user-confirmed **50/50 simplified native run** recorded
+[above](#postman-native-verification-and-release-reporting--20-october-2026).
+
+### Cleanup verification
+
+| Check | Actual result |
+| --- | --- |
+| Compatibility HTTP, first disposable server | Two full runs; each **25 requests / 50 passed assertions**, 0 failures/skips/unexecuted; stale saved IDs/tokens shadowed; 25 additional read-only identity checks per run |
+| Restarted disposable server | Old environment rejected before any application request; imported new generated environment then completed two more full runs, each **25 / 50 passed**, 0 failures/skips/unexecuted |
+| Guard checks | **19 passed per server**: unsafe/missing origin/run proof, malformed/null/redirect/error proof, ordinary-database/live-AI claims, partial/reordered workflows, missing IDs and unkeyed identity requests |
+| Failed prerequisite checks | **7 passed per server**: unexpected status, invalid JWT, mismatched/invalid project or member/bug response, and incorrect lifecycle/Fix Version data saved no IDs/JWTs/snapshot, left next step disabled, and blocked the subsequent request with skip + stop before HTTP |
+| Occupied origin | Second launcher exited 1 before creating a run directory; first owned listener preserved |
+| Launcher configuration/error checks | **8 configuration checks, 8 server-failure checks and 8 cleanup-failure checks passed** in separate processes; includes fresh configuration, credential removal, SQLite/external-socket audit rejection, approved binding, genuine error propagation and no false cleanup confirmation |
+| Original Windows Ctrl+C regression | Reproduced with a real `CTRL_C_EVENT` in an owned hidden console: traceback included `CancelledError` and `KeyboardInterrupt`; owned temporary directory removed and port released |
+| Simplified launcher Ctrl+C | Repeated real Windows `CTRL_C_EVENT` checks: **exit 0**, no traceback/CancelledError/KeyboardInterrupt text, cleanup confirmation present, owned directory independently confirmed absent and port 8148 available |
+| Runtime placement / Git ignore | New SQLite/environment pairs under unique `postman/.runtime/run-*/`; `.gitignore` excludes the whole runtime tree; templates remain sanitized in `postman/` |
+| Relevant existing pytest | **28 passed, 268 deselected in 22.52s**, exit 0; no failures/errors/skips; serial disposable fixtures verified before execution |
+| JSON / variables / scripts / authentication | **3 JSON files valid; 27 scripts compile; 25 request selectors/order and seven folder names unchanged; 7 No Auth, 8 explicit role overrides, 10 QA-inherited requests**; all request variables resolve; no custom test wrappers/role-switch scripts or unused `created_bug` remain |
+| Secrets / traceability / protected files | Ten changed source/deliverable files checked; templates blank except isolated origin; no literal JWT/provider keys; runtime ignored; all 390 prior TC concepts/selectors and 88 RTM rows/titles/ratings preserved; no application/test/dependency/CI changes |
+| Final syntax / whitespace | `python -m py_compile postman/serve.py`, Node script compilation and `git diff --check` passed; edited documentation/collection explicitly saved and checked as UTF-8 |
+| Native execution of changed suite | Codex did not execute it natively during these cleanup checks; the user subsequently confirmed **25 requests / 50 of 50 assertions passed**, as recorded above. Compatibility checks remain separate |
+
+All 18 role-switch scripts and all 25 custom assertion wrappers were removed.
+Native Bearer authorization defaults to QA; six requests override Owner and two
+override Developer; seven requests explicitly use No Auth. Successful Login tests
+capture JWTs. An unexpected HTTP status calls `setNextRequest(null)` centrally.
+A request enables the next numbered step only after its business assertions pass;
+otherwise the next pre-request guard skips that HTTP request and requests iteration
+termination with `setNextRequest(null)`. This does not assume `skipRequest()` alone
+stops the collection. IDs/tokens cannot be extracted from failed response tests.
+
+The launcher removed Newman/subprocess/stdin/thread functionality, retained fresh
+database configuration and audit protections, and moved runtime storage away from
+`test-results/`. A narrow `except KeyboardInterrupt` around Uvicorn's run call
+handles normal Ctrl+C; genuine exceptions still propagate, and the disposal
+message is reached only after successful temporary-directory cleanup and an
+explicit absence check. No ordinary application database was opened, inspected,
+copied, migrated or modified. No old/unrelated `test-results/` directory was swept.
+
+Temporary verification commands from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe work/postman-cleanup/verify_shutdown.py --original
+.\.venv\Scripts\python.exe work/postman-cleanup/verify_shutdown.py
+.\.venv\Scripts\python.exe work/postman-cleanup/verify_workflow.py
+.\.venv\Scripts\python.exe work/postman-cleanup/check_launcher.py configuration
+.\.venv\Scripts\python.exe work/postman-cleanup/check_launcher.py server-failure
+.\.venv\Scripts\python.exe work/postman-cleanup/check_launcher.py cleanup-failure
+.\.venv\Scripts\python.exe work/postman-cleanup/final_checks.py
+.\.venv\Scripts\python.exe -m py_compile postman/serve.py
+git diff --check
+```
+
+These are task-local instruments, not maintained tests or a shipped runner. They
+use Node's compatibility shim for the actual collection scripts and hidden owned
+Windows consoles for genuine Ctrl+C events. Initial sandboxed startup and signal
+helper setup attempts were inconclusive; a temporary verifier syntax error was
+corrected before the successful runs. Those attempts are not counted as passes.
+Only the exact new disposable directory left by that sandboxed attempt was removed
+after its owned process was confirmed exited; no old/unrelated directories were
+deleted. Scratch verification instruments were removed before the final handoff.
+
+The focused pytest command used the same module list and `-k` selector recorded in
+the original Postman section below, with temporary output options changed to
+`--basetemp postman/.runtime/pytest-cleanup --output postman/.runtime/pytest-browser`.
+JSON/auth/order/variable/script checks, secret/Git-ignore checks and `git diff
+--check` accompany the final handoff. TC-055's unsupported request-23 reference was
+removed from collection/canonical catalogue documentation; request 15 remains its
+direct provider-configuration failure check. All existing RTM AC rows, ratings and
+TC numbering remain unchanged. No application defect or unrelated change was added.
+
+### User-confirmed GitHub Actions milestone
+
+The latest confirmed hosted CI milestone, supplied by the user for this cleanup,
+is **724 Python + 99 JavaScript + 24 Playwright/BDD = 847 passed tests**, with
+**three required GitHub Actions checks protecting `main`**. This is user-confirmed
+hosted evidence, distinct from the historical local-only results below and from
+this task's focused rerun. No CI workflow or branch-protection setting was changed.
+
+## Focused Postman suite — 20 October 2026
+
+Historical implementation-stage evidence, before the user-confirmed native
+baseline and subsequent simplification recorded above. Counts, paths and pending
+statuses below describe that earlier implementation; use the current
+[Postman instructions](../postman/README.md) for the simplified suite.
+
+Application **1.0.0-dev**, branch `test/focused-postman-suite`, uncommitted working
+changes based on the previously clean `main` checkout. The two latest Desktop
+exports were inspected without publishing credentials or modifying the originals.
+The resulting [collection and instructions](../postman/README.md) contain **25
+requests / 57 named Postman assertions** in seven folders. There are 121 static
+`pm.expect` call sites; these are not additional Runner assertion entries.
+
+This adds selected Postman implementations to **27 existing TC IDs** and one
+distinct technical safety procedure, **TC-391**. Existing conceptual numbering,
+pytest selectors and M01–M05 aliases are preserved; next ID is TC-392. The RTM
+still owns the unchanged **88 Covered / 0 Partial / 0 Not Covered** assessment.
+These supplemental API results do not establish UI coverage or release completion.
+
+| Check | Actual result |
+| --- | --- |
+| JSON / structure / variables / auth / script syntax | All three Postman JSON files parse; v2.1 metadata and request/event/body structure checked; 25 ordered requests, 44 scripts compile under Node 24.19.0; all request variables resolve; 7 explicitly No Auth requests (six registration/login requests and the missing-authentication check), 18 inherited-auth requests; per-request redirects disabled |
+| Final compatibility HTTP execution, run 1 | **25 requests, 57 assertions passed, 0 failed, 0 skipped, 0 unexecuted**; 25 additional read-only server-proof exchanges |
+| Final compatibility HTTP execution, run 2 | **25 requests, 57 assertions passed, 0 failed, 0 skipped, 0 unexecuted**; fresh accounts/project/bug while deliberately stale saved IDs/tokens were shadowed; 25 additional proof exchanges |
+| Collection guard checks | **18 passed**: wrong/missing origin/run credentials, wrong identities, unkeyed server proof, malformed/null/redirect/error proof responses, ordinary database/live-AI proof claims, partial starts, missing IDs and previous-failure latch |
+| Launcher configuration/audit checks | **7 passed**: fresh absolute path overrides inherited database setting, provider key removed, signing secret replaced, alternate nonexistent SQLite path rejected before opening, external socket rejected before IO, owned loopback listener, disposable directory removed |
+| Occupied-port safeguard | Second launcher refused port 8148 with exit 1 before database initialization; did not reuse or terminate the first owned server |
+| Graceful cleanup | Final compatibility server exited 0; its entire generated environment/database directory was removed; approved port available afterward |
+| Relevant existing pytest | **28 passed, 268 deselected in 22.03s**, exit 0; no failures/skips/errors; deselected cases were not executed in this focused run |
+| Python tooling syntax / whitespace | `python -m py_compile postman/serve.py` and `git diff --check`: exit 0 |
+| Credential check | Supplied literal credential values absent from changed artifacts; committed templates contain no credentials/JWTs/run proof values; generated secrets/reports/databases confined to ignored disposable directories |
+| Native Postman Collection Runner | **Unexecuted / unverified**: Desktop installed (12.33.1), but no targetable window was exposed; no native Runner assertion pass claim |
+| Newman / Postman CLI | **Unexecuted / unverified**: neither on PATH; no installation attempted. `serve.py --newman` correctly refused the absent executable with exit 1 before reserving a port or creating data; actual Newman subprocess execution remains unverified |
+| Live AI / manual UI suggestion review | **Unexecuted / unverified for this change**; no external AI calls or live evaluation; historical evaluation evidence elsewhere remains distinct |
+
+The compatibility instrument was temporary task-workspace code, **not an official
+Postman runtime or a maintained repository runner**. It compiled and executed the
+collection's actual pre-request/post-response JavaScript via Node `vm`, supplied
+the small `pm`/assertion API surface used here, honored asynchronous identity checks,
+auth inheritance, variable scopes, ordering and stop/skip behavior, and sent real
+HTTP requests with redirects disabled. This verifies API behavior and scripting
+logic, but cannot certify Postman sandbox/import/UI compatibility. Native import
+and one full Runner run are the remaining follow-up.
+
+Commands used for task-local verification (these scratch instruments are not
+repository deliverables):
+
+```powershell
+node work/verify.cjs
+& 'D:\Portfolio\ai-qa-bug-triage\.venv\Scripts\python.exe' work/verify_launcher.py
+```
+
+The final compatibility execution used a fresh launcher-owned directory
+`test-results/postman-_9z2gjan/`, checked the PID/configuration before HTTP,
+and removed it on normal shutdown. Before proof-response hardening, two additional
+compatibility runs also passed 25 requests/57 assertions each; the final two runs
+above verify the resulting source. Initial sandboxed subprocess verification
+stalled before completing any collection run and was **not a pass**. Only the
+identified owned processes were stopped; their two known temporary directories
+were removed. The rerun outside the sandbox completed and cleaned up normally.
+No ordinary application database was opened, inspected, copied, migrated or reset.
+
+Relevant pytest command from the repository root (serial; existing fixtures set
+fresh absolute per-test SQLite paths and remove provider credentials before app
+lifespan):
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/backend/test_registration.py tests/backend/test_login.py tests/backend/test_projects.py tests/backend/test_bug.py tests/backend/test_fix_version_on_pass.py tests/backend/test_ai_triage.py -q -k 'successful_registration or successful_login or unauthenticated_user_cannot_access_protected_endpoint or create_project or owner_can_add_project_member or project_member_can_view_project_members or project_creator_is_project_owner or project_member_can_create_bug or bug_creation_rejected_without_title or project_member_can_edit_bug_report or unauthorized_member_cannot_delete_bug or authorized_member_can_delete_bug or triage_to_open_can_assign_eligible_project_member or project_owner_can_move_bug_from_open_to_development or assigned_developer_can_move_bug_from_development_to_testing or assigned_qa_can_pass_bug_and_close_it or reopening_clears_resolution_and_fix_version or ai_triage_unconfigured_requests_keep_503_without_provider_work' --basetemp test-results/postman-pytest --output test-results/postman-pytest-browser
+.\.venv\Scripts\python.exe -m py_compile postman/serve.py
+git diff --check
+```
+
+No application defect was discovered. Native runtime execution remains the material
+verification limitation. Database-isolation/configuration/cleanup checks are
+technical provenance, not new business acceptance criteria. No application source,
+requirements, dependencies or GitHub Actions files were changed.
+
+Postman API behavior consulted during implementation:
+[asynchronous pm.sendRequest](https://learning.postman.com/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-send-request/)
+and [pre-request skipRequest](https://learning.postman.com/v11/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-execution/).
 
 ## GitHub Actions CI — 20 October 2026
 

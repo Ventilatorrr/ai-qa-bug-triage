@@ -1,0 +1,116 @@
+name: Postman API regression
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postman:
+    name: Postman API regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      POSTMAN_API_KEY: ''
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install application dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install Postman CLI
+        run: |
+          npm install --global postman-cli@1.75.0
+          postman --version
+
+      - name: Run collection with owned disposable server
+        shell: bash
+        run: |
+          server_log="$RUNNER_TEMP/postman-server.log"
+
+          cleanup() {
+            result=$?
+            trap - EXIT INT TERM
+            if kill -0 "$server_pid" 2>/dev/null; then
+              kill -INT "$server_pid"
+              for attempt in {1..20}; do
+                kill -0 "$server_pid" 2>/dev/null || break
+                sleep 1
+              done
+              if kill -0 "$server_pid" 2>/dev/null; then
+                echo "::error::Disposable server did not stop normally; killing owned process."
+                kill -KILL "$server_pid"
+                result=1
+              fi
+            fi
+            if ! wait "$server_pid"; then
+              echo "::error::Disposable launcher exited unsuccessfully."
+              result=1
+            fi
+            database_path=$(sed -n 's/^Verified new database: //p' "$server_log")
+            if [[ -n "$database_path" && -e "$(dirname "$database_path")" ]]; then
+              echo "::error::Owned disposable runtime directory was not removed."
+              result=1
+            fi
+            exit "$result"
+          }
+
+          # Restore SIGINT for the background Python process so Ctrl+C semantics
+          # also work during startup. Uvicorn returns to the launcher's cleanup.
+          env --default-signal=INT python -u postman/serve.py >"$server_log" 2>&1 &
+          server_pid=$!
+          trap cleanup EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+
+          ready=false
+          for attempt in {1..30}; do
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo "::error::Disposable launcher exited before readiness."
+              exit 1
+            fi
+            # This log is overwritten for each launch; never search old runtimes.
+            environment_file=$(sed -n 's/^Import this generated environment: //p' "$server_log")
+            # Without a run key the wrapper returns 403. Any HTTP response proves
+            # readiness; the collection performs the authenticated identity checks.
+            if [[ -n "$environment_file" && -f "$environment_file" ]] && \
+              curl --silent --output /dev/null --max-time 1 --noproxy '*' \
+                http://127.0.0.1:8148/__postman__/identity; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then
+            echo "::error::Disposable server was not ready after 30 attempts."
+            exit 1
+          fi
+
+          echo "Disposable server ready; running Postman CLI."
+          # Silence assertion failure details, which can contain credentials.
+          # Keep the CLI's real exit code; never export credential-bearing reports.
+          postman collection run "postman/AI QA Bug Triage.postman_collection.json" \
+            --environment "$environment_file" --ignore-redirects --no-report-events --silent
+          echo "Postman collection passed."

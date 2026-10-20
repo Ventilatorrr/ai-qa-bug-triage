@@ -3,7 +3,7 @@ Bug triage application built as a QA portfolio project with FastAPI, SQLite, and
 
 Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The frontend supports bug creation, viewing, editing, deletion, lifecycle actions, sorting, and pagination. Increment 3 AI Assist is implemented with explicit suggestion review and normal Create/Save persistence. Broader browser verification and increment completion remain outstanding; see traceability for evidence and gaps.
 
-Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite including five executable pytest-bdd scenarios across four feature files. All five BDD scenarios are executable; see the [catalogue](docs/test-cases.md#executable-bdd--testse2ebddtest_workflowspy). Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). GitHub Actions CI is configured below; its first hosted run remains pending. Postman remains planned work.
+Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite including five executable pytest-bdd scenarios across four feature files. All five BDD scenarios are executable; see the [catalogue](docs/test-cases.md#executable-bdd--testse2ebddtest_workflowspy). Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). The latest user-confirmed GitHub Actions milestone passed 724 Python, 99 JavaScript and 24 Playwright/BDD tests (847 total), with three required checks protecting `main`. [AI QA Bug Triage – API Regression Test Suite](postman/README.md) provides 25 isolated API requests and 50 named assertions; the user confirmed all 50 passed in native Postman against `1.0.0-dev`. The suite is reusable across compatible releases, with each execution recording its actual application version. A separate Postman CLI workflow is configured; hosted Postman execution remains unverified.
 
 See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Historical working notes and requirements_old.md are not the current specification.
 
@@ -149,8 +149,20 @@ summary provides `python-test-report` and `e2e-test-results` artifacts, includin
 JUnit XML even after test failures. E2E failures retain Playwright traces and
 screenshots; frontend failures upload `frontend-failure-log`. Artifacts expire
 after seven days; cancelled jobs or failures before report creation may have no
-artifacts. Local results and the pending hosted verification are recorded in
+artifacts. The latest user-confirmed hosted milestone is **847 passing tests**
+(724 Python + 99 JavaScript + 24 Playwright/BDD), with all three required checks
+protecting `main`. Local evidence and the dated hosted confirmation are recorded in
 [test execution](docs/test-execution.md#github-actions-ci--20-october-2026).
+
+The separate [Postman API regression workflow](.github/workflows/postman.yml)
+uses official Postman CLI **1.75.0** on the same PR/push triggers. It runs the
+local collection against a fresh server from `postman/serve.py`, waits for HTTP
+readiness and cleans up the owned server/runtime on exit. The collection validates
+run identity before each request. No Postman API key or
+cloud login is used. [Setup and cleanup details](postman/README.md#github-actions)
+explain the workflow. The user-confirmed local CLI run passed **50/50 assertions**
+with exit 0; **hosted Postman CI remains unverified** and is excluded from the
+847-test milestone above.
 
 ## Python Playwright E2E tests
 
