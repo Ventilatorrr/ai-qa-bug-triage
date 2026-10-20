@@ -8,6 +8,103 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## GitHub Actions CI — 20 October 2026
+
+Continued the user's existing workflow on `ci/github-actions`. Preserved its
+triggers, read-only permissions, Ubuntu 24.04 runner, Python 3.14 and valid
+`checkout@v7` / `setup-python@v7` references. Added independent JavaScript and
+Playwright/BDD jobs, report uploads, seven-day retention, explicit Bash pipefail
+and offline provider configuration. No application code, assertions, requirements,
+dependencies, TC IDs or RTM coverage ratings changed. The QA strategy's stale
+CI deferral was updated; historical execution records below are unchanged.
+
+Local verification uses Windows, Python **3.14.2**, Node **24.19.0**, Playwright
+**1.64.0**, pytest **9.1.1**, pytest-playwright **0.10.0** and pytest-bdd **8.1.0**.
+These are local results, not a GitHub-hosted execution:
+
+| Check | Result |
+| --- | --- |
+| Default Python discovery | **724 collected**, 3.82s, exit 0 |
+| Chromium discovery | **24 collected**, 0.08s, exit 0; includes the five bound BDD scenarios |
+| Frontend JavaScript | **99 passed**, 419.5409ms, exit 0; exact Bash/tee pipeline rerun: **99 passed**, 405.9319ms, exit 0; no failures/skips/cancellations/todo |
+| Full offline Python | **724 passed in 364.28s**, exit 0; no failures/errors/skips |
+| Chromium Playwright + BDD | **24 passed in 80.94s**, exit 0; includes five BDD cases; no failures/errors/skips/teardown errors |
+| YAML / GitHub Actions configuration | Checksum-verified **actionlint 1.7.12**, exit 0, no diagnostics; ShellCheck unavailable and explicitly disabled |
+| Bash pipeline handling | Git Bash syntax check passed; synthetic `exit 7 \| cat` preserved exit 7 with the workflow's `-eo pipefail` options |
+| Dependencies | Both `pip install --dry-run --no-index -r requirements-dev.txt` and `-r requirements-e2e.txt` passed, exit 0; all pinned packages already installed. `pip check`: **No broken requirements found**, exit 0 |
+| Whitespace | Final `git diff --check` passed, exit 0 |
+
+Discovery commands from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest --collect-only -q
+.\.venv\Scripts\python.exe -m pytest tests/e2e/ --e2e --e2e-port 8148 --browser chromium --collect-only -q
+node --test tests/frontend/*.test.cjs
+```
+
+Full local verification uses fresh ignored directory `test-results/ci-20261020-0a4d7072/`,
+explicit pytest basetemp and Playwright output paths, with `TMP`, `TEMP` and
+`TMPDIR` confined to its `tmp/` subdirectory. Environment matches the workflow:
+`CI=true`, blank `OPENAI_API_KEY`, `AI_EVALUATION_ALLOW_LIVE=0`,
+`OPENAI_BASE_URL=http://127.0.0.1:9/v1`. A disposable `sitecustomize.py` audit
+guard, inherited by Python subprocesses through `PYTHONPATH`, rejects external
+socket connections, SQLite paths outside this run directory, and historical
+`ai-evaluation-results/` reads. This is ad hoc local verification instrumentation,
+not a maintained test case or new project dependency.
+
+Full serial execution commands from the repository root, under that environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -x --basetemp test-results/ci-20261020-0a4d7072/python-temp --output test-results/ci-20261020-0a4d7072/python-browser --junitxml=test-results/ci-20261020-0a4d7072/python.xml
+.\.venv\Scripts\python.exe -m pytest tests/e2e/ --e2e --e2e-port 8148 --browser chromium -q --basetemp test-results/ci-20261020-0a4d7072/e2e-temp --junitxml=test-results/ci-20261020-0a4d7072/e2e.xml --output=test-results/ci-20261020-0a4d7072/e2e-browser --tracing retain-on-failure --screenshot only-on-failure
+```
+
+The initial sandboxed full-suite attempt and diagnostic attempt were aborted
+without final pytest summaries. The locally installed Playwright plugin cleans
+its default `test-results/` output directory, which conflicted with verification
+files beneath it; restricted sandbox temporary-directory/process behavior also
+prevented reliable completion. The rerun uses a dedicated `--output` path outside
+the sandbox. Dependency dry-runs initially emitted sandbox cleanup warnings and
+were rerun successfully; Git Bash startup was sandbox-blocked and its rerun passed.
+No test assertions were changed to resolve local verification setup.
+
+Both JUnit reports were parsed: 724 and 24 tests respectively, with zero
+failures/errors/skips. The Python audit log contains guard-startup entries and
+no blocked external socket, database or historical-evidence access attempts.
+E2E's dedicated temporary server directory was removed and port 8148 was
+available again after execution. No full network packet capture or separate
+manual visual/theme review was performed. No application defect was discovered;
+the setup issues above are local verification limitations.
+
+Source inspection confirms per-test absolute SQLite paths, environment setup and
+cached database rebinding before lifespan, separate migration/subprocess databases,
+and temporary evaluation output roots. E2E retains explicit `--e2e`, port 8148
+availability checks, verified owned server/database identity before HTTP, mocked
+SDK transport, blocked outgoing server connections, local browser routing and
+owned-server cleanup. No real application database or historical AI evaluation
+evidence is used. No live evaluation or deployment is invoked.
+
+Official references checked: [checkout v7](https://github.com/actions/checkout/blob/v7/action.yml),
+[setup-python v7](https://github.com/actions/setup-python/blob/v7/action.yml),
+[setup-node v7](https://github.com/actions/setup-node/blob/v7/action.yml) and
+[upload-artifact v7](https://github.com/actions/upload-artifact/blob/v7/action.yml)
+exist and accept the configured inputs. The official
+[Python build manifest](https://github.com/actions/python-versions/blob/main/versions-manifest.json)
+includes stable CPython 3.14 Linux x64 builds for Ubuntu 24.04;
+[Node 24 is LTS](https://nodejs.org/en/about/previous-releases).
+Playwright documents [browser/dependency installation for CI](https://playwright.dev/python/docs/ci-intro)
+and the configured [trace/screenshot options](https://playwright.dev/python/docs/test-runners).
+Manifest paths, Python `pathlib`/temporary-directory handling and Bash globbing
+were inspected for Linux compatibility.
+
+**Hosted verification remains pending:** clean Ubuntu dependency resolution,
+`playwright install --with-deps chromium`, Linux browser execution, actual
+trigger behavior and artifact upload/download require the first GitHub run.
+Local Bash execution does not establish Linux verification. Direct dependencies
+are pinned; transitive resolution and action major tags can change. No commit,
+push, merge, release or deployment occurred. No increment-completion claim or
+new AC coverage is made.
+
 ## Test organization — 19 October 2026
 
 Branch `refactor/test-organization`, baseline `ca53965` (merged five executable
