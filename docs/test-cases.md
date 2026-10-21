@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-392**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-393**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -28,7 +28,8 @@ own results. Test bodies and parameter data remain the executable specification.
 | Structured manual | 5 groups | 5 | M01–M05 |
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
-| Total | 404 | **391** | Definition, conceptual-case and execution counts differ; reused IDs counted once |
+| JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
+| Total | 405 | **392** | Definition, conceptual-case and execution counts differ; reused IDs counted once |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -716,3 +717,13 @@ is supporting tooling.
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-391"></a>TC-391 | — | Refuse unsafe Postman targets and stale IDs; own and dispose only fresh isolated server/database data; prevent paid AI calls | Structured infrastructure verification | [Safety verification procedure](../postman/README.md#safety-verification-procedure-tc-391), steps 1–5; supported by `postman/serve.py` and the collection pre-request guard; [actual execution evidence](test-execution.md#postman-simplification--20-october-2026) distinguishes compatibility checks from native Runner execution |
+
+## JMeter API performance
+
+One technical workflow, with equivalent user/loop/duration configurations sharing
+one ID. Its seven HTTP requests and repeated samples are not additional cases or
+new business-AC evidence; the RTM is unchanged.
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-392"></a>TC-392 | — | Bounded fictional register/login/project/bug workflow validates responses, extracted prerequisites and bug/project identity; stops failed threads; shared configurable HTTP target with local defaults | JMeter / technical performance | [`api-performance.jmx`](../jmeter/api-performance.jmx): `API Workflow` → `HTTP Request Defaults` and `GET Application Version`, `POST Register User`, `POST Login User`, `GET Projects`, `POST Create Project`, `POST Create Bug`, `GET Created Bug`; smoke, concurrent and timed configurations in [run guide](../jmeter/README.md#execute-and-inspect-results) |

@@ -5,6 +5,14 @@ test-results/
 postman/.runtime/
 ai-evaluation-results/
 
+# JMeter output, disposable runtime data and local credentials
+jmeter/results/
+jmeter/.runtime/
+jmeter/**/*.jtl
+jmeter/**/*.hprof
+jmeter/*.properties
+jmeter/*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

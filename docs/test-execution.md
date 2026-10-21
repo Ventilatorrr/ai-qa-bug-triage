@@ -1,12 +1,22 @@
 # QA test execution report
 
-Reporting date: **20 October 2026**. The [test catalogue](test-cases.md) defines
+Reporting date: **21 October 2026**. The [test catalogue](test-cases.md) defines
 cases; the [RTM](traceability-matrix.md) owns overall AC coverage. Results below
 were obtained at the stated milestones. Executed cases, collection counts and
 planned evaluations are distinct.
 
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
+
+## JMeter finalization — 21 October 2026
+
+Independent JMeter 5.6.3 / Java 21 verification of the current shared HTTP Request Defaults plan used a fresh disposable SQLite server on port 8148 with live AI disabled; see the [run guide](../jmeter/README.md).
+
+- Default smoke: **7 samples, 0 errors**, mean **70.1 ms**, **13.3 requests/s**, p95 **212 ms**.
+- Two users, 1s ramp-up, two loops, 10s cap: **28 samples, 0 errors**, mean **62.3 ms**, **21.9 requests/s**, p95 **206.6 ms**.
+
+Both runs had the expected counts for all seven labels and inherited the verified local target; concurrency also supplied explicit protocol/host/port overrides. JTL results and generated HTML statistics were checked.
+**TC-392** remains one technical workflow; RTM coverage is unchanged. Historical user measurements remain attributed in the guide; these local checks establish no production capacity or performance SLO.
 
 ## Postman CLI and GitHub Actions integration — 20 October 2026
 
