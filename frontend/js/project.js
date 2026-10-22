@@ -15,6 +15,9 @@ const memberManagement = document.querySelector("#member-management");
 const showMemberFormButton = document.querySelector("#show-member-form");
 const memberForm = document.querySelector("#member-form");
 const cancelMemberFormButton = document.querySelector("#cancel-member-form");
+const addMemberButton = document.querySelector("#add-member-button");
+// Opening or cancelling Add Member starts a new form interaction.
+let memberFormSession = 0;
 
 const memberEmailInput = document.querySelector("#member-email");
 const memberRoleInput = document.querySelector("#member-role");
@@ -274,6 +277,13 @@ function updateMembersToggle() {
 async function addMember(event) {
     event.preventDefault();
 
+    // One Add per form interaction: repeated clicks or Enter must not send
+    // another POST while the first is pending.
+    if (addMemberButton.disabled) {
+        return;
+    }
+
+    const session = memberFormSession;
     const member = {
         email: memberEmailInput.value,
         role: memberRoleInput.value
@@ -282,58 +292,80 @@ async function addMember(event) {
     let response;
     let data = {};
 
+    addMemberButton.disabled = true;
+
     try {
-        response = await authenticatedFetch(
-            `/projects/${projectId}/members`,
-            {
-                method: "POST",
+        try {
+            response = await authenticatedFetch(
+                `/projects/${projectId}/members`,
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-                body: JSON.stringify(member)
+                    body: JSON.stringify(member)
+                }
+            );
+
+            if (!response) {
+                return;
             }
-        );
 
-        if (!response) {
+            try {
+                data = await response.json();
+            } catch (error) {
+                data = {};
+            }
+        } catch (error) {
+            if (session === memberFormSession) {
+                showMemberMessage("Unable to add member. Please try again.", "error");
+            }
             return;
         }
 
-        try {
-            data = await response.json();
-        } catch (error) {
-            data = {};
+        if (session !== memberFormSession) {
+            // A cancelled Add may still have added the member: refresh the
+            // project data without touching the newer form or its feedback.
+            if (response.ok) {
+                await loadMembers(true);
+                await loadBugs();
+                await loadBugAssignees();
+            }
+            return;
         }
-    } catch (error) {
-        showMemberMessage("Unable to add member. Please try again.", "error");
-        return;
+
+        if (!response.ok) {
+            showMemberMessage(formatApiError(data.detail), "error");
+            return;
+        }
+
+        memberForm.reset();
+
+        memberForm.hidden = true;
+
+        showMemberFormButton.hidden = false;
+
+        const addedEmail = typeof data.email === "string" ? data.email : member.email;
+        const addedRole = typeof data.role === "string" ? data.role : member.role;
+
+        showMemberMessage(
+            `Member "${addedEmail}" (${addedRole}) added successfully.`,
+            "success"
+        );
+
+        await loadMembers();
+
+        await loadBugs();
+
+        await loadBugAssignees();
+    } finally {
+        // A late completion must not unlock a newer interaction's pending Add.
+        if (session === memberFormSession) {
+            addMemberButton.disabled = false;
+        }
     }
-
-    if (!response.ok) {
-        showMemberMessage(formatApiError(data.detail), "error");
-        return;
-    }
-
-    memberForm.reset();
-
-    memberForm.hidden = true;
-
-    showMemberFormButton.hidden = false;
-
-    const addedEmail = typeof data.email === "string" ? data.email : member.email;
-    const addedRole = typeof data.role === "string" ? data.role : member.role;
-
-    showMemberMessage(
-        `Member "${addedEmail}" (${addedRole}) added successfully.`,
-        "success"
-    );
-
-    await loadMembers();
-
-    await loadBugs();
-
-    await loadBugAssignees();
 }
 
 
@@ -1021,6 +1053,8 @@ showMemberFormButton.addEventListener(
     "click",
     function () {
         clearWorkflowFeedback();
+        ++memberFormSession;
+        addMemberButton.disabled = false;
         memberForm.hidden = false;
 
         showMemberFormButton.hidden = true;
@@ -1031,6 +1065,8 @@ showMemberFormButton.addEventListener(
 cancelMemberFormButton.addEventListener(
     "click",
     function () {
+        ++memberFormSession;
+        addMemberButton.disabled = false;
         memberForm.reset();
 
         memberForm.hidden = true;
@@ -1281,6 +1317,8 @@ if (!localStorage.getItem("access_token")) {
         restoreBugSortPreference();
         restoreBugPageSizePreference();
         bugCurrentPage = 1;
+        ++memberFormSession;
+        addMemberButton.disabled = false;
         showMemberMessage("");
         showBugMessage("");
 
