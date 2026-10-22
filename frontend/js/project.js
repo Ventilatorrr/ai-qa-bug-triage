@@ -22,6 +22,7 @@ const memberRoleInput = document.querySelector("#member-role");
 const showBugFormButton = document.querySelector("#show-bug-form");
 const bugForm = document.querySelector("#bug-form");
 const cancelBugFormButton = document.querySelector("#cancel-bug-form");
+const createBugButton = document.querySelector("#create-bug-button");
 const newBugAiAssistButton = document.querySelector("#new-bug-ai-assist");
 const newBugAiMessage = document.querySelector("#new-bug-ai-message");
 const newBugAiSuggestions = document.querySelector("#new-bug-ai-suggestions");
@@ -36,6 +37,7 @@ window.addEventListener("pagehide", () => {
 window.addEventListener("pageshow", event => {
     if (event.persisted && !bugForm.hidden) {
         ++bugFormSession;
+        createBugButton.disabled = false;
         beginAiAssistSession(bugForm, "bug-", newBugAiAssistButton, newBugAiMessage, newBugAiSuggestions);
     }
 });
@@ -1078,6 +1080,7 @@ showBugFormButton.addEventListener(
     async function () {
         clearWorkflowFeedback();
         ++bugFormSession;
+        createBugButton.disabled = false;
         newBugAiAssistButton.hidden = true;
         newBugAiMessage.textContent = "";
         bugForm.hidden = false;
@@ -1103,6 +1106,7 @@ cancelBugFormButton.addEventListener(
     "click",
     function () {
         ++bugFormSession;
+        createBugButton.disabled = false;
         endAiAssistSession(bugForm);
         bugForm.reset();
         updateSelectPromptStyle(bugSeverityInput);
@@ -1123,6 +1127,12 @@ bugForm.addEventListener(
     "submit",
     async function (event) {
         event.preventDefault();
+
+        // One Create per form session: double-clicks and repeated Enter must not
+        // send another POST while the first is pending (BUG-37).
+        if (createBugButton.disabled) {
+            return;
+        }
 
         const session = bugFormSession;
         const request = ++bugSubmitRequest;
@@ -1173,56 +1183,70 @@ bugForm.addEventListener(
                     : null
         };
 
-        const response = await authenticatedFetch(
-            `/projects/${projectId}/bugs`,
-            {
-                method: "POST",
+        createBugButton.disabled = true;
 
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
+        try {
+            const response = await authenticatedFetch(
+                `/projects/${projectId}/bugs`,
+                {
+                    method: "POST",
 
-                body: JSON.stringify(bug)
-            }
-        );
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-        if (!response) {
-            return;
-        }
-
-        const data = await response.json();
-
-        if (response.ok) {
-            if (!isValidBugResponse(data)) {
-                if (isCurrentSubmission()) {
-                    showBugMessage("Unable to confirm bug creation. Invalid server response.", "error");
+                    body: JSON.stringify(bug)
                 }
+            );
+
+            if (!response) {
                 return;
             }
-            const current = isCurrentSubmission();
 
-            if (current) {
-                ++bugFormSession;
-                endAiAssistSession(bugForm);
-                bugForm.reset();
-                updateSelectPromptStyle(bugSeverityInput);
-                updateSelectPromptStyle(bugPriorityInput);
-                updateSelectPromptStyle(bugAssigneeInput);
-                bugForm.hidden = true;
-                showBugFormButton.hidden = false;
-                showBugMessage(
-                    `BUG-${data.bug_number} "${data.title}" created successfully.`,
-                    "success"
-                );
+            const data = await response.json();
+
+            if (response.ok) {
+                if (!isValidBugResponse(data)) {
+                    if (isCurrentSubmission()) {
+                        showBugMessage("Unable to confirm bug creation. Invalid server response.", "error");
+                    }
+                    return;
+                }
+                const current = isCurrentSubmission();
+
+                if (current) {
+                    ++bugFormSession;
+                    endAiAssistSession(bugForm);
+                    bugForm.reset();
+                    updateSelectPromptStyle(bugSeverityInput);
+                    updateSelectPromptStyle(bugPriorityInput);
+                    updateSelectPromptStyle(bugAssigneeInput);
+                    bugForm.hidden = true;
+                    showBugFormButton.hidden = false;
+                    showBugMessage(
+                        `BUG-${data.bug_number} "${data.title}" created successfully.`,
+                        "success"
+                    );
+                }
+
+                // A cancelled submission may still have persisted on the server.
+                // Capture ownership after cleanup advances the session. loadBugs
+                // rechecks it when writing feedback after its asynchronous work.
+                await loadBugs({ silent: !current, feedbackSession: bugFormSession });
+            } else if (isCurrentSubmission()) {
+                showBugMessage(formatApiError(data.detail), "error");
             }
-
-            // A cancelled submission may still have persisted on the server.
-            // Capture ownership after cleanup advances the session. loadBugs
-            // rechecks it when writing feedback after its asynchronous work.
-            await loadBugs({ silent: !current, feedbackSession: bugFormSession });
-        } else if (isCurrentSubmission()) {
-            showBugMessage(formatApiError(data.detail), "error");
+        } catch (error) {
+            if (isCurrentSubmission()) {
+                showBugMessage("Unable to create bug. Please try again.", "error");
+            }
+        } finally {
+            // A late completion must not unlock a newer session's pending Create.
+            // Opening or cancelling the form re-enables Create for that session.
+            if (session === bugFormSession && request === bugSubmitRequest) {
+                createBugButton.disabled = false;
+            }
         }
     }
 );

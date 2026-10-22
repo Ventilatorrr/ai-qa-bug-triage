@@ -133,7 +133,7 @@ the workflow is on the default branch). Three independent Ubuntu 24.04 jobs run:
 
 - Python 3.14: the complete default pytest suite (currently 638 tests), including
   offline evaluation-harness regression tests, with a JUnit XML report.
-- Node.js 24: all 99 JavaScript tests using Node's built-in test runner; no npm
+- Node.js 24: all 102 JavaScript tests using Node's built-in test runner; no npm
   installation is needed.
 - Python 3.14 and Chromium: all 24 opt-in Playwright tests, including the five
   executable BDD scenarios, on port 8148.
