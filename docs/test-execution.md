@@ -8,6 +8,47 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Concurrent bug edit and status updates (audit B3) — 22 October 2026
+
+Audit finding, confirmed before any production change. No separate in-app bug
+report was recorded (user decision). Tracked by branch
+`fix/concurrent-bug-updates` and TC-406/TC-407.
+
+Cause: Edit Bug and status updates read the bug's status, assignee and
+resolution, validated the request against them, then wrote, with no transaction
+held between the read and the write. Another update could commit in between, so
+the write was based on stale state. The Edit form sends only changed fields, so
+edits to different fields already coexisted; edits to the same field remain
+last-write-wins, as designed. Confirmed against the original code, with each
+competing request sent between the first request's read and write:
+
+- Description edit overlapping Testing → Closed (Passed, Fix Version `1.3.0`):
+  both returned 200, but the edit's outside-Closed/Fixed rule cleared Fix
+  Version, leaving `Closed`/`Fixed` with no Fix Version (AC-017.5).
+- Failed overlapping Passed: both returned 200; the acknowledged pass was
+  overwritten, in effect a Closed → Development transition (AC-017.8).
+- Edit assigning the QA Analyst overlapping Failed (temporary probe, not kept):
+  the bug ended in `Development` assigned to a QA Analyst.
+
+Fix in `app/api/bugs.py`: both update endpoints now start with `BEGIN IMMEDIATE`
+and roll back on any error, matching `create_bug`. A competing update waits
+(SQLite busy timeout) and is then validated against the committed state. No
+schema, API contract or frontend change.
+
+TC-406 and TC-407 failed against the original code as above; with the fix the
+competing request cannot commit inside the window, runs afterwards, and the
+probe ended with the Developer assigned. Results:
+
+- TC-406/TC-407: **2 passed**.
+- Full offline backend (`tests/backend`): **585 passed in 375.55s**, serial, no
+  API key, temporary databases only. The default suite now collects 648 tests.
+- `git diff --check` passed. No frontend, Postman, Playwright or live AI runs.
+
+Not changed: same-field last-write-wins without conflict detection, which would
+need a version check and frontend handling (product decision); under heavy
+contention a request waiting longer than the busy timeout can still fail with
+`database is locked`, as `create_bug` already can.
+
 ## Concurrent Add Member race — 22 October 2026
 
 Audit finding, confirmed before any production change. No separate in-app bug

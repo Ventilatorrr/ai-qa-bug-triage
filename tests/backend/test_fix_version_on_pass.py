@@ -287,3 +287,79 @@ def test_passed_fix_version_preserves_authorization(
     stored = test_client.get(url, headers={"Authorization": f"Bearer {actors['owner']['token']}"})
     assert stored.status_code == 200
     assert stored.json() == before
+
+
+def interleave_before_bug_update(monkeypatch, competing_request):
+    """Send competing_request just before the next bug UPDATE and record its outcome."""
+    import sqlite3
+
+    from app import database
+    from app.api import bugs
+
+    outcome = {}
+
+    class CompetingConnection(sqlite3.Connection):
+        def execute(self, sql, parameters=()):
+            if sql.lstrip().startswith("UPDATE bugs") and not outcome:
+                outcome["started"] = True
+                try:
+                    outcome["response"] = competing_request()
+                except sqlite3.OperationalError as error:
+                    outcome["blocked"] = str(error)
+            return super().execute(sql, parameters)
+
+    # timeout=0: a competing writer that has to wait fails at once instead of
+    # stalling this single-threaded test for the busy timeout.
+    monkeypatch.setattr(
+        bugs, "get_connection",
+        lambda: sqlite3.connect(database.DATABASE_NAME, timeout=0, factory=CompetingConnection),
+    )
+    return outcome
+
+
+# TC-406 | AC-017.5 — Edit overlapping a passed transition preserves its fix version
+def test_edit_overlapping_passed_transition_preserves_fix_version(test_client, lifecycle_bug, monkeypatch):
+    url, before, actors = lifecycle_bug()
+    owner = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    qa = {"Authorization": f"Bearer {actors['qa']['token']}"}
+    passed = {"status": "Closed", "testing_outcome": "Passed", "fix_version": "1.3.0"}
+    outcome = interleave_before_bug_update(
+        monkeypatch, lambda: test_client.patch(f"{url}/status", headers=qa, json=passed)
+    )
+
+    edit = test_client.patch(url, headers=owner, json={"description": "Edited while testing"})
+    if "blocked" in outcome:
+        # The pass could not commit inside the edit, so it runs once the edit finishes.
+        outcome["response"] = test_client.patch(f"{url}/status", headers=qa, json=passed)
+
+    assert edit.status_code == 200
+    assert outcome["response"].status_code == 200
+    stored = test_client.get(url, headers=owner).json()
+    assert stored["description"] == "Edited while testing"
+    assert (stored["status"], stored["resolution"], stored["fix_version"]) == ("Closed", "Fixed", "1.3.0")
+    assert "database is locked" in outcome.get("blocked", "")
+
+
+# TC-407 | AC-017.8 — Competing testing outcomes cannot both apply
+def test_competing_testing_outcomes_cannot_both_apply(test_client, lifecycle_bug, monkeypatch):
+    url, before, actors = lifecycle_bug()
+    owner = {"Authorization": f"Bearer {actors['owner']['token']}"}
+    qa = {"Authorization": f"Bearer {actors['qa']['token']}"}
+    passed = {"status": "Closed", "testing_outcome": "Passed", "fix_version": "1.3.0"}
+    failed = {"status": "Development", "testing_outcome": "Failed", "assignee_id": actors["developer"]["user_id"]}
+    outcome = interleave_before_bug_update(
+        monkeypatch, lambda: test_client.patch(f"{url}/status", headers=owner, json=passed)
+    )
+
+    response = test_client.patch(f"{url}/status", headers=qa, json=failed)
+    if "blocked" in outcome:
+        outcome["response"] = test_client.patch(f"{url}/status", headers=owner, json=passed)
+
+    assert response.status_code == 200
+    # The pass is validated against Development, where closing requires a non-Fixed resolution.
+    assert outcome["response"].status_code == 422
+    stored = test_client.get(url, headers=owner).json()
+    assert (stored["status"], stored["assignee_id"], stored["resolution"], stored["fix_version"]) == (
+        "Development", actors["developer"]["user_id"], None, None
+    )
+    assert "database is locked" in outcome.get("blocked", "")

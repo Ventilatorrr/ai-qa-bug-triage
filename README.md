@@ -131,7 +131,7 @@ traceability for the REQ-020 browser checks and remaining gaps.
 `main`, and manual `workflow_dispatch` runs from GitHub's **Actions** tab (once
 the workflow is on the default branch). Three independent Ubuntu 24.04 jobs run:
 
-- Python 3.14: the complete default pytest suite (currently 646 tests), including
+- Python 3.14: the complete default pytest suite (currently 648 tests), including
   offline evaluation-harness regression tests, with a JUnit XML report.
 - Node.js 24: all 109 JavaScript tests using Node's built-in test runner; no npm
   installation is needed.
