@@ -1,12 +1,37 @@
 # QA test execution report
 
-Reporting date: **21 October 2026**. The [test catalogue](test-cases.md) defines
+Reporting date: **22 October 2026**. The [test catalogue](test-cases.md) defines
 cases; the [RTM](traceability-matrix.md) owns overall AC coverage. Results below
 were obtained at the stated milestones. Executed cases, collection counts and
 planned evaluations are distinct.
 
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
+
+## AI evaluation harness simplification — 22 October 2026
+
+With no options, every run sends the unchanged production Medium Fast request.
+The optional `--reasoning-effort medium|low|high` and `--service-tier standard|fast`
+overrides remain and apply only when supplied; `--explicit-medium` was removed as
+redundant. The legacy Standard cost formula was removed: cost always follows the
+returned tier (default/standard 1x; Fast, priority, missing or unknown
+conservatively 2x), whatever was requested. Live gates, SQLite/socket isolation,
+six-request limit, $0.10 pause, stop-on-error without retries, unique evidence
+directories, dataset fingerprints and Not assessed review templates are unchanged.
+
+Offline harness: **149 → 63 cases**, 19 → 18 functions. Gate, selection, failure
+and cost checks are no longer multiplied by request configurations.
+
+- Retired: TC-385 (`--explicit-medium`; ID stays assigned, never reused).
+- Narrowed: TC-358 (35 → 5), TC-363 (5 → 2), TC-375 (30 → 6), TC-381 (25 → 5),
+  TC-382 (12 → 6, returned-tier cost), TC-384 (direct production adapter parity),
+  TC-379 (6 override variants), TC-380 (4 → 2), TC-383 (3 → 2).
+
+Full offline Python: **638 passed in 400.00s** (575 backend + 63 harness), serial,
+no API key, `AI_EVALUATION_ALLOW_LIVE=0`, dead `OPENAI_BASE_URL`; each API test
+used its own temporary database. `git diff --check` passed. No live request was
+made and no historical `run.json` evidence was changed. Earlier sections keep their
+original counts and option semantics as recorded at the time.
 
 ## JMeter finalization — 21 October 2026
 

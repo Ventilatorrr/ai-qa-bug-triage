@@ -116,10 +116,27 @@ Reuse `build_generation_input`, `create_openai_client`,
 `request_openai_suggestions` and `process_provider_response` unchanged. A forwarding
 recorder captures the actual SDK arguments/response without substituting prompts
 or generation settings: gpt-6-luna, strict schema, store=False, 60-second timeout,
-zero SDK retries; no explicit output cap, temperature, seed or reasoning effort.
-Record returned model as well as the requested alias; a dated alias snapshot is
-accepted and recorded. No new dependencies or changes to the provider adapter,
-output schema or validator are required.
+zero SDK retries; no explicit output cap, temperature or seed. Record returned
+model as well as the requested alias; a dated alias snapshot is accepted and
+recorded. No new dependencies or changes to the provider adapter, output schema
+or validator are required.
+
+**Current request settings (22 October 2026).** Without options, every run sends
+the production request unchanged, including `reasoning={"effort":"medium"}` and
+`service_tier="fast"`. Optional evaluation-only overrides apply only when supplied:
+`--reasoning-effort medium|low|high` changes only the reasoning effort, and
+`--service-tier standard|fast` changes only the tier (`standard` omits it). Run-level
+`reasoning_effort`/`service_tier` record the selected overrides (null keeps
+production's); each attempt records the actual request. `--explicit-medium` was
+removed because the default already sends Medium Fast. Cost is estimated from the
+returned tier, whatever was requested: default or standard at Standard rates,
+Fast/priority at 2x, and a missing or unknown tier conservatively at 2x. The
+experiment sections below are retained provenance and describe the option
+semantics in force when those runs executed (the default then omitted both
+settings, and `--explicit-medium` existed). Evidence records
+`dataset_versions` for the run and `dataset_version` per execution, so mixed
+A–F/quality selections are labelled accurately; coverage status is read from the
+[traceability matrix](traceability-matrix.md), not recorded by the runner.
 
 The runner never starts FastAPI, calls application APIs or calls the database-backed
 `request_suggestions` orchestration. It constructs fictional context models directly.
@@ -348,8 +365,8 @@ Q7, Q11**, once per arm (six requests each, **12 total**). Q11 has one output
 per arm here; its historical repeat does not establish repeat consistency for
 this experiment. Retain the existing case/TC identities and quality-1 dataset.
 
-Control uses `--reasoning-effort medium` (also the default): the request still
-omits `reasoning`, preserving production's effective Medium behavior. Candidate
+Control used `--reasoning-effort medium` (then also the default): the request
+omitted `reasoning`, preserving production's effective Medium behavior at the time. Candidate
 uses `--reasoning-effort low`, adding only `reasoning={"effort": "low"}` in the
 evaluation recorder. The production adapter, prompt, input data, strict schema,
 validator, omitted verbosity, per-request client lifecycle, 60-second SDK timeout

@@ -131,23 +131,22 @@ def create_client(*, live, scenario):
 
 
 class RecordingResponses:
-    """Record requests with evaluation-only reasoning and service-tier overrides."""
+    """Record the production request; apply only explicitly selected overrides."""
 
-    def __init__(self, client, record, *, reasoning_effort="medium", service_tier="standard", explicit_medium=False):
+    def __init__(self, client, record, *, reasoning_effort=None, service_tier=None):
         self.client = client
         self.record = record
         self.reasoning_effort = reasoning_effort
         self.service_tier = service_tier
-        self.explicit_medium = explicit_medium
 
     def create(self, **kwargs):
-        # Normalize only evaluation selectors so historical modes cannot inherit
-        # production defaults; prompt, context and schema still use the adapter.
-        kwargs.pop("reasoning", None)
-        kwargs.pop("service_tier", None)
-        if self.reasoning_effort in {"low", "high"} or self.explicit_medium:
+        # None keeps the production adapter's setting; prompt, context and schema
+        # are never changed here.
+        if self.reasoning_effort is not None:
             kwargs["reasoning"] = {"effort": self.reasoning_effort}
-        if self.service_tier == "fast":
+        if self.service_tier == "standard":
+            kwargs.pop("service_tier", None)
+        elif self.service_tier == "fast":
             kwargs["service_tier"] = "fast"
         self.record["request"] = deepcopy(kwargs)
         self.record["requested_service_tier"] = kwargs.get("service_tier")
@@ -203,17 +202,19 @@ def new_output_directory(requested):
 
 
 def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids=None,
-                   reasoning_effort="medium", service_tier="standard", explicit_medium=False):
-    """Six serial attempts at most. All semantic assessments begin unassessed."""
+                   reasoning_effort=None, service_tier=None):
+    """Six serial attempts at most. All semantic assessments begin unassessed.
+
+    By default the production request is sent unchanged. reasoning_effort and
+    service_tier are evaluation-only overrides applied only when selected.
+    """
     evaluation_started = monotonic()
     if live:
         require_live_authorization()
-    if reasoning_effort not in ("medium", "low", "high"):
-        raise ValueError("Select medium (unchanged provider default), low or high reasoning effort.")
-    if service_tier not in ("standard", "fast"):
-        raise ValueError("Select standard (omitted service tier) or fast.")
-    if explicit_medium and (reasoning_effort != "medium" or service_tier != "fast"):
-        raise ValueError("Explicit Medium requires medium reasoning and fast service tier.")
+    if reasoning_effort not in (None, "medium", "low", "high"):
+        raise ValueError("Select medium, low or high reasoning effort, or omit it to keep production's.")
+    if service_tier not in (None, "standard", "fast"):
+        raise ValueError("Select standard (omitted service tier) or fast, or omit it to keep production's.")
     scenarios = select_scenarios(scenario_set=scenario_set, scenario_ids=scenario_ids)
     occurrences = {}
     execution_plan = []
@@ -224,6 +225,7 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
             "execution_id": f"{identifier}:{occurrences[identifier]}",
             "scenario_id": identifier, "tc_id": case["tc_id"],
             "occurrence": occurrences[identifier],
+            "dataset_version": QUALITY_DATASET_VERSION if identifier.startswith("Q") else DATASET_VERSION,
         })
     protocol = (ROOT / "docs" / "ai-testing-strategy.md").read_text(encoding="utf-8")
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip()
@@ -232,29 +234,26 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
         "mode": "live" if live else "offline", "live_model_evaluated": False,
         "date_utc": datetime.now(timezone.utc).isoformat(), "revision": revision, "tracked_changes": dirty,
         "sdk_version": version("openai"),
-        "dataset_version": QUALITY_DATASET_VERSION if any(case["id"].startswith("Q") for case in scenarios) else DATASET_VERSION,
+        "dataset_versions": sorted({item["dataset_version"] for item in execution_plan}),
         "dataset_sha256": fingerprint(scenarios), "protocol_sha256": sha256(protocol.encode()).hexdigest(),
         "scenarios": [{key: value for key, value in case.items() if key != "offline_suggestions"} for case in scenarios],
         "protocol": protocol, "pass_number": pass_number, "request_limit": REQUEST_LIMIT,
         "selection": {"scenario_set": scenario_set or ("baseline" if scenario_ids is None else None),
                       "scenario_ids": [case["id"] for case in scenarios]},
         "execution_plan": execution_plan,
+        # Overrides only; null keeps production's setting. Attempts record actual requests.
         "reasoning_effort": reasoning_effort,
-        "explicit_medium": explicit_medium,
-        "requested_service_tier": "fast" if service_tier == "fast" else None,
+        "service_tier": service_tier,
         "client_config": {"timeout_seconds": 60.0, "max_retries": 0},
-        "cost_assumption": "USD, Standard short context, $0.10/M input + $0.50/M output; 2026-10-16 public pricing; offline usage synthetic",
-        "coverage": "Existing RTM: 88 Covered / 0 Partial / 0 Not Covered. Additional evaluations do not reassess AC coverage; no new semantic pass claimed.",
+        "cost_assumption": (
+            "USD, short context; Standard input/cached/write/output $0.10/$0.01/$0.125/$0.50 per M; "
+            "Fast/priority 2x; default fallback 1x; unknown tier conservatively 2x; "
+            "2026-10-19 official pricing; offline usage synthetic"
+        ),
         "attempts": [], "not_run": [case["id"] for case in scenarios],
         "not_run_execution_ids": [item["execution_id"] for item in execution_plan],
         "estimated_cost_usd": 0.0, "stop_reason": None,
     }
-    if service_tier == "fast" or reasoning_effort == "high":
-        report["cost_assumption"] = (
-            "USD, short context; Standard input/cached/write/output $0.10/$0.01/$0.125/$0.50 per M; "
-            "Fast/priority 2x; default fallback 1x; unknown tier conservatively 2x; "
-            "2026-10-19 official pricing; offline usage synthetic"
-        )
     with isolated_application(live=live) as database_path:
         from app.ai_context import AiTriageContext
         from app.ai_generation import build_generation_input
@@ -287,7 +286,6 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
                     raw = request_openai_suggestions(
                         generation_input, client=SimpleNamespace(responses=RecordingResponses(
                             client, record, reasoning_effort=reasoning_effort, service_tier=service_tier,
-                            explicit_medium=explicit_medium,
                         )),
                     )
                 record["decoded_response"] = raw
@@ -319,20 +317,20 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
                 report["stop_reason"] = "Attempt failed; no retry. Remaining scenarios were not run."
             usage = record.get("provider", {}).get("usage")
             if usage and all(type(usage.get(name)) is int and usage[name] >= 0 for name in ("input_tokens", "output_tokens")):
-                record["estimated_cost_usd"] = round((usage["input_tokens"] * 0.10 + usage["output_tokens"] * 0.50) / 1_000_000, 8)
-                if service_tier == "fast" or reasoning_effort == "high":
-                    details = usage.get("input_tokens_details") or {}
-                    cached, writes = details.get("cached_tokens") or 0, details.get("cache_write_tokens") or 0
-                    returned_tier = record["provider"]["service_tier"]
-                    multiplier = 1 if returned_tier in {"default", "standard"} else 2
-                    record["cost_estimate_basis"] = (
-                        "returned_service_tier" if returned_tier in {"default", "standard", "fast", "priority"}
-                        else "fast_rate_upper_bound_unconfirmed_tier"
-                    )
-                    record["estimated_cost_usd"] = round(multiplier * (
-                        (usage["input_tokens"] - cached - writes) * 0.10 + cached * 0.01
-                        + writes * 0.125 + usage["output_tokens"] * 0.50
-                    ) / 1_000_000, 8)
+                # Cost follows the returned tier, whatever was requested: default/standard
+                # at Standard rates; Fast, priority or an unconfirmed tier conservatively at 2x.
+                details = usage.get("input_tokens_details") or {}
+                cached, writes = details.get("cached_tokens") or 0, details.get("cache_write_tokens") or 0
+                returned_tier = record["provider"]["service_tier"]
+                multiplier = 1 if returned_tier in {"default", "standard"} else 2
+                record["cost_estimate_basis"] = (
+                    "returned_service_tier" if returned_tier in {"default", "standard", "fast", "priority"}
+                    else "fast_rate_upper_bound_unconfirmed_tier"
+                )
+                record["estimated_cost_usd"] = round(multiplier * (
+                    (usage["input_tokens"] - cached - writes) * 0.10 + cached * 0.01
+                    + writes * 0.125 + usage["output_tokens"] * 0.50
+                ) / 1_000_000, 8)
                 report["estimated_cost_usd"] = round(report["estimated_cost_usd"] + record["estimated_cost_usd"], 8)
             if live and "provider" in record:
                 report["live_model_evaluated"] = True
@@ -363,15 +361,11 @@ def main(argv=None):
     selection.add_argument("--scenarios", nargs="+", help="One to six scenario IDs in execution order; repeats are explicit.")
     parser.add_argument("--output", help="New child directory under ai-evaluation-results.")
     parser.add_argument("--pass-number", type=int, choices=(1, 2), default=1)
-    parser.add_argument("--reasoning-effort", choices=("medium", "low", "high"), default="medium",
-                        help="Evaluation only: medium preserves historical omitted reasoning; low/high add an explicit override.")
-    parser.add_argument("--service-tier", choices=("standard", "fast"), default="standard",
-                        help="Evaluation only: standard preserves the omitted tier; fast adds service_tier=fast.")
-    parser.add_argument("--explicit-medium", action="store_true",
-                        help="Evaluation only: explicitly send Medium; requires --reasoning-effort medium --service-tier fast.")
+    parser.add_argument("--reasoning-effort", choices=("medium", "low", "high"),
+                        help="Evaluation-only override; default: production's reasoning setting.")
+    parser.add_argument("--service-tier", choices=("standard", "fast"),
+                        help="Evaluation-only override; standard omits the tier. Default: production's tier.")
     args = parser.parse_args(argv)
-    if args.explicit_medium and (args.reasoning_effort != "medium" or args.service_tier != "fast"):
-        parser.error("Explicit Medium requires medium reasoning and fast service tier.")
     if args.live:
         try:
             require_live_authorization()
@@ -386,16 +380,13 @@ def main(argv=None):
         report = run_evaluation(
             output, live=args.live, pass_number=args.pass_number,
             scenario_set=args.scenario_set, scenario_ids=args.scenarios,
-            reasoning_effort=args.reasoning_effort,
-            service_tier=args.service_tier,
-            explicit_medium=args.explicit_medium,
+            reasoning_effort=args.reasoning_effort, service_tier=args.service_tier,
         )
     except Exception as error:
         print(f"Evaluation stopped: {type(error).__name__}; no exception details logged.", file=sys.stderr)
         return 2
     print(f"{report['mode']}: {len(report['attempts'])}/{len(report['execution_plan'])} selected attempts "
           f"(maximum {REQUEST_LIMIT}); evidence: {output / 'run.json'}")
-    print("No new semantic pass claimed; existing RTM remains 88 Covered / 0 Partial / 0 Not Covered.")
     return 1 if report["stop_reason"] else 0
 
 
