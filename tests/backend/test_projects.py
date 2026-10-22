@@ -1353,3 +1353,125 @@ def test_add_member_rejects_empty_or_non_string_email(
     after = test_client.get(members_url, headers=headers)
     assert after.status_code == 200
     assert after.json() == before.json()
+
+
+def stored_memberships(project_id, user_id):
+    from contextlib import closing
+
+    from app import database
+
+    with closing(database.get_connection()) as connection:
+        return connection.execute(
+            "SELECT role FROM project_members WHERE project_id = ? AND user_id = ?",
+            (project_id, user_id)
+        ).fetchall()
+
+
+# TC-404 | Technical — Competing add member requests return one 201 and one 409
+def test_competing_add_member_requests_return_one_created_and_one_conflict(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    monkeypatch
+):
+    import sqlite3
+
+    from app import database
+    from app.api import projects
+
+    owner = authenticated_user_factory(email="race-owner@example.com")
+    member = authenticated_user_factory(email="race-member@example.com")
+    project = project_factory(owner["token"], name="Competing Member Project")
+    members_url = f"/projects/{project['id']}/members"
+    headers = {"Authorization": f"Bearer {owner['token']}"}
+    competing = {}
+
+    class CompetingConnection(sqlite3.Connection):
+        def execute(self, sql, parameters=()):
+            # The competing request passes its own duplicate check and commits
+            # after this request's check, immediately before this insert.
+            if "INSERT INTO project_members" in sql and not competing:
+                competing["started"] = True
+                competing["response"] = test_client.post(
+                    members_url,
+                    json={"email": member["user"]["email"], "role": "QA Analyst"},
+                    headers=headers
+                )
+            return super().execute(sql, parameters)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            projects,
+            "get_connection",
+            lambda: sqlite3.connect(database.DATABASE_NAME, factory=CompetingConnection)
+        )
+        response = test_client.post(
+            members_url,
+            json={"email": member["user"]["email"], "role": "Developer"},
+            headers=headers
+        )
+
+    assert competing["response"].status_code == 201
+    assert competing["response"].json()["role"] == "QA Analyst"
+    assert response.status_code == 409
+    assert response.json() == {"detail": "This user is already a member of this project."}
+    assert stored_memberships(project["id"], member["user_id"]) == [("QA Analyst",)]
+
+    members = test_client.get(members_url, headers=headers)
+    assert members.status_code == 200
+    assert [row["email"] for row in members.json()] == [
+        "race-owner@example.com",
+        "race-member@example.com"
+    ]
+
+    duplicate = test_client.post(
+        members_url,
+        json={"email": member["user"]["email"], "role": "Developer"},
+        headers=headers
+    )
+    assert duplicate.status_code == 409
+
+
+# TC-405 | Technical — Add member does not report unrelated integrity failures as conflicts
+def test_add_member_does_not_report_unrelated_integrity_failure_as_conflict(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory,
+    monkeypatch
+):
+    import sqlite3
+
+    from app import database
+    from app.api import projects
+
+    owner = authenticated_user_factory(email="integrity-owner@example.com")
+    user_factory(email="integrity-member@example.com")
+    project = project_factory(owner["token"], name="Integrity Failure Project")
+    members_url = f"/projects/{project['id']}/members"
+    headers = {"Authorization": f"Bearer {owner['token']}"}
+    before = test_client.get(members_url, headers=headers)
+    assert before.status_code == 200
+
+    class NullRoleConnection(sqlite3.Connection):
+        def execute(self, sql, parameters=()):
+            if "INSERT INTO project_members" in sql:
+                parameters = (parameters[0], parameters[1], None)
+            return super().execute(sql, parameters)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            projects,
+            "get_connection",
+            lambda: sqlite3.connect(database.DATABASE_NAME, factory=NullRoleConnection)
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="NOT NULL"):
+            test_client.post(
+                members_url,
+                json={"email": "integrity-member@example.com", "role": "Developer"},
+                headers=headers
+            )
+
+    after = test_client.get(members_url, headers=headers)
+    assert after.status_code == 200
+    assert after.json() == before.json()
