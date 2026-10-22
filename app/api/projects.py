@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Header
@@ -382,13 +383,26 @@ def add_project_member(
                 detail="This user is already a member of this project."
             )
 
-        conn.execute(
-            """
-            INSERT INTO project_members (project_id, user_id, role)
-            VALUES (?, ?, ?)
-            """,
-            (project_id, member_user_id, member_role)
-        )
+        try:
+            conn.execute(
+                """
+                INSERT INTO project_members (project_id, user_id, role)
+                VALUES (?, ?, ?)
+                """,
+                (project_id, member_user_id, member_role)
+            )
+
+        # A concurrent request can add the same member after the check above.
+        except sqlite3.IntegrityError as error:
+            conn.rollback()
+
+            if error.sqlite_errorname != "SQLITE_CONSTRAINT_PRIMARYKEY":
+                raise
+
+            raise HTTPException(
+                status_code=409,
+                detail="This user is already a member of this project."
+            )
 
         conn.commit()
 

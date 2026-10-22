@@ -8,6 +8,37 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Concurrent Add Member race — 22 October 2026
+
+Audit finding, confirmed before any production change. No separate in-app bug
+report was recorded (user decision). Tracked by branch
+`fix/handle-concurrent-member-adds` and TC-404/TC-405.
+
+Cause: connections use Python's legacy transaction control
+(`isolation_level=''`), so the duplicate-member `SELECT` runs outside a
+transaction and holds no lock. Two overlapping requests can both pass the check.
+The `(project_id, user_id)` primary key prevents a duplicate row, but the losing
+`INSERT` raised `sqlite3.IntegrityError` (`SQLITE_CONSTRAINT_PRIMARYKEY`), which
+the endpoint did not handle. A scratch-database script showed this sequence
+directly. Fix in `app/api/projects.py`: that specific error rolls back and returns
+the existing 409 `This user is already a member of this project.`; other
+integrity errors are still raised.
+
+TC-404 runs two real API requests deterministically, with no sleeps or threads
+started by the test: a connection subclass sends the competing request just
+before the original request's insert. TC-405 injects a NOT NULL failure to show
+other integrity errors are not reported as 409. Against the pre-fix endpoint,
+TC-404 failed (the competing request returned 201, then the original insert
+raised the unhandled `IntegrityError` at `projects.py:385`); TC-405 passed, as
+expected for a guard. With the fix:
+
+- TC-404/TC-405: **2 passed**; `tests/backend/test_projects.py`: **55 passed**,
+  including TC-202/203 (add), TC-207 (404), TC-208 (sequential 409), TC-214
+  (non-owner denial) and TC-403 (B2 422).
+- `tests/backend/test_bug.py`, which adds members in most setups: **138 passed**.
+- Full backend suite not rerun locally (narrow change); the default suite now
+  collects 646 tests and runs in CI. `git diff --check` passed.
+
 ## Malformed Add Member email HTTP 500 (audit B2) — 22 October 2026
 
 Reproduced manually by the user with Postman against a disposable environment:

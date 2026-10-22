@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-404**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-406**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (20 modules) | 218 | 229 | 581 cases; 91 parameterized functions |
+| Backend pytest (20 modules) | 220 | 231 | 583 cases; 91 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 109 registered tests | 109 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 415 | **402** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 417 | **404** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -344,6 +344,8 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-215"></a>TC-215 | AC-010.5 | Non owner cannot edit project | API / integration | [`test_non_owner_cannot_edit_project`](../tests/backend/test_projects.py#L1202); All variants |
 | <a id="tc-216"></a>TC-216 | AC-010.5 | Non owner cannot delete project | API / integration | [`test_non_owner_cannot_delete_project`](../tests/backend/test_projects.py#L1255); All variants |
 | <a id="tc-403"></a>TC-403 | — | Add member rejects empty or non-string email with 422 and no membership change (audit B2 regression) | API / integration | [`test_add_member_rejects_empty_or_non_string_email`](../tests/backend/test_projects.py#L1315); email=array, object, number, boolean, null, empty string |
+| <a id="tc-404"></a>TC-404 | — | Competing add member requests return one 201 and one 409 with a single stored membership | API / integration; database integrity | [`test_competing_add_member_requests_return_one_created_and_one_conflict`](../tests/backend/test_projects.py#L1371); competing request commits between the duplicate check and insert |
+| <a id="tc-405"></a>TC-405 | — | Add member does not report unrelated integrity failures as conflicts | API / integration | [`test_add_member_does_not_report_unrelated_integrity_failure_as_conflict`](../tests/backend/test_projects.py#L1436); injected NOT NULL failure on insert |
 
 ## tests/backend/test_registration.py
 
