@@ -8,6 +8,33 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## BUG-37 duplicate New Bug submission — 22 October 2026
+
+BUG-37 was reproduced manually by the user with Chrome DevTools network
+throttling: repeated Create clicks saved eight reports with the same title in
+about two seconds. Cause: the New Bug Create button stayed enabled and the submit
+handler had no in-flight guard, so every click sent a POST. Edit Save already
+disabled its button. Create is now disabled while its POST is pending, re-enabled
+after a failed current request, and re-enabled when the form is opened, cancelled
+or restored. A late completion from an abandoned session cannot unlock a newer
+pending Create. A thrown request error in the current session now shows
+"Unable to create bug. Please try again." Existing session safeguards are unchanged.
+
+New cases TC-393, TC-394 and TC-395 (`—` AC mapping; no AC covers duplicate
+submission). Against the pre-fix `project.js` from `HEAD`, all three failed
+(TC-393 recorded four POSTs instead of one) while the 16 existing form-session
+tests passed. With the fix:
+
+- Frontend Node: **102 passed / 0 failed** (99 existing + 3 new), using
+  Playwright's bundled Node v24.21.0 because no system Node was installed.
+- Full offline Python: **638 passed in 461.96s**, serial, no API key, temporary
+  databases only.
+- Playwright/BDD: **24 passed in 68.17s** (Chromium, port 8148, fresh E2E
+  server and temporary database, mocked provider), after the user stopped a
+  separately started Postman launcher that had held the port. Existing browser
+  journeys that click Create pass with the guard in place. No browser test
+  targets the pending-request disabled state; that remains covered by TC-393–395.
+
 ## AI evaluation harness simplification — 22 October 2026
 
 With no options, every run sends the unchanged production Medium Fast request.

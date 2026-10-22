@@ -56,7 +56,7 @@ function pageFixture(edit, {realListRefresh = false} = {}) {
     const cancelButton = node(edit ? "#cancel-edit-form" : "#cancel-bug-form");
     return Object.assign(f, {
         prefix, node, stored, messages, rendered, window,
-        openButton, saveButton: node("#save-edit-button"),
+        openButton, saveButton: node("#save-edit-button"), createButton: node("#create-bug-button"),
         open: () => event(openButton, "click"), cancel: () => event(cancelButton, "click"),
         save: () => event(f.form, "submit"), refreshes: () => refreshes
     });
@@ -407,4 +407,95 @@ test("test_new_create_delayed_list_refresh_response_preserves_newer_session", as
 // TC-304 | AC-020.8 — New create delayed list refresh JSON preserves newer session
 test("test_new_create_delayed_list_refresh_json_preserves_newer_session", async function test_new_create_delayed_list_refresh_json_preserves_newer_session() {
     await check_delayed_create_list_refresh_preserves_newer_session("json");
+});
+
+// TC-393 | Technical — New create repeated submission sends one POST while pending (BUG-37)
+test("test_new_create_repeated_submission_sends_one_post_while_pending", async () => {
+    const f = pageFixture(false), pending = deferred(), writes = [];
+    await f.open();
+    assert.equal(f.createButton.disabled, false);
+    f.inputs["#bug-title"].value = "Single submission";
+    f.send = (url, options) => { writes.push({url, method: options.method}); return pending.promise; };
+    // Double-click and repeated Enter before the first response arrives.
+    const saves = [f.save(), f.save(), f.save(), f.save()];
+    assert.deepEqual(writes, [{url: "/projects/1/bugs", method: "POST"}], "only the first Create reaches the server");
+    assert.equal(f.createButton.disabled, true, "Create stays unavailable while the request is pending");
+    assert.equal(f.form.hidden, false);
+
+    pending.resolve({ok: true, json: async () => ({...f.stored, title: "Single submission"})});
+    await Promise.all(saves);
+    assert.equal(writes.length, 1);
+    assert.equal(f.form.hidden, true);
+    assert.equal(f.refreshes(), 1);
+    assert.equal(f.messages.filter(([text]) => /created successfully/.test(text)).length, 1);
+
+    await f.open();
+    assert.equal(f.createButton.disabled, false, "a newly opened form can create again");
+});
+
+// TC-394 | Technical — New create failure re-enables Create for retry (BUG-37)
+test("test_new_create_failure_reenables_create_for_retry", async () => {
+    for (const failure of ["http_error", "invalid_json", "network_error"]) {
+        const f = pageFixture(false), pending = deferred(), titles = [];
+        await f.open();
+        f.inputs["#bug-title"].value = "Retry after failure";
+        f.send = (url, options) => { titles.push(JSON.parse(options.body).title); return pending.promise; };
+        const first = f.save();
+        assert.equal(f.createButton.disabled, true);
+        if (failure === "network_error") pending.reject(new Error("Offline"));
+        else if (failure === "invalid_json") pending.resolve({ok: false, json: async () => { throw new SyntaxError("Unexpected token <"); }});
+        else pending.resolve({ok: false, json: async () => ({detail: "Bug title is required."})});
+        await first;
+        assert.equal(f.createButton.disabled, false, `${failure} allows another submission`);
+        assert.equal(f.form.hidden, false);
+        assert.equal(f.inputs["#bug-title"].value, "Retry after failure");
+        assert.match(f.messages.at(-1)[0], failure === "http_error" ? /Bug title is required/ : /Unable to create bug/);
+        assert.equal(f.refreshes(), 0);
+
+        f.send = async (url, options) => {
+            titles.push(JSON.parse(options.body).title);
+            return {ok: true, json: async () => ({...f.stored, title: "Retry after failure"})};
+        };
+        await f.save();
+        assert.deepEqual(titles, ["Retry after failure", "Retry after failure"]);
+        assert.equal(f.form.hidden, true);
+    }
+});
+
+// TC-395 | Technical — Late Create completion does not unlock or close a reopened form (BUG-37)
+test("test_new_create_late_completion_keeps_reopened_create_guard", async () => {
+    for (const outcome of ["success", "error", "rejection"]) {
+        const f = pageFixture(false), old = deferred(), newer = deferred(), titles = [];
+        await f.open();
+        f.inputs["#bug-title"].value = "First submission";
+        f.send = (url, options) => { titles.push(JSON.parse(options.body).title); return old.promise; };
+        const oldSave = f.save();
+        assert.equal(f.createButton.disabled, true);
+        await f.cancel();
+        assert.equal(f.createButton.disabled, false, "Cancel ends the abandoned session's guard");
+        await f.open();
+        assert.equal(f.createButton.disabled, false, "a reopened form can submit");
+
+        f.inputs["#bug-title"].value = "Newer submission";
+        f.send = (url, options) => { titles.push(JSON.parse(options.body).title); return newer.promise; };
+        const newerSaves = [f.save(), f.save()];
+        assert.deepEqual(titles, ["First submission", "Newer submission"], "the newer session is guarded too");
+
+        const count = f.messages.length;
+        if (outcome === "rejection") old.reject(new Error("Old transport error"));
+        else if (outcome === "error") old.resolve({ok: false, json: async () => ({detail: "Old error"})});
+        else old.resolve({ok: true, json: async () => ({...f.stored, title: "First submission"})});
+        await oldSave;
+        assert.equal(f.createButton.disabled, true, `late ${outcome} must not unlock the newer pending Create`);
+        assert.equal(f.form.hidden, false);
+        assert.equal(f.inputs["#bug-title"].value, "Newer submission");
+        assert.equal(f.messages.length, count, `late ${outcome} writes no feedback`);
+
+        newer.resolve({ok: true, json: async () => ({...f.stored, title: "Newer submission"})});
+        await Promise.all(newerSaves);
+        assert.equal(f.form.hidden, true);
+        assert.equal(titles.length, 2);
+        await f.open();
+        assert.equal(f.createButton.disabled, false);
+    }
 });

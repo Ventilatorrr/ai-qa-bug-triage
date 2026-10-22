@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-393**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-396**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
+| Frontend Node (8 files) | 102 registered tests | 102 | Internal loops are variants |
 | Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 404 | **391** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 407 | **394** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -474,6 +474,9 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-302"></a>TC-302 | AC-020.7 | New create current list refresh failure shows error | Frontend JS / DOM substitutes | [`test_new_create_current_list_refresh_failure_shows_error`](../tests/frontend/form-session.test.cjs#L337); All variants |
 | <a id="tc-303"></a>TC-303 | AC-020.8 | New create delayed list refresh response preserves newer session | Frontend JS / DOM substitutes | [`test_new_create_delayed_list_refresh_response_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L403); All variants |
 | <a id="tc-304"></a>TC-304 | AC-020.8 | New create delayed list refresh JSON preserves newer session | Frontend JS / DOM substitutes | [`test_new_create_delayed_list_refresh_json_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L408); All variants |
+| <a id="tc-393"></a>TC-393 | — | New create repeated submission sends one POST while pending (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_repeated_submission_sends_one_post_while_pending`](../tests/frontend/form-session.test.cjs#L413); four rapid submits, one POST, Create disabled until the form reopens |
+| <a id="tc-394"></a>TC-394 | — | New create failure re-enables Create for retry (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_failure_reenables_create_for_retry`](../tests/frontend/form-session.test.cjs#L437); failure=http_error, invalid_json, network_error |
+| <a id="tc-395"></a>TC-395 | — | Late Create completion does not unlock or close a reopened form (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_late_completion_keeps_reopened_create_guard`](../tests/frontend/form-session.test.cjs#L466); late outcome=success, error, rejection |
 
 ## tests/frontend/lifecycle-action-disabled-state.test.cjs
 
