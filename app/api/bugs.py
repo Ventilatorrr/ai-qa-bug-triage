@@ -318,6 +318,7 @@ def update_bug(
     conn = get_connection()
 
     try:
+        conn.execute("BEGIN IMMEDIATE")
         membership = conn.execute(
             """
             SELECT role
@@ -499,6 +500,9 @@ def update_bug(
                 detail="Bug not found."
             )
 
+    except BaseException:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -536,6 +540,7 @@ def update_bug_status(
     conn = get_connection()
 
     try:
+        conn.execute("BEGIN IMMEDIATE")
         membership = conn.execute(
             """
             SELECT role
@@ -1023,6 +1028,9 @@ def update_bug_status(
                 detail="Bug not found."
             )
 
+    except BaseException:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
