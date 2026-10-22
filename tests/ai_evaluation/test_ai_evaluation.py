@@ -62,6 +62,9 @@ def test_evaluation_offline_records_production_contracts(monkeypatch):
     assert report["dataset_sha256"] == runner.fingerprint(scenarios_before)
     assert len(report["protocol_sha256"]) == 64
     assert report["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
+    assert report["dataset_versions"] == ["1"]
+    assert report["reasoning_effort"] is report["service_tier"] is None
+    assert "coverage" not in report
     assert len(requests) == len(report["attempts"]) == 6
     assert len(clients) == 6 and all(client.is_closed() for client in clients)
     assert [item["tc_id"] for item in report["attempts"]] == [f"TC-{number}" for number in range(351, 357)]
@@ -70,7 +73,12 @@ def test_evaluation_offline_records_production_contracts(monkeypatch):
 
     for scenario, record, request in zip(scenarios_before, report["attempts"], requests, strict=True):
         assert request == record["request"]
-        assert set(request) == {"model", "instructions", "input", "text", "store"}
+        # Default evaluation sends production's generation settings unchanged.
+        assert set(request) == {"model", "reasoning", "service_tier", "instructions", "input", "text", "store"}
+        assert request["reasoning"] == {"effort": "medium"}
+        assert request["service_tier"] == "fast"
+        assert record["requested_service_tier"] == "fast"
+        assert record["dataset_version"] == "1"
         assert request["model"] == "gpt-6-luna"
         assert record["client_config"] == report["client_config"]
         assert request["store"] is False
@@ -392,14 +400,16 @@ def test_quality_offline_batches_record_production_requests_and_unique_execution
     report = json.loads(evidence.read_text(encoding="utf-8"))
     assert [item["scenario_id"] for item in report["attempts"]] == expected
     assert report["selection"]["scenario_ids"] == expected
-    assert report["dataset_version"] == "quality-1"
+    assert report["dataset_versions"] == sorted({"1" if item.startswith("EVAL-") else "quality-1" for item in expected})
+    assert [item["dataset_version"] for item in report["attempts"]] == [
+        "1" if item.startswith("EVAL-") else "quality-1" for item in expected
+    ]
     assert len(requests) == len(clients) == len(expected) <= report["request_limit"] == 6
     assert all(client.is_closed() for client in clients)
     assert report["not_run"] == report["not_run_execution_ids"] == []
     assert report["stop_reason"] is None
     assert report["database_created"] is report["live_model_evaluated"] is False
-    assert "88 Covered / 0 Partial / 0 Not Covered" in report["coverage"]
-    assert "remains Partial" not in report["coverage"]
+    assert "coverage" not in report
     execution_ids = [item["execution_id"] for item in report["attempts"]]
     assert len(execution_ids) == len(set(execution_ids))
     assert execution_ids == [item["execution_id"] for item in report["execution_plan"]]
@@ -490,7 +500,7 @@ def test_evaluation_reasoning_arms_preserve_requests_and_inputs(monkeypatch):
         assert runner.main(["--offline", "--output", str(output), "--scenarios", *identifiers, *arguments]) == 0
         report = json.loads((output / "run.json").read_text(encoding="utf-8"))
         reports.append(report)
-        assert report["reasoning_effort"] == ("low" if label == "low" else "medium")
+        assert report["reasoning_effort"] == (None if label == "default" else label)
         assert report["selection"]["scenario_ids"] == identifiers
         assert report["request_limit"] == len(report["attempts"]) == 6
         assert report["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
@@ -512,10 +522,9 @@ def test_evaluation_reasoning_arms_preserve_requests_and_inputs(monkeypatch):
 
     for baseline, explicit_medium, low in zip(*(report["attempts"] for report in reports), strict=True):
         assert baseline["request"] == explicit_medium["request"]
-        assert set(baseline["request"]) == {"model", "instructions", "input", "text", "store"}
-        low_request = deepcopy(low["request"])
-        assert low_request.pop("reasoning") == {"effort": "low"}
-        assert low_request == baseline["request"]
+        assert set(baseline["request"]) == {"model", "reasoning", "service_tier", "instructions", "input", "text", "store"}
+        assert baseline["request"]["reasoning"] == {"effort": "medium"}
+        assert low["request"] == baseline["request"] | {"reasoning": {"effort": "low"}}
         assert baseline["generation_input"] == explicit_medium["generation_input"] == low["generation_input"]
         assert baseline["generation_sha256"] == low["generation_sha256"]
         assert baseline["validated_output"] == explicit_medium["validated_output"] == low["validated_output"]
@@ -630,14 +639,14 @@ def test_evaluation_fast_preserves_standard_requests_and_records_actual_tier(mon
                             "--output", str(output), "--scenarios", *identifiers]) == 0
         report = json.loads((output / "run.json").read_text(encoding="utf-8"))
         reports.append(report)
-        assert report["requested_service_tier"] == ("fast" if tier == "fast" else None)
+        assert report["service_tier"] == tier
         assert len(report["attempts"]) == report["request_limit"] == 6
         assert report["not_run"] == [] and report["stop_reason"] is None
         assert report["database_created"] is report["live_model_evaluated"] is False
         for attempt, request in zip(report["attempts"], requests[-6:], strict=True):
             assert attempt["request"] == request
             assert attempt["provider"]["service_tier"] == returned_tier
-            assert attempt["requested_service_tier"] == report["requested_service_tier"]
+            assert attempt["requested_service_tier"] == ("fast" if tier == "fast" else None)
             assert attempt["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
             assert attempt["validator_exclusions"] == [] and all(attempt["mechanical_checks"].values())
             if tier == "fast" or reasoning_effort == "high":
@@ -682,7 +691,7 @@ def test_evaluation_invalid_service_tier_precedes_io(monkeypatch, service_tier):
     assert not runner.OUTPUT_ROOT.exists()
 
 
-# TC-384 | AC — — Historical wire modes/inputs survive; explicit Medium Fast matches production.
+# TC-384 | AC — — Default and explicit Medium Fast match production; overrides change only effort/tier.
 def test_evaluation_explicit_medium_fast_preserves_existing_modes(monkeypatch):
     ids = ["EVAL-D", "EVAL-F", "Q1", "Q5", "Q7", "Q11"]
     original = runner.offline_response
@@ -697,24 +706,24 @@ def test_evaluation_explicit_medium_fast_preserves_existing_modes(monkeypatch):
         return httpx2.Response(200, json=body)
 
     monkeypatch.setattr(runner, "offline_response", respond)
+    # (name, CLI overrides, effort sent, service tier sent)
     modes = [
-        ("medium-standard", "medium", "standard", False),
-        ("low-standard", "low", "standard", False),
-        ("low-fast", "low", "fast", False),
-        ("medium-fast-implicit", "medium", "fast", False),
-        ("medium-fast-explicit", "medium", "fast", True),
-        ("high-standard", "high", "standard", False),
-        ("high-fast", "high", "fast", False),
+        ("default", [], "medium", "fast"),
+        ("medium-fast-explicit", ["--explicit-medium"], "medium", "fast"),
+        ("medium-fast", ["--reasoning-effort", "medium", "--service-tier", "fast"], "medium", "fast"),
+        ("medium-standard", ["--reasoning-effort", "medium", "--service-tier", "standard"], "medium", None),
+        ("low-fast", ["--reasoning-effort", "low", "--service-tier", "fast"], "low", "fast"),
+        ("low-standard", ["--reasoning-effort", "low", "--service-tier", "standard"], "low", None),
+        ("high-fast", ["--reasoning-effort", "high", "--service-tier", "fast"], "high", "fast"),
+        ("high-standard", ["--reasoning-effort", "high", "--service-tier", "standard"], "high", None),
     ]
     reports = {}
-    for name, effort, tier, explicit in modes:
+    for name, overrides, effort, tier in modes:
         output = runner.OUTPUT_ROOT / name
-        assert runner.main(["--offline", "--reasoning-effort", effort, "--service-tier", tier,
-                            "--output", str(output), "--scenarios", *ids]
-                           + (["--explicit-medium"] if explicit else [])) == 0
+        assert runner.main(["--offline", "--output", str(output), "--scenarios", *ids, *overrides]) == 0
         report = json.loads((output / "run.json").read_text(encoding="utf-8"))
         reports[name] = report
-        assert report["explicit_medium"] is explicit
+        assert report["explicit_medium"] is (name == "medium-fast-explicit")
         assert [a["scenario_id"] for a in report["attempts"]] == ids
         assert len(report["attempts"]) == report["request_limit"] == 6
         assert report["not_run"] == [] and report["stop_reason"] is None
@@ -723,9 +732,9 @@ def test_evaluation_explicit_medium_fast_preserves_existing_modes(monkeypatch):
             assert attempt["request"] == wire
             assert wire["model"] == "gpt-6-luna" and wire["store"] is False
             assert wire["text"]["format"]["strict"] is True and "verbosity" not in wire["text"]
-            assert wire.get("reasoning") == ({"effort": effort} if effort in {"low", "high"} or explicit else None)
-            assert wire.get("service_tier") == ("fast" if tier == "fast" else None)
-            assert attempt["requested_service_tier"] == wire.get("service_tier")
+            assert wire["reasoning"] == {"effort": effort}
+            assert wire.get("service_tier") == tier
+            assert attempt["requested_service_tier"] == tier
             assert attempt["provider"]["service_tier"] == ("priority" if tier == "fast" else "default")
             assert attempt["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
             assert attempt["validator_exclusions"] == [] and all(attempt["mechanical_checks"].values())
@@ -735,35 +744,29 @@ def test_evaluation_explicit_medium_fast_preserves_existing_modes(monkeypatch):
             elif effort == "high":
                 assert attempt["estimated_cost_usd"] == 0.0001695
                 assert attempt["cost_estimate_basis"] == "returned_service_tier"
+            else:
+                assert attempt["estimated_cost_usd"] == 0.00018  # Legacy Standard estimate.
     assert len({r["dataset_sha256"] for r in reports.values()}) == 1
     from app.ai_openai import request_openai_suggestions
 
     for index in range(6):
         attempts = {name: r["attempts"][index] for name, r in reports.items()}
         assert len({a["generation_sha256"] for a in attempts.values()}) == 1
-        assert all(a["generation_input"] == attempts["low-fast"]["generation_input"] for a in attempts.values())
-        expected = deepcopy(attempts["low-fast"]["request"])
-        expected["reasoning"] = {"effort": "medium"}
-        assert attempts["medium-fast-explicit"]["request"] == expected
+        assert all(a["generation_input"] == attempts["default"]["generation_input"] for a in attempts.values())
+        # The production adapter's own wire request, with no evaluation recorder.
         scenario = runner.select_scenarios(scenario_ids=[ids[index]])[0]
         with runner.create_client(live=False, scenario=scenario) as client:
-            raw = request_openai_suggestions(
-                deepcopy(attempts["medium-fast-explicit"]["generation_input"]), client=client,
-            )
-        assert requests[-1] == attempts["medium-fast-explicit"]["request"]
-        assert raw == attempts["medium-fast-explicit"]["decoded_response"]
-        high = deepcopy(expected)
-        high["reasoning"] = {"effort": "high"}
-        assert attempts["high-fast"]["request"] == high
-        high.pop("service_tier")
-        assert attempts["high-standard"]["request"] == high
-        expected.pop("reasoning")
-        assert attempts["medium-fast-implicit"]["request"] == expected
-        expected.pop("service_tier")
-        assert attempts["medium-standard"]["request"] == expected
-        expected["reasoning"] = {"effort": "low"}
-        assert attempts["low-standard"]["request"] == expected
-    assert len(requests) == 48
+            raw = request_openai_suggestions(deepcopy(attempts["default"]["generation_input"]), client=client)
+        production = requests[-1]
+        assert raw == attempts["default"]["decoded_response"]
+        for name in ("default", "medium-fast-explicit", "medium-fast"):
+            assert attempts[name]["request"] == production
+        standard = {key: value for key, value in production.items() if key != "service_tier"}
+        assert attempts["medium-standard"]["request"] == standard
+        for effort in ("low", "high"):
+            assert attempts[f"{effort}-fast"]["request"] == production | {"reasoning": {"effort": effort}}
+            assert attempts[f"{effort}-standard"]["request"] == standard | {"reasoning": {"effort": effort}}
+    assert len(requests) == 54
 
 
 # TC-385 | AC — — Explicit Medium cannot silently alter Low or Standard selections.
