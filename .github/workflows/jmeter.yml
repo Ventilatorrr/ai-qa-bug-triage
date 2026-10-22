@@ -1,0 +1,200 @@
+
+name: JMeter CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  jmeter:
+    name: JMeter API smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    env:
+      OPENAI_API_KEY: ''
+      OPENAI_BASE_URL: http://127.0.0.1:9/v1
+      AI_EVALUATION_ALLOW_LIVE: '0'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install application dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install JMeter
+        run: |
+          curl -fL --retry 1 --connect-timeout 15 --max-time 180 \
+            https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz \
+            -o "$RUNNER_TEMP/jmeter.tgz"
+          tar -xzf "$RUNNER_TEMP/jmeter.tgz" -C "$RUNNER_TEMP"
+
+      - name: Prepare disposable database
+        run: |
+          test_dir=$(mktemp -d "$RUNNER_TEMP/jmeter-ci-XXXXXX")
+          echo "TEST_DIR=$test_dir" >> "$GITHUB_ENV"
+          echo "DATABASE_NAME=$test_dir/disposable.sqlite3" >> "$GITHUB_ENV"
+
+          jwt_secret=$(
+            python -c 'import secrets; print(secrets.token_urlsafe(48))'
+          )
+          echo "::add-mask::$jwt_secret"
+          echo "JWT_SECRET_KEY=$jwt_secret" >> "$GITHUB_ENV"
+
+      - name: Start isolated FastAPI server
+        run: |
+          python - <<'PY'
+          import os
+          import socket
+          from pathlib import Path
+          from app import database
+
+          db = Path(os.environ['DATABASE_NAME'])
+          assert db.is_absolute() and not db.exists()
+          assert database.DATABASE_NAME == str(db)
+
+          with socket.socket() as listener:
+              listener.bind(('127.0.0.1', 8148))
+          PY
+
+          python -m uvicorn app.main:app \
+            --host 127.0.0.1 --port 8148 --no-access-log \
+            > "$RUNNER_TEMP/jmeter-server.log" 2>&1 &
+
+          echo "$!" > "$RUNNER_TEMP/jmeter-server.pid"
+
+          ready=false
+          for attempt in {1..30}; do
+            if ! kill -0 "$(cat "$RUNNER_TEMP/jmeter-server.pid")" \
+                2>/dev/null; then
+              break
+            fi
+
+            if curl -fsS --noproxy '*' --max-time 1 \
+                http://127.0.0.1:8148/version \
+                > /dev/null 2>&1; then
+              ready=true
+              break
+            fi
+
+            sleep 1
+          done
+
+          if [[ "$ready" != true || ! -f "$DATABASE_NAME" ]]; then
+            cat "$RUNNER_TEMP/jmeter-server.log"
+            exit 1
+          fi
+
+      - name: Run JMeter smoke test
+        run: |
+          mkdir -p "$RUNNER_TEMP/jmeter-results"
+
+          "$RUNNER_TEMP/apache-jmeter-5.6.3/bin/jmeter" -n \
+            -t jmeter/api-performance.jmx \
+            -Jusers=1 -Jloops=1 -Jduration=30 \
+            -l "$RUNNER_TEMP/jmeter-results/smoke.jtl" \
+            -j "$RUNNER_TEMP/jmeter-results/jmeter.log"
+
+      - name: Verify seven successful requests
+        run: |
+          python - <<'PY'
+          import csv
+          import os
+          from collections import Counter
+          from pathlib import Path
+
+          path = (
+              Path(os.environ['RUNNER_TEMP'])
+              / 'jmeter-results/smoke.jtl'
+          )
+
+          with path.open(newline='', encoding='utf-8') as file:
+              rows = list(csv.DictReader(file))
+
+          expected = Counter({
+              'GET Application Version': 1,
+              'POST Register User': 1,
+              'POST Login User': 1,
+              'GET Projects': 1,
+              'POST Create Project': 1,
+              'POST Create Bug': 1,
+              'GET Created Bug': 1,
+          })
+
+          actual = Counter(row['label'] for row in rows)
+
+          assert actual == expected, 'Wrong request counts'
+          assert all(
+              row['success'] == 'true' for row in rows
+          ), 'JMeter requests or assertions failed'
+
+          print('PASS: 7 samples, 0 errors')
+          PY
+
+      - name: Stop server and remove disposable database
+        if: ${{ always() }}
+        run: |
+          if [[ -f "$RUNNER_TEMP/jmeter-server.pid" ]]; then
+            server_pid=$(cat "$RUNNER_TEMP/jmeter-server.pid")
+
+            if [[ ! "$server_pid" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::error::Invalid owned server PID; preserving database."
+              exit 1
+            fi
+
+            if kill -0 "$server_pid" 2>/dev/null; then
+              kill -TERM "$server_pid" 2>/dev/null || true
+
+              for attempt in {1..10}; do
+                kill -0 "$server_pid" 2>/dev/null || break
+                sleep 1
+              done
+
+              if kill -0 "$server_pid" 2>/dev/null; then
+                echo "::error::Server did not stop; preserving database."
+                exit 1
+              fi
+            fi
+          fi
+
+          if [[ -n "${TEST_DIR:-}" ]]; then
+            if [[ ! "$TEST_DIR" =~ ^"$RUNNER_TEMP"/jmeter-ci-[[:alnum:]]{6}$ ]]; then
+              echo "::error::Unexpected disposable directory."
+              exit 1
+            fi
+
+            rm -rf -- "$TEST_DIR"
+          fi
+
+      - name: Upload JMeter results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: jmeter-smoke-results
+          path: |
+            ${{ runner.temp }}/jmeter-results/
+            ${{ runner.temp }}/jmeter-server.log
+          if-no-files-found: warn
+          retention-days: 7

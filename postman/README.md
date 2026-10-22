@@ -122,7 +122,7 @@ is killed by owned PID and the job fails; leftover owned data also fails the job
 There is no runtime-directory sweep. Abrupt runner loss or forced job termination
 cannot guarantee normal cleanup; the hosted runner itself is disposable.
 
-Inspect **Actions → Postman API regression → a run** for the outcome. Hosted
+Inspect **Actions → Postman CI → a run** for the outcome. Hosted
 execution, including real Linux startup/SIGINT cleanup, remains **unverified**
 until an actual GitHub Actions run completes. Local syntax and Bash workflow
 simulations are recorded separately in the execution report.
