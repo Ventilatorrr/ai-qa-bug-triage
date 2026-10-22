@@ -332,7 +332,7 @@ def add_project_member(
         member_email = member.get("email")
         member_role = member.get("role")
 
-        if not member_email:
+        if not isinstance(member_email, str) or not member_email:
             raise HTTPException(
                 status_code=422,
                 detail="Member email is required."

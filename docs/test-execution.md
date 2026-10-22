@@ -8,6 +8,40 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Malformed Add Member email HTTP 500 (audit B2) — 22 October 2026
+
+Reproduced manually by the user with Postman against a disposable environment:
+`POST /projects/{id}/members` with `"email": ["qa@example.com"]` as the Project
+Owner returned HTTP 500. No separate in-app bug report was recorded (user
+decision). Tracked by branch `fix/validate-member-email-input` and TC-403.
+
+Cause: the endpoint reads a plain `dict` body and only checked `if not
+member_email`. A non-empty array or object is truthy, so it reached the users
+lookup, where `sqlite3` raised `ProgrammingError` (unsupported parameter type),
+which was unhandled. Numbers and `true` were bound as integers, found no user and
+returned 404 instead of 422. Fix in `app/api/projects.py`: the existing email
+check also requires a string (`isinstance`), matching the project-name
+validation. Non-string values now return 422 `Member email is required.` before
+any member lookup; owner checks, role validation and valid-email behavior are
+unchanged.
+
+New case TC-403 (`—` AC mapping; no AC covers request types). Against the
+pre-fix endpoint, the array and object variants raised `ProgrammingError`, number
+and boolean returned 404, and null and empty string passed (already 422). An
+isolated scratch-database reproduction confirmed HTTP 500 for array and object,
+with no membership created. With the fix:
+
+- TC-403: **6 passed**; `tests/backend/test_projects.py`: **53 passed**, including
+  valid add (TC-202), unknown user (TC-207), duplicate 409 (TC-208) and non-owner
+  denial (TC-214).
+- Full offline backend (`tests/backend`): **581 passed in 453.05s** (575 + 6),
+  serial, no API key, temporary databases only. The default suite now collects
+  644 tests; the 63 evaluation-harness cases were not rerun (unchanged).
+- `git diff --check` passed. No frontend, Postman, Playwright or live AI runs.
+
+Not changed here: the Add Member check-then-insert race (an overlapping
+duplicate can raise an uncaught `IntegrityError`, giving HTTP 500).
+
 ## Duplicate Add Member submission — 22 October 2026
 
 Reproduced manually by the user with Chrome DevTools throttling: repeated Add

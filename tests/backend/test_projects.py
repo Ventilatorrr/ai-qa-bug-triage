@@ -1298,3 +1298,58 @@ def test_non_owner_cannot_delete_project(
 
     assert get_response.status_code == 200
     assert get_response.json()["name"] == "Protected Delete Project"
+
+
+# TC-403 | Technical — Add member rejects empty or non string email (audit B2 regression)
+@pytest.mark.parametrize(
+    "email",
+    [
+        ["qa@example.com"],
+        {"email": "qa@example.com"},
+        123,
+        True,
+        None,
+        ""
+    ]
+)
+def test_add_member_rejects_empty_or_non_string_email(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory,
+    email
+):
+    owner = authenticated_user_factory(
+        email="malformed-email-owner@example.com",
+        password="Password1"
+    )
+    user_factory(
+        email="qa@example.com",
+        password="Password1"
+    )
+
+    project = project_factory(
+        owner["token"],
+        name="Malformed Member Email Project"
+    )
+
+    members_url = f"/projects/{project['id']}/members"
+    headers = {"Authorization": f"Bearer {owner['token']}"}
+    before = test_client.get(members_url, headers=headers)
+    assert before.status_code == 200
+
+    response = test_client.post(
+        members_url,
+        json={
+            "email": email,
+            "role": "Developer"
+        },
+        headers=headers
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Member email is required."}
+
+    after = test_client.get(members_url, headers=headers)
+    assert after.status_code == 200
+    assert after.json() == before.json()
