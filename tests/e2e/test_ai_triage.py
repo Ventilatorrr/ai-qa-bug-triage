@@ -2,12 +2,14 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_bug, unique_name
+from tests.e2e.pages import BugForm
 
 
 # TC-325 | AC-018.2, AC-018.3, AC-020.1, AC-020.2, AC-020.3, AC-020.4, AC-020.7 — New AI review applies only selected suggestions before create
 def test_new_ai_review_applies_only_selected_suggestions_before_create(
     page, e2e_api, workspace,
 ):
+    form = BugForm(page)
     login(page, workspace["owner"])
     page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
 
@@ -20,33 +22,31 @@ def test_new_ai_review_applies_only_selected_suggestions_before_create(
     page.get_by_role("button", name="New Bug", exact=True).click()
 
     title = unique_name("AI draft")
-    page.get_by_label("Title:", exact=True).fill(title)
-    page.get_by_label("Description:", exact=True).fill("Manual description")
-    page.get_by_label("Severity:", exact=True).select_option("Minor")
-    expect(page.get_by_role("button", name="AI Assist", exact=True)).to_be_visible()
+    form.title.fill(title)
+    form.description.fill("Manual description")
+    form.severity.select_option("Minor")
+    expect(form.ai_assist).to_be_visible()
     assert ai_requests == []
 
-    page.get_by_role("button", name="AI Assist", exact=True).click()
-    expect(page.get_by_role("article", name="AI suggestion: Title", exact=True)).to_contain_text(
-        f"Reviewed {title}"
-    )
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(title)
+    form.ai_assist.click()
+    expect(form.suggestion("Title")).to_contain_text(f"Reviewed {title}")
+    expect(form.title).to_have_value(title)
 
-    page.get_by_role("button", name="Use Title suggestion", exact=True).click()
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(f"Reviewed {title}")
+    form.use_suggestion("Title")
+    expect(form.title).to_have_value(f"Reviewed {title}")
 
     revised = unique_name("Manually revised AI title")
-    page.get_by_label("Title:", exact=True).fill(revised)
-    page.get_by_role("button", name="Dismiss Description suggestion", exact=True).click()
-    page.get_by_role("button", name="Use All", exact=True).click()
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(revised)
-    expect(page.get_by_label("Description:", exact=True)).to_have_value("Manual description")
-    expect(page.get_by_label("Severity:", exact=True)).to_have_value("Major")
+    form.title.fill(revised)
+    form.dismiss_suggestion("Description")
+    form.use_all()
+    expect(form.title).to_have_value(revised)
+    expect(form.description).to_have_value("Manual description")
+    expect(form.severity).to_have_value("Major")
     assert len(ai_requests) == 1
     collection = f"/projects/{workspace['project']['id']}/bugs"
     assert api_call(e2e_api, "GET", collection, workspace["owner"]) == []
 
-    page.get_by_role("button", name="Create", exact=True).click()
+    form.create.click()
     page.get_by_role("link", name="BUG-1", exact=True).click()
 
     page.reload()
@@ -58,31 +58,32 @@ def test_new_ai_review_applies_only_selected_suggestions_before_create(
 # TC-326 | AC-020.5, AC-020.7, AC-020.8 — Edit AI cancel discards changes then save persists review
 def test_edit_ai_cancel_discards_changes_then_save_persists_review(page, e2e_api, workspace):
     bug = seed_bug(e2e_api, workspace, description="Stored description", severity="Minor")
+    form = BugForm(page)
 
     login(page, workspace["qa"])
     open_bug(page, workspace, bug)
     page.get_by_role("button", name="Edit", exact=True).click()
 
-    page.get_by_role("button", name="AI Assist", exact=True).click()
-    page.get_by_role("button", name="Use Title suggestion", exact=True).click()
-    page.get_by_role("button", name="Dismiss All", exact=True).click()
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(f"Reviewed {bug['title']}")
-    expect(page.get_by_label("Description:", exact=True)).to_have_value("Stored description")
+    form.ai_assist.click()
+    form.use_suggestion("Title")
+    form.dismiss_all()
+    expect(form.title).to_have_value(f"Reviewed {bug['title']}")
+    expect(form.description).to_have_value("Stored description")
 
-    page.get_by_role("button", name="Cancel", exact=True).click()
+    form.cancel.click()
     assert api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"]) == bug
 
     page.get_by_role("button", name="Edit", exact=True).click()
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(bug["title"])
-    expect(page.get_by_role("article", name="AI suggestion: Title", exact=True)).to_have_count(0)
+    expect(form.title).to_have_value(bug["title"])
+    expect(form.suggestion("Title")).to_have_count(0)
 
-    page.get_by_role("button", name="AI Assist", exact=True).click()
-    page.get_by_role("button", name="Use All", exact=True).click()
+    form.ai_assist.click()
+    form.use_all()
     revised = unique_name("Saved reviewed edit")
-    page.get_by_label("Title:", exact=True).fill(revised)
+    form.title.fill(revised)
     assert api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"]) == bug
 
-    page.get_by_role("button", name="Save", exact=True).click()
+    form.save.click()
     expect(page.get_by_role("heading", name=revised, exact=True)).to_be_visible()
 
     page.reload()
@@ -104,19 +105,20 @@ def test_edit_ai_cancel_discards_changes_then_save_persists_review(page, e2e_api
 def test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry(
     page, e2e_api, workspace, outcome, message,
 ):
+    form = BugForm(page)
     login(page, workspace["owner"])
     page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
     page.get_by_role("button", name="New Bug", exact=True).click()
 
     title = unique_name("Manual continuation")
-    page.get_by_label("Title:", exact=True).fill(title)
-    page.get_by_label("Description:", exact=True).fill(f"E2E:{outcome}")
-    page.get_by_role("button", name="AI Assist", exact=True).click()
+    form.title.fill(title)
+    form.description.fill(f"E2E:{outcome}")
+    form.ai_assist.click()
 
     expect(page.get_by_text(message, exact=outcome == "failure")).to_be_visible()
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(title)
-    expect(page.get_by_label("Description:", exact=True)).to_have_value(f"E2E:{outcome}")
-    expect(page.get_by_role("button", name="AI Assist", exact=True)).to_be_enabled()
+    expect(form.title).to_have_value(title)
+    expect(form.description).to_have_value(f"E2E:{outcome}")
+    expect(form.ai_assist).to_be_enabled()
     assert api_call(
         e2e_api, "GET", f"/projects/{workspace['project']['id']}/bugs", workspace["owner"]
     ) == []
@@ -124,12 +126,12 @@ def test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry(
     with page.expect_response(
         lambda response: response.url.endswith("/ai-assist") and response.request.method == "POST"
     ) as retry:
-        page.get_by_role("button", name="AI Assist", exact=True).click()
+        form.ai_assist.click()
     assert retry.value.status == (502 if outcome == "failure" else 200)
     expect(page.get_by_text(message, exact=outcome == "failure")).to_be_visible()
 
-    page.get_by_label("Description:", exact=True).fill("Manual recovery details")
-    page.get_by_role("button", name="Create", exact=True).click()
+    form.description.fill("Manual recovery details")
+    form.create.click()
     page.get_by_role("link", name="BUG-1", exact=True).click()
 
     expect(page.get_by_role("heading", name=title, exact=True)).to_be_visible()

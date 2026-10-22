@@ -509,10 +509,10 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-325"></a>TC-325 | AC-018.2, AC-018.3, AC-020.1, AC-020.2, AC-020.3, AC-020.4, AC-020.7 | New AI review applies only selected suggestions before create | Playwright / Chromium (mocked AI) | [`test_new_ai_review_applies_only_selected_suggestions_before_create`](../tests/e2e/test_ai_triage.py#L8); All variants |
+| <a id="tc-325"></a>TC-325 | AC-018.2, AC-018.3, AC-020.1, AC-020.2, AC-020.3, AC-020.4, AC-020.7 | New AI review applies only selected suggestions before create | Playwright / Chromium (mocked AI) | [`test_new_ai_review_applies_only_selected_suggestions_before_create`](../tests/e2e/test_ai_triage.py#L9); All variants |
 | <a id="tc-326"></a>TC-326 | AC-020.5, AC-020.7, AC-020.8 | Edit AI cancel discards changes then save persists review | Playwright / Chromium (mocked AI) | [`test_edit_ai_cancel_discards_changes_then_save_persists_review`](../tests/e2e/test_ai_triage.py#L59); All variants |
-| <a id="tc-327"></a>TC-327 | AC-018.4, AC-023.1, AC-023.2 | Recover manually and retry after AI service failure | Playwright / Chromium (mocked AI) | [`test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry`](../tests/e2e/test_ai_triage.py#L104); outcome=failure |
-| <a id="tc-328"></a>TC-328 | AC-018.4, AC-019.4, AC-023.2 | Recover manually and retry after valid empty AI output | Playwright / Chromium (mocked AI) | [`test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry`](../tests/e2e/test_ai_triage.py#L104); outcome=empty |
+| <a id="tc-327"></a>TC-327 | AC-018.4, AC-023.1, AC-023.2 | Recover manually and retry after AI service failure | Playwright / Chromium (mocked AI) | [`test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry`](../tests/e2e/test_ai_triage.py#L105); outcome=failure |
+| <a id="tc-328"></a>TC-328 | AC-018.4, AC-019.4, AC-023.2 | Recover manually and retry after valid empty AI output | Playwright / Chromium (mocked AI) | [`test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry`](../tests/e2e/test_ai_triage.py#L105); outcome=empty |
 
 ## tests/e2e/test_auth.py
 
@@ -532,18 +532,18 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-333"></a>TC-333 | AC-012.2, AC-012.4, AC-012.5, AC-012.6 | Sort pagination and page size survive navigation and reload | Playwright / Chromium | [`test_sort_pagination_and_page_size_survive_navigation_and_reload`](../tests/e2e/test_bug_list.py#L9); All variants |
-| <a id="tc-334"></a>TC-334 | AC-012.5, AC-012.6 | Page size preferences persist and are isolated by user | Playwright / Chromium | [`test_page_size_preferences_persist_and_are_isolated_by_user`](../tests/e2e/test_bug_list.py#L54); All variants |
+| <a id="tc-333"></a>TC-333 | AC-012.2, AC-012.4, AC-012.5, AC-012.6 | Sort pagination and page size survive navigation and reload | Playwright / Chromium | [`test_sort_pagination_and_page_size_survive_navigation_and_reload`](../tests/e2e/test_bug_list.py#L10); All variants |
+| <a id="tc-334"></a>TC-334 | AC-012.5, AC-012.6 | Page size preferences persist and are isolated by user | Playwright / Chromium | [`test_page_size_preferences_persist_and_are_isolated_by_user`](../tests/e2e/test_bug_list.py#L53); All variants |
 
 ## tests/e2e/test_bugs.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L76); All variants |
-| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L122); All variants |
-| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L167); All variants |
-| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L195); All variants |
-| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L13); title=normal/unbroken (2,000 characters), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
+| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L78); All variants |
+| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L125); All variants |
+| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L170); All variants |
+| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L198); All variants |
+| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L14); title=normal/unbroken (2,000 characters), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
 
 ## tests/e2e/test_projects.py
 
