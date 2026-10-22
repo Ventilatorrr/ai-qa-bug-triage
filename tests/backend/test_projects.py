@@ -1475,3 +1475,50 @@ def test_add_member_does_not_report_unrelated_integrity_failure_as_conflict(
     after = test_client.get(members_url, headers=headers)
     assert after.status_code == 200
     assert after.json() == before.json()
+
+
+# TC-408 | AC-009.1, AC-009.3, AC-009.4 — Add member matches emails like login (audit B7 regression)
+def test_add_member_matches_email_like_login(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    user_factory
+):
+    owner = authenticated_user_factory(email="case-owner@example.com")
+    # Registration stores the domain in lowercase: Case-Member@example.com.
+    member = user_factory(email="Case-Member@Example.COM")
+    project = project_factory(owner["token"], name="Email Case Project")
+    members_url = f"/projects/{project['id']}/members"
+    headers = {"Authorization": f"Bearer {owner['token']}"}
+
+    def add(email):
+        return test_client.post(
+            members_url,
+            json={"email": email, "role": "Developer"},
+            headers=headers
+        )
+
+    assert test_client.post("/login", json=member).status_code == 200
+
+    response = add(member["email"])
+
+    assert response.status_code == 201
+    assert response.json()["email"] == "Case-Member@example.com"
+
+    duplicate = add("Case-Member@EXAMPLE.com")
+
+    assert duplicate.status_code == 409
+    assert duplicate.json() == {"detail": "This user is already a member of this project."}
+
+    # The local part stays case-sensitive, as in registration and login.
+    for email in ["case-member@example.com", "not-an-email"]:
+        unknown = add(email)
+        assert unknown.status_code == 404
+        assert unknown.json() == {"detail": "User not found."}
+
+    members = test_client.get(members_url, headers=headers)
+    assert members.status_code == 200
+    assert [(row["email"], row["role"]) for row in members.json()] == [
+        ("case-owner@example.com", "Project Owner"),
+        ("Case-Member@example.com", "Developer")
+    ]

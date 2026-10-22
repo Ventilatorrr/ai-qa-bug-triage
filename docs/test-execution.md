@@ -8,6 +8,42 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Add Member email case handling (audit B7) — 22 October 2026
+
+Audit finding, partially confirmed on a disposable database before any production
+change. No separate in-app bug report was recorded (user decision). Tracked by
+branch `fix/member-email-case-handling` and TC-408.
+
+Registration and login validate emails with Pydantic `EmailStr`, which lowercases
+the domain and keeps the local part, and then compare exactly in SQLite. Their
+policy is therefore: domain case-insensitive, local part case-sensitive
+(`qa@example.com` and `QA@example.com` can be separate accounts). Add Member read
+the raw string, so it did not follow the domain rule:
+
+- A user registered as `Dev@Example.COM` (stored `Dev@example.com`) could log in
+  with that input, but Add Member with the same input returned 404.
+- `qa@EXAMPLE.COM` logged in (200) but Add Member returned 404, and a domain
+  variant of an existing member returned 404 instead of 409.
+- Local-part variants (`Qa@Example.com`) were rejected consistently (login 401,
+  Add Member 404). No duplicate memberships were created in any case.
+
+Fix in `app/api/projects.py`: Add Member normalizes the email with the same
+`EmailStr` validation before the lookup. Stored emails are already normalized
+this way (since registration was implemented), so existing exact matches are
+unchanged. Malformed addresses keep the existing 404 `User not found.`; non-string
+values keep B2's 422. Local-part case sensitivity is unchanged.
+
+TC-408 failed against the original endpoint (registration-cased input returned
+404 instead of 201). With the fix:
+
+- TC-408: **passed**. `test_projects.py`, `test_registration.py` and
+  `test_login.py`: **74 passed**, including Add Member (TC-202/203), unknown user
+  (TC-207), duplicate (TC-208), non-owner (TC-214), B2 (TC-403) and the race
+  cases (TC-404/405).
+- `tests/backend/test_bug.py`, which adds members in most setups: **138 passed**.
+- Full backend suite not rerun locally (narrow change); the default suite now
+  collects 649 tests and runs in CI. `git diff --check` passed.
+
 ## Concurrent bug edit and status updates (audit B3) — 22 October 2026
 
 Audit finding, confirmed before any production change. No separate in-app bug

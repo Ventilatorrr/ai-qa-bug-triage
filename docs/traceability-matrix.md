@@ -62,10 +62,10 @@ reopened-state readback. No new TC IDs or AC coverage changes accompany cleanup.
 | REQ-007 | AC-007.3 — Invalid Project Name Editing | [TC-195](test-cases.md#tc-195), [TC-196](test-cases.md#tc-196), [TC-314](test-cases.md#tc-314), [TC-315](test-cases.md#tc-315), [TC-316](test-cases.md#tc-316), [TC-317](test-cases.md#tc-317), [TC-318](test-cases.md#tc-318), [TC-319](test-cases.md#tc-319), [TC-320](test-cases.md#tc-320), [TC-323](test-cases.md#tc-323) | API; Frontend JS | Covered |
 | REQ-008 | AC-008.1 — Successful Project Deletion | [TC-199](test-cases.md#tc-199), [TC-200](test-cases.md#tc-200), [TC-339](test-cases.md#tc-339) | API; Playwright | Covered |
 | REQ-008 | AC-008.2 — Unauthorized Project Deletion | [TC-201](test-cases.md#tc-201), [TC-388](test-cases.md#tc-388) | API; BDD; Playwright | Covered |
-| REQ-009 | AC-009.1 — Add Member | [TC-202](test-cases.md#tc-202), [TC-203](test-cases.md#tc-203), [TC-331](test-cases.md#tc-331) | API; Playwright; Postman API | Covered |
+| REQ-009 | AC-009.1 — Add Member | [TC-202](test-cases.md#tc-202), [TC-203](test-cases.md#tc-203), [TC-331](test-cases.md#tc-331), [TC-408](test-cases.md#tc-408) | API; Playwright; Postman API | Covered |
 | REQ-009 | AC-009.2 — Remove Member | [TC-204](test-cases.md#tc-204), [TC-205](test-cases.md#tc-205), [TC-206](test-cases.md#tc-206), [TC-331](test-cases.md#tc-331) | API; Playwright | Covered |
-| REQ-009 | AC-009.3 — Invalid Member | [TC-207](test-cases.md#tc-207) | API | Covered |
-| REQ-009 | AC-009.4 — Duplicate Member | [TC-208](test-cases.md#tc-208) | API | Covered |
+| REQ-009 | AC-009.3 — Invalid Member | [TC-207](test-cases.md#tc-207), [TC-408](test-cases.md#tc-408) | API | Covered |
+| REQ-009 | AC-009.4 — Duplicate Member | [TC-208](test-cases.md#tc-208), [TC-408](test-cases.md#tc-408) | API | Covered |
 | REQ-009 | AC-009.5 — View Project Members | [TC-209](test-cases.md#tc-209), [TC-331](test-cases.md#tc-331) | API; Playwright; Postman API | Covered |
 | REQ-010 | AC-010.1 — Project Owner Role | [TC-211](test-cases.md#tc-211) | API; Postman API | Covered |
 | REQ-010 | AC-010.2 — QA Analyst Role | [TC-212](test-cases.md#tc-212) | API | Covered |

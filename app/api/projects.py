@@ -2,12 +2,16 @@ import sqlite3
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Header
+from pydantic import EmailStr, TypeAdapter, ValidationError
 
 from app.database import get_connection
 from app.api.auth import get_current_user_id
 
 
 router = APIRouter(tags=["Projects"])
+
+# Registration and login use EmailStr, which lowercases the domain only.
+EMAIL_ADAPTER = TypeAdapter(EmailStr)
 
 
 def validate_project_name(name):
@@ -349,6 +353,15 @@ def add_project_member(
             raise HTTPException(
                 status_code=422,
                 detail="Invalid project role."
+            )
+
+        try:
+            member_email = EMAIL_ADAPTER.validate_python(member_email)
+        except ValidationError:
+            # No registered account can have an invalid email address.
+            raise HTTPException(
+                status_code=404,
+                detail="User not found."
             )
 
         member_user = conn.execute(
