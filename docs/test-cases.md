@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-396**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-400**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (8 files) | 102 registered tests | 102 | Internal loops are variants |
+| Frontend Node (8 files) | 106 registered tests | 106 | Internal loops are variants |
 | Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 407 | **394** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 411 | **398** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -507,6 +507,10 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-322"></a>TC-322 | AC-005.1 | Project creation submits valid name unchanged | Frontend JS / DOM substitutes | [`test_project_creation_submits_valid_name_unchanged`](../tests/frontend/project-name-validation.test.cjs#L199); All variants |
 | <a id="tc-323"></a>TC-323 | AC-007.3 | Project edit blocks blank name submission | Frontend JS / DOM substitutes | [`test_project_edit_blocks_blank_name_submission`](../tests/frontend/project-name-validation.test.cjs#L189); All variants |
 | <a id="tc-324"></a>TC-324 | AC-007.1 | Project edit submits valid name unchanged | Frontend JS / DOM substitutes | [`test_project_edit_submits_valid_name_unchanged`](../tests/frontend/project-name-validation.test.cjs#L199); All variants |
+| <a id="tc-396"></a>TC-396 | — | New project repeated submission sends one POST while pending | Frontend JS / DOM substitutes | [`test_new_project_repeated_submission_sends_one_post_while_pending`](../tests/frontend/project-name-validation.test.cjs#L215); four rapid submits, one POST, Create disabled while pending |
+| <a id="tc-397"></a>TC-397 | — | New project failure re-enables Create for retry | Frontend JS / DOM substitutes | [`test_new_project_failure_reenables_create_for_retry`](../tests/frontend/project-name-validation.test.cjs#L238); failure=http_error, invalid_json, network_error |
+| <a id="tc-398"></a>TC-398 | — | Late project Create completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_new_project_late_completion_keeps_reopened_form`](../tests/frontend/project-name-validation.test.cjs#L265); late outcome=success, error, rejection |
+| <a id="tc-399"></a>TC-399 | — | Overlapping project list refreshes render each project once | Frontend JS / DOM substitutes | [`test_overlapping_project_list_refreshes_render_each_project_once`](../tests/frontend/project-name-validation.test.cjs#L299); finish=interleaved, superseded_last |
 
 ## tests/e2e/test_ai_triage.py
 
