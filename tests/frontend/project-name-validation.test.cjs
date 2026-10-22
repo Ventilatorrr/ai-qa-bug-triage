@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const {Element} = require("./helpers/ai-fixture.cjs");
+const {Element, deferred} = require("./helpers/ai-fixture.cjs");
 
 function projectPage() {
     const element = tag => {
@@ -27,11 +27,11 @@ function projectPage() {
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/projects.js"), "utf8"), runtime);
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/api-errors.js"), "utf8"), runtime);
     node("#project-form").reset = () => {};
-    runtime.loadProjects = () => {};
+    const realLoadProjects = runtime.loadProjects; let refreshes = 0; runtime.loadProjects = () => { refreshes++; };
     runtime.renderProjectView = () => {};
-    let serverError = null;
+    let serverError = null, send = null;
     runtime.authenticatedFetch = async (url, options) => {
-        requests.push({url, ...options});
+        requests.push({url, ...options}); if (send) return send(url, options);
         if (serverError) return {ok: false, status: serverError.status, json: async () => ({detail: serverError.detail})};
         return {ok: true, json: async () => ({id: 1, ...JSON.parse(options.body)})};
     };
@@ -40,7 +40,7 @@ function projectPage() {
     let editInput;
     const click = selector => node(selector).click();
     return {
-        node, requests,
+        node, requests, runtime, realLoadProjects, createButton: node("#create-project-button"), refreshes: () => refreshes, setSend: fn => { send = fn; },
         showPageError: text => runtime.showProjectMessage(text, "error"),
         setServerError: (status, detail) => { serverError = {status, detail}; },
         open(edit, id = 1) {
@@ -207,3 +207,134 @@ for (const edit of [false, true]) {
         }
     });
 }
+
+const created = name => ({ok: true, status: 201, json: async () => ({id: 7, name})});
+const tick = () => new Promise(resolve => setImmediate(resolve));
+
+// TC-396 | Technical — New project repeated submission sends one POST while pending
+test("test_new_project_repeated_submission_sends_one_post_while_pending", async () => {
+    const page = projectPage(), pending = deferred();
+    page.open(false);
+    assert.equal(page.createButton.disabled, false);
+    page.setSend(() => pending.promise);
+    // Double-click and repeated Enter before the first response arrives.
+    const submits = [1, 2, 3, 4].map(() => page.submit(false, "Single Project"));
+    assert.equal(page.requests.length, 1, "only the first Create reaches the server");
+    assert.equal(page.requests[0].method, "POST");
+    assert.equal(page.createButton.disabled, true, "Create stays unavailable while the request is pending");
+    assert.equal(page.node("#project-form").hidden, false);
+
+    pending.resolve(created("Single Project"));
+    await Promise.all(submits);
+    assert.equal(page.requests.length, 1);
+    assert.equal(page.node("#project-form").hidden, true);
+    assert.equal(page.refreshes(), 1);
+    assert.equal(page.node("#message").textContent, 'Project "Single Project" created successfully.');
+    page.open(false);
+    assert.equal(page.createButton.disabled, false);
+});
+
+// TC-397 | Technical — New project failure re-enables Create for retry
+test("test_new_project_failure_reenables_create_for_retry", async () => {
+    for (const failure of ["http_error", "invalid_json", "network_error"]) {
+        const page = projectPage(), pending = deferred();
+        page.open(false);
+        page.setSend(() => pending.promise);
+        const first = page.submit(false, "Retry Project");
+        assert.equal(page.createButton.disabled, true);
+        if (failure === "network_error") pending.reject(new Error("Offline"));
+        else if (failure === "invalid_json") pending.resolve({ok: false, status: 500, json: async () => { throw new SyntaxError("Unexpected token <"); }});
+        else pending.resolve({ok: false, status: 503, json: async () => ({detail: "Service unavailable."})});
+        await first;
+        assert.equal(page.createButton.disabled, false, `${failure} allows another submission`);
+        assert.equal(page.node("#project-form").hidden, false);
+        assert.equal(page.node("#project-name").value, "Retry Project");
+        assert.equal(page.node("#message").textContent,
+            failure === "http_error" ? "Service unavailable." : "Unable to create project. Please try again.");
+        assert.equal(page.refreshes(), 0);
+
+        page.setSend(async () => created("Retry Project"));
+        await page.submit(false, "Retry Project");
+        assert.equal(page.requests.filter(request => request.method === "POST").length, 2);
+        assert.equal(page.node("#project-form").hidden, true);
+        assert.equal(page.refreshes(), 1);
+    }
+});
+
+// TC-398 | Technical — Late project Create completion does not affect a reopened form
+test("test_new_project_late_completion_keeps_reopened_form", async () => {
+    for (const outcome of ["success", "error", "rejection"]) {
+        const page = projectPage(), old = deferred(), newer = deferred();
+        page.open(false);
+        page.setSend(() => old.promise);
+        const oldSubmit = page.submit(false, "First Project");
+        page.cancel(false);
+        assert.equal(page.createButton.disabled, false, "Cancel ends the abandoned interaction's guard");
+        page.open(false);
+        assert.equal(page.createButton.disabled, false);
+
+        page.setSend(() => newer.promise);
+        const newerSubmits = [page.submit(false, "Newer Project"), page.submit(false, "Newer Project")];
+        assert.equal(page.requests.length, 2, "the newer interaction is guarded too");
+        page.showPageError("Newer feedback");
+
+        if (outcome === "rejection") old.reject(new Error("Old transport error"));
+        else if (outcome === "error") old.resolve({ok: false, status: 503, json: async () => ({detail: "Old error"})});
+        else old.resolve(created("First Project"));
+        await oldSubmit;
+        assert.equal(page.createButton.disabled, true, `late ${outcome} must not unlock the newer pending Create`);
+        assert.equal(page.node("#project-form").hidden, false, `late ${outcome} must not close the newer form`);
+        assert.equal(page.node("#project-name").value, "Newer Project");
+        assert.equal(page.node("#message").textContent, "Newer feedback", `late ${outcome} writes no feedback`);
+        assert.equal(page.refreshes(), outcome === "success" ? 1 : 0, "a saved late project still refreshes the list");
+
+        newer.resolve(created("Newer Project"));
+        await Promise.all(newerSubmits);
+        assert.equal(page.node("#project-form").hidden, true);
+        assert.equal(page.node("#message").textContent, 'Project "Newer Project" created successfully.');
+    }
+});
+
+// TC-399 | Technical — Overlapping project list refreshes render each project once
+test("test_overlapping_project_list_refreshes_render_each_project_once", async () => {
+    for (const finish of ["interleaved", "superseded_last"]) {
+        const page = projectPage(), lists = [], roles = [];
+        page.setSend(() => { const response = deferred(); lists.push(response); return response.promise; });
+        page.runtime.getProjectRole = id => { const role = deferred(); roles.push({id, role}); return role.promise; };
+        page.runtime.renderProjectView = (element, project) => { element.textContent = project.name; };
+        const answer = list => ({ok: true, json: async () => list});
+        // Both refreshes can wait on the same project's role: pick the older or newer request.
+        const resolveRole = async (id, which = "older") => {
+            for (let i = 0; i < 20 && !roles.some(entry => entry.id === id); i++) await tick();
+            const matches = roles.filter(entry => entry.id === id);
+            assert.ok(matches.length, `role request for project ${id}`);
+            const entry = which === "newer" ? matches.at(-1) : matches[0];
+            roles.splice(roles.indexOf(entry), 1);
+            entry.role.resolve("Project Owner");
+            await tick();
+        };
+
+        // A: an earlier refresh (initial load); B: the refresh after a successful Create.
+        const a = page.realLoadProjects();
+        lists[0].resolve(answer([{id: 1, name: "Alpha"}, {id: 2, name: "Beta"}]));
+        await resolveRole(1);
+        const b = page.realLoadProjects();
+        lists[1].resolve(answer([{id: 1, name: "Alpha"}, {id: 2, name: "Beta"}, {id: 3, name: "Gamma"}]));
+        if (finish === "interleaved") {
+            await resolveRole(1);
+            await resolveRole(2);
+            await resolveRole(2);
+            await resolveRole(3);
+        } else {
+            // B finishes first; the superseded A completes afterwards.
+            await resolveRole(1);
+            await resolveRole(2, "newer");
+            await resolveRole(3);
+            await b;
+            await resolveRole(2);
+        }
+        await Promise.all([a, b]);
+        assert.deepEqual(page.node("#projects").children.map(row => row.textContent), ["Alpha", "Beta", "Gamma"],
+            `${finish}: the latest list renders once and a superseded refresh adds nothing`);
+    }
+});

@@ -4,8 +4,12 @@ const projectForm = document.querySelector("#project-form");
 
 const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
+const createProjectButton = document.querySelector("#create-project-button");
 let editingProjectId = null;
 let projectFormFeedback = null;
+// Opening or cancelling New Project starts a new form interaction.
+let projectFormSession = 0;
+let projectListLoad = 0;
 
 
 function redirectToLogin() {
@@ -121,6 +125,8 @@ async function getProjectRole(projectId) {
 
 
 async function loadProjects() {
+    // Overlapping refreshes must not interleave rows; only the latest renders.
+    const load = ++projectListLoad;
     const response = await authenticatedFetch("/projects");
 
     if (!response) {
@@ -129,8 +135,12 @@ async function loadProjects() {
 
     const data = await response.json();
 
+    if (load !== projectListLoad) {
+        return;
+    }
+
     if (response.ok) {
-        projectsContainer.innerHTML = "";
+        const projectElements = [];
 
         for (const project of data) {
             const role = await getProjectRole(project.id);
@@ -143,7 +153,11 @@ async function loadProjects() {
                 renderProjectView(projectElement, project, role);
             }
 
-            projectsContainer.appendChild(projectElement);
+            projectElements.push(projectElement);
+        }
+
+        if (load === projectListLoad) {
+            projectsContainer.replaceChildren(...projectElements);
         }
     } else {
         showProjectMessage(formatApiError(data.detail), "error");
@@ -338,6 +352,8 @@ async function deleteProject(project, projectElement) {
 
 showProjectFormButton.addEventListener("click", function () {
     clearProjectFormFeedback();
+    ++projectFormSession;
+    createProjectButton.disabled = false;
     projectForm.hidden = false;
     showProjectFormButton.hidden = true;
 });
@@ -345,6 +361,8 @@ showProjectFormButton.addEventListener("click", function () {
 
 cancelProjectFormButton.addEventListener("click", function () {
     clearProjectFormFeedback("create");
+    ++projectFormSession;
+    createProjectButton.disabled = false;
     projectForm.reset();
     projectForm.hidden = true;
     showProjectFormButton.hidden = false;
@@ -358,6 +376,12 @@ document.querySelector("#project-name").addEventListener("input", function (even
 projectForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    // One Create per form interaction: repeated clicks or Enter must not send
+    // another POST while the first is pending.
+    if (createProjectButton.disabled) {
+        return;
+    }
+
     const projectName = document.querySelector("#project-name").value;
 
     if (!projectName.trim()) {
@@ -367,35 +391,56 @@ projectForm.addEventListener("submit", async function (event) {
         return;
     }
 
-    const response = await authenticatedFetch("/projects", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: projectName
-        })
-    });
+    const session = projectFormSession;
+    createProjectButton.disabled = true;
 
-    if (!response) {
-        return;
-    }
+    try {
+        const response = await authenticatedFetch("/projects", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: projectName
+            })
+        });
 
-    const data = await response.json();
+        if (!response) {
+            return;
+        }
 
-    if (response.ok) {
-        projectForm.reset();
-        projectForm.hidden = true;
-        showProjectFormButton.hidden = false;
-        showProjectMessage(
-            `Project "${data.name}" created successfully.`,
-            "success",
-            {context: "create"}
-        );
-        loadProjects();
-    } else {
-        showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
-            context: "create", nameValidation: data.detail === "Project name is required."
-        } : null);
+        const data = await response.json();
+
+        if (session !== projectFormSession) {
+            // A cancelled Create may still have saved a project: refresh the
+            // list without touching the newer form or its feedback.
+            if (response.ok) loadProjects();
+            return;
+        }
+
+        if (response.ok) {
+            projectForm.reset();
+            projectForm.hidden = true;
+            showProjectFormButton.hidden = false;
+            showProjectMessage(
+                `Project "${data.name}" created successfully.`,
+                "success",
+                {context: "create"}
+            );
+            loadProjects();
+        } else {
+            showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
+                context: "create", nameValidation: data.detail === "Project name is required."
+            } : null);
+        }
+    } catch (error) {
+        if (session === projectFormSession) {
+            showProjectMessage("Unable to create project. Please try again.", "error");
+        }
+    } finally {
+        // A late completion must not unlock a newer interaction's pending Create.
+        if (session === projectFormSession) {
+            createProjectButton.disabled = false;
+        }
     }
 });

@@ -8,6 +8,39 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Duplicate New Project submission — 22 October 2026
+
+Reproduced manually by the user with Chrome DevTools Slow 4G throttling: repeated
+Create clicks while the first request was pending created several projects. No
+separate in-app bug report was recorded (user decision); BUG-37 remains the New Bug
+defect only. Tracked by branch `fix/prevent-duplicate-project-submissions` and the
+cases below. Identical names across independently created projects remain allowed
+(AC-005.1).
+
+Cause: Create stayed enabled with no in-flight guard. A late success from a
+cancelled Create also reset and hid the newer form. Fix in `frontend/js/projects.js`:
+Create is disabled while its POST is pending and re-enabled after a current
+failure, Cancel or reopen. A form-interaction counter makes late completions
+refresh the list only, without closing the newer form, unlocking its Create or
+replacing its feedback. A thrown request error now shows "Unable to create
+project. Please try again."
+
+Overlapping list refreshes were a separate defect. Against the original
+`loadProjects()`, an earlier refresh still fetching member roles kept appending
+rows after a newer refresh had cleared the list: three projects rendered as five
+rows. This can still happen without duplicate submissions, for example a Create
+during a slow initial load, or a cancelled and a current Create both succeeding.
+Each refresh now builds its rows and renders only if it is still the latest.
+
+New cases TC-396 to TC-399 (`—` AC mapping). Against `projects.js` from `main`, all
+four failed (four POSTs instead of one; five rendered rows instead of three) and
+the 16 existing tests in the file passed. With the fix:
+
+- Frontend Node: **106 passed / 0 failed** (Playwright's bundled Node v24.21.0).
+- Playwright/BDD: **24 passed in 63.95s** (Chromium, port 8148, fresh E2E server
+  and temporary database, mocked provider).
+- `git diff --check` passed. Backend pytest was not rerun: no backend files changed.
+
 ## BUG-37 duplicate New Bug submission — 22 October 2026
 
 BUG-37 was reproduced manually by the user with Chrome DevTools network
