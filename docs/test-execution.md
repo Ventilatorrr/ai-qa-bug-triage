@@ -8,6 +8,41 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Duplicate Add Member submission — 22 October 2026
+
+Reproduced manually by the user with Chrome DevTools throttling: repeated Add
+clicks sent four POSTs. The first returned 201 and added the member; three
+returned 409, and the final message read "This user is already a member of this
+project." even though the add succeeded. No separate in-app bug report was
+recorded (user decision). Tracked by branch
+`fix/prevent-duplicate-member-submissions` and the cases below.
+
+Cause: Add stayed enabled with no in-flight guard, and nothing tracked the form
+interaction, so a late result from a cancelled Add could also reset a reopened
+form or replace its message. Fix in `frontend/js/project.js`: Add is disabled while
+its POST is pending and re-enabled after a current failure, Cancel, reopen or
+back/forward restore. A late completion only refreshes members and bugs when the
+member was added. A genuinely separate duplicate attempt still shows the
+backend's 409.
+
+New cases TC-400 to TC-402 (`—` AC mapping). The New Project fix (TC-396 to TC-399,
+below) was developed in parallel and merged first; the counts in this section were
+measured before integrating it. Against `project.js` from `main`, all three failed
+(four POSTs instead of one) while the 19 other form-session tests passed. With the fix:
+
+- Frontend Node: **105 passed / 0 failed** on the branch before integration
+  (Playwright's bundled Node v24.21.0). The combined catalogue now has 109
+  registered frontend tests.
+- Playwright/BDD: **24 passed in 74.33s** (Chromium, port 8148, fresh E2E server
+  and temporary database, mocked provider). This confirms the project page still
+  loads and works; no E2E journey adds members through the form (members are
+  seeded through the API).
+- `git diff --check` passed. Backend pytest was not rerun: no backend files changed.
+
+Not changed here: the backend Add Member check-then-insert race (an overlapping
+duplicate can raise an uncaught `IntegrityError`, giving HTTP 500) and the
+malformed-email HTTP 500 (audit B2).
+
 ## Duplicate New Project submission — 22 October 2026
 
 Reproduced manually by the user with Chrome DevTools Slow 4G throttling: repeated

@@ -499,3 +499,129 @@ test("test_new_create_late_completion_keeps_reopened_create_guard", async () => 
         assert.equal(f.createButton.disabled, false);
     }
 });
+
+// Add Member runs in the same project page; reuse the New Bug page fixture.
+function memberFixture() {
+    const f = pageFixture(false);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/api-errors.js"), "utf8"), f.runtime);
+    const form = f.node("#member-form"), email = f.node("#member-email"), role = f.node("#member-role");
+    form.reset = () => { email.value = ""; role.value = "QA Analyst"; };
+    let memberRefreshes = 0;
+    f.runtime.loadMembers = async () => { memberRefreshes++; };
+    const posts = [];
+    const respond = (status, body) => ({ok: status < 400, status, json: async () => body});
+    return Object.assign(f, {
+        email, role, posts, respond,
+        addButton: f.node("#add-member-button"),
+        memberMessage: f.node("#member-message"),
+        memberForm: form,
+        memberRefreshes: () => memberRefreshes,
+        openMember: () => f.node("#show-member-form").click(),
+        cancelMember: () => f.node("#cancel-member-form").click(),
+        // A real click or Enter dispatches submit; the page has one submit handler.
+        addMember(value, selectedRole = "QA Analyst") {
+            email.value = value;
+            role.value = selectedRole;
+            const [handler] = form.listeners.submit;
+            return handler({preventDefault() {}});
+        },
+        reply(handle) {
+            f.send = (url, options) => {
+                posts.push({url, method: options.method, ...JSON.parse(options.body)});
+                return handle();
+            };
+        }
+    });
+}
+
+// TC-400 | Technical — Add member repeated submission sends one POST while pending
+test("test_add_member_repeated_submission_sends_one_post_while_pending", async () => {
+    const f = memberFixture(), pending = deferred();
+    f.openMember();
+    assert.equal(f.addButton.disabled, false);
+    f.reply(() => pending.promise);
+    // Double-click and repeated Enter before the first response arrives.
+    const submits = [1, 2, 3, 4].map(() => f.addMember("qa@example.com"));
+    assert.deepEqual(f.posts, [{url: "/projects/1/members", method: "POST", email: "qa@example.com", role: "QA Analyst"}],
+        "only the first Add reaches the server");
+    assert.equal(f.addButton.disabled, true, "Add stays unavailable while the request is pending");
+
+    pending.resolve(f.respond(201, {project_id: 1, user_id: 7, email: "qa@example.com", role: "QA Analyst"}));
+    await Promise.all(submits);
+    assert.equal(f.posts.length, 1);
+    assert.equal(f.memberMessage.textContent, 'Member "qa@example.com" (QA Analyst) added successfully.',
+        "no 409 from requests that were never needed");
+    assert.equal(f.memberForm.hidden, true);
+    assert.equal(f.memberRefreshes(), 1);
+    assert.equal(f.refreshes(), 1, "bug list refreshes once");
+    assert.equal(f.addButton.disabled, false);
+});
+
+// TC-401 | Technical — Add member failure re-enables Add for correction and retry
+test("test_add_member_failure_reenables_add_for_retry", async () => {
+    for (const [failure, expected] of [
+        ["conflict", "This user is already a member of this project."],
+        ["not_found", "User not found."],
+        ["invalid_json", "Request failed. Please try again."],
+        ["network_error", "Unable to add member. Please try again."]
+    ]) {
+        const f = memberFixture(), pending = deferred();
+        f.openMember();
+        f.reply(() => pending.promise);
+        const first = f.addMember("missing@example.com", "Developer");
+        assert.equal(f.addButton.disabled, true);
+        if (failure === "network_error") pending.reject(new Error("Offline"));
+        else if (failure === "invalid_json") pending.resolve({ok: false, status: 500, json: async () => { throw new SyntaxError("Unexpected token <"); }});
+        else pending.resolve(f.respond(failure === "conflict" ? 409 : 404, {detail: expected}));
+        await first;
+        assert.equal(f.addButton.disabled, false, `${failure} allows another submission`);
+        assert.equal(f.memberMessage.textContent, expected, `${failure} feedback is shown, not hidden`);
+        assert.equal(f.memberForm.hidden, false);
+        assert.equal(f.email.value, "missing@example.com");
+        assert.equal(f.role.value, "Developer");
+        assert.equal(f.memberRefreshes(), 0);
+
+        f.reply(async () => f.respond(201, {project_id: 1, user_id: 8, email: "dev@example.com", role: "Developer"}));
+        await f.addMember("dev@example.com", "Developer");
+        assert.deepEqual(f.posts.map(post => post.email), ["missing@example.com", "dev@example.com"]);
+        assert.equal(f.memberMessage.textContent, 'Member "dev@example.com" (Developer) added successfully.');
+        assert.equal(f.memberForm.hidden, true);
+        assert.equal(f.memberRefreshes(), 1);
+    }
+});
+
+// TC-402 | Technical — Late Add Member completion does not affect a reopened form
+test("test_add_member_late_completion_keeps_reopened_form", async () => {
+    for (const outcome of ["success", "conflict", "rejection"]) {
+        const f = memberFixture(), old = deferred(), newer = deferred();
+        f.openMember();
+        f.reply(() => old.promise);
+        const oldAdd = f.addMember("first@example.com");
+        f.cancelMember();
+        assert.equal(f.addButton.disabled, false, "Cancel ends the abandoned interaction's guard");
+        f.openMember();
+        assert.equal(f.addButton.disabled, false);
+
+        f.reply(() => newer.promise);
+        const newerAdds = [f.addMember("newer@example.com", "Developer"), f.addMember("newer@example.com", "Developer")];
+        assert.deepEqual(f.posts.map(post => post.email), ["first@example.com", "newer@example.com"],
+            "the newer interaction is guarded too");
+        f.memberMessage.textContent = "Newer feedback";
+
+        if (outcome === "rejection") old.reject(new Error("Old transport error"));
+        else if (outcome === "conflict") old.resolve(f.respond(409, {detail: "This user is already a member of this project."}));
+        else old.resolve(f.respond(201, {project_id: 1, user_id: 7, email: "first@example.com", role: "QA Analyst"}));
+        await oldAdd;
+        assert.equal(f.addButton.disabled, true, `late ${outcome} must not unlock the newer pending Add`);
+        assert.equal(f.memberForm.hidden, false, `late ${outcome} must not close the newer form`);
+        assert.equal(f.email.value, "newer@example.com");
+        assert.equal(f.memberMessage.textContent, "Newer feedback", `late ${outcome} writes no feedback`);
+        assert.equal(f.memberRefreshes(), outcome === "success" ? 1 : 0, "a late added member still refreshes the list");
+
+        newer.resolve(f.respond(201, {project_id: 1, user_id: 8, email: "newer@example.com", role: "Developer"}));
+        await Promise.all(newerAdds);
+        assert.equal(f.memberForm.hidden, true);
+        assert.equal(f.memberMessage.textContent, 'Member "newer@example.com" (Developer) added successfully.');
+        assert.equal(f.addButton.disabled, false);
+    }
+});
