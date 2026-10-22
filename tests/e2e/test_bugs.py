@@ -5,24 +5,26 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_bug, unique_name
+from tests.e2e.pages import BugForm
 
 
 # TC-378 | AC-011.1 — BUG-34 creation confirmation wraps without overflow
 @pytest.mark.parametrize("width", [1280, 375], ids=["desktop", "narrow"])
 @pytest.mark.parametrize("title", ["Synthetic bug", "W" * 2000], ids=["normal", "unbroken"])
 def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, width, title):
+    form = BugForm(page)
     page.set_viewport_size({"width": width, "height": 900})
     login(page, workspace["owner"])
     page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
     page.get_by_role("button", name="New Bug", exact=True).click()
-    page.get_by_label("Title:", exact=True).fill(title)
+    form.title.fill(title)
 
     collection = f"/projects/{workspace['project']['id']}/bugs"
     with page.expect_response(
         lambda response: response.request.method == "POST"
         and response.url.endswith(collection)
     ) as created:
-        page.get_by_role("button", name="Create", exact=True).click()
+        form.create.click()
     assert created.value.status == 201
     bug = created.value.json()
     message = page.locator("#bug-message")
@@ -74,16 +76,17 @@ def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, wid
 
 # TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 — Bug create edit assign and confirmed delete
 def test_bug_create_edit_assign_and_confirmed_delete(page, e2e_api, workspace):
+    form = BugForm(page)
     login(page, workspace["owner"])
     page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
     page.get_by_role("button", name="New Bug", exact=True).click()
 
     title = unique_name("Browser bug")
-    page.get_by_label("Title:", exact=True).fill(title)
-    page.get_by_label("Environment:", exact=True).fill("Synthetic Chromium environment")
-    page.get_by_label("Description:", exact=True).fill("Synthetic reproduction")
-    page.get_by_label("Severity:", exact=True).select_option("Minor")
-    page.get_by_role("button", name="Create", exact=True).click()
+    form.title.fill(title)
+    form.environment.fill("Synthetic Chromium environment")
+    form.description.fill("Synthetic reproduction")
+    form.severity.select_option("Minor")
+    form.create.click()
 
     page.get_by_role("link", name="BUG-1", exact=True).click()
     expect(page.get_by_role("heading", name=title, exact=True)).to_be_visible()
@@ -91,10 +94,10 @@ def test_bug_create_edit_assign_and_confirmed_delete(page, e2e_api, workspace):
 
     page.get_by_role("button", name="Edit", exact=True).click()
     revised = unique_name("Revised bug")
-    page.get_by_label("Title:", exact=True).fill(revised)
-    page.get_by_label("Priority:", exact=True).select_option("High")
-    page.get_by_label("Assignee:", exact=True).select_option(str(workspace["developer"]["id"]))
-    page.get_by_role("button", name="Save", exact=True).click()
+    form.title.fill(revised)
+    form.priority.select_option("High")
+    form.assignee.select_option(str(workspace["developer"]["id"]))
+    form.save.click()
     expect(page.get_by_role("heading", name=revised, exact=True)).to_be_visible()
 
     page.reload()
@@ -108,7 +111,7 @@ def test_bug_create_edit_assign_and_confirmed_delete(page, e2e_api, workspace):
     page.get_by_role("button", name="Edit", exact=True).click()
     page.once("dialog", lambda dialog: dialog.dismiss())
     page.get_by_role("button", name="Delete", exact=True).click()
-    expect(page.get_by_role("button", name="Save", exact=True)).to_be_visible()
+    expect(form.save).to_be_visible()
     assert api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"]) == bug
 
     page.once("dialog", lambda dialog: dialog.accept())
@@ -196,20 +199,21 @@ def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, works
     owner = workspace["owner"]
     title = unique_name("Fix Version eligibility")
     collection = f"/projects/{workspace['project']['id']}/bugs"
+    form = BugForm(page)
+    fix_version = form.fix_version
 
     login(page, owner)
     page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
     page.get_by_role("button", name="New Bug", exact=True).click()
-    expect(page.get_by_label("Fix Version:", exact=True)).to_have_count(0)
-    page.get_by_label("Title:", exact=True).fill(title)
-    page.get_by_role("button", name="Create", exact=True).click()
+    expect(fix_version).to_have_count(0)
+    form.title.fill(title)
+    form.create.click()
     page.get_by_role("link", name="BUG-1", exact=True).click()
     expect(page.get_by_role("heading", name=title, exact=True)).to_be_visible()
 
     bug = api_call(e2e_api, "GET", collection, owner)[0]
     path = bug_path(workspace, bug)
     assert api_call(e2e_api, "GET", path, owner)["fix_version"] is None
-    fix_version = page.get_by_label("Fix Version:", exact=True)
 
     for state, transition in [
         ("Triage", None),
@@ -224,12 +228,12 @@ def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, works
         page.get_by_role("button", name="Edit", exact=True).click()
         expect(fix_version).to_be_hidden()
         expect(fix_version).to_have_value("")
-        page.get_by_label("Description:", exact=True).fill(f"Edited in {state}")
+        form.description.fill(f"Edited in {state}")
 
         with page.expect_request(
             lambda request: request.method == "PATCH" and request.url.endswith(path)
         ) as save:
-            page.get_by_role("button", name="Save", exact=True).click()
+            form.save.click()
         expect(page.get_by_role("button", name="Edit", exact=True)).to_be_visible()
         assert "fix_version" not in save.value.post_data_json
         stored = api_call(e2e_api, "GET", path, owner)
@@ -247,7 +251,7 @@ def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, works
         expect(fix_version).to_be_editable()
         expect(fix_version).to_have_value(previous)
         fix_version.fill(version)
-        page.get_by_role("button", name="Save", exact=True).click()
+        form.save.click()
         expect(page.get_by_role("button", name="Edit", exact=True)).to_be_visible()
         stored = api_call(e2e_api, "GET", path, owner)
         assert (stored["fix_version"] or "") == version
@@ -258,7 +262,7 @@ def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, works
 
     page.get_by_role("button", name="Edit", exact=True).click()
     fix_version.fill("9.9.9")
-    page.get_by_role("button", name="Cancel", exact=True).click()
+    form.cancel.click()
     assert not api_call(e2e_api, "GET", path, owner)["fix_version"]
     page.get_by_role("button", name="Move to Triage", exact=True).click()
     expect(detail(page, "Status")).to_have_text("Triage")
@@ -266,11 +270,11 @@ def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, works
     page.get_by_role("button", name="Edit", exact=True).click()
     expect(fix_version).to_be_hidden()
     expect(fix_version).to_have_value("")
-    page.get_by_label("Description:", exact=True).fill("Saved after reopening")
+    form.description.fill("Saved after reopening")
     with page.expect_request(
         lambda request: request.method == "PATCH" and request.url.endswith(path)
     ) as save:
-        page.get_by_role("button", name="Save", exact=True).click()
+        form.save.click()
     expect(page.get_by_role("button", name="Edit", exact=True)).to_be_visible()
     assert "fix_version" not in save.value.post_data_json
     stored = api_call(e2e_api, "GET", path, owner)
@@ -288,11 +292,11 @@ def test_fix_version_eligibility_persistence_and_form_reset(page, e2e_api, works
     page.get_by_role("button", name="Edit", exact=True).click()
     expect(fix_version).to_be_hidden()
     expect(fix_version).to_have_value("")
-    page.get_by_label("Description:", exact=True).fill("Saved without a fix")
+    form.description.fill("Saved without a fix")
     with page.expect_request(
         lambda request: request.method == "PATCH" and request.url.endswith(path)
     ) as save:
-        page.get_by_role("button", name="Save", exact=True).click()
+        form.save.click()
     expect(page.get_by_role("button", name="Edit", exact=True)).to_be_visible()
     assert "fix_version" not in save.value.post_data_json
     stored = api_call(e2e_api, "GET", path, owner)

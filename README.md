@@ -195,6 +195,13 @@ Agent-driven runs must explicitly use approved port 8148:
 .\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium
 ```
 
+Browser tests use a deliberately small Page Object Model in `tests/e2e/pages.py`:
+`BugForm` (New/Edit Bug fields, Create/Save/Cancel and AI suggestion review) and
+`BugList` (project bug table, sorting, page size and pagination). Page objects
+expose locators and user actions only; scenarios and assertions stay in the test
+files. Less-reused pages use direct Playwright calls, and shared setup such as
+`login`, `open_bug` and `detail` remains in `tests/e2e/helpers.py`.
+
 The optional E2E dependencies include `pytest-bdd==8.1.0`. Exactly five scenarios
 are explicitly bound in `tests/e2e/bdd/test_workflows.py`: successful registration,
 project creation, non-owner project protection, QA/Developer bug lifecycle, and

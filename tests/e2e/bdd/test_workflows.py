@@ -5,6 +5,7 @@ from playwright.sync_api import expect
 from pytest_bdd import given, scenario, then, when
 
 from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_bug, unique_name
+from tests.e2e.pages import BugForm
 
 
 # TC-386 | AC-001.1 — Successful Registration
@@ -164,15 +165,16 @@ def qa_project(page, workspace):
 
 @when("the QA Analyst creates a valid bug report")
 def qa_create_bug(page, workspace, workflow):
+    form = BugForm(page)
     page.get_by_role("button", name="New Bug", exact=True).click()
     title = unique_name("BDD lifecycle bug")
-    page.get_by_label("Title:", exact=True).fill(title)
-    page.get_by_label("Description:", exact=True).fill("Fictional lifecycle reproduction")
+    form.title.fill(title)
+    form.description.fill("Fictional lifecycle reproduction")
     with page.expect_response(
         lambda response: response.request.method == "POST"
         and response.url.endswith(f"/projects/{workspace['project']['id']}/bugs")
     ) as created:
-        page.get_by_role("button", name="Create", exact=True).click()
+        form.create.click()
     assert created.value.status == 201
     workflow["bug"] = created.value.json()
     assert workflow["bug"]["title"] == title
@@ -256,7 +258,7 @@ def edit_triage_bug(page, e2e_api, workspace, workflow):
     login(page, workspace["qa"])
     open_bug(page, workspace, workflow["bug"])
     page.get_by_role("button", name="Edit", exact=True).click()
-    expect(page.get_by_role("button", name="AI Assist", exact=True)).to_be_visible()
+    expect(BugForm(page).ai_assist).to_be_visible()
     assert workflow["ai_requests"] == []
 
 
@@ -265,39 +267,38 @@ def request_ai(page):
     with page.expect_response(
         lambda response: response.request.method == "POST" and response.url.endswith("/ai-assist")
     ) as suggestions:
-        page.get_by_role("button", name="AI Assist", exact=True).click()
+        BugForm(page).ai_assist.click()
     assert suggestions.value.status == 200
 
 
 @then("the suggestions are available for review without changing the report")
 def review_ai(page, e2e_api, workspace, workflow):
     bug = workflow["bug"]
-    expect(page.get_by_role("article", name="AI suggestion: Title", exact=True)).to_contain_text(
-        f"Reviewed {bug['title']}"
-    )
-    expect(page.get_by_role("article", name="AI suggestion: Description", exact=True)).to_contain_text(
-        "Clear synthetic reproduction details"
-    )
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(bug["title"])
-    expect(page.get_by_label("Description:", exact=True)).to_have_value(bug["description"])
+    form = BugForm(page)
+    expect(form.suggestion("Title")).to_contain_text(f"Reviewed {bug['title']}")
+    expect(form.suggestion("Description")).to_contain_text("Clear synthetic reproduction details")
+    expect(form.title).to_have_value(bug["title"])
+    expect(form.description).to_have_value(bug["description"])
     assert len(workflow["ai_requests"]) == 1
     assert api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["qa"]) == bug
 
 
 @when("the QA Analyst uses the Title suggestion and dismisses the Description suggestion")
 def use_and_dismiss_ai(page):
-    page.get_by_role("button", name="Use Title suggestion", exact=True).click()
-    page.get_by_role("button", name="Dismiss Description suggestion", exact=True).click()
+    form = BugForm(page)
+    form.use_suggestion("Title")
+    form.dismiss_suggestion("Description")
 
 
 @then("only the accepted suggestion changes the form and the report remains unsaved")
 def ai_unsaved(page, e2e_api, workspace, workflow):
     bug = workflow["bug"]
-    expect(page.get_by_label("Title:", exact=True)).to_have_value(f"Reviewed {bug['title']}")
-    expect(page.get_by_label("Description:", exact=True)).to_have_value(bug["description"])
-    expect(page.get_by_label("Severity:", exact=True)).to_have_value("Minor")
-    expect(page.get_by_role("article", name="AI suggestion: Title", exact=True)).to_have_count(0)
-    expect(page.get_by_role("article", name="AI suggestion: Description", exact=True)).to_have_count(0)
+    form = BugForm(page)
+    expect(form.title).to_have_value(f"Reviewed {bug['title']}")
+    expect(form.description).to_have_value(bug["description"])
+    expect(form.severity).to_have_value("Minor")
+    expect(form.suggestion("Title")).to_have_count(0)
+    expect(form.suggestion("Description")).to_have_count(0)
     assert api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["qa"]) == bug
 
 
@@ -307,7 +308,7 @@ def save_ai(page, workspace, workflow):
         lambda response: response.request.method == "PATCH"
         and response.url.endswith(bug_path(workspace, workflow["bug"]))
     ) as saved:
-        page.get_by_role("button", name="Save", exact=True).click()
+        BugForm(page).save.click()
     assert saved.value.status == 200
     expect(page.get_by_role("button", name="Edit", exact=True)).to_be_visible()
 
