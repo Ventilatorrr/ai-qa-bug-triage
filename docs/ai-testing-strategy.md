@@ -121,14 +121,19 @@ model as well as the requested alias; a dated alias snapshot is accepted and
 recorded. No new dependencies or changes to the provider adapter, output schema
 or validator are required.
 
-**Current request settings (22 October 2026).** Without overrides, every run sends
+**Current request settings (22 October 2026).** Without options, every run sends
 the production request unchanged, including `reasoning={"effort":"medium"}` and
-`service_tier="fast"`. `--reasoning-effort` and `--service-tier` are explicit
-evaluation-only overrides (`standard` omits the tier); `--explicit-medium` equals
-the production setting. Run-level `reasoning_effort`/`service_tier` record the
-selected overrides (null keeps production's); each attempt records the actual
-request. The experiment sections below describe the flag semantics in force when
-those runs executed, when the default omitted both settings. Evidence records
+`service_tier="fast"`. Optional evaluation-only overrides apply only when supplied:
+`--reasoning-effort medium|low|high` changes only the reasoning effort, and
+`--service-tier standard|fast` changes only the tier (`standard` omits it). Run-level
+`reasoning_effort`/`service_tier` record the selected overrides (null keeps
+production's); each attempt records the actual request. `--explicit-medium` was
+removed because the default already sends Medium Fast. Cost is estimated from the
+returned tier, whatever was requested: default or standard at Standard rates,
+Fast/priority at 2x, and a missing or unknown tier conservatively at 2x. The
+experiment sections below are retained provenance and describe the option
+semantics in force when those runs executed (the default then omitted both
+settings, and `--explicit-medium` existed). Evidence records
 `dataset_versions` for the run and `dataset_version` per execution, so mixed
 A–F/quality selections are labelled accurately; coverage status is read from the
 [traceability matrix](traceability-matrix.md), not recorded by the runner.

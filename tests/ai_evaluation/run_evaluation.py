@@ -202,7 +202,7 @@ def new_output_directory(requested):
 
 
 def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids=None,
-                   reasoning_effort=None, service_tier=None, explicit_medium=False):
+                   reasoning_effort=None, service_tier=None):
     """Six serial attempts at most. All semantic assessments begin unassessed.
 
     By default the production request is sent unchanged. reasoning_effort and
@@ -215,12 +215,6 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
         raise ValueError("Select medium, low or high reasoning effort, or omit it to keep production's.")
     if service_tier not in (None, "standard", "fast"):
         raise ValueError("Select standard (omitted service tier) or fast, or omit it to keep production's.")
-    if explicit_medium and (reasoning_effort not in (None, "medium") or service_tier not in (None, "fast")):
-        raise ValueError("Explicit Medium requires medium reasoning and fast service tier.")
-    if explicit_medium:
-        reasoning_effort = "medium"
-    # Production sends service_tier="fast"; only an explicit standard override omits it.
-    fast_requested = service_tier != "standard"
     scenarios = select_scenarios(scenario_set=scenario_set, scenario_ids=scenario_ids)
     occurrences = {}
     execution_plan = []
@@ -250,19 +244,16 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
         # Overrides only; null keeps production's setting. Attempts record actual requests.
         "reasoning_effort": reasoning_effort,
         "service_tier": service_tier,
-        "explicit_medium": explicit_medium,
         "client_config": {"timeout_seconds": 60.0, "max_retries": 0},
-        "cost_assumption": "USD, Standard short context, $0.10/M input + $0.50/M output; 2026-10-16 public pricing; offline usage synthetic",
+        "cost_assumption": (
+            "USD, short context; Standard input/cached/write/output $0.10/$0.01/$0.125/$0.50 per M; "
+            "Fast/priority 2x; default fallback 1x; unknown tier conservatively 2x; "
+            "2026-10-19 official pricing; offline usage synthetic"
+        ),
         "attempts": [], "not_run": [case["id"] for case in scenarios],
         "not_run_execution_ids": [item["execution_id"] for item in execution_plan],
         "estimated_cost_usd": 0.0, "stop_reason": None,
     }
-    if fast_requested or reasoning_effort == "high":
-        report["cost_assumption"] = (
-            "USD, short context; Standard input/cached/write/output $0.10/$0.01/$0.125/$0.50 per M; "
-            "Fast/priority 2x; default fallback 1x; unknown tier conservatively 2x; "
-            "2026-10-19 official pricing; offline usage synthetic"
-        )
     with isolated_application(live=live) as database_path:
         from app.ai_context import AiTriageContext
         from app.ai_generation import build_generation_input
@@ -326,20 +317,20 @@ def run_evaluation(output, *, live, pass_number, scenario_set=None, scenario_ids
                 report["stop_reason"] = "Attempt failed; no retry. Remaining scenarios were not run."
             usage = record.get("provider", {}).get("usage")
             if usage and all(type(usage.get(name)) is int and usage[name] >= 0 for name in ("input_tokens", "output_tokens")):
-                record["estimated_cost_usd"] = round((usage["input_tokens"] * 0.10 + usage["output_tokens"] * 0.50) / 1_000_000, 8)
-                if record.get("requested_service_tier") == "fast" or reasoning_effort == "high":
-                    details = usage.get("input_tokens_details") or {}
-                    cached, writes = details.get("cached_tokens") or 0, details.get("cache_write_tokens") or 0
-                    returned_tier = record["provider"]["service_tier"]
-                    multiplier = 1 if returned_tier in {"default", "standard"} else 2
-                    record["cost_estimate_basis"] = (
-                        "returned_service_tier" if returned_tier in {"default", "standard", "fast", "priority"}
-                        else "fast_rate_upper_bound_unconfirmed_tier"
-                    )
-                    record["estimated_cost_usd"] = round(multiplier * (
-                        (usage["input_tokens"] - cached - writes) * 0.10 + cached * 0.01
-                        + writes * 0.125 + usage["output_tokens"] * 0.50
-                    ) / 1_000_000, 8)
+                # Cost follows the returned tier, whatever was requested: default/standard
+                # at Standard rates; Fast, priority or an unconfirmed tier conservatively at 2x.
+                details = usage.get("input_tokens_details") or {}
+                cached, writes = details.get("cached_tokens") or 0, details.get("cache_write_tokens") or 0
+                returned_tier = record["provider"]["service_tier"]
+                multiplier = 1 if returned_tier in {"default", "standard"} else 2
+                record["cost_estimate_basis"] = (
+                    "returned_service_tier" if returned_tier in {"default", "standard", "fast", "priority"}
+                    else "fast_rate_upper_bound_unconfirmed_tier"
+                )
+                record["estimated_cost_usd"] = round(multiplier * (
+                    (usage["input_tokens"] - cached - writes) * 0.10 + cached * 0.01
+                    + writes * 0.125 + usage["output_tokens"] * 0.50
+                ) / 1_000_000, 8)
                 report["estimated_cost_usd"] = round(report["estimated_cost_usd"] + record["estimated_cost_usd"], 8)
             if live and "provider" in record:
                 report["live_model_evaluated"] = True
@@ -374,11 +365,7 @@ def main(argv=None):
                         help="Evaluation-only override; default: production's reasoning setting.")
     parser.add_argument("--service-tier", choices=("standard", "fast"),
                         help="Evaluation-only override; standard omits the tier. Default: production's tier.")
-    parser.add_argument("--explicit-medium", action="store_true",
-                        help="Evaluation only: send Medium Fast, as production does; rejects other overrides.")
     args = parser.parse_args(argv)
-    if args.explicit_medium and (args.reasoning_effort not in (None, "medium") or args.service_tier not in (None, "fast")):
-        parser.error("Explicit Medium requires medium reasoning and fast service tier.")
     if args.live:
         try:
             require_live_authorization()
@@ -393,9 +380,7 @@ def main(argv=None):
         report = run_evaluation(
             output, live=args.live, pass_number=args.pass_number,
             scenario_set=args.scenario_set, scenario_ids=args.scenarios,
-            reasoning_effort=args.reasoning_effort,
-            service_tier=args.service_tier,
-            explicit_medium=args.explicit_medium,
+            reasoning_effort=args.reasoning_effort, service_tier=args.service_tier,
         )
     except Exception as error:
         print(f"Evaluation stopped: {type(error).__name__}; no exception details logged.", file=sys.stderr)

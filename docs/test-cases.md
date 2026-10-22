@@ -19,7 +19,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
 | Backend pytest (20 modules) | 217 | 228 | 575 cases; 90 parameterized functions |
-| Offline evaluation harness pytest (1 module) | 19 | 19 | 149 cases; no real provider calls |
+| Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 99 registered tests | 99 | Internal loops are variants |
 | Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 405 | **392** | Definition, conceptual-case and execution counts differ; reused IDs counted once |
+| Total | 404 | **391** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -605,12 +605,12 @@ run them safely; each uses an in-memory transport and independently blocks socke
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-357"></a>TC-357 | — | Default offline CLI sends the unchanged production request (Medium reasoning, Fast tier), records production contracts and dataset version, and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/ai_evaluation/test_ai_evaluation.py); All six synthetic responses |
-| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/ai_evaluation/test_ai_evaluation.py); five gates × seven modes: existing five modes plus High Standard/Fast (35 variants); CLI and programmatic entry points |
+| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/ai_evaluation/test_ai_evaluation.py); five gates; CLI and programmatic entry points |
 | <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/ai_evaluation/test_ai_evaluation.py); All variants |
 | <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/ai_evaluation/test_ai_evaluation.py); All eight failure variants; clients close on failure |
 | <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/ai_evaluation/test_ai_evaluation.py); All four variants |
 | <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/ai_evaluation/test_ai_evaluation.py); All three path variants |
-| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/ai_evaluation/test_ai_evaluation.py); existing three tier/explicit modes plus High Standard/Fast (five variants); synthetic usage only |
+| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/ai_evaluation/test_ai_evaluation.py); returned tier=default (1x, exact threshold), priority (2x); synthetic usage only |
 
 ## Additional AI quality/security evaluation — reviewed live evidence
 
@@ -650,42 +650,43 @@ sockets and SQLite and confines generated evidence to pytest temporary directori
 | --- | --- | --- | --- | --- |
 | <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/ai_evaluation/test_ai_evaluation.py); All nine quality fixtures and original A–F fingerprint |
 | <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/ai_evaluation/test_ai_evaluation.py); Five selection variants |
-| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); Six selection variants × existing three modes plus High Standard/Fast (30 variants); CLI and programmatic runner |
+| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); Six selection variants; CLI and programmatic runner |
 | <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, per-execution and run dataset versions (including mixed subsets), unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/ai_evaluation/test_ai_evaluation.py); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
 | <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/ai_evaluation/test_ai_evaluation.py); failure=filtered, malformed |
 
 ## Latency-comparison preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 These checks use only synthetic SDK responses, with sockets and SQLite blocked.
-TC-358 checks all five live gates for the four existing modes plus explicit Medium
-Fast (25 variants). Default A–F remains covered by TC-357. No new
-live-model or AC-coverage claim is made.
+On 22 October 2026 the default became the unchanged production request; the
+optional `--reasoning-effort` and `--service-tier` overrides remain, and
+`--explicit-medium` was removed. TC-379, TC-380 and TC-383 were narrowed to the
+current options; their earlier variants and historical results remain in the
+[execution report](test-execution.md). Retired IDs stay assigned and are never reused.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-379"></a>TC-379 | — | Default/explicit Medium and Low serialize the same six fictional inputs; only Low changes the reasoning effort; raw/validated evidence and usage preserved | Python unit / AI harness (offline) | [`test_evaluation_reasoning_arms_preserve_requests_and_inputs`](../tests/ai_evaluation/test_ai_evaluation.py); default, medium, low over EVAL-D/EVAL-F/Q1/Q5/Q7/Q11 |
-| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); reasoning_effort=none, xhigh, max, empty string; CLI and programmatic runner |
-| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_low_records_timing_and_failure_evidence`](../tests/ai_evaluation/test_ai_evaluation.py); five failure variants × Low Standard, Low Fast, explicit Medium Fast, High Standard/Fast (25 variants); deterministic clock |
+| <a id="tc-379"></a>TC-379 | — | Explicit overrides change only the selected reasoning effort and/or service tier of the production adapter's request; `standard` omits the tier | Python unit / AI harness (offline) | [`test_evaluation_overrides_change_only_selected_settings`](../tests/ai_evaluation/test_ai_evaluation.py); (reasoning_effort, service_tier)=(low, —), (medium, —), (high, —), (—, fast), (—, standard), (high, standard); EVAL-D |
+| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); reasoning_effort=xhigh, empty string; CLI and programmatic runner |
+| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_records_timing_and_failure_evidence`](../tests/ai_evaluation/test_ai_evaluation.py); failure=success, filtered, timeout, http_error, malformed; deterministic clock |
 
 ## Fast-service evaluation preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-382"></a>TC-382 | — | Fast adds only service_tier for Low/High; inputs/hashes/schema remain unchanged; returned tiers and cache-aware costs distinguish actual, fallback and unknown service; legacy Low Standard accounting is preserved | Python unit / AI harness (offline) | [`test_evaluation_fast_preserves_standard_requests_and_records_actual_tier`](../tests/ai_evaluation/test_ai_evaluation.py); reasoning_effort=low/high × returned_tier=fast, priority, default, standard, None, unknown (12 variants); all six selected cases per arm |
-| <a id="tc-383"></a>TC-383 | — | Invalid service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); service_tier=priority, default, empty string; CLI and programmatic entry points |
+| <a id="tc-382"></a>TC-382 | — | Returned tier, usage details and cache-aware cost survive SDK serialization; default/standard cost 1x, Fast/priority 2x, missing/unknown tiers conservatively 2x | Python unit / AI harness (offline) | [`test_evaluation_records_returned_tier_and_conservative_cost`](../tests/ai_evaluation/test_ai_evaluation.py); returned_tier=fast, priority, default, standard, None, unknown |
+| <a id="tc-383"></a>TC-383 | — | Unsupported service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); service_tier=priority, empty string; CLI and programmatic entry points |
 
-Existing TC-358/TC-363/TC-375/TC-381 cover Fast live guards, spend pause, request
-ceiling and stop-on-error; existing TC-359/TC-376 cover database/evidence guards.
+TC-358/TC-363/TC-375/TC-381 cover live guards, spend pause, request ceiling and
+stop-on-error; TC-359/TC-376 cover database/evidence guards.
 
 ## Explicit Medium Fast preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-384"></a>TC-384 | — | Default and explicit Medium Fast equal the production wire request; explicit effort/tier overrides change only those settings, preserving six inputs/hashes/schema and returned-tier/cache-cost recording | Python unit / AI harness (offline) | [`test_evaluation_explicit_medium_fast_preserves_existing_modes`](../tests/ai_evaluation/test_ai_evaluation.py); all six selected cases across eight modes: default, explicit Medium Fast, Medium/Low/High × Fast/Standard; six direct production wire requests must equal default and explicit Medium Fast |
-| <a id="tc-385"></a>TC-385 | — | Explicit Medium flag cannot silently change Low, High or Standard requests | Python unit / AI harness (offline) | [`test_evaluation_invalid_explicit_medium_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); (reasoning_effort, service_tier)=(low, fast), (medium, standard), (low, standard), (high, standard), (high, fast); CLI/programmatic rejection before IO |
+| <a id="tc-384"></a>TC-384 | — | The recorded evaluation request equals the production adapter's own wire request (Medium reasoning, Fast tier) | Python unit / AI harness (offline) | [`test_evaluation_default_request_matches_production_adapter`](../tests/ai_evaluation/test_ai_evaluation.py); EVAL-D, EVAL-F, Q1, Q5, Q7, Q11; six direct production adapter requests |
+| <a id="tc-385"></a>TC-385 | — | **Retired 22 October 2026.** Formerly: explicit Medium flag cannot change Low, High or Standard requests | — | Removed with `--explicit-medium`; the default already sends Medium Fast (TC-357, TC-384) |
 
-Existing TC-358/TC-363/TC-375/TC-381 also exercise the new explicit mode without
-new IDs; TC-357/TC-359/TC-376/TC-382 retain default, DB, evidence and cost checks.
+TC-357/TC-359/TC-376/TC-382 retain default, DB, evidence and cost checks.
 
 ## Executable BDD — tests/e2e/bdd/test_workflows.py
 
