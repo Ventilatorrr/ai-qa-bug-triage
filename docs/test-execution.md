@@ -8,6 +8,21 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## BUG-41 page background brightness with page size — 23 October 2026
+
+Frontend defect recorded in the application as BUG-41. The page glow
+(`radial-gradient(ellipse at 50% 0%, …)` on `body`) was sized to the whole
+document because the root has no background of its own, so longer pages
+stretched the ellipse and brightened the top centre: from 10 to 50 bugs per
+page, up to 7 colour levels across about 7,900 sampled pixels (dark desktop).
+The glow is now sized to the viewport (`background-size: 100% 100vh`,
+`no-repeat`). Pixel comparisons on an owned disposable E2E server show identical
+backgrounds at 10, 20 and 50 per page on desktop in both themes (at most one
+level at an anti-aliased card edge on mobile). Desktop appearance at 10 per page
+is unchanged; on mobile the glow matches pages that fit one screen and is
+slightly dimmer than before. Frontend Node **110 passed**; Bug List Playwright
+**4 passed**. No permanent test added: the check needs pixel sampling.
+
 ## Frontend polish: About, Register and Privacy — 23 October 2026
 
 About lists the technology stack with middle dots and adds a short Testing & QA
