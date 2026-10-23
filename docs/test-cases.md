@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-409**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-410**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -22,14 +22,14 @@ own results. Test bodies and parameter data remain the executable specification.
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 109 registered tests | 109 | Internal loops are variants |
-| Playwright (6 modules) | 15 functions | 16 | 19 Chromium scenarios |
+| Playwright (6 modules) | 16 functions | 17 | 23 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 420 | **407** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 421 | **408** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -565,7 +565,8 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-339"></a>TC-339 | AC-005.1, AC-005.2, AC-007.1, AC-008.1 | Project create rename and confirmed delete | Playwright / Chromium | [`test_project_create_rename_and_confirmed_delete`](../tests/e2e/test_projects.py#L7); All variants |
+| <a id="tc-339"></a>TC-339 | AC-005.1, AC-005.2, AC-007.1, AC-008.1 | Project create rename and confirmed delete | Playwright / Chromium | [`test_project_create_rename_and_confirmed_delete`](../tests/e2e/test_projects.py#L42); All variants |
+| <a id="tc-409"></a>TC-409 | AC-005.1, AC-006.3, AC-009.1 | Audit B4 project creation feedback, project heading and Add Member feedback remain readable within the viewport | Playwright / Chromium | [`test_project_and_member_text_wraps`](../tests/e2e/test_projects.py#L89); text=normal/unbroken (213-character project name, 124-character member email), width=desktop (1280)/narrow (375); all four combinations; exact messages, visible text line bounds, no clipping or page overflow |
 
 ## tests/frontend/native-input.test.html
 

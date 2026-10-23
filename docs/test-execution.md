@@ -1,12 +1,63 @@
 # QA test execution report
 
-Reporting date: **22 October 2026**. The [test catalogue](test-cases.md) defines
+Reporting date: **23 October 2026**. The [test catalogue](test-cases.md) defines
 cases; the [RTM](traceability-matrix.md) owns overall AC coverage. Results below
 were obtained at the stated milestones. Executed cases, collection counts and
 planned evaluations are distinct.
 
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
+
+## Project and member text overflow (audit B4) — 23 October 2026
+
+Audit finding, confirmed in Chromium on a disposable E2E server before any
+production change. No in-app bug report was created by the agent; the finding is
+reported for dogfooding review. Tracked by branch
+`fix/project-member-ui-overflow` and TC-409.
+
+Reproduced with fictional data: a 130-character unbroken project name, a 101-character
+unbroken name created through New Project, and a 124-character
+member email without spaces (long local part and domain labels). Viewports
+320×700, 375×812, 768×1024 and 1280×900. Original behavior:
+
+- Project page heading (`.project-header h2`): the unbroken name stayed on one
+  line at every width, extending the page to 1103–1728px. The body's
+  `overflow-x: hidden` gave no scrollbar, so the rest of the name was clipped.
+- Projects success feedback (`#message`): the quoted unbroken name overflowed
+  the message at 320, 375 and 768px (page width 803–811px).
+- Add/Remove Member success feedback (`#member-message`): the quoted email
+  overflowed its 700px section at every width and was clipped on narrow screens.
+
+Root cause: these three elements had no word-break rule, so a long token without
+spaces could not wrap. Project cards, member rows, header identity and the bug
+message already used `overflow-wrap: anywhere`. Not defects: spaced long names
+(wrap normally), project/member rows, the Project Edit field and Add Member email
+field (native inputs scroll their text internally), and API error messages
+(they do not repeat user input).
+
+Fix in `frontend/style.css`: `overflow-wrap: anywhere` on the project heading,
+the Projects page `#message` (scoped as `.project-actions + #message`, so Login
+and Register are unchanged) and `#member-message`, next to the existing
+`#bug-message` rule. Text is not truncated; there are no JavaScript, API or
+schema changes.
+
+Results:
+
+- Scratch reproduction script after the fix: no page overflow or element
+  overflow at any of the four widths; short-name baseline unchanged.
+- TC-409 failed against the original CSS for both unbroken variants
+  (`pageWidth` 1804 at 375px), and the normal variants passed. With the fix:
+  `test_projects.py` and `test_authorization.py` **7 passed in 17.87s** (TC-409
+  ×4, TC-339, TC-331, TC-332). The red run stopped at the first message, so the
+  heading and member message red results come from the reproduction script.
+- `git diff --check` passed. Chromium in the default dark theme only; light
+  theme, other browsers and real mobile devices were not checked. Backend,
+  frontend Node and full Playwright suites were not rerun (CSS-only change).
+
+Each run started `tests.e2e.server` on `127.0.0.1:8148` with a new temporary
+database, verified PID, database path, identity header and mocked provider, and
+blocked non-local requests. Temporary directories were removed and port 8148 was
+released afterwards. No real database was accessed.
 
 ## Add Member email case handling (audit B7) — 22 October 2026
 

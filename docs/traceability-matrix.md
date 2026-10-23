@@ -50,19 +50,19 @@ reopened-state readback. No new TC IDs or AC coverage changes accompany cleanup.
 | REQ-003 | AC-003.3 — Invalid Authentication | [TC-171](test-cases.md#tc-171), [TC-172](test-cases.md#tc-172), [TC-182](test-cases.md#tc-182) | API | Covered |
 | REQ-004 | AC-004.1 — Successful Logout | [TC-329](test-cases.md#tc-329) | Playwright | Covered |
 | REQ-004 | AC-004.2 — Protected Access After Logout | [TC-329](test-cases.md#tc-329) | Playwright | Covered |
-| REQ-005 | AC-005.1 — Successful Project Creation | [TC-184](test-cases.md#tc-184), [TC-188](test-cases.md#tc-188), [TC-322](test-cases.md#tc-322), [TC-339](test-cases.md#tc-339), [TC-387](test-cases.md#tc-387) | API; BDD; Frontend JS; Playwright; Postman API | Covered |
+| REQ-005 | AC-005.1 — Successful Project Creation | [TC-184](test-cases.md#tc-184), [TC-188](test-cases.md#tc-188), [TC-322](test-cases.md#tc-322), [TC-339](test-cases.md#tc-339), [TC-387](test-cases.md#tc-387), [TC-409](test-cases.md#tc-409) | API; BDD; Frontend JS; Playwright; Postman API | Covered |
 | REQ-005 | AC-005.2 — Invalid Project Name | [TC-185](test-cases.md#tc-185), [TC-186](test-cases.md#tc-186), [TC-187](test-cases.md#tc-187), [TC-309](test-cases.md#tc-309), [TC-310](test-cases.md#tc-310), [TC-311](test-cases.md#tc-311), [TC-312](test-cases.md#tc-312), [TC-313](test-cases.md#tc-313), [TC-320](test-cases.md#tc-320), [TC-321](test-cases.md#tc-321), [TC-339](test-cases.md#tc-339) | API; Frontend JS; Playwright; Postman API | Covered |
 | REQ-005 | AC-005.3 — Unauthenticated User | [TC-189](test-cases.md#tc-189) | API | Covered |
 | REQ-006 | AC-006.1 — View Project List | [TC-190](test-cases.md#tc-190) | API | Covered |
 | REQ-006 | AC-006.2 — Project List Authorization | [TC-191](test-cases.md#tc-191) | API | Covered |
-| REQ-006 | AC-006.3 — Open Project | [TC-192](test-cases.md#tc-192) | API | Covered |
+| REQ-006 | AC-006.3 — Open Project | [TC-192](test-cases.md#tc-192), [TC-409](test-cases.md#tc-409) | API; Playwright | Covered |
 | REQ-006 | AC-006.4 — Unauthorized Project Access | [TC-193](test-cases.md#tc-193), [TC-331](test-cases.md#tc-331) | API; Playwright | Covered |
 | REQ-007 | AC-007.1 — Successful Project Name Editing | [TC-194](test-cases.md#tc-194), [TC-197](test-cases.md#tc-197), [TC-324](test-cases.md#tc-324), [TC-339](test-cases.md#tc-339) | API; Frontend JS; Playwright | Covered |
 | REQ-007 | AC-007.2 — Unauthorized Project Name Editing | [TC-198](test-cases.md#tc-198), [TC-388](test-cases.md#tc-388) | API; BDD; Playwright | Covered |
 | REQ-007 | AC-007.3 — Invalid Project Name Editing | [TC-195](test-cases.md#tc-195), [TC-196](test-cases.md#tc-196), [TC-314](test-cases.md#tc-314), [TC-315](test-cases.md#tc-315), [TC-316](test-cases.md#tc-316), [TC-317](test-cases.md#tc-317), [TC-318](test-cases.md#tc-318), [TC-319](test-cases.md#tc-319), [TC-320](test-cases.md#tc-320), [TC-323](test-cases.md#tc-323) | API; Frontend JS | Covered |
 | REQ-008 | AC-008.1 — Successful Project Deletion | [TC-199](test-cases.md#tc-199), [TC-200](test-cases.md#tc-200), [TC-339](test-cases.md#tc-339) | API; Playwright | Covered |
 | REQ-008 | AC-008.2 — Unauthorized Project Deletion | [TC-201](test-cases.md#tc-201), [TC-388](test-cases.md#tc-388) | API; BDD; Playwright | Covered |
-| REQ-009 | AC-009.1 — Add Member | [TC-202](test-cases.md#tc-202), [TC-203](test-cases.md#tc-203), [TC-331](test-cases.md#tc-331), [TC-408](test-cases.md#tc-408) | API; Playwright; Postman API | Covered |
+| REQ-009 | AC-009.1 — Add Member | [TC-202](test-cases.md#tc-202), [TC-203](test-cases.md#tc-203), [TC-331](test-cases.md#tc-331), [TC-408](test-cases.md#tc-408), [TC-409](test-cases.md#tc-409) | API; Playwright; Postman API | Covered |
 | REQ-009 | AC-009.2 — Remove Member | [TC-204](test-cases.md#tc-204), [TC-205](test-cases.md#tc-205), [TC-206](test-cases.md#tc-206), [TC-331](test-cases.md#tc-331) | API; Playwright | Covered |
 | REQ-009 | AC-009.3 — Invalid Member | [TC-207](test-cases.md#tc-207), [TC-408](test-cases.md#tc-408) | API | Covered |
 | REQ-009 | AC-009.4 — Duplicate Member | [TC-208](test-cases.md#tc-208), [TC-408](test-cases.md#tc-408) | API | Covered |
