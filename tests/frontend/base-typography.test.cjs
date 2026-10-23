@@ -46,4 +46,11 @@ test("test_base_font_applies_to_page_text_and_form_controls", () => {
         /\.ai-suggestion > h4,\s*\.ai-suggestion > \.ai-suggestion-value \{\s*font-family: "Oxanium", Arial, sans-serif;/,
         "distinctive AI suggestion typography is preserved"
     );
+    assert.equal(fontFamily(".site-title"), "Arial, sans-serif", "the header logo font is unchanged");
+
+    // Bug List and Members inherit the Arial baseline; no serif overrides remain.
+    for (const selector of [".bug-table th", ".bug-table td", "#members > .project > div"]) {
+        assert.equal(fontFamily(selector), undefined, `${selector} inherits the page font`);
+    }
+    assert.doesNotMatch(css, /Times New Roman/, "no serif font overrides remain");
 });

@@ -163,6 +163,9 @@ test("test_bug_mobile_labels_and_header_relationships_survive_sorting", async ()
             assert.match(row.children[0].children[0].href, /^\/bugs.html\?project_id=1&bug_number=\d+$/);
         }
     }
+    // The Bug List shows assignee emails only; roles stay in the Members section.
+    const assignees = f.node("#bugs").querySelector("tbody").children.map(row => row.children[5].textContent);
+    assert.deepEqual([...assignees].sort(), ["User 2", "User 3", "qa@example.com"]);
 });
 
 // TC-272 | Technical — Bug list rejects invalid number response

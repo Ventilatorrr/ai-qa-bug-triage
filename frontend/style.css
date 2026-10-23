@@ -490,7 +490,7 @@ main {
     flex: 1;
 
     width: 100%;
-    max-width: 1200px;
+    max-width: 1230px;
 
     box-sizing: border-box;
 
@@ -1787,7 +1787,9 @@ body.light-theme #projects .project:not(.project-editing) .project-edit-button:h
     outline-offset: 4px;
 }
 
+/* Title takes the spare width; the other columns keep their content width. */
 .bug-table td:nth-child(2) {
+    width: 100%;
     min-width: 220px;
 }
 
@@ -1796,6 +1798,70 @@ body.light-theme #projects .project:not(.project-editing) .project-edit-button:h
 .bug-table td:nth-child(6) {
     white-space: normal;
     overflow-wrap: anywhere;
+}
+
+/* Assignee fits its longest email up to a cap; longer addresses wrap. */
+.bug-table td:nth-child(6) {
+    max-width: 240px;
+    overflow-wrap: break-word;
+}
+
+/* Desktop rows are two lines tall; longer titles end with an ellipsis. */
+@media (min-width: 1101px) {
+    /* Fixed header widths keep column positions stable between pages; Title
+       takes the rest. Widths fit measured Arial content: BUG-999, sort
+       headings, two-line statuses, ~16-character emails and one-line en-US
+       timestamps. */
+    .bug-table {
+        table-layout: fixed;
+    }
+
+    .bug-table th:nth-child(1) {
+        width: 64px;
+    }
+
+    .bug-table th:nth-child(3) {
+        width: 68px;
+    }
+
+    .bug-table th:nth-child(4) {
+        width: 66px;
+    }
+
+    .bug-table th:nth-child(5) {
+        width: 111px;
+    }
+
+    .bug-table th:nth-child(6) {
+        width: 150px;
+    }
+
+    .bug-table th:nth-child(7) {
+        width: 180px;
+    }
+
+    /* Long resolutions use the row's second line instead of widening Status. */
+    .bug-table td:nth-child(5) {
+        white-space: normal;
+    }
+
+    /* Assignee stays on one line; longer emails end with an ellipsis. */
+    .bug-table td:nth-child(6) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bug-table tbody td {
+        height: 2lh;
+    }
+
+    .bug-table .bug-title-text {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+    }
 }
 
 .bug-table tr:last-child td {
@@ -3259,9 +3325,11 @@ body.light-theme button:is(.ai-assist-button, .ai-review-button):disabled {
     }
 
     .bug-table td,
-    .bug-table td:nth-child(2) {
+    .bug-table td:nth-child(2),
+    .bug-table td:nth-child(6) {
         display: block;
         min-width: 0;
+        max-width: none;
         padding: 8px 0;
         white-space: normal;
         overflow-wrap: anywhere;

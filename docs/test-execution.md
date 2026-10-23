@@ -8,6 +8,49 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Bug List layout — 23 October 2026
+
+Refinement after BUG-39, not a recorded defect; adds TC-411 and TC-412.
+
+- Typography: after comparing Times New Roman and Arial, the user chose Arial for
+  the Bug List and Members, so the whole interface uses the BUG-39 Arial
+  baseline. Oxanium AI text and the header logo are unchanged.
+- Bug List: `main` max-width 1230px (1190px table; other pages keep their own
+  narrower content widths, so only the project page visibly changes). Assignee shows the email
+  only; roles remain in Members. Pagination stays below the table.
+- Desktop (≥1101px): `table-layout: fixed` with header widths sized to measured
+  Arial content (Bug ID, Severity, Priority, Status 111px, Assignee 150px, Last
+  Updated 180px for en-US timestamps); Title takes the rest. Rows are at least two lines
+  tall (`2lh`); titles beyond two lines and assignee emails beyond one line end
+  with an ellipsis, keeping the full text in the cell and a tooltip; long
+  resolutions wrap to the second line and are never truncated. Mobile cards are
+  unchanged and show full titles and emails.
+
+Measured in Chromium (en-US) on an owned disposable E2E server with 43 fictional
+bugs (short, long and mixed pages, every resolution, Unassigned to 115-character
+emails, a 3-bug final page) at 1120–1920px, 10/20/50 per page and all seven
+sorts; dark and light identical:
+
+- Column layouts: previously 8 distinct, boundaries moving up to 151px; now one
+  layout with no movement. Title is 429px in the 1190px table (319px at 1120px).
+- `qa2@example.com` and `dev2@example.com` show in full; `sam.lee@example.com`
+  and longer addresses end with an ellipsis.
+- Switching to Arial initially overflowed `#bugs` by 4px (horizontal scrollbar):
+  the en-US timestamp (~180px) exceeded the 165px Last Updated column and cannot
+  wrap. Widening that column to 180px removed it; Status went from 105px to
+  111px so `Closed [Cannot Reproduce]` stays on two lines.
+- Every row is 61px, including exceptional emails, so Next stays fixed across
+  full pages. A partial final page still moves Next up; fixing it would need
+  reserved blank space (about 3,000px at 50 per page), so it is left unchanged.
+- No cell, table or page overflow; Last Updated stays on one line. 390px and
+  320px cards are identical to before.
+- TC-410 now also asserts that no Times New Roman overrides remain. TC-271
+  (email-only assignees), TC-411 (two-line clamp, equal row heights, full mobile
+  titles) and TC-412 (column positions across pages, sorting and page size)
+  failed against the previous CSS/JS.
+- Frontend Node **110 passed**; Chromium Playwright + BDD **30 passed in 108.31s**.
+  Firefox and WebKit were not checked.
+
 ## BUG-39 global base font — 23 October 2026
 
 Frontend audit finding, recorded in the application as BUG-39. Tracked by branch

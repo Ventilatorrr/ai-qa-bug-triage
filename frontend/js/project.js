@@ -668,7 +668,8 @@ function displayBugAssignee(assigneeId) {
         return member.user_id === assigneeId;
     });
 
-    return member ? `${member.email} (${member.role})` : `User ${assigneeId}`;
+    // Roles stay visible in the Members section; the Bug List shows only the email.
+    return member ? member.email : `User ${assigneeId}`;
 }
 
 function displayBugStatus(bug) {
@@ -911,7 +912,15 @@ function renderBugs() {
         const titleCell =
             document.createElement("td");
 
-        titleCell.textContent = bug.title;
+        // Desktop rows clamp titles to two lines; the tooltip and bug details
+        // keep the full title available.
+        const titleText =
+            document.createElement("span");
+
+        titleText.className = "bug-title-text";
+        titleText.textContent = bug.title;
+        titleText.title = bug.title;
+        titleCell.appendChild(titleText);
 
 
         /* Severity */
@@ -960,6 +969,11 @@ function renderBugs() {
 
         assigneeCell.textContent =
             displayBugAssignee(bug.assignee_id);
+
+        // Desktop truncates long emails with an ellipsis; the tooltip keeps them readable.
+        if (bug.assignee_id != null) {
+            assigneeCell.title = assigneeCell.textContent;
+        }
 
 
         /* Last Updated */

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-411**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-413**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -22,14 +22,14 @@ own results. Test bodies and parameter data remain the executable specification.
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (9 files) | 110 registered tests | 110 | Internal loops are variants |
-| Playwright (6 modules) | 16 functions | 17 | 23 Chromium scenarios |
+| Playwright (6 modules) | 18 functions | 19 | 25 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 422 | **409** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 424 | **411** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -581,6 +581,8 @@ unassignment state/role matrix each retain one ID.
 | --- | --- | --- | --- | --- |
 | <a id="tc-333"></a>TC-333 | AC-012.2, AC-012.4, AC-012.5, AC-012.6 | Sort pagination and page size survive navigation and reload | Playwright / Chromium | [`test_sort_pagination_and_page_size_survive_navigation_and_reload`](../tests/e2e/test_bug_list.py#L10); All variants |
 | <a id="tc-334"></a>TC-334 | AC-012.5, AC-012.6 | Page size preferences persist and are isolated by user | Playwright / Chromium | [`test_page_size_preferences_persist_and_are_isolated_by_user`](../tests/e2e/test_bug_list.py#L53); All variants |
+| <a id="tc-411"></a>TC-411 | AC-012.1 | Desktop rows clamp long titles to two lines; mobile cards show full titles | Playwright / Chromium | [`test_desktop_rows_clamp_long_titles_to_two_lines`](../tests/e2e/test_bug_list.py#L118); All variants |
+| <a id="tc-412"></a>TC-412 | — | Desktop column positions stay fixed across pages, sorting and page size | Playwright / Chromium | [`test_desktop_column_positions_stay_fixed_across_pages`](../tests/e2e/test_bug_list.py#L146); All variants |
 
 ## tests/e2e/test_bugs.py
 
