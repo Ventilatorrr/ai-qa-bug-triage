@@ -8,6 +8,21 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Frontend polish: About, Register and Privacy — 23 October 2026
+
+About lists the technology stack with middle dots and adds a short Testing & QA
+section linking to the requirements, RTM, test cases, execution report and QA
+strategy on GitHub. The Register subtitle reads `Create an account · Privacy
+Policy` (TC-260 updated). The Privacy Policy now discloses that the project and
+bug pages load the Oxanium font from Google Fonts; its other statements were
+checked against the current storage keys, AI context and provider settings.
+
+A scripted review on an owned disposable E2E server covered every page (signed
+in and out, Members, New Bug and Edit Bug open, an unbroken 97-character project
+name) at 1440/1120/768/390/320px in dark and light: no page overflow, offscreen
+elements, clipped text or header overlap. Frontend Node **110 passed**; privacy
+and version pytest **3 passed**; Playwright auth and BDD **7 passed**.
+
 ## Bug List layout — 23 October 2026
 
 Refinement after BUG-39, not a recorded defect; adds TC-411 and TC-412.
