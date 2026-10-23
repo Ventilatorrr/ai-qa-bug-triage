@@ -260,6 +260,15 @@ body {
     background-color: var(--page-background);
     display: flex;
     flex-direction: column;
+    font-family: Arial, sans-serif;
+}
+
+/* Browsers give form controls their own font unless told to inherit. */
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
 }
 
 

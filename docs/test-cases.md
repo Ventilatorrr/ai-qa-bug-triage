@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-410**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-411**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (25 modules) | 223 | 234 | 586 cases; 91 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (8 files) | 109 registered tests | 109 | Internal loops are variants |
+| Frontend Node (9 files) | 110 registered tests | 110 | Internal loops are variants |
 | Playwright (6 modules) | 16 functions | 17 | 23 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 421 | **408** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 422 | **409** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -439,6 +439,12 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-259"></a>TC-259 | — | Privacy policy links cover all page footers | Frontend JS / DOM substitutes | [`test_privacy_policy_links_cover_all_page_footers`](../tests/frontend/ai-disclosure.test.cjs#L148); All variants |
 | <a id="tc-260"></a>TC-260 | — | Registration subtitle links only privacy without extra paragraphs | Frontend JS / DOM substitutes | [`test_registration_subtitle_links_only_privacy_without_extra_paragraphs`](../tests/frontend/ai-disclosure.test.cjs#L164); All variants |
 | <a id="tc-261"></a>TC-261 | — | About navigation preserves guest and authenticated controls | Frontend JS / DOM substitutes | [`test_about_navigation_preserves_guest_and_authenticated_controls`](../tests/frontend/ai-disclosure.test.cjs#L174); All variants |
+
+## tests/frontend/base-typography.test.cjs
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-410"></a>TC-410 | — | Base font applies to page text and form controls | Frontend JS / DOM substitutes | [`test_base_font_applies_to_page_text_and_form_controls`](../tests/frontend/base-typography.test.cjs#L39); All variants |
 
 ## tests/frontend/bug-number-display.test.cjs
 

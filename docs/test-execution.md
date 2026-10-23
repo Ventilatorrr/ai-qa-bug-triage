@@ -8,6 +8,31 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## BUG-39 global base font — 23 October 2026
+
+Frontend audit finding, recorded in the application as BUG-39. Tracked by branch
+`fix/global-font-baseline` and TC-410.
+
+Root cause: `frontend/style.css` never set `font-family` on `body`, so paragraphs,
+labels, messages, footers and table text used the browser default font and
+buttons used the control font. Fix: Arial on `body`, with `button`, `input`,
+`select` and `textarea` inheriting it; Oxanium AI suggestion typography unchanged.
+
+- TC-410 failed against the original CSS (`body` font-family `undefined`) and
+  passed after the fix. Frontend Node: **109 passed** before, **110** after.
+- Chromium Playwright + BDD: **28 passed in 93.28s**, including the TC-378 and
+  TC-409 wrapping regressions.
+- Headless Chromium computed styles on static `file://` copies (no server or
+  database, HTTP(S) blocked): Login, Register, About and Privacy text changed from
+  `"Times New Roman"` to `Arial, sans-serif`. The bug page redirects without a
+  token, so it was not measured.
+- Not checked: backend pytest (CSS-only change), light theme, other browsers,
+  real mobile devices and visual layout review.
+
+The Playwright run used `tests.e2e.server` on `127.0.0.1:8148` with a new temporary
+database and verified identity; the port was released afterwards. No real database
+was accessed.
+
 ## Bug API test module split (audit C6) — 23 October 2026
 
 Mechanical reorganization of `tests/backend/test_bug.py` (5,231 lines) into six
