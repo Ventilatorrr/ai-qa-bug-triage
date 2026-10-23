@@ -8,6 +8,46 @@ planned evaluations are distinct.
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
 
+## Bug API test module split (audit C6) — 23 October 2026
+
+Mechanical reorganization of `tests/backend/test_bug.py` (5,231 lines) into six
+feature modules aligned with the acceptance criteria. Test functions, decorators,
+parameters, TC comments, assertions and fixtures are unchanged; no setup was
+refactored.
+
+| Module | Scope | Functions | Cases |
+| --- | --- | ---: | ---: |
+| `test_bug.py` | Report management, AC-011–014 (TC-066–081) | 15 | 20 |
+| `test_bug_assignment.py` | AC-015 (TC-082–087) | 6 | 26 |
+| `test_bug_classification.py` | AC-016 and severity/priority validation (TC-088–093) | 6 | 35 |
+| `test_bug_lifecycle.py` | AC-017.1–017.4, 017.8, 017.9 (TC-094–107, TC-126–131) | 20 | 24 |
+| `test_bug_testing_outcomes.py` | AC-017.5 (TC-108–115) | 8 | 10 |
+| `test_bug_closure.py` | AC-017.6–017.7 (TC-116–125), with the AC-017.7 setup helper | 10 | 23 |
+
+Verification on base `d78d700`, in two stages:
+
+1. Five-module split (assignment and classification still combined in one
+   module): the five modules **138 passed in 159.75s**; full offline suite
+   **649 passed in 435.35s**.
+2. Final adjustment, separating that combined module into `test_bug_assignment.py`
+   and `test_bug_classification.py` by line range. The full suite was not rerun
+   after this step; the two new modules **61 passed in 92.90s**.
+
+Final-state checks:
+
+- All 66 definitions (65 tests and one helper) are byte-identical to the
+  original, each appears once, and the source order is kept. Reassembling the
+  modules reproduces the original exactly.
+- Collection: 26 + 35 = 61 cases in the two new modules; 138 across the six
+  modules, with node IDs identical to the baseline apart from the module path.
+  The full default collection is unchanged at 649.
+- Catalogue: 50 links (TC-082–TC-131) updated for path and line only; all 351
+  source anchors resolve. No TC IDs, AC mappings or RTM assessments changed.
+  Earlier entries naming `test_bug.py` remain historical evidence.
+
+Each test used a fresh temporary SQLite database; no real database or AI
+provider was accessed.
+
 ## Project and member text overflow (audit B4) — 23 October 2026
 
 Audit finding, confirmed in Chromium on a disposable E2E server before any
