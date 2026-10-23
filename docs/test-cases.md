@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (20 modules) | 223 | 234 | 586 cases; 91 parameterized functions |
+| Backend pytest (25 modules) | 223 | 234 | 586 cases; 91 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (8 files) | 109 registered tests | 109 | Internal loops are variants |
@@ -158,56 +158,68 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-079"></a>TC-079 | AC-014.1 | Authorized member can delete bug | API / integration; Postman API | [`test_authorized_member_can_delete_bug`](../tests/backend/test_bug.py#L803); All variants; Postman: `24 Delete Test Bug`, `25 Deleted Bug Is Not Found` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
 | <a id="tc-080"></a>TC-080 | AC-014.2 | Reject Developer bug deletion and preserve the report | API / integration; Postman API | [`test_unauthorized_member_cannot_delete_bug`](../tests/backend/test_bug.py#L876); role=Developer; Postman: `17 Reject Developer Bug Deletion`, `23 Read Back Reopened Test Bug` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
 | <a id="tc-081"></a>TC-081 | AC-014.2 | Reject outsider bug deletion and preserve the report | API / integration | [`test_unauthorized_member_cannot_delete_bug`](../tests/backend/test_bug.py#L876); role=non-member |
-| <a id="tc-082"></a>TC-082 | AC-015.1 | Authorized member can assign bug | API / integration | [`test_authorized_member_can_assign_bug`](../tests/backend/test_bug.py#L959); All variants |
-| <a id="tc-083"></a>TC-083 | AC-015.1 | Authorized member can unassign bug | API / integration | [`test_authorized_member_can_unassign_bug`](../tests/backend/test_bug.py#L1061); All variants |
-| <a id="tc-084"></a>TC-084 | AC-015.1 | Bug unassignment is rejected outside triage | API / integration | [`test_bug_unassignment_is_rejected_outside_triage`](../tests/backend/test_bug.py#L1173); All variants |
-| <a id="tc-085"></a>TC-085 | AC-015.2 | Bug cannot be assigned to invalid member | API / integration | [`test_bug_cannot_be_assigned_to_invalid_member`](../tests/backend/test_bug.py#L1219); All variants |
-| <a id="tc-086"></a>TC-086 | AC-015.1, AC-015.3 | Non member cannot assign bug | API / integration | [`test_non_member_cannot_assign_bug`](../tests/backend/test_bug.py#L1284); All variants |
-| <a id="tc-087"></a>TC-087 | AC-015.4 | Authorized member can reassign bug | API / integration | [`test_authorized_member_can_reassign_bug`](../tests/backend/test_bug.py#L1360); All variants |
-| <a id="tc-088"></a>TC-088 | AC-016.1 | Project member can set bug severity | API / integration | [`test_project_member_can_set_bug_severity`](../tests/backend/test_bug.py#L1445); All variants |
-| <a id="tc-089"></a>TC-089 | AC-016.2 | Project member can set bug priority | API / integration | [`test_project_member_can_set_bug_priority`](../tests/backend/test_bug.py#L1537); All variants |
-| <a id="tc-090"></a>TC-090 | AC-016.3 | Project member can update bug classification | API / integration; Postman API | [`test_project_member_can_update_bug_classification`](../tests/backend/test_bug.py#L1625); All variants; Postman: `14 Edit Test Bug` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-091"></a>TC-091 | AC-016.4 | Non member cannot update bug classification | API / integration | [`test_non_member_cannot_update_bug_classification`](../tests/backend/test_bug.py#L1714); All variants |
-| <a id="tc-092"></a>TC-092 | — | Bug rejects invalid severity | API / integration | [`test_bug_rejects_invalid_severity`](../tests/backend/test_bug.py#L1774); All variants |
-| <a id="tc-093"></a>TC-093 | — | Bug rejects invalid priority | API / integration | [`test_bug_rejects_invalid_priority`](../tests/backend/test_bug.py#L1846); All variants |
-| <a id="tc-094"></a>TC-094 | AC-017.1 | New bug starts in triage | API / integration; Postman API | [`test_new_bug_starts_in_triage`](../tests/backend/test_bug.py#L1897); All variants; Postman: `13 Create Test Bug` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-095"></a>TC-095 | AC-017.2 | Project owner or QA can move bug from triage to open | API / integration | [`test_project_owner_or_qa_can_move_bug_from_triage_to_open`](../tests/backend/test_bug.py#L1935); All variants |
-| <a id="tc-096"></a>TC-096 | AC-017.2 | Triage to open can assign eligible project member | API / integration; Postman API | [`test_triage_to_open_can_assign_eligible_project_member`](../tests/backend/test_bug.py#L2017); All variants; Postman: `18 Move Triage to Open` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-097"></a>TC-097 | AC-017.2 | Triage to open rejects ineligible assignee | API / integration | [`test_triage_to_open_rejects_ineligible_assignee`](../tests/backend/test_bug.py#L2067); All variants |
-| <a id="tc-098"></a>TC-098 | AC-017.2 | Developer cannot move bug from triage to open | API / integration | [`test_developer_cannot_move_bug_from_triage_to_open`](../tests/backend/test_bug.py#L2115); All variants |
-| <a id="tc-099"></a>TC-099 | AC-017.2 | Bug without assignee cannot move from triage to open | API / integration | [`test_bug_without_assignee_cannot_move_from_triage_to_open`](../tests/backend/test_bug.py#L2179); All variants |
-| <a id="tc-100"></a>TC-100 | AC-017.3 | QA analyst cannot move bug from open to development | API / integration | [`test_qa_analyst_cannot_move_bug_from_open_to_development`](../tests/backend/test_bug.py#L2227); All variants |
-| <a id="tc-101"></a>TC-101 | AC-017.3 | Project owner can move bug from open to development | API / integration; Postman API | [`test_project_owner_can_move_bug_from_open_to_development`](../tests/backend/test_bug.py#L2313); All variants; Postman: `19 Move Open to Development` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-102"></a>TC-102 | AC-017.3 | Open to development requires valid developer assignee | API / integration | [`test_open_to_development_requires_valid_developer_assignee`](../tests/backend/test_bug.py#L2402); All variants |
-| <a id="tc-103"></a>TC-103 | AC-017.3 | Non assigned developer cannot move bug from open to development | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_open_to_development`](../tests/backend/test_bug.py#L2467); All variants |
-| <a id="tc-104"></a>TC-104 | AC-017.4 | Assigned developer can move bug from development to testing | API / integration; Postman API | [`test_assigned_developer_can_move_bug_from_development_to_testing`](../tests/backend/test_bug.py#L2553); All variants; Postman: `20 Move Development to Testing` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-105"></a>TC-105 | AC-017.4 | Project owner can move bug from development to testing | API / integration | [`test_project_owner_can_move_bug_from_development_to_testing`](../tests/backend/test_bug.py#L2657); All variants |
-| <a id="tc-106"></a>TC-106 | AC-017.4 | Non assigned developer cannot move bug from development to testing | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_development_to_testing`](../tests/backend/test_bug.py#L2752); All variants |
-| <a id="tc-107"></a>TC-107 | AC-017.4 | Bug cannot move to testing with developer assignee | API / integration | [`test_bug_cannot_move_to_testing_with_developer_assignee`](../tests/backend/test_bug.py#L2863); All variants |
-| <a id="tc-108"></a>TC-108 | AC-017.5 | Assigned QA can pass bug and close it | API / integration; Postman API | [`test_assigned_qa_can_pass_bug_and_close_it`](../tests/backend/test_bug.py#L2962); All variants; Postman: `21 Pass Testing with Fix Version` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-109"></a>TC-109 | AC-017.5 | Project owner can pass bug and close it | API / integration | [`test_project_owner_can_pass_bug_and_close_it`](../tests/backend/test_bug.py#L3102); All variants |
-| <a id="tc-110"></a>TC-110 | AC-017.5 | Assigned QA can fail bug and return it to development | API / integration | [`test_assigned_qa_can_fail_bug_and_return_it_to_development`](../tests/backend/test_bug.py#L3203); All variants |
-| <a id="tc-111"></a>TC-111 | AC-017.5 | Project owner can fail bug and return it to development | API / integration | [`test_project_owner_can_fail_bug_and_return_it_to_development`](../tests/backend/test_bug.py#L3316); All variants |
-| <a id="tc-112"></a>TC-112 | AC-017.5 | Failed testing requires valid developer assignee | API / integration | [`test_failed_testing_requires_valid_developer_assignee`](../tests/backend/test_bug.py#L3436); All variants |
-| <a id="tc-113"></a>TC-113 | AC-017.5 | Non assigned QA cannot record testing outcome | API / integration | [`test_non_assigned_qa_cannot_record_testing_outcome`](../tests/backend/test_bug.py#L3533); All variants |
-| <a id="tc-114"></a>TC-114 | AC-017.5 | Testing outcome is required | API / integration | [`test_testing_outcome_is_required`](../tests/backend/test_bug.py#L3656); All variants |
-| <a id="tc-115"></a>TC-115 | AC-017.5 | Invalid testing outcome is rejected | API / integration | [`test_invalid_testing_outcome_is_rejected`](../tests/backend/test_bug.py#L3774); All variants |
-| <a id="tc-116"></a>TC-116 | AC-017.6 | Assigned developer can close bug without fixing | API / integration | [`test_assigned_developer_can_close_bug_without_fixing`](../tests/backend/test_bug.py#L3891); All variants |
-| <a id="tc-117"></a>TC-117 | AC-017.6 | Project owner can close bug without fixing | API / integration | [`test_project_owner_can_close_bug_without_fixing`](../tests/backend/test_bug.py#L3988); All variants |
-| <a id="tc-118"></a>TC-118 | AC-017.6 | Non assigned developer cannot close bug without fixing | API / integration | [`test_non_assigned_developer_cannot_close_bug_without_fixing`](../tests/backend/test_bug.py#L4081); All variants |
-| <a id="tc-119"></a>TC-119 | AC-017.6 | Bug cannot be closed without resolution | API / integration | [`test_bug_cannot_be_closed_without_resolution`](../tests/backend/test_bug.py#L4168); All variants |
-| <a id="tc-120"></a>TC-120 | AC-017.6 | Fixed resolution cannot be manually selected when closing bug | API / integration | [`test_fixed_resolution_cannot_be_manually_selected_when_closing_bug`](../tests/backend/test_bug.py#L4254); All variants |
-| <a id="tc-121"></a>TC-121 | AC-017.7 | Project owner can move closed bug to triage | API / integration; Postman API | [`test_project_owner_can_move_closed_bug_to_triage`](../tests/backend/test_bug.py#L4503); All variants; Postman: `22 Reset Closed to Triage` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-122"></a>TC-122 | AC-017.7 | Project owner can move unassigned closed bug to triage | API / integration | [`test_project_owner_can_move_unassigned_closed_bug_to_triage`](../tests/backend/test_bug.py#L4539); All variants |
-| <a id="tc-123"></a>TC-123 | AC-017.7 | Unauthorized user cannot move closed bug to triage | API / integration | [`test_unauthorized_user_cannot_move_closed_bug_to_triage`](../tests/backend/test_bug.py#L4592); All variants |
-| <a id="tc-124"></a>TC-124 | AC-017.7 | Closed bug rejects invalid direct transition | API / integration | [`test_closed_bug_rejects_invalid_direct_transition`](../tests/backend/test_bug.py#L4636); All variants |
-| <a id="tc-125"></a>TC-125 | AC-017.7 | Closed to triage rejects extra transition data | API / integration | [`test_closed_to_triage_rejects_extra_transition_data`](../tests/backend/test_bug.py#L4672); All variants |
-| <a id="tc-126"></a>TC-126 | AC-017.8 | Bug cannot skip from triage to development | API / integration | [`test_bug_cannot_skip_from_triage_to_development`](../tests/backend/test_bug.py#L4714); All variants |
-| <a id="tc-127"></a>TC-127 | AC-017.8 | Bug cannot skip from open to testing | API / integration | [`test_bug_cannot_skip_from_open_to_testing`](../tests/backend/test_bug.py#L4776); All variants |
-| <a id="tc-128"></a>TC-128 | AC-017.8 | Bug cannot move from development back to open | API / integration | [`test_bug_cannot_move_from_development_back_to_open`](../tests/backend/test_bug.py#L4863); All variants |
-| <a id="tc-129"></a>TC-129 | AC-017.8 | Bug cannot move from testing back to open | API / integration | [`test_bug_cannot_move_from_testing_back_to_open`](../tests/backend/test_bug.py#L4949); All variants |
-| <a id="tc-130"></a>TC-130 | AC-017.8 | Bug cannot move from testing back to triage | API / integration | [`test_bug_cannot_move_from_testing_back_to_triage`](../tests/backend/test_bug.py#L5060); All variants |
-| <a id="tc-131"></a>TC-131 | AC-017.9 | Changing bug status updates last updated timestamp | API / integration; Postman API | [`test_changing_bug_status_updates_last_updated_timestamp`](../tests/backend/test_bug.py#L5171); All variants; Postman: `18 Move Triage to Open`, `19 Move Open to Development`, `20 Move Development to Testing`, `21 Pass Testing with Fix Version`, `22 Reset Closed to Triage` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+
+## tests/backend/test_bug_assignment.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-082"></a>TC-082 | AC-015.1 | Authorized member can assign bug | API / integration | [`test_authorized_member_can_assign_bug`](../tests/backend/test_bug_assignment.py#L16); All variants |
+| <a id="tc-083"></a>TC-083 | AC-015.1 | Authorized member can unassign bug | API / integration | [`test_authorized_member_can_unassign_bug`](../tests/backend/test_bug_assignment.py#L118); All variants |
+| <a id="tc-084"></a>TC-084 | AC-015.1 | Bug unassignment is rejected outside triage | API / integration | [`test_bug_unassignment_is_rejected_outside_triage`](../tests/backend/test_bug_assignment.py#L230); All variants |
+| <a id="tc-085"></a>TC-085 | AC-015.2 | Bug cannot be assigned to invalid member | API / integration | [`test_bug_cannot_be_assigned_to_invalid_member`](../tests/backend/test_bug_assignment.py#L276); All variants |
+| <a id="tc-086"></a>TC-086 | AC-015.1, AC-015.3 | Non member cannot assign bug | API / integration | [`test_non_member_cannot_assign_bug`](../tests/backend/test_bug_assignment.py#L341); All variants |
+| <a id="tc-087"></a>TC-087 | AC-015.4 | Authorized member can reassign bug | API / integration | [`test_authorized_member_can_reassign_bug`](../tests/backend/test_bug_assignment.py#L417); All variants |
+
+## tests/backend/test_bug_classification.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-088"></a>TC-088 | AC-016.1 | Project member can set bug severity | API / integration | [`test_project_member_can_set_bug_severity`](../tests/backend/test_bug_classification.py#L13); All variants |
+| <a id="tc-089"></a>TC-089 | AC-016.2 | Project member can set bug priority | API / integration | [`test_project_member_can_set_bug_priority`](../tests/backend/test_bug_classification.py#L105); All variants |
+| <a id="tc-090"></a>TC-090 | AC-016.3 | Project member can update bug classification | API / integration; Postman API | [`test_project_member_can_update_bug_classification`](../tests/backend/test_bug_classification.py#L193); All variants; Postman: `14 Edit Test Bug` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-091"></a>TC-091 | AC-016.4 | Non member cannot update bug classification | API / integration | [`test_non_member_cannot_update_bug_classification`](../tests/backend/test_bug_classification.py#L282); All variants |
+| <a id="tc-092"></a>TC-092 | — | Bug rejects invalid severity | API / integration | [`test_bug_rejects_invalid_severity`](../tests/backend/test_bug_classification.py#L342); All variants |
+| <a id="tc-093"></a>TC-093 | — | Bug rejects invalid priority | API / integration | [`test_bug_rejects_invalid_priority`](../tests/backend/test_bug_classification.py#L414); All variants |
+
+## tests/backend/test_bug_closure.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-116"></a>TC-116 | AC-017.6 | Assigned developer can close bug without fixing | API / integration | [`test_assigned_developer_can_close_bug_without_fixing`](../tests/backend/test_bug_closure.py#L9); All variants |
+| <a id="tc-117"></a>TC-117 | AC-017.6 | Project owner can close bug without fixing | API / integration | [`test_project_owner_can_close_bug_without_fixing`](../tests/backend/test_bug_closure.py#L106); All variants |
+| <a id="tc-118"></a>TC-118 | AC-017.6 | Non assigned developer cannot close bug without fixing | API / integration | [`test_non_assigned_developer_cannot_close_bug_without_fixing`](../tests/backend/test_bug_closure.py#L199); All variants |
+| <a id="tc-119"></a>TC-119 | AC-017.6 | Bug cannot be closed without resolution | API / integration | [`test_bug_cannot_be_closed_without_resolution`](../tests/backend/test_bug_closure.py#L286); All variants |
+| <a id="tc-120"></a>TC-120 | AC-017.6 | Fixed resolution cannot be manually selected when closing bug | API / integration | [`test_fixed_resolution_cannot_be_manually_selected_when_closing_bug`](../tests/backend/test_bug_closure.py#L372); All variants |
+| <a id="tc-121"></a>TC-121 | AC-017.7 | Project owner can move closed bug to triage | API / integration; Postman API | [`test_project_owner_can_move_closed_bug_to_triage`](../tests/backend/test_bug_closure.py#L621); All variants; Postman: `22 Reset Closed to Triage` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-122"></a>TC-122 | AC-017.7 | Project owner can move unassigned closed bug to triage | API / integration | [`test_project_owner_can_move_unassigned_closed_bug_to_triage`](../tests/backend/test_bug_closure.py#L657); All variants |
+| <a id="tc-123"></a>TC-123 | AC-017.7 | Unauthorized user cannot move closed bug to triage | API / integration | [`test_unauthorized_user_cannot_move_closed_bug_to_triage`](../tests/backend/test_bug_closure.py#L710); All variants |
+| <a id="tc-124"></a>TC-124 | AC-017.7 | Closed bug rejects invalid direct transition | API / integration | [`test_closed_bug_rejects_invalid_direct_transition`](../tests/backend/test_bug_closure.py#L754); All variants |
+| <a id="tc-125"></a>TC-125 | AC-017.7 | Closed to triage rejects extra transition data | API / integration | [`test_closed_to_triage_rejects_extra_transition_data`](../tests/backend/test_bug_closure.py#L790); All variants |
+
+## tests/backend/test_bug_lifecycle.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-094"></a>TC-094 | AC-017.1 | New bug starts in triage | API / integration; Postman API | [`test_new_bug_starts_in_triage`](../tests/backend/test_bug_lifecycle.py#L5); All variants; Postman: `13 Create Test Bug` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-095"></a>TC-095 | AC-017.2 | Project owner or QA can move bug from triage to open | API / integration | [`test_project_owner_or_qa_can_move_bug_from_triage_to_open`](../tests/backend/test_bug_lifecycle.py#L43); All variants |
+| <a id="tc-096"></a>TC-096 | AC-017.2 | Triage to open can assign eligible project member | API / integration; Postman API | [`test_triage_to_open_can_assign_eligible_project_member`](../tests/backend/test_bug_lifecycle.py#L125); All variants; Postman: `18 Move Triage to Open` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-097"></a>TC-097 | AC-017.2 | Triage to open rejects ineligible assignee | API / integration | [`test_triage_to_open_rejects_ineligible_assignee`](../tests/backend/test_bug_lifecycle.py#L175); All variants |
+| <a id="tc-098"></a>TC-098 | AC-017.2 | Developer cannot move bug from triage to open | API / integration | [`test_developer_cannot_move_bug_from_triage_to_open`](../tests/backend/test_bug_lifecycle.py#L223); All variants |
+| <a id="tc-099"></a>TC-099 | AC-017.2 | Bug without assignee cannot move from triage to open | API / integration | [`test_bug_without_assignee_cannot_move_from_triage_to_open`](../tests/backend/test_bug_lifecycle.py#L287); All variants |
+| <a id="tc-100"></a>TC-100 | AC-017.3 | QA analyst cannot move bug from open to development | API / integration | [`test_qa_analyst_cannot_move_bug_from_open_to_development`](../tests/backend/test_bug_lifecycle.py#L335); All variants |
+| <a id="tc-101"></a>TC-101 | AC-017.3 | Project owner can move bug from open to development | API / integration; Postman API | [`test_project_owner_can_move_bug_from_open_to_development`](../tests/backend/test_bug_lifecycle.py#L421); All variants; Postman: `19 Move Open to Development` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-102"></a>TC-102 | AC-017.3 | Open to development requires valid developer assignee | API / integration | [`test_open_to_development_requires_valid_developer_assignee`](../tests/backend/test_bug_lifecycle.py#L510); All variants |
+| <a id="tc-103"></a>TC-103 | AC-017.3 | Non assigned developer cannot move bug from open to development | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_open_to_development`](../tests/backend/test_bug_lifecycle.py#L575); All variants |
+| <a id="tc-104"></a>TC-104 | AC-017.4 | Assigned developer can move bug from development to testing | API / integration; Postman API | [`test_assigned_developer_can_move_bug_from_development_to_testing`](../tests/backend/test_bug_lifecycle.py#L661); All variants; Postman: `20 Move Development to Testing` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-105"></a>TC-105 | AC-017.4 | Project owner can move bug from development to testing | API / integration | [`test_project_owner_can_move_bug_from_development_to_testing`](../tests/backend/test_bug_lifecycle.py#L765); All variants |
+| <a id="tc-106"></a>TC-106 | AC-017.4 | Non assigned developer cannot move bug from development to testing | API / integration | [`test_non_assigned_developer_cannot_move_bug_from_development_to_testing`](../tests/backend/test_bug_lifecycle.py#L860); All variants |
+| <a id="tc-107"></a>TC-107 | AC-017.4 | Bug cannot move to testing with developer assignee | API / integration | [`test_bug_cannot_move_to_testing_with_developer_assignee`](../tests/backend/test_bug_lifecycle.py#L971); All variants |
+| <a id="tc-126"></a>TC-126 | AC-017.8 | Bug cannot skip from triage to development | API / integration | [`test_bug_cannot_skip_from_triage_to_development`](../tests/backend/test_bug_lifecycle.py#L1070); All variants |
+| <a id="tc-127"></a>TC-127 | AC-017.8 | Bug cannot skip from open to testing | API / integration | [`test_bug_cannot_skip_from_open_to_testing`](../tests/backend/test_bug_lifecycle.py#L1132); All variants |
+| <a id="tc-128"></a>TC-128 | AC-017.8 | Bug cannot move from development back to open | API / integration | [`test_bug_cannot_move_from_development_back_to_open`](../tests/backend/test_bug_lifecycle.py#L1219); All variants |
+| <a id="tc-129"></a>TC-129 | AC-017.8 | Bug cannot move from testing back to open | API / integration | [`test_bug_cannot_move_from_testing_back_to_open`](../tests/backend/test_bug_lifecycle.py#L1305); All variants |
+| <a id="tc-130"></a>TC-130 | AC-017.8 | Bug cannot move from testing back to triage | API / integration | [`test_bug_cannot_move_from_testing_back_to_triage`](../tests/backend/test_bug_lifecycle.py#L1416); All variants |
+| <a id="tc-131"></a>TC-131 | AC-017.9 | Changing bug status updates last updated timestamp | API / integration; Postman API | [`test_changing_bug_status_updates_last_updated_timestamp`](../tests/backend/test_bug_lifecycle.py#L1527); All variants; Postman: `18 Move Triage to Open`, `19 Move Open to Development`, `20 Move Development to Testing`, `21 Pass Testing with Fix Version`, `22 Reset Closed to Triage` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
 
 ## tests/backend/test_bug_numbers.py
 
@@ -220,6 +232,19 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-136"></a>TC-136 | AC-019.2, AC-022.2 | Keep AI history exclusion tied to internal identity after public resolution | API / integration | [`test_public_bug_routes_use_local_number_and_isolate_projects`](../tests/backend/test_bug_numbers.py#L82); operation=ai-assist |
 | <a id="tc-137"></a>TC-137 | — | Failed creation rolls back bug and counter | API / integration | [`test_failed_creation_rolls_back_bug_and_counter`](../tests/backend/test_bug_numbers.py#L141); All variants |
 | <a id="tc-138"></a>TC-138 | AC-011.1 | Concurrent creation allocates unique bug numbers | API / integration | [`test_concurrent_creation_allocates_unique_bug_numbers`](../tests/backend/test_bug_numbers.py#L184); All variants |
+
+## tests/backend/test_bug_testing_outcomes.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-108"></a>TC-108 | AC-017.5 | Assigned QA can pass bug and close it | API / integration; Postman API | [`test_assigned_qa_can_pass_bug_and_close_it`](../tests/backend/test_bug_testing_outcomes.py#L5); All variants; Postman: `21 Pass Testing with Fix Version` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-109"></a>TC-109 | AC-017.5 | Project owner can pass bug and close it | API / integration | [`test_project_owner_can_pass_bug_and_close_it`](../tests/backend/test_bug_testing_outcomes.py#L145); All variants |
+| <a id="tc-110"></a>TC-110 | AC-017.5 | Assigned QA can fail bug and return it to development | API / integration | [`test_assigned_qa_can_fail_bug_and_return_it_to_development`](../tests/backend/test_bug_testing_outcomes.py#L246); All variants |
+| <a id="tc-111"></a>TC-111 | AC-017.5 | Project owner can fail bug and return it to development | API / integration | [`test_project_owner_can_fail_bug_and_return_it_to_development`](../tests/backend/test_bug_testing_outcomes.py#L359); All variants |
+| <a id="tc-112"></a>TC-112 | AC-017.5 | Failed testing requires valid developer assignee | API / integration | [`test_failed_testing_requires_valid_developer_assignee`](../tests/backend/test_bug_testing_outcomes.py#L479); All variants |
+| <a id="tc-113"></a>TC-113 | AC-017.5 | Non assigned QA cannot record testing outcome | API / integration | [`test_non_assigned_qa_cannot_record_testing_outcome`](../tests/backend/test_bug_testing_outcomes.py#L576); All variants |
+| <a id="tc-114"></a>TC-114 | AC-017.5 | Testing outcome is required | API / integration | [`test_testing_outcome_is_required`](../tests/backend/test_bug_testing_outcomes.py#L699); All variants |
+| <a id="tc-115"></a>TC-115 | AC-017.5 | Invalid testing outcome is rejected | API / integration | [`test_invalid_testing_outcome_is_rejected`](../tests/backend/test_bug_testing_outcomes.py#L817); All variants |
 
 ## tests/backend/test_bug_update_readback.py
 
