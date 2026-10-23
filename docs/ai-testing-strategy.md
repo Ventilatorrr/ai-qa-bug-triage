@@ -427,7 +427,7 @@ semantic quality. No historical artifact is edited or reused as a new result.
 | Option | Status and decision boundary |
 | --- | --- |
 | Low reasoning | Tested: 14.93% lower observed median provider latency in the initial six paired fictional cases. Low was not selected; the approved production configuration is explicit Medium + Fast. |
-| Fast service tier | Six-configuration study complete; Medium + Fast selected and implemented in the working tree. Focused offline regression verifies production/evaluation request equivalence. Review, commit, CI and release remain pending; exploratory timing is not a speed guarantee. |
+| Fast service tier | Six-configuration study complete; Medium + Fast selected and merged to `main`. Focused offline regression, run in CI, verifies production/evaluation request equivalence. Not yet in a published release; exploratory timing is not a speed guarantee. |
 | High reasoning | Tested on default and Fast tiers; High Fast's 3.7065s median and 23.74% higher estimated cost than Medium Fast were not justified by its localized Q7/Q11 rewrite gains. Production adoption deferred. |
 | Reasoning None | Deferred; no experiment or production change authorized here. |
 | Client reuse | Deferred; potentially a smaller connection/setup saving, unmeasured. |
@@ -553,5 +553,6 @@ use Low/Medium/High order, Standard then Fast, with nominal historical tiers
 qualified. The user selected Medium Fast; its production request configuration
 and evaluation-boundary normalization are implemented, with focused offline
 regression recorded [below the study](test-execution.md#production-medium-fast-implementation--19-october-2026).
-Review, commit, CI and release remain pending. No new live request or production
+It is merged to `main` and covered by the offline CI suite, but not yet part of a
+published release. No new live request or production
 timing verification was performed; the small-study limits remain.

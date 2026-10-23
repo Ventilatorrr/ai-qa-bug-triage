@@ -258,6 +258,10 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     background-color: var(--page-background);
+    /* Size the theme glow to the viewport, not the document, so longer pages
+       do not stretch it and change its brightness. */
+    background-size: 100% 100vh;
+    background-repeat: no-repeat;
     display: flex;
     flex-direction: column;
     font-family: Arial, sans-serif;
@@ -2528,7 +2532,6 @@ footer a:focus-visible {
 body:not(.light-theme) {
     color-scheme: dark;
     background-image: var(--page-glow);
-    background-size: auto;
 }
 
 body:not(.light-theme) .site-header {
@@ -3143,7 +3146,7 @@ body.light-theme button:is(.ai-assist-button, .ai-review-button):disabled {
     margin-bottom: 0;
 }
 
-.privacy-content a,
+.about-content a,
 #register-description a {
     color: inherit;
     text-decoration: underline;

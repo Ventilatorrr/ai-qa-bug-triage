@@ -166,7 +166,7 @@ test("test_registration_subtitle_links_only_privacy_without_extra_paragraphs", (
     const main = html.match(/<main>[\s\S]*?<\/main>/)[0];
     assert.match(main, /<h2>Register<\/h2>/);
     assert.equal((main.match(/<p[^>]*class="page-description"/g) || []).length, 1);
-    assert.match(main, /<p id="register-description" class="page-description">\s*Create an Account &middot; Read our <a href="\/privacy.html">Privacy Policy<\/a>\s*<\/p>\s*<form id="register-form">/);
+    assert.match(main, /<p id="register-description" class="page-description">\s*Create an account &middot; <a href="\/privacy.html">Privacy Policy<\/a>\s*<\/p>\s*<form id="register-form">/);
     assert.equal((html.match(/href="\/privacy.html"/g) || []).length, 2, "subtitle and footer both link to the policy");
 });
 
