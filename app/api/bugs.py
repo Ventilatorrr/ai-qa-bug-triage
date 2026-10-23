@@ -10,6 +10,47 @@ from app.schemas import BugCreate, BugStatusUpdate, BugUpdate
 router = APIRouter(tags=["Bugs"])
 
 
+# Bug detail response fields, in response order.
+BUG_RESPONSE_FIELDS = (
+    "id",
+    "project_id",
+    "title",
+    "severity",
+    "priority",
+    "status",
+    "resolution",
+    "assignee_id",
+    "affected_version",
+    "fix_version",
+    "environment",
+    "description",
+    "steps_to_reproduce",
+    "expected_result",
+    "actual_result",
+    "created_by",
+    "created_at",
+    "updated_at",
+    "bug_number"
+)
+
+
+def _fetch_bug(conn, project_id, bug_number):
+    """Return one bug as a response dict, or None if it does not exist."""
+    row = conn.execute(
+        f"""
+        SELECT {", ".join(BUG_RESPONSE_FIELDS)}
+        FROM bugs
+        WHERE project_id = ? AND bug_number = ?
+        """,
+        (project_id, bug_number)
+    ).fetchone()
+
+    if row is None:
+        return None
+
+    return dict(zip(BUG_RESPONSE_FIELDS, row))
+
+
 @router.post("/projects/{project_id}/bugs", status_code=201)
 def create_bug(
     project_id: int,
@@ -247,64 +288,18 @@ def get_bug(
                 detail="Project not found."
             )
 
-        row = conn.execute(
-            """
-            SELECT
-                id,
-                project_id,
-                title,
-                severity,
-                priority,
-                status,
-                resolution,
-                assignee_id,
-                affected_version,
-                fix_version,
-                environment,
-                description,
-                steps_to_reproduce,
-                expected_result,
-                actual_result,
-                created_by,
-                created_at,
-                updated_at,
-                bug_number
-            FROM bugs
-            WHERE project_id = ? AND bug_number = ?
-            """,
-            (project_id, bug_number)
-        ).fetchone()
+        bug = _fetch_bug(conn, project_id, bug_number)
 
     finally:
         conn.close()
 
-    if row is None:
+    if bug is None:
         raise HTTPException(
             status_code=404,
             detail="Bug not found."
         )
 
-    return {
-        "id": row[0],
-        "project_id": row[1],
-        "title": row[2],
-        "severity": row[3],
-        "priority": row[4],
-        "status": row[5],
-        "resolution": row[6],
-        "assignee_id": row[7],
-        "affected_version": row[8],
-        "fix_version": row[9],
-        "environment": row[10],
-        "description": row[11],
-        "steps_to_reproduce": row[12],
-        "expected_result": row[13],
-        "actual_result": row[14],
-        "created_by": row[15],
-        "created_at": row[16],
-        "updated_at": row[17],
-        "bug_number": row[18]
-    }
+    return bug
 
 
 @router.patch("/projects/{project_id}/bugs/{bug_number}")
@@ -466,35 +461,9 @@ def update_bug(
 
         conn.commit()
 
-        row = conn.execute(
-            """
-            SELECT
-                id,
-                project_id,
-                title,
-                severity,
-                priority,
-                status,
-                resolution,
-                assignee_id,
-                affected_version,
-                fix_version,
-                environment,
-                description,
-                steps_to_reproduce,
-                expected_result,
-                actual_result,
-                created_by,
-                created_at,
-                updated_at,
-                bug_number
-            FROM bugs
-            WHERE project_id = ? AND bug_number = ?
-            """,
-            (project_id, bug_number)
-        ).fetchone()
+        updated_bug = _fetch_bug(conn, project_id, bug_number)
 
-        if row is None:
+        if updated_bug is None:
             raise HTTPException(
                 status_code=404,
                 detail="Bug not found."
@@ -506,27 +475,7 @@ def update_bug(
     finally:
         conn.close()
 
-    return {
-        "id": row[0],
-        "project_id": row[1],
-        "title": row[2],
-        "severity": row[3],
-        "priority": row[4],
-        "status": row[5],
-        "resolution": row[6],
-        "assignee_id": row[7],
-        "affected_version": row[8],
-        "fix_version": row[9],
-        "environment": row[10],
-        "description": row[11],
-        "steps_to_reproduce": row[12],
-        "expected_result": row[13],
-        "actual_result": row[14],
-        "created_by": row[15],
-        "created_at": row[16],
-        "updated_at": row[17],
-        "bug_number": row[18]
-    }
+    return updated_bug
 
 
 @router.patch("/projects/{project_id}/bugs/{bug_number}/status")
@@ -809,17 +758,6 @@ def update_bug_status(
                         detail="Resolution is required when closing a bug without fixing it."
                     )
 
-                if requested_resolution not in [
-                    "Won't Fix",
-                    "Duplicate",
-                    "Cannot Reproduce",
-                    "Not a Bug"
-                ]:
-                    raise HTTPException(
-                        status_code=422,
-                        detail="Invalid bug resolution."
-                    )
-
                 if (
                     requested_assignee_id is not None
                     or testing_outcome is not None
@@ -938,12 +876,6 @@ def update_bug_status(
                 new_assignee_id = requested_assignee_id
                 new_resolution = None
 
-            else:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Invalid testing outcome."
-                )
-
         else:
             raise HTTPException(
                 status_code=422,
@@ -994,35 +926,9 @@ def update_bug_status(
 
         conn.commit()
 
-        row = conn.execute(
-            """
-            SELECT
-                id,
-                project_id,
-                title,
-                severity,
-                priority,
-                status,
-                resolution,
-                assignee_id,
-                affected_version,
-                fix_version,
-                environment,
-                description,
-                steps_to_reproduce,
-                expected_result,
-                actual_result,
-                created_by,
-                created_at,
-                updated_at,
-                bug_number
-            FROM bugs
-            WHERE project_id = ? AND bug_number = ?
-            """,
-            (project_id, bug_number)
-        ).fetchone()
+        updated_bug = _fetch_bug(conn, project_id, bug_number)
 
-        if row is None:
+        if updated_bug is None:
             raise HTTPException(
                 status_code=404,
                 detail="Bug not found."
@@ -1034,27 +940,7 @@ def update_bug_status(
     finally:
         conn.close()
 
-    return {
-        "id": row[0],
-        "project_id": row[1],
-        "title": row[2],
-        "severity": row[3],
-        "priority": row[4],
-        "status": row[5],
-        "resolution": row[6],
-        "assignee_id": row[7],
-        "affected_version": row[8],
-        "fix_version": row[9],
-        "environment": row[10],
-        "description": row[11],
-        "steps_to_reproduce": row[12],
-        "expected_result": row[13],
-        "actual_result": row[14],
-        "created_by": row[15],
-        "created_at": row[16],
-        "updated_at": row[17],
-        "bug_number": row[18]
-    }
+    return updated_bug
 
 
 @router.delete("/projects/{project_id}/bugs/{bug_number}", status_code=204)
