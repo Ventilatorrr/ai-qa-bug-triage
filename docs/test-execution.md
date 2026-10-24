@@ -39,16 +39,16 @@ decision to publish remains the project owner's.
 | --- | --- |
 | Scope | Increments 1–3 (REQ-001–REQ-023): accounts, projects and membership, bug management and lifecycle, human-reviewed AI-assisted triage. Security safeguards for public hosting, Try Demo, Docker and Railway deployment are `1.0.0-dev` work |
 | Recorded evidence | Python, frontend, Chromium Playwright/BDD, Postman and JMeter runs in this record; RTM **88/88 Covered** |
-| Release branch | With the layout-shift fix: full Python **652 passed**, frontend **115 passed**. Chromium Playwright/BDD last ran before the release-branch commits (**30 passed**, [C4](#shared-frontend-auth-module-audit-c4--24-october-2026)) |
+| Release branch | Latest local regression, including automatic login after registration: full Python **652 passed**, frontend **118 passed**, Chromium Playwright/BDD **30 passed** ([record](#automatic-login-after-registration--24-october-2026)) |
 | Manual evidence | User-reported [M01–M05](#manual-acceptance-testing--16-october-2026) passes; dogfooding, including the 41 formally tracked defects in the [defect summary](defect-summary.md) |
 | Tracked defects | None open; all 41 are Closed (39 Fixed, 1 Not a Bug, 1 Won't Fix) |
-| Remaining release gates | Final targeted manual smoke test; required GitHub Actions CI on the release pull request |
+| Release gates | Required GitHub Actions CI on the release pull request **passed** and the final targeted manual smoke test **passed** on 24 October 2026. |
 | Known limitations | Browser automation is Chromium-only; cross-browser and full accessibility verification remain outstanding |
-| QA recommendation | **Pending** |
+| QA recommendation | **GO** for the `v0.2.0` GitHub development release only; not a recommendation for public production deployment |
 
 Recorded evidence shows no open formally tracked defects and full
-acceptance-criteria coverage; this does not establish that no defects remain. The recommendation stays Pending until the smoke test and release
-pull-request CI pass. Passing tests reduce risk; they do not guarantee quality.
+acceptance-criteria coverage; this does not establish that no defects remain. With both release
+gates passed, QA recommends GO for `v0.2.0` within the scope and limitations above. Passing tests reduce risk; they do not guarantee quality.
 
 ## Automated regression milestones
 
