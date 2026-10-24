@@ -24,6 +24,8 @@ As a new user, I want to register an account so that I can access the system.
 
 - A new user can register using a unique email address and a valid password.
 - A user account is created after successful registration.
+- After successful registration, the user is automatically logged in and redirected to the Projects page, without entering their credentials again.
+- If registration succeeds but automatic login fails, the user is informed that the account was created and is directed to log in manually; the user is not told that registration failed.
 
 #### AC-001.2 — Duplicate Email
 

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-419**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-422**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (25 modules) | 224 | 235 | 589 cases; 92 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (10 files) | 115 registered tests | 115 | Internal loops are variants |
+| Frontend Node (11 files) | 118 registered tests | 118 | Internal loops are variants |
 | Playwright (6 modules) | 18 functions | 19 | 25 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 430 | **417** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 433 | **420** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -563,6 +563,14 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-398"></a>TC-398 | — | Late project Create completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_new_project_late_completion_keeps_reopened_form`](../tests/frontend/project-name-validation.test.cjs#L266); late outcome=success, error, rejection |
 | <a id="tc-399"></a>TC-399 | — | Overlapping project list refreshes render each project once | Frontend JS / DOM substitutes | [`test_overlapping_project_list_refreshes_render_each_project_once`](../tests/frontend/project-name-validation.test.cjs#L300); finish=interleaved, superseded_last |
 
+## tests/frontend/registration.test.cjs
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-419"></a>TC-419 | AC-001.1, AC-002.1 | Registration logs in through /login once, stores the token and opens Projects; duplicate submission ignored | Frontend JS / DOM substitutes | [`test_successful_registration_logs_in_and_opens_projects_once`](../tests/frontend/registration.test.cjs#L45); All variants |
+| <a id="tc-420"></a>TC-420 | AC-001.2, AC-001.3, AC-001.4 | Rejected registration shows the existing error and never authenticates or redirects | Frontend JS / DOM substitutes | [`test_rejected_registration_does_not_authenticate`](../tests/frontend/registration.test.cjs#L64); All variants (409, invalid email, invalid password, network failure) |
+| <a id="tc-421"></a>TC-421 | AC-001.1 | Login failure after registration reports the created account, links to Login and keeps the form disabled | Frontend JS / DOM substitutes | [`test_login_failure_after_registration_directs_to_manual_login`](../tests/frontend/registration.test.cjs#L85); All variants (401, missing token, network failure) |
+
 ## tests/e2e/test_ai_triage.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
@@ -576,7 +584,7 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-329"></a>TC-329 | AC-001.1, AC-002.1, AC-003.1, AC-003.2, AC-004.1, AC-004.2 | Registration login logout | Playwright / Chromium | [`test_registration_login_logout`](../tests/e2e/test_auth.py#L9); All variants |
+| <a id="tc-329"></a>TC-329 | AC-001.1, AC-002.1, AC-003.1, AC-003.2, AC-004.1, AC-004.2 | Registration automatically logs in, survives reload, logout, then manual login | Playwright / Chromium | [`test_registration_login_logout`](../tests/e2e/test_auth.py#L9); All variants |
 | <a id="tc-330"></a>TC-330 | AC-002.2 | Invalid login feedback allows correction | Playwright / Chromium | [`test_invalid_login_feedback_allows_correction`](../tests/e2e/test_auth.py#L38); All variants |
 
 ## tests/e2e/test_authorization.py
@@ -759,7 +767,7 @@ and [execution evidence](test-execution.md#executable-bdd--19-october-2026).
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-386"></a>TC-386 | AC-001.1 | [Successfully register an account](../tests/e2e/bdd/features/authentication.feature#L4) | BDD / Playwright / Chromium | [`test_successful_registration`](../tests/e2e/bdd/test_workflows.py); registration POST 201, login redirect and usable new credentials |
+| <a id="tc-386"></a>TC-386 | AC-001.1 | [Successfully register an account](../tests/e2e/bdd/features/authentication.feature#L4) | BDD / Playwright / Chromium | [`test_successful_registration`](../tests/e2e/bdd/test_workflows.py); registration POST 201, automatic login redirect to Projects and usable new credentials |
 | <a id="tc-387"></a>TC-387 | AC-005.1 | [Successfully create a project](../tests/e2e/bdd/features/project_management.feature#L4) | BDD / Playwright / Chromium | [`test_successful_project_creation`](../tests/e2e/bdd/test_workflows.py); UI create, reload/API name readback, creator membership and displayed Project Owner role |
 | <a id="tc-388"></a>TC-388 | AC-007.2, AC-008.2, AC-010.5 | [Non-owner cannot modify a project](../tests/e2e/bdd/features/project_management.feature#L11) | BDD / Playwright / API | [`test_non_owner_cannot_modify_project`](../tests/e2e/bdd/test_workflows.py); QA Analyst sees no edit control; valid rename PUT and DELETE rejected with 404; owner readback and member UI remain unchanged |
 | <a id="tc-389"></a>TC-389 | AC-011.1, AC-017.2, AC-017.3, AC-017.4, AC-017.5 | [QA Analyst manages a bug lifecycle](../tests/e2e/bdd/features/bug_lifecycle.feature#L4) | BDD / Playwright / Chromium | [`test_qa_bug_lifecycle`](../tests/e2e/bdd/test_workflows.py); QA creates Triage, assigns Developer/Open, Developer moves Development/Testing with QA handoff, QA Pass closes Fixed; reload/API persistence, no Fix Version assigned |

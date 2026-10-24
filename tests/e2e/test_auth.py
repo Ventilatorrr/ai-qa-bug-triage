@@ -16,13 +16,10 @@ def test_registration_login_logout(page: Page, e2e_base_url):
     page.get_by_label("Password:", exact=True).fill(password)
     page.get_by_role("button", name="Register", exact=True).click()
 
-    expect(page).to_have_url(f"{e2e_base_url}/login.html")
-
-    page.get_by_label("Email:", exact=True).fill(email)
-    page.get_by_label("Password:", exact=True).fill(password)
-    page.get_by_role("button", name="Login", exact=True).click()
-
+    # Registration logs the new user in automatically; the session survives reload.
     expect(page).to_have_url(f"{e2e_base_url}/projects.html")
+    page.reload()
+    expect(page.get_by_role("heading", name="My Projects")).to_be_visible()
     expect(page.get_by_role("button", name="Logout")).to_be_visible()
 
     page.get_by_role("button", name="Logout").click()
@@ -32,6 +29,13 @@ def test_registration_login_logout(page: Page, e2e_base_url):
 
     page.goto(f"{e2e_base_url}/projects.html")
     expect(page).to_have_url(f"{e2e_base_url}/login.html")
+
+    page.get_by_label("Email:", exact=True).fill(email)
+    page.get_by_label("Password:", exact=True).fill(password)
+    page.get_by_role("button", name="Login", exact=True).click()
+
+    expect(page).to_have_url(f"{e2e_base_url}/projects.html")
+    expect(page.get_by_role("button", name="Logout")).to_be_visible()
 
 
 # TC-330 | AC-002.2 — Invalid login feedback allows correction
