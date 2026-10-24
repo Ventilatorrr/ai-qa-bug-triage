@@ -46,7 +46,7 @@ reopened-state readback. No new TC IDs or AC coverage changes accompany cleanup.
 | REQ-002 | AC-002.1 — Successful Login | [TC-169](test-cases.md#tc-169), [TC-177](test-cases.md#tc-177), [TC-329](test-cases.md#tc-329) | API; Playwright; Postman API | Covered |
 | REQ-002 | AC-002.2 — Invalid Credentials | [TC-178](test-cases.md#tc-178), [TC-179](test-cases.md#tc-179), [TC-330](test-cases.md#tc-330) | API; Playwright | Covered |
 | REQ-003 | AC-003.1 — Authenticated Access | [TC-180](test-cases.md#tc-180), [TC-329](test-cases.md#tc-329) | API; Playwright | Covered |
-| REQ-003 | AC-003.2 — Unauthenticated Access | [TC-181](test-cases.md#tc-181), [TC-329](test-cases.md#tc-329) | API; Playwright; Postman API | Covered |
+| REQ-003 | AC-003.2 — Unauthenticated Access | [TC-181](test-cases.md#tc-181), [TC-329](test-cases.md#tc-329), [TC-414](test-cases.md#tc-414) | API; Frontend JS; Playwright; Postman API | Covered |
 | REQ-003 | AC-003.3 — Invalid Authentication | [TC-171](test-cases.md#tc-171), [TC-172](test-cases.md#tc-172), [TC-182](test-cases.md#tc-182) | API | Covered |
 | REQ-004 | AC-004.1 — Successful Logout | [TC-329](test-cases.md#tc-329) | Playwright | Covered |
 | REQ-004 | AC-004.2 — Protected Access After Logout | [TC-329](test-cases.md#tc-329) | Playwright | Covered |

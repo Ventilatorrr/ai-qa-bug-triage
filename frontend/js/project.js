@@ -1,3 +1,5 @@
+import {authenticatedFetch, getCurrentUserId, redirectToLogin} from "./auth.js";
+
 const params = new URLSearchParams(window.location.search);
 
 const projectId = params.get("id");
@@ -76,45 +78,6 @@ const bugAssigneeInput =
 
 let projectMembers = [];
 
-function redirectToLogin() {
-    localStorage.removeItem("access_token");
-    window.location.replace("/login.html");
-}
-
-function getCurrentAccessToken() {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-        redirectToLogin();
-        return null;
-    }
-
-    return token;
-}
-
-async function authenticatedFetch(url, options = {}) {
-    const token = getCurrentAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            ...options.headers,
-            "Authorization": "Bearer " + token
-        }
-    });
-
-    if (response.status === 401) {
-        redirectToLogin();
-        return null;
-    }
-
-    return response;
-}
-
 function showMemberMessage(text, type = "neutral") {
     memberMessage.classList.remove("message-success", "message-error");
     memberMessage.textContent = text;
@@ -124,18 +87,6 @@ function showMemberMessage(text, type = "neutral") {
     } else if (text && type === "error") {
         memberMessage.classList.add("message-error");
     }
-}
-
-function getCurrentUserId() {
-    const token = getCurrentAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    const payload = token.split(".")[1];
-
-    return JSON.parse(atob(payload)).user_id;
 }
 
 
