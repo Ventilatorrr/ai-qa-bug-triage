@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const {Element, deferred} = require("./helpers/ai-fixture.cjs");
+const {loadPageScript} = require("./helpers/page-script.cjs");
 
 function projectPage() {
     const element = tag => {
@@ -24,7 +25,7 @@ function projectPage() {
         fetch: async () => ({ok: true, json: async () => []}),
         console
     });
-    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/projects.js"), "utf8"), runtime);
+    loadPageScript(runtime, "projects.js");
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/api-errors.js"), "utf8"), runtime);
     node("#project-form").reset = () => {};
     const realLoadProjects = runtime.loadProjects; let refreshes = 0; runtime.loadProjects = () => { refreshes++; };

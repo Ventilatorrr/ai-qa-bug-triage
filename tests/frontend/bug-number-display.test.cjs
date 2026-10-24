@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const {Element} = require("./helpers/ai-fixture.cjs");
+const {loadPageScript} = require("./helpers/page-script.cjs");
 
 function page(search = "?project_id=3&bug_number=7") {
     const nodes = new Map(), feedback = new Map(), calls = [];
@@ -18,7 +19,7 @@ function page(search = "?project_id=3&bug_number=7") {
     const runtime = vm.createContext({document, window, URLSearchParams, console, confirm: () => true,
         localStorage: {getItem: () => null, removeItem() {}},
         sessionStorage: {setItem: (key, value) => feedback.set(key, value)}});
-    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/bugs.js"), "utf8"), runtime);
+    loadPageScript(runtime, "bugs.js");
     runtime.authenticatedFetch = async (url, options) => { calls.push([url, options?.method]); return {status: 204}; };
     const bug = {id: 42, project_id: 3, bug_number: 7, title: "Example", status: "Triage", assignee_id: null};
     return {runtime, node, document, feedback, calls, bug, destination: () => destination};

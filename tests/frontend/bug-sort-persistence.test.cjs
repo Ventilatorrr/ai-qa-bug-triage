@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const {Element} = require("./helpers/ai-fixture.cjs");
+const {loadPageScript} = require("./helpers/page-script.cjs");
 
 class PageElement extends Element {
     constructor(tag = "div") { super(tag); this.dataset = {}; }
@@ -68,7 +69,7 @@ async function page({
         Object.defineProperty(runtime, "sessionStorage", session === "throwing-getter"
             ? {get() { throw new Error("Storage blocked"); }} : {value: session});
     }
-    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js", script), "utf8"), runtime);
+    loadPageScript(runtime, script);
     // Complete the real initial load before inspecting the rendered table.
     await new Promise(resolve => setImmediate(resolve));
     const table = () => node("#bugs");

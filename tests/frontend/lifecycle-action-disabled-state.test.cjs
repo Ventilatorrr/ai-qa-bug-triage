@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const {Element} = require("./helpers/ai-fixture.cjs");
+const {loadPageScript} = require("./helpers/page-script.cjs");
 
 class PageElement extends Element {
     constructor(tag) { super(tag); if (tag === "select") this.options = []; }
@@ -30,7 +31,7 @@ async function page(status, role = "Project Owner", assignee = 2) {
         localStorage: {getItem: () => null, removeItem() {}},
         endAiAssistSession() {}, formatApiError: (detail, fallback) => detail || fallback,
     });
-    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/bugs.js"), "utf8"), runtime);
+    loadPageScript(runtime, "bugs.js");
     await new Promise(resolve => setImmediate(resolve));
     const members = [
         {user_id: 1, email: "owner@example.com", role: "Project Owner"},

@@ -57,6 +57,7 @@ frontend Node tests used DOM/API/storage substitutes rather than a browser.
 | 23 October 2026 | Bug List layout: frontend / Chromium + BDD | **110 passed** / **30 passed in 108.31s** | [Bug List layout](#bug-list-layout--23-october-2026) |
 | 24 October 2026 | E2E ownership audit: full default Python / Chromium + BDD | **652 passed** / 6 runs **30 passed**, 1 run 29 passed + 1 failed (unidentified, not reproduced) | [E2E ownership audit](#e2e-server-ownership-audit--24-october-2026) |
 | 24 October 2026 | Hosted Postman CI | **Success** | [Run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303), `main` at `964a3b1` |
+| 24 October 2026 | Audit C4 shared auth module: frontend / Chromium + BDD | **115 passed** / **30 passed in 106.69s** | [C4](#shared-frontend-auth-module-audit-c4--24-october-2026) |
 
 The 16 October additions verify rendered member emails/roles and ordering
 (AC-009.5 / TC-331), plus complete Severity, Priority and Status rank ordering in
@@ -100,6 +101,29 @@ Two preliminary backend attempts failed on a sandbox-generated temporary path (o
 and are not counted; no application or test code changed. The completed 598-test
 run and its JUnit report contain zero errors. SHA256 comparison confirmed all
 **seven** preserved AI evidence files were unchanged. AC coverage remained **88/88**.
+
+## Shared frontend auth module (audit C4) — 24 October 2026
+
+Refactor, not a recorded application defect; adds TC-414–TC-418. The duplicated
+`redirectToLogin()`, `getCurrentAccessToken()`, `authenticatedFetch()` and
+`getCurrentUserId()` in `projects.js`, `project.js` and `bugs.js` moved to the
+native ES module `frontend/js/auth.js`; the three pages load their scripts with
+`type="module"`, while shared helpers remain classic scripts. Intentional
+change: a malformed token now yields a null user ID on every page, as on Bug
+Details, instead of throwing on Projects and Project; the backend still rejects it.
+Frontend Node tests evaluate the modules as strict classic scripts in `vm`
+contexts after checking each `./auth.js` import against its exports.
+
+| Check | Result |
+| --- | --- |
+| Frontend Node (bundled Playwright Node v24.21.0), existing tests after refactor | **110 passed** |
+| TC-417 / TC-418 against a scratch copy with the old throwing decode and a classic `projects.js` tag | **2 failed, 3 passed** (detected) |
+| Full frontend Node suite | **115 passed** |
+| Chromium Playwright + BDD, port 8148 | **30 passed in 106.69s** |
+| Browser check, owned test server on 127.0.0.1:8148 with a fresh temporary database | Modules served as `text/javascript`; no script or module-loading errors (only the expected 401 resource log); login, Projects, Project (Create, mocked AI Assist), Bug Details and logout worked; rejected and missing tokens redirected to login |
+| `git diff --check` | Passed |
+
+The full default Python suite was not rerun (no backend change).
 
 ## E2E server ownership audit — 24 October 2026
 

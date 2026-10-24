@@ -1,3 +1,5 @@
+import {authenticatedFetch, getCurrentUserId, redirectToLogin} from "./auth.js";
+
 const projectsContainer = document.querySelector("#projects");
 const message = document.querySelector("#message");
 const projectForm = document.querySelector("#project-form");
@@ -11,45 +13,6 @@ let projectFormFeedback = null;
 let projectFormSession = 0;
 let projectListLoad = 0;
 
-
-function redirectToLogin() {
-    localStorage.removeItem("access_token");
-    window.location.replace("/login.html");
-}
-
-function getCurrentAccessToken() {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-        redirectToLogin();
-        return null;
-    }
-
-    return token;
-}
-
-async function authenticatedFetch(url, options = {}) {
-    const token = getCurrentAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            ...options.headers,
-            "Authorization": "Bearer " + token
-        }
-    });
-
-    if (response.status === 401) {
-        redirectToLogin();
-        return null;
-    }
-
-    return response;
-}
 
 if (!localStorage.getItem("access_token")) {
     redirectToLogin();
@@ -79,18 +42,6 @@ function clearCorrectedProjectNameFeedback(input, context) {
     if (input.value.trim()) {
         clearProjectFormFeedback(context, true);
     }
-}
-
-function getCurrentUserId() {
-    const token = getCurrentAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    const payload = token.split(".")[1];
-
-    return JSON.parse(atob(payload)).user_id;
 }
 
 

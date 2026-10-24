@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const {Element, fixture, success, deferred} = require("./helpers/ai-fixture.cjs");
+const {loadPageScript} = require("./helpers/page-script.cjs");
 
 // Execute actual page scripts and event handlers; stub only surrounding APIs/rendering.
 function pageFixture(edit, {realListRefresh = false} = {}) {
@@ -26,7 +27,7 @@ function pageFixture(edit, {realListRefresh = false} = {}) {
         document: {createElement: tag => new Element(tag), querySelector: node, querySelectorAll: () => []}
     });
     f.form.reset = () => Object.values(f.inputs).forEach(input => { input.value = ""; });
-    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js", edit ? "bugs.js" : "project.js"), "utf8"), f.runtime);
+    loadPageScript(f.runtime, edit ? "bugs.js" : "project.js");
     const actualLoadBugs = f.runtime.loadBugs;
     const actualShowBugMessage = f.runtime.showBugMessage;
     const stored = {id: 2, project_id: 1, bug_number: 11, title: "Stored", status: "Triage", assignee_id: null};
