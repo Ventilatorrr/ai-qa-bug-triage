@@ -20,7 +20,7 @@ The [defect summary](defect-summary.md) records verified tracker data.
   local-only browser routing; see the [README](../README.md#python-playwright-e2e-tests).
 - Other evidence is recorded separately and labelled as such: user-reported manual
   acceptance checks ([M01–M05](#manual-acceptance-testing--16-october-2026)),
-  genuine defects from the user's dogfooding of the real application (summarized in
+  formally tracked defects from the user's dogfooding of the real application (summarized in
   the [defect summary](defect-summary.md)), and explicitly approved live AI
   evaluations, which send fictional scenarios to the real provider.
 - Attempts interrupted by sandbox or environment setup are not counted as passes;
@@ -28,6 +28,27 @@ The [defect summary](defect-summary.md) records verified tracker data.
 - `test-results/` output was temporary and is not retained. Live AI evidence under
   `ai-evaluation-results/` is preserved locally but not published (gitignored);
   its paths and SHA256 hashes identify each artifact.
+
+## Release readiness assessment — v0.2.0
+
+QA recommendation on publishing the core application as GitHub development
+release `v0.2.0`. It is not approval for public production deployment, and the
+decision to publish remains the project owner's.
+
+| Area | Status |
+| --- | --- |
+| Scope | Increments 1–3 (REQ-001–REQ-023): accounts, projects and membership, bug management and lifecycle, human-reviewed AI-assisted triage. Security safeguards for public hosting, Try Demo, Docker and Railway deployment are `1.0.0-dev` work |
+| Recorded evidence | Python, frontend, Chromium Playwright/BDD, Postman and JMeter runs in this record; RTM **88/88 Covered** |
+| Release branch | With the layout-shift fix: full Python **652 passed**, frontend **115 passed**. Chromium Playwright/BDD last ran before the release-branch commits (**30 passed**, [C4](#shared-frontend-auth-module-audit-c4--24-october-2026)) |
+| Manual evidence | User-reported [M01–M05](#manual-acceptance-testing--16-october-2026) passes; dogfooding, including the 41 formally tracked defects in the [defect summary](defect-summary.md) |
+| Tracked defects | None open; all 41 are Closed (39 Fixed, 1 Not a Bug, 1 Won't Fix) |
+| Remaining release gates | Final targeted manual smoke test; required GitHub Actions CI on the release pull request |
+| Known limitations | Browser automation is Chromium-only; cross-browser and full accessibility verification remain outstanding |
+| QA recommendation | **Pending** |
+
+Recorded evidence shows no open formally tracked defects and full
+acceptance-criteria coverage; this does not establish that no defects remain. The recommendation stays Pending until the smoke test and release
+pull-request CI pass. Passing tests reduce risk; they do not guarantee quality.
 
 ## Automated regression milestones
 

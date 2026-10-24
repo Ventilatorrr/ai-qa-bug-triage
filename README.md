@@ -66,18 +66,16 @@ is the source of truth for FastAPI metadata, `/version`, and the About page.
 
 | Version | Meaning |
 | --- | --- |
-| `0.1.0-dev` | Retrospective label for development before `v0.1.0`; no release or Git tag existed for this label |
-| `0.1.0` | First stable release, published as GitHub Release and annotated Git tag `v0.1.0` |
-| `0.2.0-dev` | Retrospective label for development between `v0.1.0` and `v0.2.0`; the application displayed `1.0.0-dev` during this period |
-| `0.2.0` | Current application version: core application release `v0.2.0`, without Try Demo or production hosting |
-| `1.0.0-dev` | Planned next development phase: Try Demo and deployment |
-| `1.0.0-rc.1` | Planned first release candidate |
+| `0.1.0-dev`, `0.2.0-dev` | Development-phase labels for work before `v0.1.0` and `v0.2.0`, used for Affected Version; not necessarily the version the application displayed, and not releases or Git tags |
+| `0.1.0` | Previous published release: GitHub Release and annotated Git tag `v0.1.0` |
+| `0.2.0` | Current version: upcoming core application GitHub release `v0.2.0` |
+| `1.0.0-dev` | Next development phase: security safeguards, Try Demo, Docker and Railway |
+| `1.0.0-rc.1` | Planned production release candidate |
 | `1.0.0` | Planned first production release with Try Demo, `v1.0.0` |
 
-`v0.1.0` remains the latest published release; the `v0.2.0` tag and GitHub
-Release have not been created yet. Affected Version may identify an observed
-development build, such as the `1.0.0-dev` label displayed before `0.2.0`; it is
-not populated automatically. Fix Version identifies
+`v0.1.0` is the latest published release; `v0.2.0` has not yet been tagged or
+published. Affected Version may identify an observed development build, such as
+`0.2.0-dev`; it is not populated automatically. Fix Version identifies
 the release that includes, or is planned to include, a fix; that release need not
 be published yet.
 
