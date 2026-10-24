@@ -1,12 +1,38 @@
 # QA test execution report
 
-Reporting date: **23 October 2026**. The [test catalogue](test-cases.md) defines
+Reporting date: **24 October 2026**. The [test catalogue](test-cases.md) defines
 cases; the [RTM](traceability-matrix.md) owns overall AC coverage. Results below
 were obtained at the stated milestones. Executed cases, collection counts and
 planned evaluations are distinct.
 
 Current assessment: **88 Covered / 0 Partial / 0 Not Covered**, following the
 [AC-019.2 final evaluation review](#ac-0192-final-evaluation-review).
+
+## E2E server ownership audit — 24 October 2026
+
+Pre-deployment safety audit, not a recorded application defect; adds TC-413.
+Startup ownership was already strong: the child refuses existing or mismatched
+database paths and inherited provider keys, verifies its bound socket, and
+reports PID/parent, database, port and a per-run identity that the parent checks
+again in the first HTTP response. The gap was the port probe, which bound only
+`127.0.0.1`. On Windows a listener on `0.0.0.0` or dual-stack `[::]` passed the
+probe and coexisted with the test server, which would then have received the
+origin's remaining requests if the test server exited mid-run. Linux (CI) already
+rejected these. The probe now binds every interface (exclusive on Windows).
+
+| Check | Result |
+| --- | --- |
+| Before fix: stand-in socket on `0.0.0.0:8148` / `[::]:8148` (no app or database) | Fixture started anyway; 1 Playwright test **passed** each time |
+| After fix: same stand-ins | Session **refused** before server start (WinError 10048) |
+| TC-413 against the restored loopback-only probe | **2 failed, 1 passed** (`ipv4-any`, `dual-stack-any` detected) |
+| TC-413 and isolation module | **6 passed** |
+| Default pytest | **652 passed** |
+| Playwright/BDD, port 8148, 7 consecutive runs | 6 × **30 passed**; first run **1 failed, 29 passed** (test unidentified, not reproduced) |
+| Hard kill of the pytest parent mid-run | Server child exited via stdin EOF; port 8148 released; disposable temp directory left behind and removed |
+
+Normal shutdown, startup timeout and pytest-handled interruption use the
+fixture's `finally` block (source inspection). Residual risk: a listener started
+on another interface after the probe and the test server exiting mid-run.
 
 ## BUG-41 page background brightness with page size — 23 October 2026
 

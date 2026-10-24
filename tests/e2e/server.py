@@ -16,6 +16,19 @@ def event_loop():
     return asyncio.SelectorEventLoop() if sys.platform == "win32" else asyncio.new_event_loop()
 
 
+def probe_port(port):
+    """Raise OSError if any interface uses the port; never contacts a listener."""
+    # Windows lets 127.0.0.1 coexist with 0.0.0.0 or [::] listeners, which would
+    # then receive the origin's requests if the test server exited. Probe them all.
+    family = socket.AF_INET6 if socket.has_dualstack_ipv6() else socket.AF_INET
+    with socket.socket(family) as probe:
+        if sys.platform == "win32":
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        if family == socket.AF_INET6:
+            probe.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        probe.bind(("::" if family == socket.AF_INET6 else "0.0.0.0", port))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, choices=(8148, 8151), required=True)
