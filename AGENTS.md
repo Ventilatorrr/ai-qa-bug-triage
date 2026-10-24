@@ -146,9 +146,9 @@ it when files change or assumptions need verification.
   feature work.
 - Leave Affected Version blank when no appropriate released/observed version is
   known.
-- Fix Version means the released version in which the fix actually became
-  available.
-- Do not populate Fix Version merely with a planned or expected future release.
+- Fix Version means the application release in which the fix is included or
+  planned to be included; that release need not have been published yet.
+- Leave Fix Version blank when no target release is known.
 - Non-fix resolutions may legitimately have no Fix Version.
 
 

@@ -122,9 +122,11 @@ is killed by owned PID and the job fails; leftover owned data also fails the job
 There is no runtime-directory sweep. Abrupt runner loss or forced job termination
 cannot guarantee normal cleanup; the hosted runner itself is disposable.
 
-Inspect **Actions → Postman CI → a run** for the outcome. Hosted
-execution, including real Linux startup/SIGINT cleanup, remains **unverified**
-until an actual GitHub Actions run completes. Local syntax and Bash workflow
+Inspect **Actions → Postman CI → a run** for the outcome. Hosted execution,
+including Linux startup and the cleanup checks above, has passed; for example
+[run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303)
+(24 October 2026, `main` at `964a3b1`). The CLI runs with `--silent`, so the
+hosted log reports success, not assertion counts. Local syntax and Bash workflow
 simulations are recorded separately in the execution report.
 
 ## Requests and existing conceptual test cases
@@ -159,14 +161,13 @@ and Codex's compatibility/cleanup checks remain separate historical evidence.
 
 Record each execution's date, actual application version, suite, environment,
 method, request/assertion counts, result and commit/tag when available in
-[test execution](../docs/test-execution.md#postman-native-verification-and-release-reporting--20-october-2026).
+[test execution](../docs/test-execution.md#postman-api-regression-suite--20-october-2026).
 Version reporting is manual; `/version` may confirm it without adding a suite
 request. Record a separate run when testing `1.0.0` or another release. The earlier
-metadata/fixture cleanup did not execute a new native run. Hosted Postman
-execution remains unverified.
+metadata/fixture cleanup did not execute a new native run.
 
 Separately, on **20 October 2026**, the user confirmed the final collection with
 **Postman CLI 1.75.0**: **25 application requests + 25 identity checks; 50/50 named
 assertions passed; 0 failures; exit 0; 3.8 seconds; 29 ms average response time**,
 against isolated `1.0.0-dev` launched by `serve.py`. This is local CLI evidence,
-separate from native desktop Runner results and the 847-test hosted CI milestone.
+separate from native desktop Runner results and hosted CI runs.

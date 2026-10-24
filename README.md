@@ -3,9 +3,9 @@ Bug triage application built as a QA portfolio project with FastAPI, SQLite, and
 
 Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The frontend supports bug creation, viewing, editing, deletion, lifecycle actions, sorting, and pagination. Increment 3 AI Assist is implemented with explicit suggestion review and normal Create/Save persistence. Broader browser verification and increment completion remain outstanding; see traceability for evidence and gaps.
 
-Current automated coverage uses pytest/FastAPI TestClient, database integration tests, mocked AI provider tests, dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite including five executable pytest-bdd scenarios across four feature files. All five BDD scenarios are executable; see the [catalogue](docs/test-cases.md#executable-bdd--testse2ebddtest_workflowspy). Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). The latest user-confirmed GitHub Actions milestone passed 724 Python, 99 JavaScript and 24 Playwright/BDD tests (847 total), with three required checks protecting `main`. [AI QA Bug Triage – API Regression Test Suite](postman/README.md) provides 25 isolated API requests and 50 named assertions; the user confirmed all 50 passed in native Postman against `1.0.0-dev`. The suite is reusable across compatible releases, with each execution recording its actual application version. A separate Postman CLI workflow is configured; hosted Postman execution remains unverified.
+Automated coverage uses pytest/FastAPI TestClient (API, database, security and mocked AI tests), dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite with a small set of executable pytest-bdd scenarios. An isolated [Postman API regression suite](postman/README.md) and a [JMeter API performance plan](jmeter/README.md) complement them. Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). The [test-case catalogue](docs/test-cases.md) maintains the current test inventory, [test execution](docs/test-execution.md) records dated results, and the [defect summary](docs/defect-summary.md) records verified tracker data.
 
-See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Historical working notes and requirements_old.md are not the current specification.
+See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Working notes are not the current specification.
 
 For a fresh Windows PowerShell setup, install Python 3.14 and Git, then run:
 
@@ -75,7 +75,8 @@ is the source of truth for FastAPI metadata, `/version`, and the About page.
 `v0.1.0` remains the published release. No release candidate or new Git tag has
 been created yet. Affected Version may identify an observed development build,
 such as `1.0.0-dev`; it is not populated automatically. Fix Version identifies
-the released version containing a fix and remains blank while the fix is unreleased.
+the release that includes, or is planned to include, a fix; that release need not
+be published yet.
 
 Python dependency installation does not install Node; the separate frontend
 test commands below require it.
@@ -117,7 +118,7 @@ identify the owning process and configuration; do not reuse or terminate an
 unidentified server. Once available, run
 `node tests/frontend/native-input-server.cjs`, open
 `http://127.0.0.1:8148/`, and choose **Run native input regressions** to verify
-the actual form markup and native controls (12 New/Edit, Use/Use All, LF/CR/CRLF
+the actual form markup and native controls (New/Edit, Use/Use All and LF/CR/CRLF
 cases). `/ui-style.test.html` provides the separate native style fixtures.
 This server binds only to loopback and serves an explicit static route allowlist,
 with no application database, application API, or provider access. Stop only the
@@ -127,16 +128,16 @@ traceability for the REQ-020 browser checks and remaining gaps.
 
 ## Continuous integration
 
-[CI](.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes to
+[Application CI](.github/workflows/application.yml) runs on pull requests targeting `main`, pushes to
 `main`, and manual `workflow_dispatch` runs from GitHub's **Actions** tab (once
 the workflow is on the default branch). Three independent Ubuntu 24.04 jobs run:
 
-- Python 3.14: the complete default pytest suite (currently 649 tests), including
-  offline evaluation-harness regression tests, with a JUnit XML report.
-- Node.js 24: all 109 JavaScript tests using Node's built-in test runner; no npm
+- Python 3.14: the complete default pytest suite, including offline
+  evaluation-harness regression tests, with a JUnit XML report.
+- Node.js 24: all JavaScript tests using Node's built-in test runner; no npm
   installation is needed.
-- Python 3.14 and Chromium: all 24 opt-in Playwright tests, including the five
-  executable BDD scenarios, on port 8148.
+- Python 3.14 and Chromium: all opt-in Playwright tests, including the executable
+  BDD scenarios, on port 8148.
 
 Jobs can run concurrently; tests within each Python job remain serial. Existing
 fixtures create disposable SQLite databases and temporary directories. CI supplies
@@ -144,14 +145,13 @@ no OpenAI credentials, disables live evaluation opt-in and points any unmocked
 SDK client at an unused loopback endpoint. Provider responses are mocked; CI does
 not run live AI evaluations, use historical evaluation evidence or deploy.
 
-Open **Actions → CI → a run** to inspect each job and its step logs. The run
+Open **Actions → Application CI → a run** to inspect each job and its step logs. The run
 summary provides `python-test-report` and `e2e-test-results` artifacts, including
 JUnit XML even after test failures. E2E failures retain Playwright traces and
 screenshots; frontend failures upload `frontend-failure-log`. Artifacts expire
 after seven days; cancelled jobs or failures before report creation may have no
-artifacts. The latest user-confirmed hosted milestone is **847 passing tests**
-(724 Python + 99 JavaScript + 24 Playwright/BDD), with all three required checks
-protecting `main`. Local evidence and the dated hosted confirmation are recorded in
+artifacts. The three jobs are required checks protecting `main`. Dated local and
+hosted results are recorded in
 [test execution](docs/test-execution.md#github-actions-ci--20-october-2026).
 
 The separate [Postman API regression workflow](.github/workflows/postman.yml)
@@ -160,9 +160,12 @@ local collection against a fresh server from `postman/serve.py`, waits for HTTP
 readiness and cleans up the owned server/runtime on exit. The collection validates
 run identity before each request. No Postman API key or
 cloud login is used. [Setup and cleanup details](postman/README.md#github-actions)
-explain the workflow. The user-confirmed local CLI run passed **50/50 assertions**
-with exit 0; **hosted Postman CI remains unverified** and is excluded from the
-847-test milestone above.
+explain the workflow. Hosted runs pass on GitHub Actions, for example
+[run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303)
+on 24 October 2026 for `main` at `964a3b1`.
+
+The [JMeter CI workflow](.github/workflows/jmeter.yml) runs a short smoke test of
+the [API performance plan](jmeter/README.md) on the same triggers.
 
 ## Python Playwright E2E tests
 
@@ -218,7 +221,7 @@ and non-owner protection), `bug_lifecycle.feature`, and `ai_review.feature`.
 There are no specifications-only BDD scenarios.
 BDD uses the same fixtures, server and provider mock described below. It covers
 representative workflows, not every AC variant or real-model quality. Results and
-limitations are in the [cleanup execution record](docs/test-execution.md#bdd-feature-cleanup--19-october-2026).
+limitations are in the [execution record](docs/test-execution.md#executable-bdd--19-october-2026).
 
 Run suites serially. The fixture refuses an occupied port without contacting or
 terminating its listener; a listener on any interface (loopback, `0.0.0.0` or `[::]`)
@@ -249,7 +252,7 @@ after startup. Synthetic descriptions containing `E2E:failure` or `E2E:empty`
 select provider-error or empty-result fixtures; these switches exist only in the
 test server, never the application.
 
-The initial scenarios cover authentication and logout protection, project
+Scenarios cover authentication and logout protection, project
 creation/rename/deletion, membership removal and unauthorized access, bug
 creation/edit/assignment/deletion, Developer/QA lifecycle handoff with Pass/Fail
 and reopening, sorting/pagination/navigation/page-size persistence, and AI
@@ -259,9 +262,9 @@ scenario is added because the application has no filtering feature. Chromium
 coverage does not establish cross-browser, full accessibility, visual/theme,
 real-model quality, or increment completion.
 
-The suite now contains 15 scenarios, including Fix Version eligibility and form
-reset across lifecycle states, and page-size preferences across projects and
-users through navigation, reload, and logout/login. Focused JavaScript tests
+They also cover Fix Version eligibility and form reset across lifecycle states,
+and page-size preferences across projects and users through navigation, reload,
+and logout/login. Focused JavaScript tests
 cover invalid/blocked preference storage without changing browser permissions.
 
 For failure artifacts, append `--tracing retain-on-failure --screenshot only-on-failure`.
