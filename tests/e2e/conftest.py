@@ -2,7 +2,6 @@ import json
 import os
 from pathlib import Path
 from queue import Empty, Queue
-import socket
 import subprocess
 import sys
 import tempfile
@@ -15,6 +14,7 @@ import jwt
 import pytest
 
 from tests.e2e.helpers import api_call, unique_name
+from tests.e2e.server import probe_port
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -25,16 +25,13 @@ def e2e_base_url(pytestconfig):
     port = pytestconfig.getoption("--e2e-port")
     origin = f"http://127.0.0.1:{port}"
     # Binding checks availability without contacting an unknown server.
-    with socket.socket() as probe:
-        if sys.platform == "win32":
-            probe.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
-        try:
-            probe.bind(("127.0.0.1", port))
-        except OSError as exc:
-            pytest.fail(
-                f"Port {port} is unavailable. Identify its owner/configuration; "
-                f"no server was reused. {exc}"
-            )
+    try:
+        probe_port(port)
+    except OSError as exc:
+        pytest.fail(
+            f"Port {port} is unavailable. Identify its owner/configuration; "
+            f"no server was reused. {exc}"
+        )
 
     with tempfile.TemporaryDirectory(prefix="ai-qa-e2e-") as directory:
         database_path = (Path(directory) / "e2e.db").resolve()

@@ -221,7 +221,8 @@ representative workflows, not every AC variant or real-model quality. Results an
 limitations are in the [cleanup execution record](docs/test-execution.md#bdd-feature-cleanup--19-october-2026).
 
 Run suites serially. The fixture refuses an occupied port without contacting or
-terminating its listener. Identify any existing owner/configuration before
+terminating its listener; a listener on any interface (loopback, `0.0.0.0` or `[::]`)
+counts as occupied. Identify any existing owner/configuration before
 continuing; the fixture never attaches to an existing application server. Ports
 8148 and 8151 are the only supported choices. Do not run the static fixture server
 at the same time on the selected port.
