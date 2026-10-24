@@ -17,7 +17,7 @@
 | Moderate | 4 | 9 | 0 |
 | Minor | 0 | 10 | 12 |
 
-**Fix Version note:** Fix Version identifies the release in which a fix is included or planned to be included. `1.0.0` is the intended upcoming release and has not yet been published (the latest release tag is `v0.1.0`; the running version is `1.0.0-dev`); its final contents will be confirmed during release verification.
+**Fix Version note:** Fix Version identifies the release in which a fix is included or planned to be included. This snapshot preserves the values recorded on 24 October 2026. The fixes then recorded as `1.0.0` are now planned for the core application release `v0.2.0` (not yet published; the latest release tag is `v0.1.0`); the project owner will update those tracker records to `0.2.0`, and this summary should be refreshed from the tracker afterwards. Affected Version `1.0.0-dev` is the label the application displayed during `0.2.0-dev` development.
 
 | Bug ID | Title | Severity | Priority | Resolution | Affected | Fix |
 | --- | --- | --- | --- | --- | --- | --- |
