@@ -709,6 +709,16 @@ async function refreshProjectMemberAndBugData(preserveVisibleState = false) {
     }
 }
 
+// Hide the empty-list message while New Bug is open, where it could be
+// mistaken for form or AI Assist feedback.
+function updateBugEmptyState() {
+    const emptyMessage = document.querySelector("#bug-list-empty");
+
+    if (emptyMessage) {
+        emptyMessage.hidden = !bugForm.hidden;
+    }
+}
+
 function renderBugs() {
     const data = [...projectBugs].sort(compareBugs);
     const totalPages = Math.max(1, Math.ceil(data.length / bugPageSize));
@@ -734,6 +744,9 @@ function renderBugs() {
         const emptyMessage =
             document.createElement("p");
 
+        emptyMessage.id =
+            "bug-list-empty";
+
         emptyMessage.className =
             "page-description";
 
@@ -743,6 +756,8 @@ function renderBugs() {
         bugsContainer.appendChild(
             emptyMessage
         );
+
+        updateBugEmptyState();
 
         return;
     }
@@ -1085,6 +1100,7 @@ showBugFormButton.addEventListener(
         newBugAiAssistButton.hidden = true;
         newBugAiMessage.textContent = "";
         bugForm.hidden = false;
+        updateBugEmptyState();
         beginAiAssistSession(bugForm, "bug-", newBugAiAssistButton, newBugAiMessage, newBugAiSuggestions);
 
         showBugFormButton.hidden = true;
@@ -1115,6 +1131,7 @@ cancelBugFormButton.addEventListener(
         updateSelectPromptStyle(bugAssigneeInput);
 
         bugForm.hidden = true;
+        updateBugEmptyState();
 
         showBugFormButton.hidden = false;
 
