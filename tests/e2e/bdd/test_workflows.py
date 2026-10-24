@@ -68,7 +68,7 @@ def register(page, workflow):
 
 @then("my user account should be created")
 def registered_account(page, workflow):
-    expect(page).to_have_url("/login.html")
+    expect(page).to_have_url("/projects.html")
     login(page, workflow["account"])
     expect(page.get_by_role("heading", name="My Projects", exact=True)).to_be_visible()
     expect(page.get_by_role("button", name="Logout", exact=True)).to_be_visible()

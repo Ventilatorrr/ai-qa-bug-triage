@@ -254,7 +254,9 @@ body {
 }
 
 body {
-    width: 100%;
+    /* Span the viewport, including any vertical scrollbar, so centred content
+       stays put between short and long pages. overflow-x hides the overlap. */
+    width: 100vw;
     min-height: 100vh;
     overflow-x: hidden;
     background-color: var(--page-background);

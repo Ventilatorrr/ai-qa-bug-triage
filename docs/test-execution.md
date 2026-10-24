@@ -20,7 +20,7 @@ The [defect summary](defect-summary.md) records verified tracker data.
   local-only browser routing; see the [README](../README.md#python-playwright-e2e-tests).
 - Other evidence is recorded separately and labelled as such: user-reported manual
   acceptance checks ([M01–M05](#manual-acceptance-testing--16-october-2026)),
-  genuine defects from the user's dogfooding of the real application (summarized in
+  formally tracked defects from the user's dogfooding of the real application (summarized in
   the [defect summary](defect-summary.md)), and explicitly approved live AI
   evaluations, which send fictional scenarios to the real provider.
 - Attempts interrupted by sandbox or environment setup are not counted as passes;
@@ -28,6 +28,27 @@ The [defect summary](defect-summary.md) records verified tracker data.
 - `test-results/` output was temporary and is not retained. Live AI evidence under
   `ai-evaluation-results/` is preserved locally but not published (gitignored);
   its paths and SHA256 hashes identify each artifact.
+
+## Release readiness assessment — v0.2.0
+
+QA recommendation on publishing the core application as GitHub development
+release `v0.2.0`. It is not approval for public production deployment, and the
+decision to publish remains the project owner's.
+
+| Area | Status |
+| --- | --- |
+| Scope | Increments 1–3 (REQ-001–REQ-023): accounts, projects and membership, bug management and lifecycle, human-reviewed AI-assisted triage. Security safeguards for public hosting, Try Demo, Docker and Railway deployment are `1.0.0-dev` work |
+| Recorded evidence | Python, frontend, Chromium Playwright/BDD, Postman and JMeter runs in this record; RTM **88/88 Covered** |
+| Release branch | Latest local regression, including automatic login after registration: full Python **652 passed**, frontend **118 passed**, Chromium Playwright/BDD **30 passed** ([record](#automatic-login-after-registration--24-october-2026)) |
+| Manual evidence | User-reported [M01–M05](#manual-acceptance-testing--16-october-2026) passes; dogfooding, including the 41 formally tracked defects in the [defect summary](defect-summary.md) |
+| Tracked defects | None open; all 41 are Closed (39 Fixed, 1 Not a Bug, 1 Won't Fix) |
+| Release gates | Required GitHub Actions CI on the release pull request **passed** and the final targeted manual smoke test **passed** on 24 October 2026. |
+| Known limitations | Browser automation is Chromium-only; cross-browser and full accessibility verification remain outstanding |
+| QA recommendation | **GO** for the `v0.2.0` GitHub development release only; not a recommendation for public production deployment |
+
+Recorded evidence shows no open formally tracked defects and full
+acceptance-criteria coverage; this does not establish that no defects remain. With both release
+gates passed, QA recommends GO for `v0.2.0` within the scope and limitations above. Passing tests reduce risk; they do not guarantee quality.
 
 ## Automated regression milestones
 
@@ -101,6 +122,28 @@ Two preliminary backend attempts failed on a sandbox-generated temporary path (o
 and are not counted; no application or test code changed. The completed 598-test
 run and its JUnit report contain zero errors. SHA256 comparison confirmed all
 **seven** preserved AI evidence files were unchanged. AC coverage remained **88/88**.
+
+## Automatic login after registration — 24 October 2026
+
+Onboarding improvement, not a recorded application defect; adds TC-419–TC-421 and
+updates TC-329/TC-386 to the new redirect. After `POST /register` returns 201,
+`register.js` calls the existing `POST /login` with the same credentials, stores
+`access_token` exactly as `login.js` does and replaces the page with Projects. No
+backend change. If that login fails, the page states that the account was created,
+links to Login and keeps Register disabled.
+
+| Check | Result |
+| --- | --- |
+| TC-419–TC-421 against the HEAD `register.js` (scratch swap, restored) | **2 failed, 1 passed** (TC-419/TC-421 detected; TC-420 preserved behavior passes) |
+| Full frontend Node | **118 passed** |
+| Full default Python | **652 passed in 414.64s** |
+| Chromium Playwright + BDD, port 8148 | **30 passed in 99.29s** |
+| Browser check, owned `tests.e2e.server` on 127.0.0.1:8148 with a fresh temporary database and mocked provider; listener PID, database path and identity header verified | Registration → `/register` 201, `/login` 200, Projects with token; immediate project creation 201; reload kept the session; logout cleared the token; manual login worked; duplicate email 409 and invalid email/password 422 showed existing messages with no login request or token; simulated `/login` 500 after a real 201 showed the account-created fallback, Register stayed disabled, a repeated Enter sent no request, and the account then logged in manually |
+| `git diff --check` | Passed |
+
+The first browser attempt ran a heuristically cached pre-change `register.js` (static
+files have no `Cache-Control`) and fell back to the old Login redirect; after
+refreshing the cache entries, the served script was verified before the recorded checks.
 
 ## Shared frontend auth module (audit C4) — 24 October 2026
 

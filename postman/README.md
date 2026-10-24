@@ -1,7 +1,7 @@
 # AI QA Bug Triage – API Regression Test Suite
 
 **25 ordered requests / 50 named assertions**, in seven folders, reusable across
-`1.0.0-dev`, `1.0.0` and later compatible releases. The suite covers fictional user
+`0.2.0`, `1.0.0` and later compatible releases. The suite covers fictional user
 setup, project membership, bug
 CRUD/validation, authorization, unavailable AI, and the full lifecycle through
 Closed/Fixed, reopening and deletion. Broader role/state combinations remain in pytest.
@@ -163,7 +163,7 @@ Record each execution's date, actual application version, suite, environment,
 method, request/assertion counts, result and commit/tag when available in
 [test execution](../docs/test-execution.md#postman-api-regression-suite--20-october-2026).
 Version reporting is manual; `/version` may confirm it without adding a suite
-request. Record a separate run when testing `1.0.0` or another release. The earlier
+request. Record a separate run when testing `0.2.0` or another release. The earlier
 metadata/fixture cleanup did not execute a new native run.
 
 Separately, on **20 October 2026**, the user confirmed the final collection with
