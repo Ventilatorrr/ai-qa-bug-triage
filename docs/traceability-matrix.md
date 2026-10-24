@@ -12,19 +12,19 @@ AC-011.1 additionally includes TC-378's BUG-34 browser regression on 19 October
 TC-386–TC-390 add five representative executable BDD workflows on 19 October
 2026; these supplement only the mapped ACs below without changing collective
 coverage assessments. See the [BDD execution record](test-execution.md#executable-bdd--19-october-2026).
-The subsequent [feature cleanup](test-execution.md#bdd-feature-cleanup--19-october-2026)
+The subsequent feature cleanup
 groups those same five scenarios into four feature files, all executable, with
 no specifications-only scenarios; TC IDs, AC mappings and assessments are unchanged.
 
 The focused Postman suite adds selected API implementations of 27 existing TC
 IDs on 20 October 2026; see the [catalogue selectors](test-cases.md) and
-[execution evidence](test-execution.md#postman-simplification--20-october-2026).
+[execution evidence](test-execution.md#postman-api-regression-suite--20-october-2026).
 Rows marked Postman API include only those representative variants, not all AC
 behavior. No TC/AC IDs or collective coverage ratings are changed. TC-391 is a
 technical isolation case without a business AC mapping. The user confirmed native
 Runner success for both the historical 25-request/57-assertion suite and the
 simplified **AI QA Bug Triage – API Regression Test Suite** (25 requests/50 assertions)
-against `1.0.0-dev` on 20 October 2026; see the [native execution record](test-execution.md#postman-native-verification-and-release-reporting--20-october-2026).
+against `1.0.0-dev` on 20 October 2026; see the [native execution record](test-execution.md#postman-api-regression-suite--20-october-2026).
 The reusable suite's compatibility results remain separate from native execution.
 TC-055 maps only to request 15, not later
 reopened-state readback. No new TC IDs or AC coverage changes accompany cleanup.
