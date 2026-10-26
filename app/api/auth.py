@@ -29,6 +29,13 @@ def _get_secret_key():
     return secret
 
 
+def hash_password(password):
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
+
+
 def create_access_token(user_id):
     expiration = datetime.now(timezone.utc) + timedelta(hours=8)
     payload = {
@@ -81,10 +88,7 @@ def get_current_user_id(authorization: str | None) -> int:
 
 @router.post("/register", status_code=201)
 def register(user: UserCreate):
-    password_hash = bcrypt.hashpw(
-        user.password.encode("utf-8"),
-        bcrypt.gensalt()
-    ).decode("utf-8")
+    password_hash = hash_password(user.password)
 
     conn = get_connection()
 

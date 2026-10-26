@@ -3,7 +3,7 @@
 One authoritative overall assessment per acceptance criterion in [requirements](requirements.md).
 TC definitions and precise selectors are in the [catalogue](test-cases.md); execution
 provenance is in [test-execution](test-execution.md). Assessed on 16 October 2026
-against `27c46ac` plus the deterministic coverage additions, with user-reported
+against `27c46ac` plus the deterministic coverage additions, with manual
 M01–M05 results for `1.0.0-dev`. AC-019.2 additionally incorporates the reviewed
 16 October live evaluations at `aa6977b` / `061fcef` plus recorded local changes.
 AC-011.1 additionally includes TC-378's BUG-34 browser regression on 19 October
@@ -21,8 +21,8 @@ IDs on 20 October 2026; see the [catalogue selectors](test-cases.md) and
 [execution evidence](test-execution.md#postman-api-regression-suite--20-october-2026).
 Rows marked Postman API include only those representative variants, not all AC
 behavior. No TC/AC IDs or collective coverage ratings are changed. TC-391 is a
-technical isolation case without a business AC mapping. The user confirmed native
-Runner success for both the historical 25-request/57-assertion suite and the
+technical isolation case without a business AC mapping. Native
+Runner success was confirmed manually for both the historical 25-request/57-assertion suite and the
 simplified **AI QA Bug Triage – API Regression Test Suite** (25 requests/50 assertions)
 against `1.0.0-dev` on 20 October 2026; see the [native execution record](test-execution.md#postman-api-regression-suite--20-october-2026).
 The reusable suite's compatibility results remain separate from native execution.
@@ -35,16 +35,16 @@ mapped ACs and updates TC-329/TC-386 to the new redirect. Collective coverage
 assessments are unchanged.
 
 Increment 4 (26 October 2026) adds REQ-024 and REQ-025; existing assessments are
-unchanged. REQ-024 is in progress: TC-438–TC-440 validate only the E-Commerce seed
-dataset, so AC-024.3 and AC-024.5 are Partial until Demo creation, the visible
-explanation of intentional imperfections, the genuine-defect dataset and numbering after
-seeding are implemented; other REQ-024 ACs remain Not Covered. REQ-025 is implemented
-with TC-422–TC-433 and TC-437. Two of its ACs remain Partial: AC-025.1 cannot
-yet show Demo accounts sharing the limit, because REQ-024 is not implemented; for
-AC-025.5, the frontend generically shows backend error details (TC-244), but no
-429-specific UI or browser check has been performed.
+unchanged. TC-438–TC-449 cover the seed datasets and `POST /demo`. AC-024.1, AC-024.3,
+AC-024.6 and AC-024.8 remain Partial until the Login-page `Try Demo` control, the visible
+explanation of intentional imperfections, and browser use of a Demo and its error
+handling are verified. For AC-024.4, the genuine defect snapshot was reviewed for
+potentially sensitive information before inclusion; TC-442 adds automated checks for
+sensitive data patterns. REQ-025 is implemented with TC-422–TC-433, TC-437 and TC-449;
+AC-025.5 remains Partial because the frontend shows backend error details generically
+(TC-244) but no 429-specific UI or browser check has been performed.
 
-**92 Covered / 4 Partial / 6 Not Covered / 102 total.**
+**97 Covered / 5 Partial / 0 Not Covered / 102 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -141,16 +141,16 @@ AC-025.5, the frontend generically shows backend error details (TC-244), but no
 | REQ-022 | AC-022.3 — Limit AI Capabilities | [TC-021](test-cases.md#tc-021), [TC-032](test-cases.md#tc-032), [TC-036](test-cases.md#tc-036), [TC-038](test-cases.md#tc-038), [TC-041](test-cases.md#tc-041), [TC-042](test-cases.md#tc-042), [TC-044](test-cases.md#tc-044), [TC-046](test-cases.md#tc-046), [TC-049](test-cases.md#tc-049), [TC-053](test-cases.md#tc-053), [TC-054](test-cases.md#tc-054), [TC-061](test-cases.md#tc-061), [TC-235](test-cases.md#tc-235), [TC-250](test-cases.md#tc-250) | API; Frontend JS; Python unit | Covered |
 | REQ-023 | AC-023.1 — Handle AI Request Failure | [TC-008](test-cases.md#tc-008), [TC-027](test-cases.md#tc-027), [TC-028](test-cases.md#tc-028), [TC-029](test-cases.md#tc-029), [TC-031](test-cases.md#tc-031), [TC-036](test-cases.md#tc-036), [TC-052](test-cases.md#tc-052), [TC-055](test-cases.md#tc-055), [TC-062](test-cases.md#tc-062), [TC-063](test-cases.md#tc-063), [TC-232](test-cases.md#tc-232), [TC-233](test-cases.md#tc-233), [TC-244](test-cases.md#tc-244), [TC-246](test-cases.md#tc-246), [TC-247](test-cases.md#tc-247), [TC-327](test-cases.md#tc-327), [TC-422](test-cases.md#tc-422), [TC-424](test-cases.md#tc-424) | API; Frontend JS; Playwright; Python unit; Postman API | Covered |
 | REQ-023 | AC-023.2 — Continue Without AI | [TC-056](test-cases.md#tc-056), [TC-230](test-cases.md#tc-230), [TC-243](test-cases.md#tc-243), [TC-244](test-cases.md#tc-244), [TC-289](test-cases.md#tc-289), [TC-290](test-cases.md#tc-290), [TC-327](test-cases.md#tc-327), [TC-328](test-cases.md#tc-328) | API; Frontend JS; Playwright | Covered |
-| REQ-024 | AC-024.1 — Start Demo | — | — | Not Covered |
-| REQ-024 | AC-024.2 — Demo Project Team | — | — | Not Covered |
-| REQ-024 | AC-024.3 — Demo E-Commerce Platform Project | [TC-438](test-cases.md#tc-438), [TC-439](test-cases.md#tc-439), [TC-440](test-cases.md#tc-440) | API; Static data | Partial |
-| REQ-024 | AC-024.4 — AI QA Bug Triage Project | — | — | Not Covered |
-| REQ-024 | AC-024.5 — Seed Data Integrity | [TC-438](test-cases.md#tc-438), [TC-440](test-cases.md#tc-440) | API; Static data | Partial |
-| REQ-024 | AC-024.6 — Normal Use of Demo Data | — | — | Not Covered |
-| REQ-024 | AC-024.7 — Visitor Isolation | — | — | Not Covered |
-| REQ-024 | AC-024.8 — Demo Creation Failure | — | — | Not Covered |
-| REQ-025 | AC-025.1 — Per-Account Daily Limit | [TC-425](test-cases.md#tc-425) | API | Partial |
-| REQ-025 | AC-025.2 — Global Daily Limit | [TC-426](test-cases.md#tc-426) | API | Covered |
+| REQ-024 | AC-024.1 — Start Demo | [TC-443](test-cases.md#tc-443) | API | Partial |
+| REQ-024 | AC-024.2 — Demo Project Team | [TC-443](test-cases.md#tc-443), [TC-445](test-cases.md#tc-445), [TC-446](test-cases.md#tc-446), [TC-448](test-cases.md#tc-448) | API | Covered |
+| REQ-024 | AC-024.3 — Demo E-Commerce Platform Project | [TC-438](test-cases.md#tc-438), [TC-439](test-cases.md#tc-439), [TC-440](test-cases.md#tc-440), [TC-443](test-cases.md#tc-443) | API; Static data | Partial |
+| REQ-024 | AC-024.4 — AI QA Bug Triage Project | [TC-441](test-cases.md#tc-441), [TC-442](test-cases.md#tc-442), [TC-443](test-cases.md#tc-443), [TC-446](test-cases.md#tc-446) | API; Manual; Static data | Covered |
+| REQ-024 | AC-024.5 — Seed Data Integrity | [TC-438](test-cases.md#tc-438), [TC-440](test-cases.md#tc-440), [TC-441](test-cases.md#tc-441), [TC-443](test-cases.md#tc-443), [TC-444](test-cases.md#tc-444) | API; Static data | Covered |
+| REQ-024 | AC-024.6 — Normal Use of Demo Data | [TC-445](test-cases.md#tc-445), [TC-449](test-cases.md#tc-449) | API | Partial |
+| REQ-024 | AC-024.7 — Visitor Isolation | [TC-446](test-cases.md#tc-446) | API | Covered |
+| REQ-024 | AC-024.8 — Demo Creation Failure | [TC-447](test-cases.md#tc-447) | API; Database | Partial |
+| REQ-025 | AC-025.1 — Per-Account Daily Limit | [TC-425](test-cases.md#tc-425), [TC-449](test-cases.md#tc-449) | API | Covered |
+| REQ-025 | AC-025.2 — Global Daily Limit | [TC-426](test-cases.md#tc-426), [TC-449](test-cases.md#tc-449) | API | Covered |
 | REQ-025 | AC-025.3 — Limit Configuration | [TC-427](test-cases.md#tc-427), [TC-428](test-cases.md#tc-428), [TC-429](test-cases.md#tc-429) | API | Covered |
 | REQ-025 | AC-025.4 — Usage Counting and Enforcement | [TC-429](test-cases.md#tc-429), [TC-430](test-cases.md#tc-430), [TC-431](test-cases.md#tc-431), [TC-432](test-cases.md#tc-432), [TC-433](test-cases.md#tc-433), [TC-437](test-cases.md#tc-437) | API; Database | Covered |
 | REQ-025 | AC-025.5 — Limit Reached | [TC-425](test-cases.md#tc-425), [TC-426](test-cases.md#tc-426), [TC-430](test-cases.md#tc-430) | API | Partial |
@@ -160,7 +160,7 @@ AC-025.5, the frontend generically shows backend error details (TC-244), but no
 
 - **AC-019.2 — Use Bug and Project Context:** deterministic context/prompt tests and [TC-351–TC-356](test-cases.md#ac-0192-opt-in-evaluation) collectively verify current-form primacy, grounded rewriting, relevant historical proposals and abstention from unsupported facts. The [final review](test-execution.md#ac-0192-final-evaluation-review) records 30 live evaluations (12 original, 12 historical clarification, six formatting correction), assessed against the unchanged [rubric](ai-testing-strategy.md). Final EVAL-D returns all five supported historical values with field-only formatting. Closure is user-directed, based on Codex-assisted review; raw assessment templates remain unchanged. The final configuration has one six-case run; this representative evidence does not establish zero hallucinations, independent human scoring or broad model reliability. No stated AC gap remains in this assessment.
 
-Manual contributions remain user-reported; existing JavaScript assertions supply
+Manual contributions are manual results, not automated executions; existing JavaScript assertions supply
 M05’s manually unreproduced race case. The member-display and complete sorting-rank
 gaps are closed by current automated execution. See the [execution record](test-execution.md)
 for exact results, provenance and limitations.

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-441**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-450**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (27 modules) | 243 | 254 | 653 cases; 102 parameterized functions |
+| Backend pytest (28 modules) | 252 | 263 | 663 cases; 103 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (11 files) | 118 registered tests | 118 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 452 | **439** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 461 | **448** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -308,9 +308,23 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-438"></a>TC-438 | AC-024.3, AC-024.5 | E-Commerce seed has exactly 20 numbered bugs with existing field validation, valid team references and consistent relative dates | Static data / Python unit | [`test_ecommerce_seed_has_twenty_well_formed_bugs`](../tests/backend/test_demo_seed.py#L45); All variants |
-| <a id="tc-439"></a>TC-439 | AC-024.3 | E-Commerce seed includes every lifecycle status, each teammate and unassigned bugs, Fixed and non-fix resolutions, varied classifications, and intentionally imperfect reports only in Triage | Static data / Python unit | [`test_ecommerce_seed_covers_realistic_workflow_with_intentional_triage_examples`](../tests/backend/test_demo_seed.py#L67); All variants |
-| <a id="tc-440"></a>TC-440 | AC-024.3, AC-024.5 | Every E-Commerce seed bug is created by its seeded reporter and reaches its seeded state through the existing lifecycle API with identical stored values | API | [`test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api`](../tests/backend/test_demo_seed.py#L87); All variants |
+| <a id="tc-438"></a>TC-438 | AC-024.3, AC-024.5 | E-Commerce seed has exactly 20 numbered bugs with existing field validation, valid team references and consistent relative dates | Static data / Python unit | [`test_ecommerce_seed_has_twenty_well_formed_bugs`](../tests/backend/test_demo_seed.py#L54); All variants |
+| <a id="tc-439"></a>TC-439 | AC-024.3 | E-Commerce seed includes every lifecycle status, each teammate and unassigned bugs, Fixed and non-fix resolutions, varied classifications, and intentionally imperfect reports only in Triage | Static data / Python unit | [`test_ecommerce_seed_covers_realistic_workflow_with_intentional_triage_examples`](../tests/backend/test_demo_seed.py#L74); All variants |
+| <a id="tc-440"></a>TC-440 | AC-024.3, AC-024.5 | Every E-Commerce seed bug is created by its seeded reporter and reaches its seeded state through the existing lifecycle API with identical stored values | API | [`test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api`](../tests/backend/test_demo_seed.py#L94); All variants |
+| <a id="tc-441"></a>TC-441 | AC-024.4, AC-024.5 | Genuine snapshot keeps unique original numbers, valid fields, time-zoned original timestamps, consistent lifecycle values and valid team references | Static data / Python unit | [`test_genuine_snapshot_keeps_valid_numbered_bugs_and_original_timestamps`](../tests/backend/test_demo_seed.py#L139); All variants |
+| <a id="tc-442"></a>TC-442 | AC-024.4 | Genuine snapshot contains no obvious local user paths, API keys, JWTs, private keys, password values or non-example email domains | Static data / Python unit | [`test_genuine_snapshot_contains_no_obvious_private_data`](../tests/backend/test_demo_seed.py#L167); All variants |
+
+## tests/backend/test_demo.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-443"></a>TC-443 | AC-024.1, AC-024.2, AC-024.3, AC-024.4, AC-024.5 | `POST /demo` returns only the visitor's token; five role-identifiable accounts with one suffix are members of both projects; every seeded bug is stored in its final state with mapped people and original or relative dates | API | [`test_demo_creates_team_projects_and_seeded_bugs`](../tests/backend/test_demo.py#L53); All variants |
+| <a id="tc-444"></a>TC-444 | AC-024.5 | New bugs continue after the highest seeded number, and restart integrity checks accept the seeded data | API | [`test_demo_numbering_continues_after_highest_seeded_number`](../tests/backend/test_demo.py#L89); All variants |
+| <a id="tc-445"></a>TC-445 | AC-024.2, AC-024.6 | Demo owner progresses, reopens, edits and deletes seeded bugs and removes and re-adds a teammate by its generated email | API | [`test_demo_owner_uses_existing_workflows_on_seeded_data`](../tests/backend/test_demo.py#L104); All variants |
+| <a id="tc-446"></a>TC-446 | AC-024.7 | Two Demos have disjoint projects and accounts, cannot access each other, and a later Demo receives unmodified seed data | API | [`test_demo_environments_are_independent`](../tests/backend/test_demo.py#L127); All variants |
+| <a id="tc-447"></a>TC-447 | AC-024.8 | A failure while seeding the second project or creating the token returns 500 and leaves no accounts, projects, memberships or bugs; retry succeeds | API; Database | [`test_demo_creation_failure_rolls_back_everything`](../tests/backend/test_demo.py#L151); All variants (second_project, token) |
+| <a id="tc-448"></a>TC-448 | AC-024.2 | A generated email that is already registered causes a new suffix; the existing account is untouched | API | [`test_demo_retries_when_generated_email_is_taken`](../tests/backend/test_demo.py#L180); All variants |
+| <a id="tc-449"></a>TC-449 | AC-025.1, AC-025.2, AC-024.6 | Demo owners are bound by the per-account limit and share the global limit with normal accounts | API / AI (mocked provider) | [`test_demo_accounts_share_regular_ai_usage_limits`](../tests/backend/test_demo.py#L195); All variants |
 
 ## tests/backend/test_fix_version_on_pass.py
 
@@ -666,11 +680,11 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-343"></a>TC-343 | AC-012.1, AC-012.2 | Bug list/details presentation | Structured manual / user-reported | [M01](test-execution.md#m01); Manually executable checks; see recorded limitations |
-| <a id="tc-344"></a>TC-344 | AC-012.2 | Native browser interactions | Structured manual / user-reported | [M02](test-execution.md#m02); Manually executable checks; see recorded limitations |
-| <a id="tc-345"></a>TC-345 | AC-012.5 | Pagination and responsive layout | Structured manual / user-reported | [M03](test-execution.md#m03); Manually executable checks; see recorded limitations |
-| <a id="tc-346"></a>TC-346 | AC-017.1 | Lifecycle scrolling | Structured manual / user-reported | [M04](test-execution.md#m04); Manually executable checks; see recorded limitations |
-| <a id="tc-347"></a>TC-347 | AC-020.8 | Pending AI suggestion lifetime | Structured manual / user-reported | [M05](test-execution.md#m05); Manually executable checks; see recorded limitations |
+| <a id="tc-343"></a>TC-343 | AC-012.1, AC-012.2 | Bug list/details presentation | Structured manual | [M01](test-execution.md#m01); Manually executable checks; see recorded limitations |
+| <a id="tc-344"></a>TC-344 | AC-012.2 | Native browser interactions | Structured manual | [M02](test-execution.md#m02); Manually executable checks; see recorded limitations |
+| <a id="tc-345"></a>TC-345 | AC-012.5 | Pagination and responsive layout | Structured manual | [M03](test-execution.md#m03); Manually executable checks; see recorded limitations |
+| <a id="tc-346"></a>TC-346 | AC-017.1 | Lifecycle scrolling | Structured manual | [M04](test-execution.md#m04); Manually executable checks; see recorded limitations |
+| <a id="tc-347"></a>TC-347 | AC-020.8 | Pending AI suggestion lifetime | Structured manual | [M05](test-execution.md#m05); Manually executable checks; see recorded limitations |
 
 ## AC-019.2 opt-in evaluation
 

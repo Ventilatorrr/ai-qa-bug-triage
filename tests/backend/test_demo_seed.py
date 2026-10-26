@@ -1,5 +1,7 @@
+from datetime import datetime
 import json
 from pathlib import Path
+import re
 
 import pytest
 
@@ -7,6 +9,8 @@ from app.schemas import BugCreate
 
 
 SEED_PATH = Path(__file__).resolve().parents[2] / "app" / "demo_data" / "demo_ecommerce.json"
+GENUINE_PATH = SEED_PATH.with_name("ai_qa_bug_triage.json")
+TEAM = {"owner": "Project Owner", "qa1": "QA Analyst", "qa2": "QA Analyst", "dev1": "Developer", "dev2": "Developer"}
 CONTENT_FIELDS = (
     "title", "affected_version", "environment", "description", "steps_to_reproduce",
     "expected_result", "actual_result", "severity", "priority",
@@ -20,6 +24,11 @@ BUG_KEYS = {
 @pytest.fixture(scope="module")
 def seed():
     return json.loads(SEED_PATH.read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="module")
+def genuine():
+    return json.loads(GENUINE_PATH.read_text(encoding="utf-8"))
 
 
 def lifecycle_path(bug, user_id):
@@ -44,9 +53,7 @@ def lifecycle_path(bug, user_id):
 # TC-438 | AC-024.3, AC-024.5 — E-Commerce seed has twenty well-formed bugs with valid values
 def test_ecommerce_seed_has_twenty_well_formed_bugs(seed):
     assert seed["project"] == "Demo E-Commerce Platform"
-    assert seed["team"] == {
-        "owner": "Project Owner", "qa1": "QA Analyst", "qa2": "QA Analyst", "dev1": "Developer", "dev2": "Developer",
-    }
+    assert seed["team"] == TEAM
     bugs = seed["bugs"]
     assert len(bugs) == 20
     assert [bug["number"] for bug in bugs] == list(range(1, 21))
@@ -117,3 +124,59 @@ def test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api(
             "assignee_id": user_id(bug["assignee"]), "created_by": user_id(bug["created_by"]),
         }
         assert {field: stored[field] for field in expected} == expected, bug["number"]
+
+
+def required_assignee_role(bug):
+    """Assignee role that a bug's final state requires under the existing lifecycle rules."""
+    if bug["status"] == "Development" or (bug["status"] == "Closed" and bug["resolution"] != "Fixed"):
+        return "Developer"
+    if bug["status"] == "Testing" or (bug["status"] == "Closed" and bug["resolution"] == "Fixed"):
+        return "QA Analyst"
+    return None
+
+
+# TC-441 | AC-024.4, AC-024.5 — Genuine snapshot keeps valid numbered bugs, original timestamps and lifecycle values
+def test_genuine_snapshot_keeps_valid_numbered_bugs_and_original_timestamps(genuine):
+    assert genuine["project"] == "AI QA Bug Triage"
+    assert genuine["team"] == TEAM
+    bugs = genuine["bugs"]
+    numbers = [bug["number"] for bug in bugs]
+    assert len(bugs) == genuine["snapshot"]["bug_count"] > 0
+    assert numbers == sorted(set(numbers)) and numbers[0] >= 1  # Unique original numbers; gaps are allowed.
+    keys = (BUG_KEYS - {"created_days_ago", "updated_days_ago"}) | {"created_at", "updated_at"}
+    for bug in bugs:
+        number = bug["number"]
+        assert set(bug) == keys, number
+        BugCreate(**{field: bug[field] for field in CONTENT_FIELDS})  # Existing field validation.
+        assert all(bug[field] is None or len(bug[field]) <= 20 for field in ("affected_version", "fix_version")), number
+        created, updated = (datetime.fromisoformat(bug[field]) for field in ("created_at", "updated_at"))
+        assert created.tzinfo and updated.tzinfo and created <= updated, number
+        assert bug["status"] in {"Triage", "Open", "Development", "Testing", "Closed"}, number
+        if bug["status"] == "Closed":
+            assert bug["resolution"] in {"Fixed", "Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"}, number
+        else:
+            assert bug["resolution"] is None, number
+        assert bug["fix_version"] is None or bug["resolution"] == "Fixed", number
+        assert bug["created_by"] in TEAM, number
+        if bug["assignee"] is not None:
+            role = TEAM[bug["assignee"]]
+            assert role in {"QA Analyst", "Developer"} and required_assignee_role(bug) in {None, role}, number
+
+
+# TC-442 | AC-024.4 — Genuine snapshot contains no obvious private emails, credentials or local user paths
+def test_genuine_snapshot_contains_no_obvious_private_data(genuine):
+    private_patterns = {
+        "local user path": re.compile(r"(?i)\\Users\\|(?<![\w.])/(?:home|Users)/"),
+        "API key": re.compile(r"\bsk-[\w-]{8,}"),
+        "JWT": re.compile(r"\beyJ[\w-]{8,}\.[\w-]{8,}"),
+        "private key": re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+        "password value": re.compile(r"(?i)\bpassword\s*[:=]\s*\S+"),
+    }
+    # Example addresses in reproduction steps are allowed only on reserved example domains.
+    reserved_domain = re.compile(r"(?i)^(?:[\w-]+\.)*(?:example(?:\.(?:com|net|org))?|test|invalid|localhost)$")
+    for bug in genuine["bugs"]:
+        text = "\n".join(bug[field] or "" for field in CONTENT_FIELDS if field not in ("severity", "priority"))
+        for category, pattern in private_patterns.items():
+            assert not pattern.search(text), (bug["number"], category)
+        for email in re.findall(r"[\w.%+-]+@([\w-]+(?:\.[\w-]+)+)", text):
+            assert reserved_domain.match(email), (bug["number"], "email domain")

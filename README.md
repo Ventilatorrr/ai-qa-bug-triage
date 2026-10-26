@@ -105,6 +105,14 @@ so it survives restarts. Each form text field sent to AI Assist is limited to
 5,000 characters, historical context text to 1,000 characters, and provider output
 to 8,000 tokens.
 
+`POST /demo` needs no authentication. In one database transaction it creates five
+normal accounts (a Project Owner, two QA Analysts and two Developers with generated
+`@example.com` addresses and random, undisclosed passwords) and two projects seeded
+from `app/demo_data/`: 20 fictional E-Commerce bugs and a sanitized snapshot of this
+project's genuine defects, with their original numbers and timestamps. It returns the
+Project Owner's token in the same shape as `/login`; nothing is kept if any step fails.
+Demo accounts follow the normal permissions and AI usage limits.
+
 Configured requests return `{"outcome": "suggestions", "suggestions": {"title": "..."}}`
 or `{"outcome": "no_usable_suggestions", "suggestions": {}}` after application
 validation. They never save a bug. New Bug and eligible Edit Bug forms display

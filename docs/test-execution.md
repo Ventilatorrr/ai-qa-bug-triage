@@ -18,9 +18,9 @@ The [defect summary](defect-summary.md) records verified tracker data.
   use the application's development/dogfooding database. E2E uses the
   owned test server on `127.0.0.1:8148` with verified database/identity and
   local-only browser routing; see the [README](../README.md#python-playwright-e2e-tests).
-- Other evidence is recorded separately and labelled as such: user-reported manual
+- Other evidence is recorded separately and labelled as such: manual
   acceptance checks ([M01–M05](#manual-acceptance-testing--16-october-2026)),
-  formally tracked defects from the user's dogfooding of the real application (summarized in
+  formally tracked defects from dogfooding the real application (summarized in
   the [defect summary](defect-summary.md)), and explicitly approved live AI
   evaluations, which send fictional scenarios to the real provider.
 - Attempts interrupted by sandbox or environment setup are not counted as passes;
@@ -40,7 +40,7 @@ decision to publish remains the project owner's.
 | Scope | Increments 1–3 (REQ-001–REQ-023): accounts, projects and membership, bug management and lifecycle, human-reviewed AI-assisted triage. Security safeguards for public hosting, Try Demo, Docker and Railway deployment are `1.0.0-dev` work |
 | Recorded evidence | Python, frontend, Chromium Playwright/BDD, Postman and JMeter runs in this record; RTM **88/88 Covered** |
 | Release branch | Latest local regression, including automatic login after registration: full Python **652 passed**, frontend **118 passed**, Chromium Playwright/BDD **30 passed** ([record](#automatic-login-after-registration--24-october-2026)) |
-| Manual evidence | User-reported [M01–M05](#manual-acceptance-testing--16-october-2026) passes; dogfooding, including the 41 formally tracked defects in the [defect summary](defect-summary.md) |
+| Manual evidence | Manual [M01–M05](#manual-acceptance-testing--16-october-2026) passes; dogfooding, including the 41 formally tracked defects in the [defect summary](defect-summary.md) |
 | Tracked defects | None open; all 41 are Closed (39 Fixed, 1 Not a Bug, 1 Won't Fix) |
 | Release gates | Required GitHub Actions CI on the release pull request **passed** and the final targeted manual smoke test **passed** on 24 October 2026. |
 | Known limitations | Browser automation is Chromium-only; cross-browser and full accessibility verification remain outstanding |
@@ -70,7 +70,7 @@ frontend Node tests used DOM/API/storage substitutes rather than a browser.
 | 19 October 2026 | Final AI quality milestone: full default backend; E2E excluded | **615 passed in 347.03s**, 0 failed/errors/skipped | `test/ai-quality` at `3e9d39d` plus the uncommitted milestone; includes all 40 offline harness variants |
 | 19 October 2026 | Test organization: full offline Python / frontend / Chromium + BDD | **724 passed in 412.41s** / **99 passed** / **24 passed in 64.72s** | [Test organization](#test-organization--19-october-2026), baseline `ca53965` |
 | 20 October 2026 | CI local verification: full offline Python / frontend / Chromium + BDD | **724 passed in 364.28s** / **99 passed** / **24 passed in 80.94s** | [GitHub Actions CI](#github-actions-ci--20-october-2026) |
-| 20 October 2026 | First hosted Application CI milestone | **847 passed** (724 Python + 99 JavaScript + 24 Playwright/BDD) | User-confirmed; three required checks protect `main` |
+| 20 October 2026 | First hosted Application CI milestone | **847 passed** (724 Python + 99 JavaScript + 24 Playwright/BDD) | Manually confirmed hosted run; three required checks protect `main` |
 | 22 October 2026 | BUG-37 fix: full offline Python | **638 passed in 461.96s** | [BUG-37](#bug-37-duplicate-new-bug-submission--22-october-2026) |
 | 22 October 2026 | AI harness simplification: full offline Python | **638 passed in 400.00s** (575 backend + 63 harness) | [Harness simplification](#ai-evaluation-harness-simplification--22-october-2026) |
 | 22 October 2026 | Audit B2 / B3: full offline backend | **581 passed in 453.05s** / **585 passed in 375.55s** | [B2](#malformed-add-member-email-http-500-audit-b2--22-october-2026), [B3](#concurrent-bug-edit-and-status-updates-audit-b3--22-october-2026) |
@@ -122,6 +122,24 @@ Two preliminary backend attempts failed on a sandbox-generated temporary path (o
 and are not counted; no application or test code changed. The completed 598-test
 run and its JUnit report contain zero errors. SHA256 comparison confirmed all
 **seven** preserved AI evidence files were unchanged. AC coverage remained **88/88**.
+
+## Demo creation backend (REQ-024, part 2) — 26 October 2026
+
+Adds `POST /demo` (`app/api/demo.py`), a shared `hash_password()` in `app/api/auth.py`,
+validation of the reviewed genuine snapshot `app/demo_data/ai_qa_bug_triage.json`
+(41 Closed bugs) and TC-441–TC-449. The genuine defect snapshot was reviewed for potentially
+sensitive information before inclusion; TC-442 adds automated checks for sensitive data patterns. One `BEGIN IMMEDIATE` transaction creates the five accounts,
+both projects, memberships and all 61 bugs in their final state, then the owner's token;
+any failure rolls everything back and returns `500`. No frontend change yet. All runs used
+disposable pytest databases; the real local database was not opened.
+
+| Check | Result |
+| --- | --- |
+| `test_demo.py` + `test_demo_seed.py` | **13 passed in 20.18s** |
+| TC-441/TC-442 against ten in-memory mutations of the genuine snapshot (paths, personal email domain, key, JWT, password, duplicate number, timestamp order, Fix Version, assignee role) | Each **detected**; unmodified snapshot passes |
+| TC-447 with a deliberately non-atomic scratch edit (commit after accounts), restored and compared | **2 failed**, as expected |
+| Demo, seed, registration, login, JWT, privacy, database lifecycle/isolation and AI usage modules | **93 passed in 74.62s** |
+| `git diff --check` | Passed |
 
 ## Demo E-Commerce seed dataset (REQ-024, part 1) — 26 October 2026
 
@@ -738,10 +756,10 @@ versions are described in the [Postman guide](../postman/README.md#execution-evi
 | Date / stage | Method and provenance | Requests / assertions | Result and notes |
 | --- | --- | --- | --- |
 | 20 Oct, initial suite | Temporary Node `vm` compatibility instrument running the collection's real scripts over HTTP (not an official Postman runtime) | 25 / **57** per run | Two final runs **57/57 passed**, 0 failed/skipped/unexecuted; second run with stale saved IDs/tokens shadowed. Two earlier runs before proof-response hardening also passed |
-| 20 Oct, initial suite | Native Collection Runner, user-confirmed | 25 / **57** | **57/57 passed**, 0 failures/errors/skips; about **5 s**, **85 ms** average. A rerun on the same server and a run after restart with the newly generated environment also succeeded (no further counts recorded) |
+| 20 Oct, initial suite | Native Collection Runner, manually confirmed | 25 / **57** | **57/57 passed**, 0 failures/errors/skips; about **5 s**, **85 ms** average. A rerun on the same server and a run after restart with the newly generated environment also succeeded (no further counts recorded) |
 | 20 Oct, simplified suite | Compatibility instrument, two disposable servers | 25 / **50** per run | Two full runs per server, each **50/50 passed**; the restarted server rejected the old environment before any application request |
-| 20 Oct, simplified suite | Native Collection Runner, user-confirmed | 25 / **50** | **50/50 passed**, no reported failures; Ctrl+C shutdown without traceback. Timing and commit not supplied |
-| 20 Oct, final collection | Postman CLI **1.75.0**, local, user-confirmed | 25 + 25 identity checks / **50** | **50/50 passed**, 0 failures, exit 0; **3.8 s**, **29 ms** average. Commit not supplied (uncommitted work) |
+| 20 Oct, simplified suite | Native Collection Runner, manually confirmed | 25 / **50** | **50/50 passed**, no reported failures; Ctrl+C shutdown without traceback. Timing and commit not supplied |
+| 20 Oct, final collection | Postman CLI **1.75.0**, local, manually confirmed | 25 + 25 identity checks / **50** | **50/50 passed**, 0 failures, exit 0; **3.8 s**, **29 ms** average. Commit not supplied (uncommitted work) |
 | 24 Oct, hosted | [Postman CI run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303), push to `main` at `964a3b1` | Silent CLI run | **Success**, including owned-server cleanup checks. Assertion counts are not printed (`--silent`) |
 
 The native simplified run preceded a metadata cleanup that finalized the display
@@ -842,7 +860,7 @@ sandbox restricted temporary directories); they are not counted. The action
 references, CPython 3.14 and Node 24 availability, and Playwright CI options were
 checked against official documentation.
 
-**Hosted result (user-confirmed):** the first hosted milestone passed **724 Python +
+**Hosted result (manually confirmed):** the first hosted milestone passed **724 Python +
 99 JavaScript + 24 Playwright/BDD = 847 tests**, and the three jobs became required
 checks protecting `main`. Postman and JMeter run in their own workflows.
 
@@ -1061,7 +1079,7 @@ passed without whitespace errors.
 
 ## Manual acceptance testing — 16 October 2026
 
-M01–M05 are **user-reported passes**, not agent-observed executions. Environment:
+M01–M05 are **manual passes**, not automated or agent-observed executions. Environment:
 **1.0.0-dev, Windows 11, Chrome, FastAPI/Uvicorn**. Exact Chrome build, source
 revision, viewport dimensions, screenshots and individual measurements were not
 supplied. These reports complement automated and historical evidence; they do not
