@@ -42,9 +42,9 @@ def service_calls(monkeypatch):
     calls = []
     original = ai_triage.request_triage
 
-    def record(project_id, bug_id, form):
+    def record(project_id, bug_id, form, **kwargs):
         calls.append((project_id, bug_id, form.model_dump()))
-        return original(project_id, bug_id, form)
+        return original(project_id, bug_id, form, **kwargs)
 
     monkeypatch.setattr(ai_triage, "request_triage", record)
     return calls

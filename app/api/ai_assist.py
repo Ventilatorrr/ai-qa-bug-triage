@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header, HTTPException
 
-from app import ai_triage
+from app import ai_triage, ai_usage
 from app.ai_context import FORM_TEXT_LIMIT
 from app.api.auth import get_current_user_id
 from app.database import get_connection
@@ -43,7 +43,7 @@ def authorize_ai_assist(project_id, bug_number, authorization):
             if bug[1] != "Triage":
                 raise HTTPException(status_code=409, detail="AI assistance requires a bug in Triage.")
             bug_id = bug[0]
-        return bug_id
+        return user_id, bug_id
     finally:
         conn.close()
 
@@ -59,12 +59,14 @@ def reject_oversized_form(form):
 
 
 def request_authorized_triage(project_id, bug_number, form, authorization):
-    bug_id = authorize_ai_assist(project_id, bug_number, authorization)
+    user_id, bug_id = authorize_ai_assist(project_id, bug_number, authorization)
     reject_oversized_form(form)
     try:
-        result = ai_triage.request_triage(project_id, bug_id, form)
+        result = ai_triage.request_triage(project_id, bug_id, form, user_id=user_id)
         return {"outcome": result.outcome, "suggestions": result.suggestions}
-    except ai_triage.AiTriageUnavailable as error:
+    except ai_usage.AiUsageLimitReached as error:
+        raise HTTPException(status_code=429, detail=str(error)) from None
+    except (ai_triage.AiTriageUnavailable, ai_usage.AiUsageMisconfigured) as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except ai_triage.AiTriageFailed as error:
         raise HTTPException(status_code=502, detail=str(error)) from None

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-425**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-438**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (25 modules) | 227 | 238 | 606 cases; 94 parameterized functions |
+| Backend pytest (26 modules) | 240 | 251 | 650 cases; 102 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (11 files) | 118 registered tests | 118 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 436 | **423** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 449 | **436** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -140,6 +140,21 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/backend/test_ai_triage.py#L462); All variants |
 | <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/backend/test_ai_triage.py#L478); All variants |
 | <a id="tc-424"></a>TC-424 | AC-025.6, AC-023.1 | AI triage sends the output-token limit and treats a response truncated by it as a safe failure without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_bounds_output_and_treats_truncated_output_as_safe_failure`](../tests/backend/test_ai_triage.py#L442); All variants |
+
+## tests/backend/test_ai_usage.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-425"></a>TC-425 | AC-025.1, AC-025.5 | Per-account limit counts across projects; over-limit New/Edit requests return the account 429 before the provider, stay rejected on retry, change nothing and leave other accounts unaffected | API / AI (mocked provider) | [`test_ai_usage_enforces_per_account_daily_limit_across_projects`](../tests/backend/test_ai_usage.py#L43); All variants |
+| <a id="tc-426"></a>TC-426 | AC-025.2, AC-025.5 | Global limit rejects every account with the global 429 before the provider | API / AI (mocked provider) | [`test_ai_usage_enforces_global_daily_limit_across_accounts`](../tests/backend/test_ai_usage.py#L68); All variants |
+| <a id="tc-427"></a>TC-427 | AC-025.3 | Unset or blank limits apply the 50/500 defaults | API / AI (mocked provider) | [`test_ai_usage_applies_default_limits_when_not_configured`](../tests/backend/test_ai_usage.py#L87); All variants (unset, empty, blank; user, global) |
+| <a id="tc-428"></a>TC-428 | AC-025.3 | Configured limits, including whitespace and `0`, are applied | API / AI (mocked provider) | [`test_ai_usage_applies_configured_limits`](../tests/backend/test_ai_usage.py#L110); All variants |
+| <a id="tc-429"></a>TC-429 | AC-025.3, AC-025.4 | Invalid limit configuration returns 503 for AI Assist only, before the provider and without counting; other API use continues | API / AI (mocked provider) | [`test_ai_usage_invalid_configuration_blocks_only_ai_assist_without_counting`](../tests/backend/test_ai_usage.py#L124); All variants (six invalid values; both variables) |
+| <a id="tc-430"></a>TC-430 | AC-025.4, AC-025.5, AC-025.6 | Unauthenticated, unauthorized, ineligible, invalid, oversized, unconfigured and over-limit requests are not counted | API / AI (mocked provider) | [`test_ai_usage_does_not_count_requests_rejected_before_provider`](../tests/backend/test_ai_usage.py#L143); All variants |
+| <a id="tc-431"></a>TC-431 | AC-025.4 | Requests that fail at or after the provider call, including SDK context exit, are counted and return 502 | API / AI (mocked provider) | [`test_ai_usage_counts_requests_that_fail_at_the_provider`](../tests/backend/test_ai_usage.py#L209); All variants (error, timeout, malformed, truncated, SDK context exit) |
+| <a id="tc-437"></a>TC-437 | AC-025.4 | Local preparation failures (generation input, SDK client creation or context entry) before the provider are not counted | API / AI (mocked provider) | [`test_ai_usage_does_not_count_local_preparation_failures`](../tests/backend/test_ai_usage.py#L234); All variants (generation_input, client, context_enter) |
+| <a id="tc-432"></a>TC-432 | AC-025.4 | Usage survives an application restart and resets at 00:00 UTC | API / AI (mocked provider) | [`test_ai_usage_persists_across_restart_and_resets_at_utc_midnight`](../tests/backend/test_ai_usage.py#L264); All variants |
+| <a id="tc-433"></a>TC-433 | AC-025.4 | Concurrent reservations cannot exceed the per-account or global limit | Database / concurrency | [`test_ai_usage_concurrent_reservations_cannot_exceed_limits`](../tests/backend/test_ai_usage.py#L293); All variants (user, global) |
 
 ## tests/backend/test_bug.py
 
@@ -276,15 +291,18 @@ unassignment state/role matrix each retain one ID.
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-145"></a>TC-145 | — | Fresh database creates numbering schema | Database / infrastructure | [`test_fresh_database_creates_numbering_schema`](../tests/backend/test_database_migrations.py#L68); All variants |
-| <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/backend/test_database_migrations.py#L80); All variants |
-| <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/backend/test_database_migrations.py#L109); All variants |
-| <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L171); mutation starts with ALTER or CREATE (7 variants) |
-| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L171); mutation=PRAGMA user_version=2 |
-| <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L171); mutation=DELETE FROM users WHERE id=2 |
-| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L187); field=bug_number; all associated values |
-| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L187); field=next_bug_number; all associated values |
-| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L199); All variants |
-| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L209); All variants |
+| <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/backend/test_database_migrations.py#L81); All variants |
+| <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/backend/test_database_migrations.py#L111); All variants |
+| <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation starts with ALTER or CREATE (7 variants) |
+| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=PRAGMA user_version=3 |
+| <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=DELETE FROM users WHERE id=2 |
+| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L282); field=bug_number; all associated values |
+| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L282); field=next_bug_number; all associated values |
+| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L294); All variants |
+| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L304); All variants |
+| <a id="tc-434"></a>TC-434 | — | Version 1 upgrade adds the empty usage table and preserves every existing definition and row; idempotent | Database / infrastructure | [`test_version_1_upgrade_adds_usage_table_and_preserves_all_data`](../tests/backend/test_database_migrations.py#L211); All variants (fresh, legacy-upgraded version 1) |
+| <a id="tc-435"></a>TC-435 | — | Version 1 upgrade failure rolls back the table and version, then succeeds on retry | Database / infrastructure | [`test_version_1_upgrade_failure_rolls_back_table_and_version`](../tests/backend/test_database_migrations.py#L231); All variants |
+| <a id="tc-436"></a>TC-436 | — | Startup rejects an unexpected version 1 or version 2 schema or usage relationship without changes | Database / infrastructure | [`test_startup_rejects_unexpected_version_1_or_2_schema`](../tests/backend/test_database_migrations.py#L262); All variants |
 
 ## tests/backend/test_fix_version_on_pass.py
 

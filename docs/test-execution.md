@@ -123,6 +123,40 @@ and are not counted; no application or test code changed. The completed 598-test
 run and its JUnit report contain zero errors. SHA256 comparison confirmed all
 **seven** preserved AI evidence files were unchanged. AC coverage remained **88/88**.
 
+## Daily AI usage limits (REQ-025) — 26 October 2026
+
+Adds TC-425–TC-436. Schema version 2 adds an `ai_requests` table, one row per counted
+request; a version-1 database gains only that empty table at startup, inside the
+existing atomic, verified upgrade. After the provider-key check, a short
+`BEGIN IMMEDIATE` transaction counts today's UTC usage and either records the request
+or returns `429`, committing before the provider call. Limits come from
+`AI_DAILY_USER_LIMIT` / `AI_DAILY_GLOBAL_LIMIT` (defaults 50/500); invalid values
+return `503` for AI Assist only. TC-149 now uses unsupported version 3, because 2 is
+now valid. All databases were disposable pytest databases; no real or hosted database
+was opened.
+
+| Check | Result |
+| --- | --- |
+| Focused: AI, usage, database, bug-numbering and offline evaluation modules | **422 passed in 251.42s** after one test-setup correction (manual bug creation used the AI form's `""` severity) |
+| Full default Python (schema change affects every database-backed test) | **710 passed in 627.26s**; collected before one duplicate TC-436 variant was removed |
+| `test_database_migrations.py` after the final TC-149/TC-436 edits | **33 passed** |
+| TC-433 repeated five times | **2 passed** each run |
+| TC-433 with `BEGIN IMMEDIATE` removed (scratch edit, restored and compared) | **Failed**: concurrent reservations exceeded the limit |
+| `git diff --check` | Passed |
+
+Frontend and browser suites were not run: no frontend change, and the UI shows the
+backend `detail` for any failed AI request.
+
+Review correction: the reservation initially ran before generation-input and SDK-client
+preparation. It now runs after both, immediately before the provider request. TC-437
+reproduced the issue first (**2 failed**: each local failure consumed quota) and
+passes after the change; the focused AI, usage and bug-numbering modules gave
+**179 passed in 230.16s**. A follow-up kept the SDK client context inside the provider
+error boundary, so a failure on entering or exiting it returns the safe `502` instead
+of escaping; quota errors still pass through as `429`/`503`. New TC-437 and TC-431 variants
+first failed (**2 failed**, the exception escaped), then `test_ai_usage` + `test_ai_triage`
+gave **81 passed**.
+
 ## Bounded AI provider requests (AC-025.6) — 26 October 2026
 
 First REQ-025 slice; adds TC-422–TC-424. After authorization, AI Assist rejects any

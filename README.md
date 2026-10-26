@@ -94,6 +94,17 @@ retries are disabled. Failed requests and outcomes with no usable suggestions
 preserve form values and permit manual Create/Save and explicit AI Assist retry.
 See traceability for REQ-023 evidence and remaining verification limits.
 
+Daily AI Assist limits default to 50 requests per account and 500 requests across
+all accounts per UTC day. Override them with `AI_DAILY_USER_LIMIT` and
+`AI_DAILY_GLOBAL_LIMIT` (non-negative integers; `0` disables AI Assist). Unset or
+blank values use the defaults; any other invalid value returns HTTP 503 for AI
+Assist only. A request counts once it is about to reach the provider, even if the
+provider then fails; requests over a limit return HTTP 429 without calling the
+provider. Usage is stored in the `ai_requests` table (database schema version 2),
+so it survives restarts. Each form text field sent to AI Assist is limited to
+5,000 characters, historical context text to 1,000 characters, and provider output
+to 8,000 tokens.
+
 Configured requests return `{"outcome": "suggestions", "suggestions": {"title": "..."}}`
 or `{"outcome": "no_usable_suggestions", "suggestions": {}}` after application
 validation. They never save a bug. New Bug and eligible Edit Bug forms display

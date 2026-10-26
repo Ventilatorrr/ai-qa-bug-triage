@@ -34,12 +34,14 @@ login and its account-created fallback, adds TC-419–TC-421 as frontend evidenc
 mapped ACs and updates TC-329/TC-386 to the new redirect. Collective coverage
 assessments are unchanged.
 
-Increment 4 (26 October 2026) adds REQ-024 and REQ-025. Their 14 ACs are Not Covered
-until implementation and verification; existing assessments are unchanged.
-AC-025.6 is Partial: TC-422–TC-424 verify the input, history and output bounds, but
-"not counted" remains unverified until the AC-025.4 usage limits exist.
+Increment 4 (26 October 2026) adds REQ-024 and REQ-025; existing assessments are
+unchanged. REQ-024 ACs remain Not Covered until implemented. REQ-025 is implemented
+with TC-422–TC-433 and TC-437. Two of its ACs remain Partial: AC-025.1 cannot
+yet show Demo accounts sharing the limit, because REQ-024 is not implemented; for
+AC-025.5, the frontend generically shows backend error details (TC-244), but no
+429-specific UI or browser check has been performed.
 
-**88 Covered / 1 Partial / 13 Not Covered / 102 total.**
+**92 Covered / 2 Partial / 8 Not Covered / 102 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -144,12 +146,12 @@ AC-025.6 is Partial: TC-422–TC-424 verify the input, history and output bounds
 | REQ-024 | AC-024.6 — Normal Use of Demo Data | — | — | Not Covered |
 | REQ-024 | AC-024.7 — Visitor Isolation | — | — | Not Covered |
 | REQ-024 | AC-024.8 — Demo Creation Failure | — | — | Not Covered |
-| REQ-025 | AC-025.1 — Per-Account Daily Limit | — | — | Not Covered |
-| REQ-025 | AC-025.2 — Global Daily Limit | — | — | Not Covered |
-| REQ-025 | AC-025.3 — Limit Configuration | — | — | Not Covered |
-| REQ-025 | AC-025.4 — Usage Counting and Enforcement | — | — | Not Covered |
-| REQ-025 | AC-025.5 — Limit Reached | — | — | Not Covered |
-| REQ-025 | AC-025.6 — Bounded Provider Requests | [TC-422](test-cases.md#tc-422), [TC-423](test-cases.md#tc-423), [TC-424](test-cases.md#tc-424) | API | Partial |
+| REQ-025 | AC-025.1 — Per-Account Daily Limit | [TC-425](test-cases.md#tc-425) | API | Partial |
+| REQ-025 | AC-025.2 — Global Daily Limit | [TC-426](test-cases.md#tc-426) | API | Covered |
+| REQ-025 | AC-025.3 — Limit Configuration | [TC-427](test-cases.md#tc-427), [TC-428](test-cases.md#tc-428), [TC-429](test-cases.md#tc-429) | API | Covered |
+| REQ-025 | AC-025.4 — Usage Counting and Enforcement | [TC-429](test-cases.md#tc-429), [TC-430](test-cases.md#tc-430), [TC-431](test-cases.md#tc-431), [TC-432](test-cases.md#tc-432), [TC-433](test-cases.md#tc-433), [TC-437](test-cases.md#tc-437) | API; Database | Covered |
+| REQ-025 | AC-025.5 — Limit Reached | [TC-425](test-cases.md#tc-425), [TC-426](test-cases.md#tc-426), [TC-430](test-cases.md#tc-430) | API | Partial |
+| REQ-025 | AC-025.6 — Bounded Provider Requests | [TC-422](test-cases.md#tc-422), [TC-423](test-cases.md#tc-423), [TC-424](test-cases.md#tc-424), [TC-430](test-cases.md#tc-430) | API | Covered |
 
 ## Coverage closure and limitations
 
