@@ -850,3 +850,122 @@ As a Project Owner or QA Analyst, I want to continue creating or editing a bug w
 - After either outcome, the user can explicitly retry `AI Assist`.
 
 ---
+
+## Increment 4 — Try Demo and AI Usage Limits
+
+### REQ-024 — Try Demo
+
+The system shall allow a visitor to start using the application with a newly created, automatically authenticated normal account, a fictional project team, and two independent, editable seeded projects.
+
+### US-024 — Try the Application
+
+As a visitor, I want to try the application without registering so that I can evaluate bug management and AI-assisted triage with realistic data.
+
+### Acceptance Criteria
+
+#### AC-024.1 — Start Demo
+
+- The Login page provides a `Try Demo` control.
+- Choosing `Try Demo` creates a new normal account, signs the visitor in using the existing authentication mechanism, and opens the Projects page without the visitor entering an email address or password.
+- Each successful activation creates a separate Demo. Repeated activation while a request is in progress does not start another request.
+- Generated credentials are never shown to the visitor. After logout or authentication expiry, the visitor can start a new Demo.
+- Normal registration and login are unchanged.
+
+#### AC-024.2 — Demo Project Team
+
+- Each Demo creates five normal user accounts: the visitor's Project Owner account, two QA Analysts (QA1 and QA2), and two Developers (Dev1 and Dev2).
+- All five accounts are members of both seeded projects with those roles.
+- Each account has a short generated email address that identifies its Demo role (Project Owner, QA1, QA2, Dev1, or Dev2), includes a suffix unique to its Demo, and is valid under the existing email rules.
+- Teammate credentials are randomly generated and never exposed. Accounts are not shared between Demos, and teammates belong only to their own Demo's projects.
+
+#### AC-024.3 — Demo E-Commerce Platform Project
+
+- The `Demo E-Commerce Platform` project contains exactly 20 fictional bugs.
+- Collectively, the bugs include:
+  - every lifecycle status, every Severity, and every Priority;
+  - bugs assigned to each of QA1, QA2, Dev1, and Dev2, and unassigned bugs;
+  - Closed bugs covering every supported resolution: `Fixed`, `Won't Fix`, `Duplicate`, `Cannot Reproduce`, and `Not a Bug`, each at least once, consistent with the existing lifecycle rules.
+- Bugs include realistic descriptions, steps to reproduce, expected and actual results, and version information appropriate to their status.
+
+#### AC-024.4 — AI QA Bug Triage Project
+
+- The `AI QA Bug Triage` project contains copies of the project's genuine tracked defects included in the approved sanitized seed dataset, a reviewed snapshot that is not synchronized with the original tracker.
+- Copies preserve the original visible Bug IDs, Date Created, Date Updated, and, where available, the genuine report content, classification, status, resolution, and versions.
+- A source bug's current assignee is mapped to a Demo teammate where appropriate and valid; otherwise the copy is unassigned, consistent with existing rules. Historical assignments are not invented.
+- Creators are mapped to valid Demo accounts without claiming to preserve historical creator identity.
+- Each Demo's copies are new records with their own internal IDs.
+- Demo creation uses only the seed dataset and never reads or modifies the original tracker database.
+- Sanitization may remove information but does not add invented details.
+- The data contains no secrets, credentials, or unnecessary personal information.
+
+#### AC-024.5 — Seed Data Integrity
+
+- All seeded projects and bugs satisfy the existing validation, assignment, and lifecycle rules.
+- A newly created bug continues the project's numbering after its highest seeded Bug ID.
+
+#### AC-024.6 — Normal Use of Demo Data
+
+- Demo accounts have exactly the permissions of other accounts with the same project role.
+- The visitor can use all existing project and bug features on the seeded data, including editing, assigning, every lifecycle transition, closing, reopening, and deleting bugs; editing and deleting projects; managing members; and AI Assist, subject to REQ-018–REQ-023 and REQ-025.
+
+#### AC-024.7 — Visitor Isolation
+
+- Each Demo receives its own copies of the seeded projects and bugs.
+- Changes in one Demo do not affect other Demos, other accounts, or the seed dataset. A Demo started after another Demo's data has changed receives the complete, unmodified seeded data.
+- A Demo account cannot access projects or bugs of which it is not a member.
+
+#### AC-024.8 — Demo Creation Failure
+
+- If Demo creation fails at any point, no accounts, projects, memberships, or bugs from that attempt remain.
+- The visitor is not signed in, sees a clear error, and can try again.
+
+---
+
+### REQ-025 — AI Usage Limits
+
+The system shall enforce configurable daily AI Assist request limits per account and across all accounts, and shall bound the size of each AI provider request.
+
+### US-025 — Keep AI Usage Bounded
+
+As the application owner, I want AI usage to be limited so that provider costs remain predictable while AI Assist remains available to all users.
+
+### Acceptance Criteria
+
+#### AC-025.1 — Per-Account Daily Limit
+
+- Each account can make at most the configured per-account number of counted AI Assist requests per UTC day, across all of its projects.
+- The same limit applies to normal and Demo accounts.
+
+#### AC-025.2 — Global Daily Limit
+
+- All accounts combined can make at most the configured global number of counted AI Assist requests per UTC day.
+- The global limit applies even when an account has not reached its own limit.
+
+#### AC-025.3 — Limit Configuration
+
+- The initial daily limits are 50 AI requests per account and 500 requests globally, measured by UTC day. Both limits are configurable and may be adjusted.
+- Both limits are set through application configuration.
+- When a limit is not configured, the application default applies.
+- When a configured limit is invalid, AI Assist requests are rejected before the AI provider is invoked, and the rest of the application remains available.
+
+#### AC-025.4 — Usage Counting and Enforcement
+
+- A request is counted when it is authenticated, authorized, eligible, and valid, and is sent to the AI provider, whether the provider then succeeds or fails.
+- Requests rejected before reaching the provider are not counted.
+- Limits are enforced by the backend. Concurrent requests cannot exceed either limit.
+- Usage survives application restarts and resets at the start of each UTC day.
+
+#### AC-025.5 — Limit Reached
+
+- A request that would exceed a limit is rejected with a `429 Too Many Requests` response before the AI provider is invoked.
+- The user is informed whether their own daily limit or the global daily limit has been reached.
+- The rejection is handled as an AI request failure under AC-023.1: the form is unchanged, no bug is modified, and the user can continue manually.
+- Retrying remains possible but is rejected until the applicable limit resets.
+
+#### AC-025.6 — Bounded Provider Requests
+
+- Current-form input exceeding the application's maximum AI input size is rejected with a clear error before the AI provider is invoked and is not counted.
+- Historical project context is limited as defined in AC-022.2, and long historical text is shortened before it is sent.
+- Each provider request sets a maximum output size. A response truncated by that limit is handled as a failed request under AC-023.1.
+
+---

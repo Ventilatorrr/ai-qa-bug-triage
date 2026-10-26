@@ -34,7 +34,10 @@ login and its account-created fallback, adds TC-419–TC-421 as frontend evidenc
 mapped ACs and updates TC-329/TC-386 to the new redirect. Collective coverage
 assessments are unchanged.
 
-**88 Covered / 0 Partial / 0 Not Covered / 88 total.**
+Increment 4 (26 October 2026) adds REQ-024 and REQ-025. Their 14 ACs are Not Covered
+until implementation and verification; existing assessments are unchanged.
+
+**88 Covered / 0 Partial / 14 Not Covered / 102 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -131,6 +134,20 @@ assessments are unchanged.
 | REQ-022 | AC-022.3 — Limit AI Capabilities | [TC-021](test-cases.md#tc-021), [TC-032](test-cases.md#tc-032), [TC-036](test-cases.md#tc-036), [TC-038](test-cases.md#tc-038), [TC-041](test-cases.md#tc-041), [TC-042](test-cases.md#tc-042), [TC-044](test-cases.md#tc-044), [TC-046](test-cases.md#tc-046), [TC-049](test-cases.md#tc-049), [TC-053](test-cases.md#tc-053), [TC-054](test-cases.md#tc-054), [TC-061](test-cases.md#tc-061), [TC-235](test-cases.md#tc-235), [TC-250](test-cases.md#tc-250) | API; Frontend JS; Python unit | Covered |
 | REQ-023 | AC-023.1 — Handle AI Request Failure | [TC-008](test-cases.md#tc-008), [TC-027](test-cases.md#tc-027), [TC-028](test-cases.md#tc-028), [TC-029](test-cases.md#tc-029), [TC-031](test-cases.md#tc-031), [TC-036](test-cases.md#tc-036), [TC-052](test-cases.md#tc-052), [TC-055](test-cases.md#tc-055), [TC-062](test-cases.md#tc-062), [TC-063](test-cases.md#tc-063), [TC-232](test-cases.md#tc-232), [TC-233](test-cases.md#tc-233), [TC-244](test-cases.md#tc-244), [TC-246](test-cases.md#tc-246), [TC-247](test-cases.md#tc-247), [TC-327](test-cases.md#tc-327) | API; Frontend JS; Playwright; Python unit; Postman API | Covered |
 | REQ-023 | AC-023.2 — Continue Without AI | [TC-056](test-cases.md#tc-056), [TC-230](test-cases.md#tc-230), [TC-243](test-cases.md#tc-243), [TC-244](test-cases.md#tc-244), [TC-289](test-cases.md#tc-289), [TC-290](test-cases.md#tc-290), [TC-327](test-cases.md#tc-327), [TC-328](test-cases.md#tc-328) | API; Frontend JS; Playwright | Covered |
+| REQ-024 | AC-024.1 — Start Demo | — | — | Not Covered |
+| REQ-024 | AC-024.2 — Demo Project Team | — | — | Not Covered |
+| REQ-024 | AC-024.3 — Demo E-Commerce Platform Project | — | — | Not Covered |
+| REQ-024 | AC-024.4 — AI QA Bug Triage Project | — | — | Not Covered |
+| REQ-024 | AC-024.5 — Seed Data Integrity | — | — | Not Covered |
+| REQ-024 | AC-024.6 — Normal Use of Demo Data | — | — | Not Covered |
+| REQ-024 | AC-024.7 — Visitor Isolation | — | — | Not Covered |
+| REQ-024 | AC-024.8 — Demo Creation Failure | — | — | Not Covered |
+| REQ-025 | AC-025.1 — Per-Account Daily Limit | — | — | Not Covered |
+| REQ-025 | AC-025.2 — Global Daily Limit | — | — | Not Covered |
+| REQ-025 | AC-025.3 — Limit Configuration | — | — | Not Covered |
+| REQ-025 | AC-025.4 — Usage Counting and Enforcement | — | — | Not Covered |
+| REQ-025 | AC-025.5 — Limit Reached | — | — | Not Covered |
+| REQ-025 | AC-025.6 — Bounded Provider Requests | — | — | Not Covered |
 
 ## Coverage closure and limitations
 
