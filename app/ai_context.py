@@ -9,6 +9,9 @@ from app.schemas import AiAssistRequest
 
 
 RECENT_BUG_LIMIT = 5
+# Per-field character bounds keep each provider request predictable (AC-025.6).
+FORM_TEXT_LIMIT = 5000
+HISTORY_TEXT_LIMIT = 1000
 
 
 class HistoricalBugContext(BaseModel):
@@ -48,6 +51,7 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
     Only suggestion-supported fields and a source bug ID are included in history.
     History is not verified fact for the current bug, and historical assignee IDs
     do not confer eligibility: use the current eligible_assignee_ids for validation.
+    Long historical text is shortened; the submitted form is never shortened.
     """
     fields = tuple(HistoricalBugContext.model_fields)
     conn = get_connection()
@@ -65,9 +69,18 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
         conn.close()
     return AiTriageContext(
         current_form=form.model_copy(deep=True),
-        recent_bugs=[HistoricalBugContext(**dict(zip(fields, row))) for row in bug_rows],
+        recent_bugs=[
+            HistoricalBugContext(**{field: _shorten_history(value) for field, value in zip(fields, row)})
+            for row in bug_rows
+        ],
         eligible_assignees=load_eligible_assignees(project_id),
     )
+
+
+def _shorten_history(value):
+    if isinstance(value, str) and len(value) > HISTORY_TEXT_LIMIT:
+        return value[:HISTORY_TEXT_LIMIT - 1] + "…"
+    return value
 
 
 def load_eligible_assignees(project_id: int) -> list[AssignableMemberContext]:

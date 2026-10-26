@@ -8,6 +8,10 @@ if TYPE_CHECKING:
     from openai import OpenAI
 
 
+# Includes reasoning tokens. A response stopped by this limit is incomplete and fails safely.
+MAX_OUTPUT_TOKENS = 8000
+
+
 class OpenAiSuggestionResponseError(ValueError):
     """The provider did not complete a usable structured-output response."""
 
@@ -34,6 +38,7 @@ def request_openai_suggestions(generation_input: dict, *, client: "OpenAI") -> o
         model="gpt-6-luna",
         reasoning={"effort": "medium"},
         service_tier="fast",
+        max_output_tokens=MAX_OUTPUT_TOKENS,
         instructions=(
             generation_input["instructions"]
             + "\noutput_contract.field_rules:\n"

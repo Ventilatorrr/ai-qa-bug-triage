@@ -1,12 +1,23 @@
 from fastapi import APIRouter, Header, HTTPException
 
 from app import ai_triage
+from app.ai_context import FORM_TEXT_LIMIT
 from app.api.auth import get_current_user_id
 from app.database import get_connection
 from app.schemas import AiAssistRequest
 
 
 router = APIRouter(tags=["AI Assist"])
+
+FORM_TEXT_LABELS = {
+    "title": "Title",
+    "affected_version": "Affected Version",
+    "environment": "Environment",
+    "description": "Description",
+    "steps_to_reproduce": "Steps to Reproduce",
+    "expected_result": "Expected Result",
+    "actual_result": "Actual Result",
+}
 
 
 def authorize_ai_assist(project_id, bug_number, authorization):
@@ -37,8 +48,19 @@ def authorize_ai_assist(project_id, bug_number, authorization):
         conn.close()
 
 
+def reject_oversized_form(form):
+    # Reject rather than truncate: the user's current bug information stays intact.
+    for field, label in FORM_TEXT_LABELS.items():
+        if len(getattr(form, field)) > FORM_TEXT_LIMIT:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{label} is too long for AI Assist (maximum {FORM_TEXT_LIMIT:,} characters).",
+            )
+
+
 def request_authorized_triage(project_id, bug_number, form, authorization):
     bug_id = authorize_ai_assist(project_id, bug_number, authorization)
+    reject_oversized_form(form)
     try:
         result = ai_triage.request_triage(project_id, bug_id, form)
         return {"outcome": result.outcome, "suggestions": result.suggestions}

@@ -11,6 +11,7 @@ import sys
 import httpx2
 import pytest
 
+from app.ai_openai import MAX_OUTPUT_TOKENS
 from tests.ai_evaluation import run_evaluation as runner
 from tests.ai_evaluation.scenarios import load_scenarios
 from tests.ai_evaluation.quality_scenarios import load_quality_scenarios
@@ -75,7 +76,10 @@ def test_evaluation_offline_records_production_contracts(monkeypatch):
     for scenario, record, request in zip(scenarios_before, report["attempts"], requests, strict=True):
         assert request == record["request"]
         # Default evaluation sends production's generation settings unchanged.
-        assert set(request) == {"model", "reasoning", "service_tier", "instructions", "input", "text", "store"}
+        assert set(request) == {
+            "model", "reasoning", "service_tier", "max_output_tokens", "instructions", "input", "text", "store",
+        }
+        assert request["max_output_tokens"] == MAX_OUTPUT_TOKENS
         assert request["reasoning"] == {"effort": "medium"}
         assert request["service_tier"] == "fast"
         assert record["requested_service_tier"] == "fast"

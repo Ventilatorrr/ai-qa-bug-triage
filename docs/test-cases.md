@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-422**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-425**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (25 modules) | 224 | 235 | 589 cases; 92 parameterized functions |
+| Backend pytest (25 modules) | 227 | 238 | 606 cases; 94 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (11 files) | 118 registered tests | 118 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 433 | **420** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 436 | **423** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -53,6 +53,7 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-009"></a>TC-009 | AC-018.3 | Reject prohibited fields in AI request context | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_invalid_context`](../tests/backend/test_ai_assist.py#L174); field in {fix_version, status, resolution, created_at, updated_at} |
 | <a id="tc-010"></a>TC-010 | AC-018.3 | Reject invalid supported AI context values | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_invalid_context`](../tests/backend/test_ai_assist.py#L174); field in {title, assignee_id, severity, priority} |
 | <a id="tc-011"></a>TC-011 | AC-018.3 | AI assist requires complete snapshot | API / AI (mocked or unavailable provider) | [`test_ai_assist_requires_complete_snapshot`](../tests/backend/test_ai_assist.py#L181); All variants |
+| <a id="tc-422"></a>TC-422 | AC-025.6, AC-023.1 | Oversized current-form text is rejected with a field-named error before the provider; at-limit text is accepted; authorization still precedes the size check | API / AI (mocked or unavailable provider) | [`test_ai_assist_rejects_oversized_form_text_before_provider`](../tests/backend/test_ai_assist.py#L195); All variants (seven text fields; edit in {False, True}) |
 
 ## tests/backend/test_ai_context.py
 
@@ -61,8 +62,9 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-012"></a>TC-012 | AC-019.2, AC-022.2 | AI context preserves submitted form and persisted bugs | API / AI (mocked or unavailable provider) | [`test_ai_context_preserves_submitted_form_and_persisted_bugs`](../tests/backend/test_ai_context.py#L72); All variants |
 | <a id="tc-013"></a>TC-013 | AC-019.2, AC-022.2 | AI context retrieves bounded deterministic same project history | API / AI (mocked or unavailable provider) | [`test_ai_context_retrieves_bounded_deterministic_same_project_history`](../tests/backend/test_ai_context.py#L119); All variants |
 | <a id="tc-014"></a>TC-014 | AC-019.2, AC-022.2 | AI context includes only current assignable project members | API / AI (mocked or unavailable provider) | [`test_ai_context_includes_only_current_assignable_project_members`](../tests/backend/test_ai_context.py#L153); All variants |
-| <a id="tc-015"></a>TC-015 | AC-019.2 | AI context supports empty project history and assignees | API / AI (mocked or unavailable provider) | [`test_ai_context_supports_empty_project_history_and_assignees`](../tests/backend/test_ai_context.py#L183); All variants |
-| <a id="tc-016"></a>TC-016 | AC-019.2 | AI context is not constructed for rejected requests | API / AI (mocked or unavailable provider) | [`test_ai_context_is_not_constructed_for_rejected_requests`](../tests/backend/test_ai_context.py#L203); All variants |
+| <a id="tc-015"></a>TC-015 | AC-019.2 | AI context supports empty project history and assignees | API / AI (mocked or unavailable provider) | [`test_ai_context_supports_empty_project_history_and_assignees`](../tests/backend/test_ai_context.py#L205); All variants |
+| <a id="tc-016"></a>TC-016 | AC-019.2 | AI context is not constructed for rejected requests | API / AI (mocked or unavailable provider) | [`test_ai_context_is_not_constructed_for_rejected_requests`](../tests/backend/test_ai_context.py#L225); All variants |
+| <a id="tc-423"></a>TC-423 | AC-025.6, AC-022.2 | AI context shortens long historical text without changing stored bugs or the submitted form | API / AI (mocked or unavailable provider) | [`test_ai_context_shortens_long_historical_text_without_changing_stored_bugs`](../tests/backend/test_ai_context.py#L183); All variants |
 
 ## tests/backend/test_ai_generation.py
 
@@ -81,13 +83,13 @@ unassignment state/role matrix each retain one ID.
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-024"></a>TC-024 | AC-019.2, AC-022.2 | AI openai sends explicit Medium Fast and existing strict contract without network or database | Python unit / AI (offline) | [`test_ai_openai_sends_existing_contract_with_sdk_without_network_or_database`](../tests/backend/test_ai_openai.py#L48); All variants |
-| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/backend/test_ai_openai.py#L123); All variants |
-| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/backend/test_ai_openai.py#L130); All variants |
-| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/backend/test_ai_openai.py#L145); All variants |
-| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/backend/test_ai_openai.py#L152); All variants |
-| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/backend/test_ai_openai.py#L161); All variants |
-| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/backend/test_ai_openai.py#L178); All variants |
-| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/backend/test_ai_openai.py#L186); All variants |
+| <a id="tc-025"></a>TC-025 | AC-019.4 | AI openai returns raw data without domain validation | Python unit / AI (offline) | [`test_ai_openai_returns_raw_data_without_domain_validation`](../tests/backend/test_ai_openai.py#L126); All variants |
+| <a id="tc-026"></a>TC-026 | — | AI openai does not expose mutable input to client | Python unit / AI (offline) | [`test_ai_openai_does_not_expose_mutable_input_to_client`](../tests/backend/test_ai_openai.py#L133); All variants |
+| <a id="tc-027"></a>TC-027 | AC-019.4, AC-023.1 | AI openai rejects uncompleted output | Python unit / AI (offline) | [`test_ai_openai_rejects_uncompleted_output`](../tests/backend/test_ai_openai.py#L148); All variants |
+| <a id="tc-028"></a>TC-028 | AC-019.4, AC-023.1 | AI openai rejects refusal instead of returning suggestions | Python unit / AI (offline) | [`test_ai_openai_rejects_refusal_instead_of_returning_suggestions`](../tests/backend/test_ai_openai.py#L155); All variants |
+| <a id="tc-029"></a>TC-029 | AC-019.4, AC-023.1 | AI openai rejects missing or unparseable JSON | Python unit / AI (offline) | [`test_ai_openai_rejects_missing_or_unparseable_json`](../tests/backend/test_ai_openai.py#L164); All variants |
+| <a id="tc-030"></a>TC-030 | AC-019.3 | AI openai rejects duplicate JSON properties at any depth | Python unit / AI (offline) | [`test_ai_openai_rejects_duplicate_json_properties_at_any_depth`](../tests/backend/test_ai_openai.py#L181); All variants |
+| <a id="tc-031"></a>TC-031 | AC-023.1 | AI openai propagates request failure without fake suggestions | Python unit / AI (offline) | [`test_ai_openai_propagates_request_failure_without_fake_suggestions`](../tests/backend/test_ai_openai.py#L189); All variants |
 
 ## tests/backend/test_ai_response.py
 
@@ -123,20 +125,21 @@ unassignment state/role matrix each retain one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-052"></a>TC-052 | AC-023.1 | AI triage duplicate JSON is safe failure before validation | API / AI (mocked or unavailable provider) | [`test_ai_triage_duplicate_json_is_safe_failure_before_validation`](../tests/backend/test_ai_triage.py#L63); All variants |
-| <a id="tc-053"></a>TC-053 | AC-018.4, AC-019.1, AC-019.2, AC-019.3, AC-019.4, AC-022.2, AC-022.3 | AI triage configured pipeline preserves form and returns validated suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions`](../tests/backend/test_ai_triage.py#L89); All variants |
-| <a id="tc-054"></a>TC-054 | AC-022.3 | AI valid suggestion cannot modify bug without user save | API / AI (mocked or unavailable provider) | [`test_ai_valid_suggestion_cannot_modify_bug_without_user_save`](../tests/backend/test_ai_triage.py#L150); All variants |
-| <a id="tc-055"></a>TC-055 | AC-023.1 | AI triage unconfigured requests keep 503 without provider work | API / AI (mocked or unavailable provider); Postman API | [`test_ai_triage_unconfigured_requests_keep_503_without_provider_work`](../tests/backend/test_ai_triage.py#L194); All variants; Postman: `15 AI Assist - Unconfigured Provider` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-056"></a>TC-056 | AC-018.4, AC-019.4, AC-023.2 | AI triage returns distinct no usable suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_returns_distinct_no_usable_suggestions`](../tests/backend/test_ai_triage.py#L219); All variants |
-| <a id="tc-057"></a>TC-057 | AC-019.3, AC-022.2 | AI triage revalidates current member eligibility | API / AI (mocked or unavailable provider) | [`test_ai_triage_revalidates_current_member_eligibility`](../tests/backend/test_ai_triage.py#L229); All variants |
-| <a id="tc-058"></a>TC-058 | AC-019.3 | AI triage excludes assignee removed during generation | API / AI (mocked or unavailable provider) | [`test_ai_triage_excludes_assignee_removed_during_generation`](../tests/backend/test_ai_triage.py#L252); All variants |
-| <a id="tc-059"></a>TC-059 | AC-022.1 | AI triage configured requests authorize before any pipeline work | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_requests_authorize_before_any_pipeline_work`](../tests/backend/test_ai_triage.py#L289); All variants |
-| <a id="tc-060"></a>TC-060 | AC-022.1 | AI triage rechecks changed role before provider invocation | API / AI (mocked or unavailable provider) | [`test_ai_triage_rechecks_changed_role_before_provider_invocation`](../tests/backend/test_ai_triage.py#L317); All variants |
-| <a id="tc-061"></a>TC-061 | AC-022.3 | AI triage instruction like content and output cannot perform actions | API / AI (mocked or unavailable provider) | [`test_ai_triage_instruction_like_content_and_output_cannot_perform_actions`](../tests/backend/test_ai_triage.py#L354); All variants |
-| <a id="tc-062"></a>TC-062 | AC-018.4, AC-019.4, AC-023.1 | AI triage failures are safe errors without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_failures_are_safe_errors_without_persistence`](../tests/backend/test_ai_triage.py#L392); All variants |
-| <a id="tc-063"></a>TC-063 | AC-023.1 | AI triage timeout is safe without retries or persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_timeout_is_safe_without_retries_or_persistence`](../tests/backend/test_ai_triage.py#L421); All variants |
-| <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/backend/test_ai_triage.py#L438); All variants |
-| <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/backend/test_ai_triage.py#L454); All variants |
+| <a id="tc-052"></a>TC-052 | AC-023.1 | AI triage duplicate JSON is safe failure before validation | API / AI (mocked or unavailable provider) | [`test_ai_triage_duplicate_json_is_safe_failure_before_validation`](../tests/backend/test_ai_triage.py#L64); All variants |
+| <a id="tc-053"></a>TC-053 | AC-018.4, AC-019.1, AC-019.2, AC-019.3, AC-019.4, AC-022.2, AC-022.3 | AI triage configured pipeline preserves form and returns validated suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_pipeline_preserves_form_and_returns_validated_suggestions`](../tests/backend/test_ai_triage.py#L90); All variants |
+| <a id="tc-054"></a>TC-054 | AC-022.3 | AI valid suggestion cannot modify bug without user save | API / AI (mocked or unavailable provider) | [`test_ai_valid_suggestion_cannot_modify_bug_without_user_save`](../tests/backend/test_ai_triage.py#L151); All variants |
+| <a id="tc-055"></a>TC-055 | AC-023.1 | AI triage unconfigured requests keep 503 without provider work | API / AI (mocked or unavailable provider); Postman API | [`test_ai_triage_unconfigured_requests_keep_503_without_provider_work`](../tests/backend/test_ai_triage.py#L195); All variants; Postman: `15 AI Assist - Unconfigured Provider` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-056"></a>TC-056 | AC-018.4, AC-019.4, AC-023.2 | AI triage returns distinct no usable suggestions | API / AI (mocked or unavailable provider) | [`test_ai_triage_returns_distinct_no_usable_suggestions`](../tests/backend/test_ai_triage.py#L220); All variants |
+| <a id="tc-057"></a>TC-057 | AC-019.3, AC-022.2 | AI triage revalidates current member eligibility | API / AI (mocked or unavailable provider) | [`test_ai_triage_revalidates_current_member_eligibility`](../tests/backend/test_ai_triage.py#L230); All variants |
+| <a id="tc-058"></a>TC-058 | AC-019.3 | AI triage excludes assignee removed during generation | API / AI (mocked or unavailable provider) | [`test_ai_triage_excludes_assignee_removed_during_generation`](../tests/backend/test_ai_triage.py#L253); All variants |
+| <a id="tc-059"></a>TC-059 | AC-022.1 | AI triage configured requests authorize before any pipeline work | API / AI (mocked or unavailable provider) | [`test_ai_triage_configured_requests_authorize_before_any_pipeline_work`](../tests/backend/test_ai_triage.py#L290); All variants |
+| <a id="tc-060"></a>TC-060 | AC-022.1 | AI triage rechecks changed role before provider invocation | API / AI (mocked or unavailable provider) | [`test_ai_triage_rechecks_changed_role_before_provider_invocation`](../tests/backend/test_ai_triage.py#L318); All variants |
+| <a id="tc-061"></a>TC-061 | AC-022.3 | AI triage instruction like content and output cannot perform actions | API / AI (mocked or unavailable provider) | [`test_ai_triage_instruction_like_content_and_output_cannot_perform_actions`](../tests/backend/test_ai_triage.py#L355); All variants |
+| <a id="tc-062"></a>TC-062 | AC-018.4, AC-019.4, AC-023.1 | AI triage failures are safe errors without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_failures_are_safe_errors_without_persistence`](../tests/backend/test_ai_triage.py#L395); All variants |
+| <a id="tc-063"></a>TC-063 | AC-023.1 | AI triage timeout is safe without retries or persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_timeout_is_safe_without_retries_or_persistence`](../tests/backend/test_ai_triage.py#L424); All variants |
+| <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/backend/test_ai_triage.py#L462); All variants |
+| <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/backend/test_ai_triage.py#L478); All variants |
+| <a id="tc-424"></a>TC-424 | AC-025.6, AC-023.1 | AI triage sends the output-token limit and treats a response truncated by it as a safe failure without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_bounds_output_and_treats_truncated_output_as_safe_failure`](../tests/backend/test_ai_triage.py#L442); All variants |
 
 ## tests/backend/test_bug.py
 

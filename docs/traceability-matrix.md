@@ -36,8 +36,10 @@ assessments are unchanged.
 
 Increment 4 (26 October 2026) adds REQ-024 and REQ-025. Their 14 ACs are Not Covered
 until implementation and verification; existing assessments are unchanged.
+AC-025.6 is Partial: TC-422–TC-424 verify the input, history and output bounds, but
+"not counted" remains unverified until the AC-025.4 usage limits exist.
 
-**88 Covered / 0 Partial / 14 Not Covered / 102 total.**
+**88 Covered / 1 Partial / 13 Not Covered / 102 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -130,9 +132,9 @@ until implementation and verification; existing assessments are unchanged.
 | REQ-020 | AC-020.8 — Pending Suggestion Lifetime | [TC-245](test-cases.md#tc-245), [TC-246](test-cases.md#tc-246), [TC-247](test-cases.md#tc-247), [TC-248](test-cases.md#tc-248), [TC-249](test-cases.md#tc-249), [TC-291](test-cases.md#tc-291), [TC-292](test-cases.md#tc-292), [TC-296](test-cases.md#tc-296), [TC-297](test-cases.md#tc-297), [TC-298](test-cases.md#tc-298), [TC-299](test-cases.md#tc-299), [TC-300](test-cases.md#tc-300), [TC-301](test-cases.md#tc-301), [TC-303](test-cases.md#tc-303), [TC-304](test-cases.md#tc-304), [TC-326](test-cases.md#tc-326), [TC-347](test-cases.md#tc-347) | Frontend JS; Manual; Playwright | Covered |
 | REQ-021 | AC-021.1 — Identify Pending AI Suggestions | [TC-235](test-cases.md#tc-235), [TC-236](test-cases.md#tc-236), [TC-238](test-cases.md#tc-238), [TC-240](test-cases.md#tc-240), [TC-250](test-cases.md#tc-250) | Frontend JS | Covered |
 | REQ-022 | AC-022.1 — Enforce AI Authorization | [TC-001](test-cases.md#tc-001), [TC-002](test-cases.md#tc-002), [TC-003](test-cases.md#tc-003), [TC-004](test-cases.md#tc-004), [TC-005](test-cases.md#tc-005), [TC-006](test-cases.md#tc-006), [TC-007](test-cases.md#tc-007), [TC-059](test-cases.md#tc-059), [TC-060](test-cases.md#tc-060), [TC-332](test-cases.md#tc-332) | API; Playwright | Covered |
-| REQ-022 | AC-022.2 — Restrict AI Context | [TC-012](test-cases.md#tc-012), [TC-013](test-cases.md#tc-013), [TC-014](test-cases.md#tc-014), [TC-017](test-cases.md#tc-017), [TC-023](test-cases.md#tc-023), [TC-024](test-cases.md#tc-024), [TC-053](test-cases.md#tc-053), [TC-057](test-cases.md#tc-057), [TC-136](test-cases.md#tc-136), [TC-252](test-cases.md#tc-252), [TC-253](test-cases.md#tc-253), [TC-254](test-cases.md#tc-254), [TC-255](test-cases.md#tc-255), [TC-256](test-cases.md#tc-256), [TC-257](test-cases.md#tc-257), [TC-258](test-cases.md#tc-258) | API; Frontend JS; Python unit | Covered |
+| REQ-022 | AC-022.2 — Restrict AI Context | [TC-012](test-cases.md#tc-012), [TC-013](test-cases.md#tc-013), [TC-014](test-cases.md#tc-014), [TC-017](test-cases.md#tc-017), [TC-023](test-cases.md#tc-023), [TC-024](test-cases.md#tc-024), [TC-053](test-cases.md#tc-053), [TC-057](test-cases.md#tc-057), [TC-136](test-cases.md#tc-136), [TC-252](test-cases.md#tc-252), [TC-253](test-cases.md#tc-253), [TC-254](test-cases.md#tc-254), [TC-255](test-cases.md#tc-255), [TC-256](test-cases.md#tc-256), [TC-257](test-cases.md#tc-257), [TC-258](test-cases.md#tc-258), [TC-423](test-cases.md#tc-423) | API; Frontend JS; Python unit | Covered |
 | REQ-022 | AC-022.3 — Limit AI Capabilities | [TC-021](test-cases.md#tc-021), [TC-032](test-cases.md#tc-032), [TC-036](test-cases.md#tc-036), [TC-038](test-cases.md#tc-038), [TC-041](test-cases.md#tc-041), [TC-042](test-cases.md#tc-042), [TC-044](test-cases.md#tc-044), [TC-046](test-cases.md#tc-046), [TC-049](test-cases.md#tc-049), [TC-053](test-cases.md#tc-053), [TC-054](test-cases.md#tc-054), [TC-061](test-cases.md#tc-061), [TC-235](test-cases.md#tc-235), [TC-250](test-cases.md#tc-250) | API; Frontend JS; Python unit | Covered |
-| REQ-023 | AC-023.1 — Handle AI Request Failure | [TC-008](test-cases.md#tc-008), [TC-027](test-cases.md#tc-027), [TC-028](test-cases.md#tc-028), [TC-029](test-cases.md#tc-029), [TC-031](test-cases.md#tc-031), [TC-036](test-cases.md#tc-036), [TC-052](test-cases.md#tc-052), [TC-055](test-cases.md#tc-055), [TC-062](test-cases.md#tc-062), [TC-063](test-cases.md#tc-063), [TC-232](test-cases.md#tc-232), [TC-233](test-cases.md#tc-233), [TC-244](test-cases.md#tc-244), [TC-246](test-cases.md#tc-246), [TC-247](test-cases.md#tc-247), [TC-327](test-cases.md#tc-327) | API; Frontend JS; Playwright; Python unit; Postman API | Covered |
+| REQ-023 | AC-023.1 — Handle AI Request Failure | [TC-008](test-cases.md#tc-008), [TC-027](test-cases.md#tc-027), [TC-028](test-cases.md#tc-028), [TC-029](test-cases.md#tc-029), [TC-031](test-cases.md#tc-031), [TC-036](test-cases.md#tc-036), [TC-052](test-cases.md#tc-052), [TC-055](test-cases.md#tc-055), [TC-062](test-cases.md#tc-062), [TC-063](test-cases.md#tc-063), [TC-232](test-cases.md#tc-232), [TC-233](test-cases.md#tc-233), [TC-244](test-cases.md#tc-244), [TC-246](test-cases.md#tc-246), [TC-247](test-cases.md#tc-247), [TC-327](test-cases.md#tc-327), [TC-422](test-cases.md#tc-422), [TC-424](test-cases.md#tc-424) | API; Frontend JS; Playwright; Python unit; Postman API | Covered |
 | REQ-023 | AC-023.2 — Continue Without AI | [TC-056](test-cases.md#tc-056), [TC-230](test-cases.md#tc-230), [TC-243](test-cases.md#tc-243), [TC-244](test-cases.md#tc-244), [TC-289](test-cases.md#tc-289), [TC-290](test-cases.md#tc-290), [TC-327](test-cases.md#tc-327), [TC-328](test-cases.md#tc-328) | API; Frontend JS; Playwright | Covered |
 | REQ-024 | AC-024.1 — Start Demo | — | — | Not Covered |
 | REQ-024 | AC-024.2 — Demo Project Team | — | — | Not Covered |
@@ -147,7 +149,7 @@ until implementation and verification; existing assessments are unchanged.
 | REQ-025 | AC-025.3 — Limit Configuration | — | — | Not Covered |
 | REQ-025 | AC-025.4 — Usage Counting and Enforcement | — | — | Not Covered |
 | REQ-025 | AC-025.5 — Limit Reached | — | — | Not Covered |
-| REQ-025 | AC-025.6 — Bounded Provider Requests | — | — | Not Covered |
+| REQ-025 | AC-025.6 — Bounded Provider Requests | [TC-422](test-cases.md#tc-422), [TC-423](test-cases.md#tc-423), [TC-424](test-cases.md#tc-424) | API | Partial |
 
 ## Coverage closure and limitations
 

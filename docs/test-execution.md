@@ -123,6 +123,26 @@ and are not counted; no application or test code changed. The completed 598-test
 run and its JUnit report contain zero errors. SHA256 comparison confirmed all
 **seven** preserved AI evidence files were unchanged. AC coverage remained **88/88**.
 
+## Bounded AI provider requests (AC-025.6) — 26 October 2026
+
+First REQ-025 slice; adds TC-422–TC-424. After authorization, AI Assist rejects any
+current-form text field over 5,000 characters with a field-named `422` before the
+provider is called; the form is never truncated. Historical bug text in the AI
+context is shortened to at most 1,000 characters. Each provider request sets
+`max_output_tokens=8000`, and an incomplete response stopped by that limit uses the
+existing `502` failure. No schema, configuration or frontend change; daily usage
+limits are not implemented yet.
+
+| Check | Result |
+| --- | --- |
+| TC-422–TC-424 against the HEAD application files (scratch swap, restored and compared) | **17 failed**; the new limit constants do not exist at HEAD, so these failures show dependence on the change rather than isolated behavioral detection |
+| Backend AI modules (`test_ai_assist`, `test_ai_context`, `test_ai_openai`, `test_ai_triage`, `test_ai_generation`, `test_ai_response`, `test_ai_suggestions`) plus offline evaluation harness | **336 passed in 118.60s** |
+| `git diff --check` | Passed |
+
+Full default Python, frontend and browser suites were not rerun: the change is
+limited to the AI request path, and the frontend already displays the backend's
+`detail` message.
+
 ## Automatic login after registration — 24 October 2026
 
 Onboarding improvement, not a recorded application defect; adds TC-419–TC-421 and
