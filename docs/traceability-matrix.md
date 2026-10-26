@@ -35,13 +35,16 @@ mapped ACs and updates TC-329/TC-386 to the new redirect. Collective coverage
 assessments are unchanged.
 
 Increment 4 (26 October 2026) adds REQ-024 and REQ-025; existing assessments are
-unchanged. REQ-024 ACs remain Not Covered until implemented. REQ-025 is implemented
+unchanged. REQ-024 is in progress: TC-438–TC-440 validate only the E-Commerce seed
+dataset, so AC-024.3 and AC-024.5 are Partial until Demo creation, the visible
+explanation of intentional imperfections, the genuine-defect dataset and numbering after
+seeding are implemented; other REQ-024 ACs remain Not Covered. REQ-025 is implemented
 with TC-422–TC-433 and TC-437. Two of its ACs remain Partial: AC-025.1 cannot
 yet show Demo accounts sharing the limit, because REQ-024 is not implemented; for
 AC-025.5, the frontend generically shows backend error details (TC-244), but no
 429-specific UI or browser check has been performed.
 
-**92 Covered / 2 Partial / 8 Not Covered / 102 total.**
+**92 Covered / 4 Partial / 6 Not Covered / 102 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -140,9 +143,9 @@ AC-025.5, the frontend generically shows backend error details (TC-244), but no
 | REQ-023 | AC-023.2 — Continue Without AI | [TC-056](test-cases.md#tc-056), [TC-230](test-cases.md#tc-230), [TC-243](test-cases.md#tc-243), [TC-244](test-cases.md#tc-244), [TC-289](test-cases.md#tc-289), [TC-290](test-cases.md#tc-290), [TC-327](test-cases.md#tc-327), [TC-328](test-cases.md#tc-328) | API; Frontend JS; Playwright | Covered |
 | REQ-024 | AC-024.1 — Start Demo | — | — | Not Covered |
 | REQ-024 | AC-024.2 — Demo Project Team | — | — | Not Covered |
-| REQ-024 | AC-024.3 — Demo E-Commerce Platform Project | — | — | Not Covered |
+| REQ-024 | AC-024.3 — Demo E-Commerce Platform Project | [TC-438](test-cases.md#tc-438), [TC-439](test-cases.md#tc-439), [TC-440](test-cases.md#tc-440) | API; Static data | Partial |
 | REQ-024 | AC-024.4 — AI QA Bug Triage Project | — | — | Not Covered |
-| REQ-024 | AC-024.5 — Seed Data Integrity | — | — | Not Covered |
+| REQ-024 | AC-024.5 — Seed Data Integrity | [TC-438](test-cases.md#tc-438), [TC-440](test-cases.md#tc-440) | API; Static data | Partial |
 | REQ-024 | AC-024.6 — Normal Use of Demo Data | — | — | Not Covered |
 | REQ-024 | AC-024.7 — Visitor Isolation | — | — | Not Covered |
 | REQ-024 | AC-024.8 — Demo Creation Failure | — | — | Not Covered |

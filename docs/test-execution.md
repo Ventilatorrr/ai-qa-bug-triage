@@ -123,6 +123,20 @@ and are not counted; no application or test code changed. The completed 598-test
 run and its JUnit report contain zero errors. SHA256 comparison confirmed all
 **seven** preserved AI evidence files were unchanged. AC coverage remained **88/88**.
 
+## Demo E-Commerce seed dataset (REQ-024, part 1) — 26 October 2026
+
+Adds the static `app/demo_data/demo_ecommerce.json` dataset (20 fictional bugs, logical
+team references, relative dates) and TC-438–TC-440. No Demo endpoint, account creation or
+frontend change yet. TC-440 replays every bug through the existing create and status APIs
+in a disposable test database and compares the stored values.
+
+| Check | Result |
+| --- | --- |
+| `tests/backend/test_demo_seed.py` | **3 passed in 2.61s** |
+| TC-440 against two temporarily invalid seed copies (Development bug assigned to a QA Analyst; Won't Fix bug with a Fix Version), restored and compared | **Failed** for each, as expected |
+| After review: BUG-15 moved to Triage as a fifth intentionally imperfect report; browser and OS versions updated (IE 11 scenario retained) | **3 passed in 2.45s** |
+| `git diff --check` | Passed |
+
 ## Daily AI usage limits (REQ-025) — 26 October 2026
 
 Adds TC-425–TC-436. Schema version 2 adds an `ai_requests` table, one row per counted

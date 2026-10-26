@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-438**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-441**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (26 modules) | 240 | 251 | 650 cases; 102 parameterized functions |
+| Backend pytest (27 modules) | 243 | 254 | 653 cases; 102 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (11 files) | 118 registered tests | 118 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 449 | **436** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 452 | **439** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
 normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
@@ -303,6 +303,14 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-434"></a>TC-434 | — | Version 1 upgrade adds the empty usage table and preserves every existing definition and row; idempotent | Database / infrastructure | [`test_version_1_upgrade_adds_usage_table_and_preserves_all_data`](../tests/backend/test_database_migrations.py#L211); All variants (fresh, legacy-upgraded version 1) |
 | <a id="tc-435"></a>TC-435 | — | Version 1 upgrade failure rolls back the table and version, then succeeds on retry | Database / infrastructure | [`test_version_1_upgrade_failure_rolls_back_table_and_version`](../tests/backend/test_database_migrations.py#L231); All variants |
 | <a id="tc-436"></a>TC-436 | — | Startup rejects an unexpected version 1 or version 2 schema or usage relationship without changes | Database / infrastructure | [`test_startup_rejects_unexpected_version_1_or_2_schema`](../tests/backend/test_database_migrations.py#L262); All variants |
+
+## tests/backend/test_demo_seed.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-438"></a>TC-438 | AC-024.3, AC-024.5 | E-Commerce seed has exactly 20 numbered bugs with existing field validation, valid team references and consistent relative dates | Static data / Python unit | [`test_ecommerce_seed_has_twenty_well_formed_bugs`](../tests/backend/test_demo_seed.py#L45); All variants |
+| <a id="tc-439"></a>TC-439 | AC-024.3 | E-Commerce seed includes every lifecycle status, each teammate and unassigned bugs, Fixed and non-fix resolutions, varied classifications, and intentionally imperfect reports only in Triage | Static data / Python unit | [`test_ecommerce_seed_covers_realistic_workflow_with_intentional_triage_examples`](../tests/backend/test_demo_seed.py#L67); All variants |
+| <a id="tc-440"></a>TC-440 | AC-024.3, AC-024.5 | Every E-Commerce seed bug is created by its seeded reporter and reaches its seeded state through the existing lifecycle API with identical stored values | API | [`test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api`](../tests/backend/test_demo_seed.py#L87); All variants |
 
 ## tests/backend/test_fix_version_on_pass.py
 
