@@ -68,8 +68,8 @@ is the source of truth for FastAPI metadata, `/version`, and the About page.
 | --- | --- |
 | `0.1.0-dev`, `0.2.0-dev` | Development-phase labels for work before `v0.1.0` and `v0.2.0`, used for Affected Version; not necessarily the version the application displayed, and not releases or Git tags |
 | `0.1.0` | Previous published release: GitHub Release and annotated Git tag `v0.1.0` |
-| `0.2.0` | Current version: core application GitHub development release `v0.2.0` |
-| `1.0.0-dev` | Next development phase toward the first production release |
+| `0.2.0` | Latest published release: core application GitHub development release `v0.2.0` |
+| `1.0.0-dev` | Current version: development phase toward the first production release |
 | `1.0.0-rc.1` | Planned production release candidate |
 | `1.0.0` | Planned first production release with Try Demo, `v1.0.0` |
 
