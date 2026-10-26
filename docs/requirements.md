@@ -880,12 +880,11 @@ As a visitor, I want to try the application without registering so that I can ev
 
 #### AC-024.3 — Demo E-Commerce Platform Project
 
-- The `Demo E-Commerce Platform` project contains exactly 20 fictional bugs.
-- Collectively, the bugs include:
-  - every lifecycle status, every Severity, and every Priority;
-  - bugs assigned to each of QA1, QA2, Dev1, and Dev2, and unassigned bugs;
-  - Closed bugs covering every supported resolution: `Fixed`, `Won't Fix`, `Duplicate`, `Cannot Reproduce`, and `Not a Bug`, each at least once, consistent with the existing lifecycle rules.
-- Bugs include realistic descriptions, steps to reproduce, expected and actual results, and version information appropriate to their status.
+- The `Demo E-Commerce Platform` project contains exactly 20 realistic fictional bug reports representing different lifecycle statuses, severities, priorities, assignments, and resolutions.
+- The represented lifecycle statuses include `Development`, `Testing`, and `Closed`.
+- The bugs include bugs assigned to each of QA1, QA2, Dev1, and Dev2, and unassigned bugs.
+- Some fictional bugs in Triage intentionally contain incomplete information, unclear wording, or questionable classifications to demonstrate AI Assist. The Demo clearly identifies these imperfections as intentional.
+- Intentionally imperfect bugs remain valid under the existing data and lifecycle rules. Intentional imperfections apply only to this project, not to the genuine defect copies in AC-024.4.
 
 #### AC-024.4 — AI QA Bug Triage Project
 
