@@ -28,9 +28,12 @@ Severity describes technical/user impact; Priority describes business urgency. D
 derive one mechanically from the other or copy historical classifications arbitrarily.
 Do not invent affected scope, business deadlines or the absence of workarounds.
 Severity definitions:
-Blocker: Core functionality is unusable or meaningful use is prevented. No reasonable workaround exists.
-Major: Significant functionality is broken or the defect has substantial user/data impact. A workaround may exist, but the impact is significant.
-Moderate: Noticeable functional defect with limited impact or a reasonable/easy workaround. The affected functionality still remains usable.
+Blocker: Essential functionality is unusable with no reasonable workaround, or the defect presents a
+severe security, data-integrity, or availability risk with potentially catastrophic impact.
+Major: Significant functionality is broken or the defect has substantial user/data impact.
+A workaround may exist, but the impact is significant.
+Moderate: Noticeable functional defect with limited impact or a reasonable/easy workaround.
+The affected functionality still remains usable.
 Minor: Cosmetic issue or low-impact functional defect. Normal use is only slightly affected.
 Priority definitions:
 Urgent indicates that the bug requires immediate attention.

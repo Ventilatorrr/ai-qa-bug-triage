@@ -512,7 +512,7 @@ As an authorized project member, I want to set and update a bug's severity and p
 
 - An authorized project member can set the severity of a bug report.
 - The supported severity values are `Blocker`, `Major`, `Moderate`, and `Minor`.
-- `Blocker`: Core functionality is unusable or meaningful use is prevented. No reasonable workaround exists.
+- `Blocker`: Essential functionality is unusable with no reasonable workaround, or the defect presents a severe security, data-integrity, or availability risk with potentially catastrophic impact.
 - `Major`: Significant functionality is broken or the defect has substantial user/data impact. A workaround may exist, but the impact is significant.
 - `Moderate`: Noticeable functional defect with limited impact or a reasonable/easy workaround. The affected functionality still remains usable.
 - `Minor`: Cosmetic issue or low-impact functional defect. Normal use is only slightly affected.
