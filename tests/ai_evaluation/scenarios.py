@@ -51,7 +51,7 @@ SCENARIO_C = {
             "description": "Unsaved retest: seven filtered rows, repeated three times. Older browser not used for this retest.",
         },
         "recent_bugs": [HISTORY_BASE | {
-            "id": 401, "title": "Old export download failure", "affected_version": "0.5.0",
+            "id": 401, "bug_number": 401, "title": "Old export download failure", "affected_version": "0.5.0",
             "environment": "TestOS 2 / Aster Browser 9", "actual_result": "No file downloaded.",
         }],
         "eligible_assignees": MEMBERS,
@@ -72,7 +72,7 @@ SCENARIO_D = {
             "actual_result": "Export CSV remains disabled.",
         },
         "recent_bugs": [HISTORY_BASE | {
-            "id": identifier, "title": title,
+            "id": identifier, "bug_number": identifier, "title": title,
             "description": "Orchid Board: filtering to zero rows leaves Export CSV disabled.",
             "environment": "TestOS 4 / Aster Browser 12", "affected_version": "0.8.2",
             "severity": "Moderate", "priority": "Medium", "assignee_id": 12,
@@ -112,7 +112,7 @@ SCENARIO_F = {
     "context": {
         "current_form": DETAILED_FORM | {"affected_version": "", "environment": ""},
         "recent_bugs": [HISTORY_BASE | {
-            "id": identifier, "title": title, "environment": "LegacyPrintOS 9",
+            "id": identifier, "bug_number": identifier, "title": title, "environment": "LegacyPrintOS 9",
             "affected_version": "0.2.0", "assignee_id": 11,
             "description": description,
         } for identifier, title, description in (

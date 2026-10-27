@@ -1,6 +1,7 @@
 """Internal suggestion contract, independent of provider transport and persistence."""
 
 from dataclasses import dataclass
+import re
 from typing import Literal
 
 
@@ -11,6 +12,22 @@ TEXT_FIELDS = frozenset({
 SEVERITIES = frozenset({"Blocker", "Major", "Moderate", "Minor"})
 PRIORITIES = frozenset({"Urgent", "High", "Medium", "Low"})
 SUPPORTED_FIELDS = TEXT_FIELDS | {"severity", "priority", "assignee_id"}
+
+# Text suggestions must be replacement field values, not advice, questions or placeholders.
+ADVICE_START = re.compile(
+    r"(?i)^\s*(?:please|kindly|consider|you (?:should|could|may|might)|specify|provide|clarify|mention"
+    r"|add (?:the|a|an|more|any|browser|device|os|operating|environment|version|details|information|steps))\b"
+)
+NON_VALUE_TEXT = re.compile(
+    r"(?i)\?\s*$|\b(?:todo|tbd|tbc|n/a|not specified|to be (?:determined|confirmed))\b"
+    r"|\[[^\]]*\s[^\]]*\]|<[^<>]*\s[^<>]*>"
+)
+
+
+def is_replacement_text(field, value):
+    # Numbered steps legitimately start with imperative verbs such as Add.
+    advice = field != "steps_to_reproduce" and ADVICE_START.search(value)
+    return not advice and not NON_VALUE_TEXT.search(value)
 
 
 class MalformedSuggestionResponse(ValueError):
@@ -60,7 +77,7 @@ def validate_suggestions(raw: object, *, eligible_assignee_ids: set[int]) -> Sug
         if any(type(other) is not type(value) or other != value for other in values[1:]):
             continue
         if field in TEXT_FIELDS:
-            valid = isinstance(value, str)
+            valid = isinstance(value, str) and is_replacement_text(field, value)
         elif field == "severity":
             valid = isinstance(value, str) and value in SEVERITIES
         elif field == "priority":

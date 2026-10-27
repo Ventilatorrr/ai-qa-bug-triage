@@ -2,7 +2,11 @@
 <html>
     <head>
         <title>AI QA Bug Triage</title>
-        <meta http-equiv="refresh" content="0; url=/projects.html">
+        <script>
+            // Go straight to the right page; Projects still validates the session with the backend.
+            window.location.replace(localStorage.getItem("access_token") ? "/projects.html" : "/login.html");
+        </script>
+        <noscript><meta http-equiv="refresh" content="0; url=/login.html"></noscript>
     </head>
     <body>
         <footer><p>Copyright &copy; 2026 AI QA Assistant</p><p><a href="/privacy.html">Privacy Policy</a></p></footer>

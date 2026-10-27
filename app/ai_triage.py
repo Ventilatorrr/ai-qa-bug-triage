@@ -5,6 +5,7 @@ from app.ai_generation import build_generation_input
 from app.ai_openai import request_openai_suggestions
 from app.ai_response import process_provider_response
 from app.ai_suggestions import MalformedSuggestionResponse, SuggestionResult
+from app.ai_usage import AiUsageLimitReached, AiUsageMisconfigured, reserve_ai_request
 from app.schemas import AiAssistRequest
 
 
@@ -23,13 +24,13 @@ def create_openai_client(api_key: str):
     return OpenAI(api_key=api_key, timeout=60.0, max_retries=0)
 
 
-def request_triage(project_id: int, bug_id: int | None, form: AiAssistRequest) -> SuggestionResult:
+def request_triage(project_id: int, bug_id: int | None, form: AiAssistRequest, *, user_id: int) -> SuggestionResult:
     """Build permitted context only after request authorization has succeeded."""
     context = build_triage_context(project_id, bug_id, form)
-    return request_suggestions(context, project_id=project_id)
+    return request_suggestions(context, project_id=project_id, user_id=user_id)
 
 
-def request_suggestions(context: AiTriageContext, *, project_id: int) -> SuggestionResult:
+def request_suggestions(context: AiTriageContext, *, project_id: int, user_id: int) -> SuggestionResult:
     """Generate and validate suggestions without persisting application data."""
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
     if not api_key:
@@ -37,7 +38,12 @@ def request_suggestions(context: AiTriageContext, *, project_id: int) -> Suggest
     generation_input = build_generation_input(context)
     try:
         with create_openai_client(api_key) as client:
+            # Counted once, after local preparation and just before the provider call,
+            # whether the provider then succeeds or fails.
+            reserve_ai_request(user_id)
             raw_response = request_openai_suggestions(generation_input, client=client)
+    except (AiUsageLimitReached, AiUsageMisconfigured):
+        raise  # Returned unchanged as 429/503 by the endpoint.
     except Exception:
         # SDK/client errors may contain credentials or request content. Do not
         # propagate/log them; keep this catch limited to the provider boundary.

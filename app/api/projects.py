@@ -108,7 +108,7 @@ def get_project(
     try:
         row = conn.execute(
             """
-            SELECT p.id, p.name
+            SELECT p.id, p.name, p.demo_kind
             FROM projects p
             JOIN project_members pm
                 ON p.id = pm.project_id
@@ -127,10 +127,10 @@ def get_project(
             detail="Project not found."
         )
 
-    return {
-        "id": row[0],
-        "name": row[1]
-    }
+    result = {"id": row[0], "name": row[1]}
+    if row[2] is not None:
+        result["demo_kind"] = row[2]
+    return result
 
 
 @router.get("/projects/{project_id}/members")

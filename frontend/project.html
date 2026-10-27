@@ -18,7 +18,7 @@
                 <a href="/about.html">About</a>
             </nav>
         </div>
-        <h1 class="site-title" aria-label="AI QA Bug Triage"><span class="wordmark" aria-hidden="true"><span class="wordmark-prefix">AI QA</span> <span class="wordmark-b">B</span><img class="wordmark-beetle" src="assets/beetle-vertical.png" alt="" width="1254" height="1254"><span>ug</span> <span class="wordmark-triage">Triage</span></span></h1>
+        <h1 class="site-title" aria-label="AI QA Bug Triage"><a class="site-title-link" href="/" aria-label="AI QA Bug Triage home"><span class="wordmark" aria-hidden="true"><span class="wordmark-prefix">AI QA</span> <span class="wordmark-b">B</span><img class="wordmark-beetle" src="assets/beetle-vertical.png" alt="" width="1254" height="1254"><span>ug</span> <span class="wordmark-triage">Triage</span></span></a></h1>
         <div class="header-right">
             <span id="header-identity" class="header-identity" hidden></span>
             <div class="header-account-actions">
@@ -42,6 +42,15 @@
                 Show Members
             </button>
         </section>
+
+        <p id="demo-note" class="page-description" hidden>
+            Some bug reports in Triage intentionally contain incomplete information, unclear wording, or questionable classifications.<br>
+            AI Assist can help identify potential improvements to these reports.
+        </p>
+        <p id="demo-history-note" class="page-description" hidden>
+            This project showcases the testing and quality assurance work behind AI QA Bug Triage.<br>
+            It contains genuine reports of defects discovered during development.
+        </p>
 
 
         <!-- Members -->
@@ -337,7 +346,7 @@
                 <div class="ai-suggestions-footer" hidden></div>
 
                 <div id="new-bug-ai-disclosure" class="section-message ai-assist-disclosure" role="note" data-ai-button="new-bug-ai-assist" hidden>
-                    <p id="new-bug-ai-disclosure-text">AI Assist sends the current bug, up to five recently updated bugs from this project, and eligible assignee information to OpenAI. Avoid passwords, API keys, and sensitive personal information. Learn more in our <a href="/privacy.html">Privacy Policy</a>.</p>
+                    <p id="new-bug-ai-disclosure-text">AI Assist sends the current bug, up to five recently updated bugs from this project, and eligible assignee information to OpenAI. Avoid passwords, API keys, and sensitive personal information. For more information, see the <a href="/privacy.html">Privacy Policy</a>.</p>
                     <button class="ai-notice-dismiss" type="button" aria-label="Dismiss AI data-sharing notice">&times;</button>
                 </div>
 

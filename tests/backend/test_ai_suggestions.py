@@ -149,3 +149,28 @@ def test_ai_suggestions_use_current_assignable_project_member_context(
         for user, valid in [(owner, False), (qa, not removed), (developer, True), (outsider, False)]:
             result = validate([{"field": "assignee_id", "value": user["user_id"]}], eligible)
             assert result.suggestions == ({"assignee_id": user["user_id"]} if valid else {})
+
+
+# TC-456 | AC-019.2, AC-019.3 — AI text suggestions must be replacement values, not advice, questions or placeholders
+@pytest.mark.parametrize("field,value,offered", [
+    ("environment", "Please specify the operating system", False),
+    ("environment", "Add browser information", False),
+    ("description", "Consider adding the device model.", False),
+    ("title", "Which payment method was used?", False),
+    ("affected_version", "TBD", False),
+    ("environment", "Chrome [browser version]", False),
+    ("environment", "<operating system>", False),
+    ("steps_to_reproduce", "1. Add an item to the basket.\n2. Select Pay.", True),
+    ("actual_result", "Unknown error shown after selecting Pay.", True),
+    ("actual_result", 'The page asks "Are you sure?" and then closes.', True),
+    ("actual_result", "The <script> tag is rendered as text.", True),
+    ("environment", "Chrome", True),
+])
+def test_ai_text_suggestions_must_be_replacement_values(field, value, offered):
+    from app.ai_generation import GENERATION_INSTRUCTIONS
+
+    result = validate([{"field": field, "value": value}, {"field": "priority", "value": "High"}])
+    assert result.suggestions == ({field: value, "priority": "High"} if offered else {"priority": "High"})
+    for rule in ("ready-to-use replacement", "Never return advice", "Do not invent browser versions",
+                 "When there is not enough evidence to improve a field, omit it"):
+        assert rule in GENERATION_INSTRUCTIONS

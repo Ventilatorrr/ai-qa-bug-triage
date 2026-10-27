@@ -136,3 +136,76 @@ def test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry(
 
     expect(page.get_by_role("heading", name=title, exact=True)).to_be_visible()
     expect(detail(page, "Description")).to_have_text("Manual recovery details")
+
+
+# TC-463 | AC-025.5 — Daily AI limit response shows its message, preserves the form and allows manual work and retry
+@pytest.mark.parametrize(
+    "form_kind,message",
+    [
+        ("edit", "You have reached your daily AI Assist limit. Try again after 00:00 UTC."),
+        ("new", "AI Assist has reached its daily limit for all users. Try again after 00:00 UTC."),
+    ],
+    ids=["account-limit-edit-bug", "global-limit-new-bug"],
+)
+def test_ai_daily_limit_preserves_form_and_allows_manual_work_and_retry(
+    page, e2e_api, workspace, form_kind, message,
+):
+    form = BugForm(page)
+    collection = f"/projects/{workspace['project']['id']}/bugs"
+    if form_kind == "edit":
+        bug = seed_bug(e2e_api, workspace, description="Stored description")
+        login(page, workspace["qa"])
+        open_bug(page, workspace, bug)
+        page.get_by_role("button", name="Edit", exact=True).click()
+        unchanged = lambda: api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"]) == bug
+        submit = form.save
+    else:
+        login(page, workspace["owner"])
+        page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
+        page.get_by_role("button", name="New Bug", exact=True).click()
+        unchanged = lambda: api_call(e2e_api, "GET", collection, workspace["owner"]) == []
+        submit = form.create
+
+    title = unique_name("Limit reached")
+    form.title.fill(title)
+    form.description.fill("Unsaved manual description")
+
+    # Only the AI Assist response is simulated, exactly as the backend returns a reached limit.
+    limited = []
+
+    def daily_limit(route):
+        if route.request.method != "POST":
+            route.fallback()
+            return
+        limited.append(route.request.post_data_json)
+        route.fulfill(status=429, json={"detail": message})
+
+    page.route("**/ai-assist", daily_limit)
+    for attempt in (1, 2):  # Retrying is possible but rejected until the limit resets.
+        form.ai_assist.click()
+        expect(form.ai_assist).to_be_enabled()
+        expect(page.get_by_text(message, exact=True)).to_be_visible()
+        assert len(limited) == attempt
+        assert limited[-1]["title"] == title
+        assert limited[-1]["description"] == "Unsaved manual description"
+        expect(form.title).to_have_value(title)
+        expect(form.description).to_have_value("Unsaved manual description")
+        expect(form.suggestion("Title")).to_have_count(0)
+        assert unchanged()
+
+    page.unroute("**/ai-assist")  # After the limit resets, the same form can request AI Assist again.
+    form.ai_assist.click()
+    expect(form.suggestion("Title")).to_contain_text(f"Reviewed {title}")
+    form.dismiss_all()
+    expect(form.title).to_have_value(title)
+    assert unchanged()
+
+    form.description.fill("Manually continued description")
+    submit.click()
+    if form_kind == "edit":
+        expect(page.get_by_role("heading", name=title, exact=True)).to_be_visible()
+    else:
+        page.get_by_role("link", name="BUG-1", exact=True).click()
+        [bug] = api_call(e2e_api, "GET", collection, workspace["owner"])
+    saved = api_call(e2e_api, "GET", bug_path(workspace, bug), workspace["owner"])
+    assert (saved["title"], saved["description"]) == (title, "Manually continued description")

@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -23,7 +24,7 @@ def generation_context(test_database):
     return AiTriageContext(
         current_form=AiAssistRequest(**form),
         recent_bugs=[HistoricalBugContext(**(form | {
-            "id": 12, "title": "Historical title", "environment": "Historical environment",
+            "id": 12, "bug_number": 3, "title": "Historical title", "environment": "Historical environment",
             "affected_version": "0.1", "assignee_id": 99,
         }))],
         eligible_assignees=[
@@ -47,6 +48,8 @@ def test_ai_generation_preserves_separate_context_without_mutation(generation_co
     assert set(result["context"]) == {"current_form", "recent_bugs", "eligible_assignees"}
     assert result["context"]["current_form"]["environment"] == ""
     assert result["context"]["recent_bugs"][0]["environment"] == "Historical environment"
+    assert result["context"]["recent_bugs"][0]["id"] == 12
+    assert result["context"]["recent_bugs"][0]["bug_number"] == 3
     assert generation_context.model_dump(mode="json") == before
     assert json.loads(json.dumps(result, ensure_ascii=False)) == result
     result["context"]["current_form"]["title"] = "Changed output"
@@ -76,7 +79,8 @@ def test_ai_generation_defines_only_supported_output_fields(generation_context):
     ("priority", {"Urgent", "High", "Medium", "Low"}),
 ])
 def test_ai_generation_classification_rules_match_application(generation_context, field, values):
-    rule = build_generation_input(generation_context)["output_contract"]["field_rules"][field]
+    generation = build_generation_input(generation_context)
+    rule = generation["output_contract"]["field_rules"][field]
     assert rule["type"] == "string"
     assert set(rule["allowed_values"]) == values
     for value in rule["allowed_values"]:
@@ -84,6 +88,13 @@ def test_ai_generation_classification_rules_match_application(generation_context
         assert validate_suggestions(
             {"suggestions": [{"field": field, "value": value}]}, eligible_assignee_ids=set(),
         ).suggestions == {field: value}
+    # Ship the application's definitions to the provider, not just the enum labels.
+    requirements = (Path(__file__).resolve().parents[2] / "docs/requirements.md").read_text(encoding="utf-8")
+    definitions = [line for line in requirements.splitlines()
+                   if any(line.startswith(f"- `{value}`") for value in values)]
+    assert len(definitions) == len(values)
+    for line in definitions:
+        assert line.removeprefix("- ").replace("`", "") in generation["instructions"]
 
 
 # TC-020 | AC-019.3 — AI generation limits assignees to supplied eligible context
@@ -107,9 +118,29 @@ def test_ai_generation_instructions_define_context_and_safety_boundaries(generat
         "current_form is the primary source of truth", "including unsaved user-entered values",
         "same-project supporting context only, not automatically verified facts",
         "Do not fabricate missing", "factual details merely to fill fields",
+        "Review Severity and Priority independently, including populated fields",
+        "When Priority is empty, consider Medium as a provisional normal priority for a functional",
+        "reasonable business context supports it; do not invent deadlines, scope, customer impact",
+        "recent_bugs.bug_number is the project-local report number",
+        "not automatic proof of identical environments",
+        "Allow a provisional Affected Version when multiple relevant reports consistently indicate",
+        "a shared release/build with no contradictory evidence",
+        "Allow Environment inference from a consistent, relevant testing context",
+        "preserve defensible existing classifications", "Do not force recommendations to fill fields",
+        "Priority describes business urgency", "Do not invent affected scope, business deadlines",
+        "or the absence of workarounds",
         "Relevant historical reports may support proposed Environment, Affected Version",
         "Severity, Priority or eligible Assignee values even when current fields are empty",
         "Proposed values do not assert current verification",
+        "shared regression sessions or explicitly related builds",
+        "not describe identical problems", "frequency alone is insufficient",
+        "a related build alone does not establish a browser or device",
+        "Preserve version/environment", "pairings; avoid combining unrelated details",
+        "unsupported precision or contradictory metadata",
+        "suggestions requiring human review, not verified facts",
+        "minimum intended behavior implied by the reported action",
+        "Do not invent unestablished screens, confirmation stages, messages or downstream outcomes",
+        "Omit fields that are already appropriate",
         "Return only the proposed field value",
         "Do not append explanations, source references",
         "uncertainty notes, or provenance in parentheses or other prose within field values",
@@ -162,7 +193,7 @@ def test_ai_generation_does_not_introduce_account_information_or_secrets(generat
     assert set(result) == {"instructions", "context", "output_contract"}
     assert set(result["context"]["current_form"]) == set(AiAssistRequest.model_fields)
     assert all(set(member) == {"user_id", "email", "role"} for member in result["context"]["eligible_assignees"])
-    assert all(set(bug) == {"id"} | set(AiAssistRequest.model_fields) for bug in result["context"]["recent_bugs"])
+    assert all(set(bug) == {"id", "bug_number"} | set(AiAssistRequest.model_fields) for bug in result["context"]["recent_bugs"])
     serialized = json.dumps(result)
     for value in secrets.values():
         assert value not in serialized

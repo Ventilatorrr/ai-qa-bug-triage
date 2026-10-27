@@ -101,7 +101,9 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
     assert context.current_form.model_dump() == snapshot
     assert [bug.id for bug in context.recent_bugs] == ([] if edit else [stored["id"]])
     if not edit:
-        assert context.recent_bugs[0].model_dump() == {"id": stored["id"]} | {field: stored[field] for field in snapshot}
+        assert context.recent_bugs[0].model_dump() == {
+            "id": stored["id"], "bug_number": stored["bug_number"],
+        } | {field: stored[field] for field in snapshot}
     assert set(context.model_dump()) == {"current_form", "recent_bugs", "eligible_assignees"}
     response = test_client.get(f"{context_project['base']}/bugs/{stored['bug_number']}", headers=context_project["headers"])
     assert response.status_code == 200
@@ -177,6 +179,28 @@ def test_ai_context_includes_only_current_assignable_project_members(
                 eligible_assignee_ids=context.eligible_assignee_ids,
             )
             assert result.suggestions == ({"assignee_id": user["user_id"]} if user["user_id"] in {member["user_id"] for member in expected} else {})
+
+
+# TC-423 | AC-025.6, AC-022.2 — AI context shortens long historical text without changing stored bugs
+def test_ai_context_shortens_long_historical_text_without_changing_stored_bugs(
+    test_client, context_project, blank_snapshot, captured_contexts,
+):
+    from app.ai_context import FORM_TEXT_LIMIT, HISTORY_TEXT_LIMIT
+
+    long_text = "Long history. " * 200
+    exact = "e" * HISTORY_TEXT_LIMIT
+    stored = create_bug(test_client, context_project, description=long_text, environment=exact, actual_result="Short")
+    snapshot = blank_snapshot | {"description": "c" * FORM_TEXT_LIMIT}
+    context = request_context(test_client, context_project, snapshot, captured_contexts)
+    history = context.recent_bugs[0]
+    assert history.description == long_text[:HISTORY_TEXT_LIMIT - 1] + "…"
+    assert len(history.description) == HISTORY_TEXT_LIMIT
+    assert history.environment == exact
+    assert history.actual_result == "Short"
+    assert history.title == "Stored title"
+    assert context.current_form.description == snapshot["description"]
+    response = test_client.get(f"{context_project['base']}/bugs/{stored['bug_number']}", headers=context_project["headers"])
+    assert response.json() == stored
 
 
 # TC-015 | AC-019.2 — AI context supports empty project history and assignees

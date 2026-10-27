@@ -7,7 +7,7 @@ const {Element} = require("./helpers/ai-fixture.cjs");
 const root = path.join(__dirname, "../../frontend");
 const source = fs.readFileSync(path.join(root, "js/ai-notice.js"), "utf8");
 const preferenceKey = "ai-data-sharing-notice-dismissed";
-const disclosure = "AI Assist sends the current bug, up to five recently updated bugs from this project, and eligible assignee information to OpenAI. Avoid passwords, API keys, and sensitive personal information. Learn more in our Privacy Policy.";
+const disclosure = "AI Assist sends the current bug, up to five recently updated bugs from this project, and eligible assignee information to OpenAI. Avoid passwords, API keys, and sensitive personal information. For more information, see the Privacy Policy.";
 
 function noticeFixture(prefix = "new-bug", stored = new Map(), blocked = false) {
     const notice = new Element("div"), text = new Element("p");
@@ -154,7 +154,7 @@ test("test_privacy_policy_links_cover_all_page_footers", () => {
     }
     const privacy = fs.readFileSync(path.join(root, "privacy.html"), "utf8");
     assert.match(privacy, /<html lang="en">/);
-    assert.match(privacy, /Pre-deployment draft/);
+    assert.match(privacy, /Last updated/);
     assert.match(privacy, /<script src="js\/theme.js">/);
     assert.match(privacy, /<script src="js\/logout.js">/);
     assert.doesNotMatch(privacy, /js\/(?:project|projects|bugs|login|register)\.js|http-equiv="refresh"/);

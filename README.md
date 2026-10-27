@@ -1,11 +1,44 @@
 # ai-qa-bug-triage
-Bug triage application built as a QA portfolio project with FastAPI, SQLite, and a plain HTML/CSS/JavaScript frontend.
 
-Authentication, project/member management, and bug-management APIs through REQ-017 are implemented. The frontend supports bug creation, viewing, editing, deletion, lifecycle actions, sorting, and pagination. Increment 3 AI Assist is implemented with explicit suggestion review and normal Create/Save persistence. Broader browser verification and increment completion remain outstanding; see traceability for evidence and gaps.
+Bug triage application built as a QA portfolio project with FastAPI, SQLite and a
+plain HTML/CSS/JavaScript frontend. It is used to demonstrate requirements-based
+testing, traceability, API, frontend and browser automation, and evaluation of an
+AI-assisted feature with a real model.
 
-Automated coverage uses pytest/FastAPI TestClient (API, database, security and mocked AI tests), dependency-free frontend JavaScript tests, and a focused Python Playwright E2E suite with a small set of executable pytest-bdd scenarios. An isolated [Postman API regression suite](postman/README.md) and a [JMeter API performance plan](jmeter/README.md) complement them. Real-model AI evaluation has been completed and reviewed; see the [execution record](docs/test-execution.md#ac-0192-final-evaluation-review). The [test-case catalogue](docs/test-cases.md) maintains the current test inventory, [test execution](docs/test-execution.md) records dated results, and the [defect summary](docs/defect-summary.md) records verified tracker data.
+## Features
 
-See [requirements](docs/requirements.md), [traceability](docs/traceability-matrix.md), and the [QA strategy](docs/qa-strategy.md) for current behavior and verification gaps. Working notes are not the current specification.
+- **Accounts:** registration with automatic login, login and logout; passwords
+  are stored as hashes and sessions use signed access tokens.
+- **Projects and roles:** project creation, renaming and deletion; members with
+  Project Owner, QA Analyst and Developer roles and role-based permissions.
+- **Bug reports:** creation, editing, deletion, assignment, severity and
+  priority, and a Triage → Open → Development → Testing → Closed lifecycle with
+  resolutions and Fix Version.
+- **Bug List:** sorting by every column, pagination and remembered page size.
+- **AI Assist:** on request, a Project Owner or QA Analyst receives validated
+  suggestions from OpenAI for the current New Bug or Triage Edit Bug form. Each
+  suggestion is reviewed with `Use`, `Dismiss`, `Use All` or `Dismiss All`;
+  nothing is saved until the user chooses `Create` or `Save`. Daily request
+  limits bound usage.
+- **Try Demo:** visitors can start a Demo from the Login page without
+  registering. Each Demo gets its own generated team and two seeded projects:
+  20 fictional E-Commerce bug reports and copies of this project's genuine
+  development defects.
+
+## QA artifacts
+
+| Document | Contents |
+| --- | --- |
+| [Requirements](docs/requirements.md) | REQ, user story and acceptance-criteria specification |
+| [Traceability matrix](docs/traceability-matrix.md) | Coverage assessment for every acceptance criterion |
+| [Test cases](docs/test-cases.md) | Catalogue of TC IDs with implementation references |
+| [Test execution](docs/test-execution.md) | Results, manual and real-AI testing, limitations |
+| [Defect summary](docs/defect-summary.md) | Tracked defects and their resolutions |
+| [QA strategy](docs/qa-strategy.md) and [AI testing strategy](docs/ai-testing-strategy.md) | Test approach and AI evaluation protocol |
+| [Definition of Done](docs/definition-of-done.md) | Increment completion criteria |
+| [Postman suite](postman/README.md) and [JMeter plan](jmeter/README.md) | API regression and performance checks |
+
+## Setup
 
 For a fresh Windows PowerShell setup, install Python 3.14 and Git, then run:
 
@@ -20,253 +53,127 @@ $env:JWT_SECRET_KEY = python -c "import secrets; print(secrets.token_urlsafe(48)
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-If `py` is unavailable, replace `py -3.14` with the path to your Python 3.14
-executable.
+Open http://127.0.0.1:8000/login.html. If `py` is unavailable, use the path to
+your Python 3.14 executable.
 
-`requirements.txt` contains the core runtime dependencies. For a runtime-only
-installation, use `python -m pip install -r requirements.txt` instead.
-`requirements-ai.txt` adds the optional OpenAI SDK; install it with
-`python -m pip install -r requirements-ai.txt` if you want live AI Assist.
-`requirements-dev.txt` includes both manifests, pytest, and httpx2 for the full
-Python test suite. The SDK is required by mocked provider tests even without an
-API key. Direct dependencies are pinned; transitive dependencies are resolved by
-pip. SQLite is included with Python.
+- `requirements.txt` contains the runtime dependencies, `requirements-ai.txt`
+  adds the optional OpenAI SDK, and `requirements-dev.txt` includes both plus
+  the Python test tools. SQLite is included with Python.
+- `JWT_SECRET_KEY` is required and must not be blank. Use a long random value
+  and keep it out of the repository. Changing it signs out all users.
 
-`JWT_SECRET_KEY` is required and must not be empty or whitespace-only. The
-application will refuse to sign or verify tokens without a nonblank value.
-Use a long, random value and do not commit it to the repository. Changing the
-secret invalidates all existing tokens; users must log in again. The command
-above generates a new secret for the current shell session; preserve your local
-secret securely outside the repository if you need tokens to survive restarts.
+### Configuration
 
-Open http://127.0.0.1:8000/login.html. Stop Uvicorn with Ctrl+C, then run the
-backend pytest suite from the repository root using the project virtual environment:
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Enables AI Assist. Without it, AI Assist returns HTTP 503 `AI assistance is not configured yet.` and the rest of the application works normally |
+| `AI_DAILY_USER_LIMIT`, `AI_DAILY_GLOBAL_LIMIT` | Daily AI Assist limits per account and across all accounts, per UTC day (defaults 50 and 500; `0` disables AI Assist). An invalid value returns HTTP 503 for AI Assist only |
+
+AI Assist sends the current form, up to five recently updated reports from the
+same project and eligible assignee information to OpenAI (`gpt-6-luna`, Medium
+reasoning, Fast service tier, `store=false`). Form text fields are limited to
+5,000 characters, historical text is shortened to 1,000 characters, and output
+is limited to 8,000 tokens. Requests over a daily limit return HTTP 429 without
+calling the provider. Provider failures return a generic HTTP 502 message and
+leave the form unchanged.
+
+`POST /demo` creates a Demo in one database transaction: five normal accounts
+with random, undisclosed passwords and name-like `@example.com` addresses, and
+the two seeded projects from `app/demo_data/`. It returns the Project Owner's
+token, and nothing is kept if any step fails. Demo creation is limited to 20
+starts per hour and 1,000 stored Demos.
+
+## Running tests
+
+Tests use fictional data, a fresh temporary SQLite database for each test, and
+mocked AI responses; no API key is needed. Keep suites serial and never point
+tests at a real application database.
 
 ```powershell
 Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Tests configure their own temporary JWT secret, mock provider calls, and require
-no real API key. Each API test uses a fresh absolute SQLite path under pytest's
-`tmp_path`. The fixture sets the environment before application import, rebinds
-cached database configuration before lifespan startup, and removes its database
-after the client closes. Migration and subprocess tests use their own temporary
-paths. Keep test suites serial; never point tests at a real application database.
+The default run includes `tests/backend/` (API, database, security and mocked
+AI) and the offline AI evaluation harness in `tests/ai_evaluation/`.
 
-Tests are grouped in `tests/backend/` (API, database, security and mocked AI),
-`tests/frontend/` (JavaScript and standalone browser fixtures), `tests/e2e/`
-(Playwright, including `bdd/`), and `tests/ai_evaluation/` (evaluation harness,
-scenarios and offline regression tests). Shared fixtures remain in
-`tests/conftest.py`. The default pytest command includes backend and offline
-evaluation tests; E2E still requires the explicit opt-in below.
-
-Formal versioning follows Semantic Versioning. `APP_VERSION` in `app/version.py`
-is the source of truth for FastAPI metadata, `/version`, and the About page.
-
-| Version | Meaning |
-| --- | --- |
-| `0.1.0-dev`, `0.2.0-dev` | Development-phase labels for work before `v0.1.0` and `v0.2.0`, used for Affected Version; not necessarily the version the application displayed, and not releases or Git tags |
-| `0.1.0` | Previous published release: GitHub Release and annotated Git tag `v0.1.0` |
-| `0.2.0` | Current version: core application GitHub development release `v0.2.0` |
-| `1.0.0-dev` | Next development phase toward the first production release |
-| `1.0.0-rc.1` | Planned production release candidate |
-| `1.0.0` | Planned first production release with Try Demo, `v1.0.0` |
-
-Git tags and GitHub Releases record which versions have been published; they are
-distinct from normal commits. Affected Version may identify an observed development build, such as
-`0.2.0-dev`; it is not populated automatically. Fix Version identifies
-the release that includes, or is planned to include, a fix; that release need not
-be published yet.
-
-Python dependency installation does not install Node; the separate frontend
-test commands below require it.
-
-The AI Assist backend uses OpenAI GPT-6 Luna only when `OPENAI_API_KEY` is set in
-the server environment and the optional SDK is installed. For real AI Assist,
-optionally set `$env:OPENAI_API_KEY = "<your-api-key>"` in the same shell before
-starting Uvicorn. No key or a blank key retains HTTP 503:
-`AI assistance is not configured yet.` Configuration
-is checked per request; no provider-switching variable or dotenv loader is used.
-Keep keys outside repository files. Provider failures return a fixed HTTP 502
-message without SDK details; clients are closed after use and automatic SDK
-retries are disabled. Failed requests and outcomes with no usable suggestions
-preserve form values and permit manual Create/Save and explicit AI Assist retry.
-See traceability for REQ-023 evidence and remaining verification limits.
-
-Configured requests return `{"outcome": "suggestions", "suggestions": {"title": "..."}}`
-or `{"outcome": "no_usable_suggestions", "suggestions": {}}` after application
-validation. They never save a bug. New Bug and eligible Edit Bug forms display
-pending values in an `AI Suggestions` area, with current-value comparisons and
-`Use`, `Dismiss`, `Use All`, and `Dismiss All` actions. Form values change only
-when a suggestion is used; normal `Create`/`Save` actions persist them. Resolve
-all pending suggestions before requesting AI Assist again. Cancelling, leaving,
-or reloading discards pending suggestions, and late results cannot populate a
-later form session. Empty successful outcomes provide feedback and permit retry.
-
-Run all dependency-free frontend JavaScript tests separately:
+Frontend JavaScript tests use DOM substitutes and Node's built-in runner:
 
 ```powershell
 node --test tests/frontend/*.test.cjs
 ```
 
-These use DOM substitutes, including CR/LF sanitization for text inputs, and
-execute the actual page event handlers; they do not establish browser E2E coverage.
-
-For the optional native browser fixtures, first check for a listener on port 8148
-(for example, `Get-NetTCPConnection -State Listen -LocalPort 8148`). If occupied,
-identify the owning process and configuration; do not reuse or terminate an
-unidentified server. Once available, run
-`node tests/frontend/native-input-server.cjs`, open
-`http://127.0.0.1:8148/`, and choose **Run native input regressions** to verify
-the actual form markup and native controls (New/Edit, Use/Use All and LF/CR/CRLF
-cases). `/ui-style.test.html` provides the separate native style fixtures.
-This server binds only to loopback and serves an explicit static route allowlist,
-with no application database, application API, or provider access. Stop only the
-fixture server you started, using Ctrl+C. It does not automate complete page
-workflows. Backend tests mock provider calls and require no real API key. See
-traceability for the REQ-020 browser checks and remaining gaps.
-
-## Continuous integration
-
-[Application CI](.github/workflows/application.yml) runs on pull requests targeting `main`, pushes to
-`main`, and manual `workflow_dispatch` runs from GitHub's **Actions** tab (once
-the workflow is on the default branch). Three independent Ubuntu 24.04 jobs run:
-
-- Python 3.14: the complete default pytest suite, including offline
-  evaluation-harness regression tests, with a JUnit XML report.
-- Node.js 24: all JavaScript tests using Node's built-in test runner; no npm
-  installation is needed.
-- Python 3.14 and Chromium: all opt-in Playwright tests, including the executable
-  BDD scenarios, on port 8148.
-
-Jobs can run concurrently; tests within each Python job remain serial. Existing
-fixtures create disposable SQLite databases and temporary directories. CI supplies
-no OpenAI credentials, disables live evaluation opt-in and points any unmocked
-SDK client at an unused loopback endpoint. Provider responses are mocked; CI does
-not run live AI evaluations, use historical evaluation evidence or deploy.
-
-Open **Actions → Application CI → a run** to inspect each job and its step logs. The run
-summary provides `python-test-report` and `e2e-test-results` artifacts, including
-JUnit XML even after test failures. E2E failures retain Playwright traces and
-screenshots; frontend failures upload `frontend-failure-log`. Artifacts expire
-after seven days; cancelled jobs or failures before report creation may have no
-artifacts. The three jobs are required checks protecting `main`. Dated local and
-hosted results are recorded in
-[test execution](docs/test-execution.md#github-actions-ci--20-october-2026).
-
-The separate [Postman API regression workflow](.github/workflows/postman.yml)
-uses official Postman CLI **1.75.0** on the same PR/push triggers. It runs the
-local collection against a fresh server from `postman/serve.py`, waits for HTTP
-readiness and cleans up the owned server/runtime on exit. The collection validates
-run identity before each request. No Postman API key or
-cloud login is used. [Setup and cleanup details](postman/README.md#github-actions)
-explain the workflow. Hosted runs pass on GitHub Actions, for example
-[run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303)
-on 24 October 2026 for `main` at `964a3b1`.
-
-The [JMeter CI workflow](.github/workflows/jmeter.yml) runs a short smoke test of
-the [API performance plan](jmeter/README.md) on the same triggers.
+Optional native browser fixtures for form controls and styles are served by
+`node tests/frontend/native-input-server.cjs` at `http://127.0.0.1:8148/`. The
+server is static and has no database or API access.
 
 ## Python Playwright E2E tests
 
-Install the optional E2E dependencies into the project virtual environment:
+Install the optional E2E dependencies and check the browser binaries:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-e2e.txt
 .\.venv\Scripts\python.exe -m playwright install --list
 ```
 
-The browser revision must match the installed Playwright package. If compatible
-Chromium and headless-shell binaries are already listed, reuse them. Install
-missing/incompatible binaries only when needed with
+Install Chromium only if a compatible version is not listed:
 `.\.venv\Scripts\python.exe -m playwright install chromium`.
 
-Normal `.\.venv\Scripts\python.exe -m pytest` runs collect the existing backend
-suite and exclude `tests/e2e/`. Browser tests require explicit opt-in. For the
-user's manual workflow on reserved port 8151:
-
-```powershell
-# Headless Chromium
-.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --browser chromium
-# Headed Chromium
-.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --browser chromium --headed
-```
-
-Agent-driven runs must explicitly use approved port 8148:
+Browser tests require explicit opt-in. Port 8148 is used for automated runs and
+8151 for manual runs:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --e2e-port 8148 --browser chromium
+# Headed manual run on the default port 8151
+.\.venv\Scripts\python.exe -m pytest tests/e2e --e2e --browser chromium --headed
 ```
 
-Browser tests use a deliberately small Page Object Model in `tests/e2e/pages.py`:
-`BugForm` (New/Edit Bug fields, Create/Save/Cancel and AI suggestion review) and
-`BugList` (project bug table, sorting, page size and pagination). Page objects
-expose locators and user actions only; scenarios and assertions stay in the test
-files. Less-reused pages use direct Playwright calls, and shared setup such as
-`login`, `open_bug` and `detail` remains in `tests/e2e/helpers.py`.
+Each run starts its own FastAPI server with a new temporary database and
+fictional JWT secret, and verifies the server's database path and identity
+before any browser interaction. The fixture refuses a port that is already in
+use. The OpenAI SDK transport is replaced with a deterministic mock, so the real
+authorization, context, validation and review code runs without external calls.
+For failure artifacts, add `--tracing retain-on-failure --screenshot only-on-failure`.
 
-The optional E2E dependencies include `pytest-bdd==8.1.0`. Exactly five scenarios
-are explicitly bound in `tests/e2e/bdd/test_workflows.py`: successful registration,
-project creation, non-owner project protection, QA/Developer bug lifecycle, and
-AI suggestion review/save. Run or collect just these scenarios with:
+The tests use a small Page Object Model (`tests/e2e/pages.py`). They cover
+authentication, project and member management, authorization, bug creation,
+editing and lifecycle, Bug List sorting and pagination, AI suggestion review and
+failure handling, and Try Demo. Coverage is Chromium-only.
+
+Five executable [pytest-bdd](tests/e2e/bdd/test_workflows.py) scenarios cover
+registration, project creation, non-owner protection, the bug lifecycle and AI
+suggestion review:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium --collect-only -q
 .\.venv\Scripts\python.exe -m pytest tests/e2e/bdd --e2e --e2e-port 8148 --browser chromium -q
 ```
 
-The four feature files contain **five scenarios total, all executable**:
-`authentication.feature` (registration), `project_management.feature` (creation
-and non-owner protection), `bug_lifecycle.feature`, and `ai_review.feature`.
-There are no specifications-only BDD scenarios.
-BDD uses the same fixtures, server and provider mock described below. It covers
-representative workflows, not every AC variant or real-model quality. Results and
-limitations are in the [execution record](docs/test-execution.md#executable-bdd--19-october-2026).
+## Continuous integration
 
-Run suites serially. The fixture refuses an occupied port without contacting or
-terminating its listener; a listener on any interface (loopback, `0.0.0.0` or `[::]`)
-counts as occupied. Identify any existing owner/configuration before
-continuing; the fixture never attaches to an existing application server. Ports
-8148 and 8151 are the only supported choices. Do not run the static fixture server
-at the same time on the selected port.
+[Application CI](.github/workflows/application.yml) runs three required checks
+on pull requests to `main` and pushes to `main`: the Python suite, the
+JavaScript suite and the Playwright/BDD suite with Chromium. CI uses no OpenAI
+credentials and does not run live AI evaluations. Test reports are uploaded as
+workflow artifacts for seven days.
 
-Each E2E invocation creates a new temporary directory/database, a dedicated FastAPI
-process, and a fictional JWT secret. Before HTTP interaction, the parent verifies
-the child's startup report: interpreter/launcher ownership, effective database
-path, bound loopback socket, and a per-run identity also checked in the first
-response. Windows uses a selector event loop in this test server to avoid the
-observed Proactor reset-connection shutdown leak. Shutdown is explicit; forced
-shutdown or temporary-directory cleanup failures fail the run.
-Safety checks use runtime exceptions, so Python's optimized mode cannot disable
-database configuration, server identity, or shutdown checks.
+Separate workflows run the [Postman API regression suite](.github/workflows/postman.yml)
+with Postman CLI 1.75.0 ([details](postman/README.md#github-actions)) and a short
+[JMeter smoke test](.github/workflows/jmeter.yml).
 
-Tests use fresh browser contexts and unique fictional accounts/projects. API
-requests seed prerequisites and verify persisted results through the same test
-server; the journeys themselves exercise real pages and browser controls. External
-browser requests are blocked. Inherited OpenAI credentials/configuration are
-removed, and the server replaces only the SDK client's transport with an
-in-memory deterministic mock. Actual authorization, context construction,
-generation input, response validation, form review, and normal persistence still
-run. No paid/external AI call occurs; outgoing server connections are blocked
-after startup. Synthetic descriptions containing `E2E:failure` or `E2E:empty`
-select provider-error or empty-result fixtures; these switches exist only in the
-test server, never the application.
+## Versioning
 
-Scenarios cover authentication and logout protection, project
-creation/rename/deletion, membership removal and unauthorized access, bug
-creation/edit/assignment/deletion, Developer/QA lifecycle handoff with Pass/Fail
-and reopening, sorting/pagination/navigation/page-size persistence, and AI
-Use/Dismiss/bulk review, cancellation, persistence, failure, and retry. Exhaustive
-validation and permission combinations remain in API/unit tests. No filtering
-scenario is added because the application has no filtering feature. Chromium
-coverage does not establish cross-browser, full accessibility, visual/theme,
-real-model quality, or increment completion.
+The project follows Semantic Versioning. `APP_VERSION` in `app/version.py` is the
+source of truth for FastAPI metadata, `/version` and the About page.
 
-They also cover Fix Version eligibility and form reset across lifecycle states,
-and page-size preferences across projects and users through navigation, reload,
-and logout/login. Focused JavaScript tests
-cover invalid/blocked preference storage without changing browser permissions.
+| Version | Meaning |
+| --- | --- |
+| `0.1.0-dev`, `0.2.0-dev` | Development-phase labels used for Affected Version; not releases or Git tags |
+| `0.1.0` | Previous published release: GitHub Release and Git tag `v0.1.0` |
+| `0.2.0` | Latest published release: core application GitHub development release `v0.2.0` |
+| `1.0.0-dev` | Current version: development toward the first production release |
+| `1.0.0-rc.1` | Planned production release candidate |
+| `1.0.0` | Planned first production release with Try Demo, `v1.0.0` |
 
-For failure artifacts, append `--tracing retain-on-failure --screenshot only-on-failure`.
-Artifacts go to ignored `test-results/`; they contain fictional test data only.
+Git tags and GitHub Releases record published versions. Affected Version is the
+version in which a bug was observed; Fix Version is the release that includes, or
+is planned to include, the fix.

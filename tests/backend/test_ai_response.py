@@ -25,7 +25,7 @@ def response_context(test_client, test_database):
     return AiTriageContext(
         current_form=form,
         recent_bugs=[HistoricalBugContext(**(form.model_dump() | {
-            "id": 12, "title": "Historical bug", "assignee_id": 99,
+            "id": 12, "bug_number": 3, "title": "Historical bug", "assignee_id": 99,
         }))],
         eligible_assignees=[
             AssignableMemberContext(user_id=7, email="qa@example.com", role="QA Analyst"),

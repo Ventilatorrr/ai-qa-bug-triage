@@ -16,7 +16,7 @@
                 <a href="/about.html">About</a>
             </nav>
         </div>
-        <h1 class="site-title" aria-label="AI QA Bug Triage"><span class="wordmark" aria-hidden="true"><span class="wordmark-prefix">AI QA</span> <span class="wordmark-b">B</span><img class="wordmark-beetle" src="assets/beetle-vertical.png" alt="" width="1254" height="1254"><span>ug</span> <span class="wordmark-triage">Triage</span></span></h1>
+        <h1 class="site-title" aria-label="AI QA Bug Triage"><a class="site-title-link" href="/" aria-label="AI QA Bug Triage home"><span class="wordmark" aria-hidden="true"><span class="wordmark-prefix">AI QA</span> <span class="wordmark-b">B</span><img class="wordmark-beetle" src="assets/beetle-vertical.png" alt="" width="1254" height="1254"><span>ug</span> <span class="wordmark-triage">Triage</span></span></a></h1>
         <div class="header-right">
 
             <nav class="main-navigation" id="guest-account-actions" aria-label="Account"><a href="/register.html">Register</a><a href="/login.html">Login</a></nav>
@@ -30,48 +30,50 @@
     <main>
         <section class="about-content privacy-content">
             <h2>Privacy Policy</h2>
-            <p class="page-description about-intro">Pre-deployment draft — updated 23 October 2026</p>
+            <p class="page-description about-intro">Last updated 27 October 2026</p>
             <hr class="about-separator">
             <div class="about-section">
-                <h3>Draft status and contact</h3>
-                <p>This draft describes the current AI QA Bug Triage implementation and its planned public portfolio use. It is not a confirmation of final deployment arrangements. Before publication, the operator must identify the data controller, publish a working privacy contact, and confirm the applicable jurisdiction and legal basis for each processing purpose. No privacy contact has been confirmed yet.</p>
+                <h3>About this policy</h3>
+                <p>This policy describes how the AI QA Bug Triage application handles data. It does not yet identify the data controller, provide a privacy contact, or state the applicable jurisdiction and legal basis for each processing purpose.</p>
             </div>
             <div class="about-section">
                 <h3>Accounts and project information</h3>
-                <p>Registration collects an email address and password. The application stores a password hash, not a plain-text password, and uses the credentials to authenticate access. Login issues an access token. Providing these details is required to create and use an account.</p>
+                <p>Registration collects an email address and password. The application stores a password hash, not the plain-text password, and uses the credentials to authenticate access. Login issues an access token. These details are required to create and use an account. Registered users can keep their accounts and projects and return to them later.</p>
                 <p>The application stores accounts, project names, memberships and roles, and user-supplied bug reports, including titles, descriptions, environment, reproduction steps, expected and actual results, versions, classifications, assignments, lifecycle information, authorship and timestamps. It uses this information to provide project collaboration and bug management. Authorized members can view their project's reports and member email addresses and roles.</p>
+            </div>
+            <div class="about-section">
+                <h3>Try Demo</h3>
+                <p>Visitors can start a Demo from the Login page without registering. Each Demo creates five generated accounts with <code>example.com</code> email addresses and random passwords that are stored as hashes and never shown. The visitor is signed in as the Demo's Project Owner. Each Demo also creates two projects: one with fictional E-Commerce bug reports and one with copies of this project's genuine development defect reports, which were reviewed for sensitive information before inclusion.</p>
+                <p>Demo accounts and data, including anything the visitor adds or changes, are stored in the application database in the same way as other accounts and projects. Demo access ends when the visitor logs out or the session expires; because the generated credentials are never shown, the Demo cannot be reopened afterwards. Demo data is not automatically deleted when access ends.</p>
+                <p>The number of Demos that can be created is limited to protect the service. These limits do not use IP addresses. Do not enter personal or confidential information in a Demo.</p>
             </div>
             <div class="about-section">
                 <h3>Optional AI Assist and OpenAI</h3>
                 <p>AI Assist contacts OpenAI only when an eligible user explicitly requests it and the service is configured. It sends the current form's Title, Affected Version, Environment, Description, Steps to Reproduce, Expected Result, Actual Result, Severity, Priority and Assignee ID, including unsaved edits.</p>
-                <p>It also sends up to five recently updated reports from the same project, with those fields and internal report IDs, and eligible assignees' user IDs, email addresses and roles. The edited report is excluded from historical context; there is no separate saved-version snapshot. Historical content may have been entered by other project members.</p>
-                <p>Application-managed authentication tokens, session credentials and configuration secrets are not automatically added to AI context. User-supplied text is not automatically checked for every possible secret. Do not include passwords, API keys, sensitive personal information or confidential third-party material in reports or AI requests.</p>
-                <p>Suggestions are advisory: review actions change only the form, and Create or Save persists the chosen values. The data-sharing notice can be dismissed; dismissal is an informational preference, not consent or a change to the data sent.</p>
-                <p>The application requests <code>store=false</code> from OpenAI. This does not establish zero retention or other provider guarantees. Before deployment, confirm the provider account's applicable terms, retention, data-use settings and transfer arrangements. See <a href="https://developers.openai.com/api/docs/guides/your-data">OpenAI's API data controls</a>.</p>
+                <p>It also sends up to five recently updated reports from the same project, with those fields, internal report IDs and bug numbers, and eligible assignees' user IDs, email addresses and roles. Long historical text is shortened. The report being edited is excluded from this historical context. Historical content may have been entered by other project members.</p>
+                <p>Application-managed authentication tokens, session credentials and configuration secrets are not automatically added to AI context. User-supplied text is not automatically checked for every possible secret. Do not include passwords, API keys, sensitive or unnecessary personal information, or confidential material in reports or AI requests.</p>
+                <p>Suggestions are advisory: review actions change only the form, and Create or Save stores the chosen values. To enforce daily usage limits, the application records the account and date of each AI Assist request sent to OpenAI. The data-sharing notice can be dismissed; dismissal is an informational preference, not consent or a change to the data sent.</p>
+                <p>The application requests <code>store=false</code> from OpenAI. This does not establish zero retention or other provider guarantees, and this policy does not describe OpenAI's own retention, data-use or transfer practices. See <a href="https://developers.openai.com/api/docs/guides/your-data">OpenAI's API data controls</a>.</p>
             </div>
             <div class="about-section">
                 <h3>Hosting and other service providers</h3>
-                <p>The hosting provider, server location, subprocessors, backup arrangements and any international transfers have not been confirmed for public deployment. Hosting infrastructure may process technical connection information such as IP addresses, browser details and request times. Actual logging, access and retention must be documented before publication. No hosting location or transfer safeguard is promised by this draft.</p>
+                <p>The application is hosted on Render. Hosting infrastructure may process technical connection information such as IP addresses, browser details and request times. This policy does not describe the server location, subprocessors, backup arrangements, hosting logs or any international transfers, and no hosting location or transfer safeguard is promised.</p>
                 <p>The project and bug report pages load the Oxanium font from Google Fonts, so your browser requests it from Google's servers, which receive technical connection information such as your IP address. The page address is not sent as a referrer with this request.</p>
             </div>
             <div class="about-section">
                 <h3>Browser storage</h3>
                 <p>The frontend uses localStorage for the access token, theme, bug page-size preferences and the shared dismissed AI-notice preference. It uses sessionStorage for per-user/project sorting and temporary interface feedback. Logging out removes the access token; other preferences remain until changed or browser storage is cleared. Clearing storage can sign you out and make the notice reappear. If storage is unavailable, dismissal may last only for the current page.</p>
-                <p>The current frontend does not implement advertising or analytics tracking. Hosting-level cookies or future integrations must be assessed and disclosed before deployment.</p>
+                <p>The current frontend does not implement advertising or analytics tracking. This policy does not cover any cookies the hosting platform may set.</p>
             </div>
             <div class="about-section">
                 <h3>Security, retention and deletion</h3>
-                <p>The application uses password hashing, authenticated API requests, project membership checks and role-based permissions. Public deployment still requires confirmation of HTTPS, hosting and database access, backups and operational security. No system can guarantee complete security; use fictional, non-sensitive content for portfolio demonstrations.</p>
-                <p>No automatic account or report retention schedule is currently implemented. Authorized project actions can delete reports and projects or remove memberships, but there is no self-service account-deletion feature. The operator must confirm retention periods or criteria for accounts, project data, logs, backups and provider copies, and establish a privacy-request and deletion process before publication. Removing a project member does not delete that person's account or all content they previously supplied.</p>
-            </div>
-            <div class="about-section">
-                <h3>Planned recruiter demonstrations</h3>
-                <p>Temporary recruiter demo accounts and fictional demonstration data are planned, not currently implemented as an automated feature. Access, expiry, cleanup and separation from real user data must be defined before those accounts are offered. This draft does not promise automatic expiry or deletion.</p>
+                <p>The application uses password hashing, authenticated API requests, project membership checks and role-based permissions. No system can guarantee complete security; use fictional, non-sensitive content for portfolio demonstrations.</p>
+                <p>No automatic account, report or Demo retention schedule is currently implemented. Authorized project actions can delete reports and projects or remove memberships, but there is no self-service account-deletion feature. Retention periods for accounts, project data, Demo data, logs, backups and provider copies have not been defined, and there is no formal privacy-request or deletion process. Removing a project member does not delete that person's account or all content they previously supplied.</p>
             </div>
             <div class="about-section">
                 <h3>Privacy rights and requests</h3>
-                <p>Depending on the applicable law and circumstances, you may have rights to access, correct or erase personal data, restrict or object to processing, receive portable data, and withdraw consent where processing relies on consent. You may also complain to the relevant supervisory authority; for UK data protection matters, see the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office</a>. These rights can have conditions and exceptions.</p>
-                <p>Before public registration opens, this page must provide the operator's identity and privacy contact, explain how to submit requests, and confirm the applicable legal bases and rights. The dismissible AI notice does not establish a legal basis or record consent. Update this policy when the confirmed deployment or data practices change.</p>
+                <p>Depending on the applicable law and circumstances, you may have rights to access, correct or erase personal data, restrict or object to processing, receive portable data, and withdraw consent where processing relies on consent. You may also be able to complain to the data protection authority responsible for your location. These rights can have conditions and exceptions.</p>
+                <p>This page does not yet explain how to submit privacy requests. The dismissible AI notice does not establish a legal basis or record consent.</p>
             </div>
         </section>
     </main>

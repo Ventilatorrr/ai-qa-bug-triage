@@ -154,7 +154,7 @@ Request 23 verifies reopened persistence; it does not directly test AI failure.
 
 ## Execution evidence
 
-On 20 October 2026, the user confirmed the simplified suite's native Runner
+On 20 October 2026, a manual native Runner execution of the simplified suite confirmed
 **25 requests / 50 of 50 assertions passed** against isolated `1.0.0-dev`, with no
 reported failures and traceback-free Ctrl+C shutdown. The earlier 57/57 native run
 and Codex's compatibility/cleanup checks remain separate historical evidence.
@@ -166,8 +166,8 @@ Version reporting is manual; `/version` may confirm it without adding a suite
 request. Record a separate run when testing `0.2.0` or another release. The earlier
 metadata/fixture cleanup did not execute a new native run.
 
-Separately, on **20 October 2026**, the user confirmed the final collection with
-**Postman CLI 1.75.0**: **25 application requests + 25 identity checks; 50/50 named
+Separately, on **20 October 2026**, a manual run of the final collection with
+**Postman CLI 1.75.0** confirmed: **25 application requests + 25 identity checks; 50/50 named
 assertions passed; 0 failures; exit 0; 3.8 seconds; 29 ms average response time**,
 against isolated `1.0.0-dev` launched by `serve.py`. This is local CLI evidence,
 separate from native desktop Runner results and hosted CI runs.

@@ -30,7 +30,8 @@ def offline_provider(test_client, test_database, monkeypatch):
             return httpx2.Response(500, json={"error": {"message": state["error"], "type": "server_error"}})
         return httpx2.Response(200, json={
             "id": "resp_offline", "object": "response", "created_at": 0,
-            "model": "gpt-6-luna", "status": "completed",
+            "model": "gpt-6-luna", "status": state.get("status", "completed"),
+            "incomplete_details": state.get("incomplete_details"),
             "output": [{"id": "msg_offline", "type": "message", "role": "assistant", "status": "completed",
                         "content": [{"type": "output_text", "text": state.get("raw_text", json.dumps(state["raw"])), "annotations": []}]}],
         })
@@ -373,7 +374,9 @@ def test_ai_triage_instruction_like_content_and_output_cannot_perform_actions(
         "title": suggested_text, "description": instruction,
     }}
     sent = offline_provider["requests"][0]
-    assert set(sent) == {"model", "reasoning", "service_tier", "instructions", "input", "text", "store"}
+    assert set(sent) == {
+        "model", "reasoning", "service_tier", "max_output_tokens", "instructions", "input", "text", "store",
+    }
     assert json.loads(sent["input"][0]["content"])["current_form"] == form
     assert instruction not in sent["instructions"]
     assert persisted_state(test_client, ai_project) == before
@@ -432,6 +435,27 @@ def test_ai_triage_timeout_is_safe_without_retries_or_persistence(
     assert len(offline_provider["requests"]) == len(offline_provider["clients"]) == 1
     assert offline_provider["clients"][0].max_retries == 0
     assert offline_provider["clients"][0].is_closed()
+
+
+# TC-424 | AC-025.6, AC-023.1 — AI triage bounds output and treats truncated output as safe failure
+@pytest.mark.parametrize("edit", [False, True])
+def test_ai_triage_bounds_output_and_treats_truncated_output_as_safe_failure(
+    test_client, ai_project, blank_form, offline_provider, edit,
+):
+    from app.ai_openai import MAX_OUTPUT_TOKENS
+
+    offline_provider["status"] = "incomplete"
+    offline_provider["incomplete_details"] = {"reason": "max_output_tokens"}
+    # Partial JSON, as a response stopped by the output limit could contain.
+    offline_provider["raw_text"] = '{"suggestions": [{"field": "title", "value": "Trunc'
+    form = blank_form | {"title": "Unsaved title"}
+    before = persisted_state(test_client, ai_project)
+    response = test_client.post(request_url(ai_project, edit), headers=headers(ai_project[0]), json=form)
+    assert response.status_code == 502
+    assert response.json() == {"detail": "AI assistance could not generate suggestions. Please try again."}
+    assert persisted_state(test_client, ai_project) == before
+    assert len(offline_provider["requests"]) == 1
+    assert offline_provider["requests"][0]["max_output_tokens"] == MAX_OUTPUT_TOKENS
 
 
 # TC-064 | Technical — AI triage configuration is checked on each request

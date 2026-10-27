@@ -223,7 +223,7 @@ As a Project Owner, I want to delete a project so that I can remove projects tha
 
 ---
 
-## REQ-009 — Project Member Management
+### REQ-009 — Project Member Management
 
 The system shall allow a Project Owner to add and remove project members and allow project members to view project membership information.
 
@@ -264,7 +264,7 @@ As a Project Owner, I want to add and remove project members so that I can contr
 
 ---
 
-## REQ-010 — Project Roles and Permissions
+### REQ-010 — Project Roles and Permissions
 
 The system shall support role-based access control for project members. A project member's assigned project role shall determine the actions they are authorized to perform within the project.
 
@@ -377,7 +377,7 @@ As an authorized project member, I want to view and open bug reports in projects
 #### AC-012.4 — Sort Bug Reports
 
 - An authorized project member can sort the bug list by all columns.
-- The default bug list order is most recently updated first.
+- The default bug list order is Bug ID descending, so the newest report is first.
 - Selecting a different column starts ascending; selecting the active column toggles direction. The active column and direction are indicated.
 - Bug ID sorts numerically by the displayed project-local bug number, Title and the displayed Assignee value sort alphabetically without case sensitivity, and Last Updated sorts chronologically.
 - Severity is ordered from highest to lowest impact: Blocker, Major, Moderate, Minor.
@@ -387,7 +387,7 @@ As an authorized project member, I want to view and open bug reports in projects
 - Missing optional values, including Unassigned, are displayed last in both directions.
 - Sorting preserves displayed data and bug links without updating bug records. The active sort is retained when the list refreshes on the current page.
 - The selected column and direction are restored when returning to the project or reloading its page within the same browser tab/session. Preferences are stored separately for each signed-in user and project.
-- With no valid saved preference, or when session storage is unavailable, the initial sort remains Last Updated descending and sorting continues to work.
+- With no valid saved preference, or when session storage is unavailable, the initial sort remains Bug ID descending and sorting continues to work.
 
 #### AC-012.5 — Paginate Bug Reports
 
@@ -697,6 +697,7 @@ As a Project Owner or QA Analyst, I want AI suggestions that match the applicati
 - A suggested Assignee must identify a current member of the relevant project who can be assigned under the existing assignment rules.
 - Suggested Title, Environment, Description, Steps to Reproduce, Expected Result, Actual Result, and Affected Version must be text values.
 - A suggested Title must contain non-whitespace text; an empty or whitespace-only Title is treated as no valid suggestion.
+- Suggested text values are ready-to-use replacement values for their fields. Advice or requests to the user, questions, TODOs and placeholders are not offered.
 - Ambiguous or conflicting suggestions for the same field are excluded for that field.
 - Unsupported fields, invalid values, and suggestions that cannot be mapped unambiguously to an existing bug field are not offered to the user.
 
@@ -848,5 +849,125 @@ As a Project Owner or QA Analyst, I want to continue creating or editing a bug w
 
 - After a failed request or an outcome with no usable suggestions, the user can continue creating or editing the bug manually.
 - After either outcome, the user can explicitly retry `AI Assist`.
+
+---
+
+## Increment 4 — Try Demo and AI Usage Limits
+
+### REQ-024 — Try Demo
+
+The system shall allow a visitor to start using the application with a newly created, automatically authenticated normal account, a fictional project team, and two independent, editable seeded projects.
+
+### US-024 — Try the Application
+
+As a visitor, I want to try the application without registering so that I can evaluate bug management and AI-assisted triage with realistic data.
+
+### Acceptance Criteria
+
+#### AC-024.1 — Start Demo
+
+- The Login page provides a `Try Demo` control.
+- Choosing `Try Demo` creates a new normal account, signs the visitor in using the existing authentication mechanism, and opens the Projects page without the visitor entering an email address or password.
+- Each successful activation creates a separate Demo. Repeated activation while a request is in progress does not start another request.
+- Generated credentials are never shown to the visitor. After logout or authentication expiry, the visitor can start a new Demo.
+- The Login page states that Demo work is not accessible after logout or session expiry, and that registering an account creates projects the visitor can return to later.
+- Normal registration and login are unchanged.
+
+#### AC-024.2 — Demo Project Team
+
+- Each Demo creates five normal user accounts: the visitor's Project Owner account, two QA Analysts (QA1 and QA2), and two Developers (Dev1 and Dev2).
+- All five accounts are members of both seeded projects with those roles.
+- Each account has a short, unique, name-like generated email address at the reserved `example.com` domain that is valid under the existing email rules and displays without truncation in the Bug List. Roles are determined by project membership, not by the address.
+- Teammate credentials are randomly generated and never exposed. Accounts are not shared between Demos, and teammates belong only to their own Demo's projects.
+
+#### AC-024.3 — E-Commerce Demo
+
+- The `E-Commerce Demo` project contains exactly 20 realistic fictional bug reports representing different lifecycle statuses, severities, priorities, assignments, and resolutions.
+- The represented lifecycle statuses include `Development`, `Testing`, and `Closed`.
+- The bugs include bugs assigned to each of QA1, QA2, Dev1, and Dev2, and unassigned bugs.
+- Some fictional bugs in Triage intentionally contain incomplete information, unclear wording, or questionable classifications to demonstrate AI Assist. The Demo clearly identifies these imperfections as intentional.
+- Intentionally imperfect bugs remain valid under the existing data and lifecycle rules. Intentional imperfections apply only to this project, not to the genuine defect copies in AC-024.4.
+
+#### AC-024.4 — AI QA Bug Triage Project
+
+- The seeded project shows a centered two-sentence introduction about development QA and genuine defect reports between Show Members and New Bug, with the second sentence on a new line. Visibility follows its server-owned Demo identity, including after renaming; ordinary projects with the same name do not show it.
+- The `AI QA Bug Triage` project contains copies of the project's genuine tracked defects included in the approved sanitized seed dataset, a reviewed snapshot that is not synchronized with the original tracker.
+- Copies preserve the original visible Bug IDs, Date Created, Date Updated, and, where available, the genuine report content, classification, status, resolution, and versions.
+- A source bug's current assignee is mapped to a Demo teammate where appropriate and valid; otherwise the copy is unassigned, consistent with existing rules. Historical assignments are not invented.
+- Creators are mapped to valid Demo accounts without claiming to preserve historical creator identity.
+- Each Demo's copies are new records with their own internal IDs.
+- Demo creation uses only the seed dataset and never reads or modifies the original tracker database.
+- Sanitization may remove information but does not add invented details.
+- The data contains no secrets, credentials, or unnecessary personal information.
+
+#### AC-024.5 — Seed Data Integrity
+
+- All seeded projects and bugs satisfy the existing validation, assignment, and lifecycle rules.
+- A newly created bug continues the project's numbering after its highest seeded Bug ID.
+
+#### AC-024.6 — Normal Use of Demo Data
+
+- Demo accounts have exactly the permissions of other accounts with the same project role.
+- The visitor can use all existing project and bug features on the seeded data, including editing, assigning, every lifecycle transition, closing, reopening, and deleting bugs; editing and deleting projects; managing members; and AI Assist, subject to REQ-018–REQ-023 and REQ-025.
+
+#### AC-024.7 — Visitor Isolation
+
+- Each Demo receives its own copies of the seeded projects and bugs.
+- Changes in one Demo do not affect other Demos, other accounts, or the seed dataset. A Demo started after another Demo's data has changed receives the complete, unmodified seeded data.
+- A Demo account cannot access projects or bugs of which it is not a member.
+
+#### AC-024.8 — Demo Creation Failure
+
+- If Demo creation fails at any point, no accounts, projects, memberships, or bugs from that attempt remain.
+- The visitor is not signed in, sees a clear error, and can try again.
+
+---
+
+### REQ-025 — AI Usage Limits
+
+The system shall enforce configurable daily AI Assist request limits per account and across all accounts, and shall bound the size of each AI provider request.
+
+### US-025 — Keep AI Usage Bounded
+
+As the application owner, I want AI usage to be limited so that provider costs remain predictable while AI Assist remains available to all users.
+
+### Acceptance Criteria
+
+#### AC-025.1 — Per-Account Daily Limit
+
+- Each account can make at most the configured per-account number of counted AI Assist requests per UTC day, across all of its projects.
+- The same limit applies to normal and Demo accounts.
+
+#### AC-025.2 — Global Daily Limit
+
+- All accounts combined can make at most the configured global number of counted AI Assist requests per UTC day.
+- The global limit applies even when an account has not reached its own limit.
+
+#### AC-025.3 — Limit Configuration
+
+- The initial daily limits are 50 AI requests per account and 500 requests globally, measured by UTC day. Both limits are configurable and may be adjusted.
+- Both limits are set through application configuration.
+- When a limit is not configured, the application default applies.
+- When a configured limit is invalid, AI Assist requests are rejected before the AI provider is invoked, and the rest of the application remains available.
+
+#### AC-025.4 — Usage Counting and Enforcement
+
+- A request is counted when it is authenticated, authorized, eligible, and valid, and is sent to the AI provider, whether the provider then succeeds or fails.
+- Requests rejected before reaching the provider are not counted.
+- Limits are enforced by the backend. Concurrent requests cannot exceed either limit.
+- Usage survives application restarts and resets at the start of each UTC day.
+
+#### AC-025.5 — Limit Reached
+
+- A request that would exceed a limit is rejected with a `429 Too Many Requests` response before the AI provider is invoked.
+- The user is informed whether their own daily limit or the global daily limit has been reached.
+- The rejection is handled as an AI request failure under AC-023.1: the form is unchanged, no bug is modified, and the user can continue manually.
+- Retrying remains possible but is rejected until the applicable limit resets.
+
+#### AC-025.6 — Bounded Provider Requests
+
+- Current-form input exceeding the application's maximum AI input size is rejected with a clear error before the AI provider is invoked and is not counted.
+- Historical project context is limited as defined in AC-022.2, and long historical text is shortened before it is sent.
+- Each provider request sets a maximum output size. A response truncated by that limit is handled as a failed request under AC-023.1.
 
 ---

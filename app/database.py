@@ -5,7 +5,7 @@ from contextlib import closing
 
 
 DATABASE_NAME = os.getenv("DATABASE_NAME", "bugtriage.db")
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 
 
 def get_connection():
@@ -29,7 +29,8 @@ def _create_schema(conn):
             id INTEGER PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             next_bug_number INTEGER NOT NULL DEFAULT 1
-                CHECK(typeof(next_bug_number) = 'integer' AND next_bug_number > 0)
+                CHECK(typeof(next_bug_number) = 'integer' AND next_bug_number > 0),
+            demo_kind TEXT
         )
         """
     )
@@ -78,6 +79,22 @@ def _create_schema(conn):
         """
     )
 
+    _create_ai_requests(conn)
+
+
+def _create_ai_requests(conn):
+    """Version 2: one row per AI Assist request counted toward the daily limits."""
+    conn.execute(
+        """
+        CREATE TABLE ai_requests (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            usage_date TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """
+    )
+
 
 BUG_COLUMNS = (
     "id", "project_id", "title", "affected_version", "environment", "description",
@@ -93,7 +110,7 @@ def _schema_properties(conn):
     ).fetchall()
     properties = {"objects": sorted(objects)}
     for kind, table in objects:
-        if kind != "table" or table not in ("users", "projects", "project_members", "bugs"):
+        if kind != "table" or table not in ("users", "projects", "project_members", "bugs", "ai_requests"):
             continue
         columns = sorted(
             (name, re.sub(r"\s+", "", declared_type.upper()), required, default, primary)
@@ -130,6 +147,10 @@ def _schema_properties(conn):
 def _verify_schema(conn, version):
     with closing(sqlite3.connect(":memory:")) as reference:
         _create_schema(reference)
+        if version < 3:
+            reference.execute("ALTER TABLE projects DROP COLUMN demo_kind")
+        if version < 2:
+            reference.execute("DROP TABLE ai_requests")
         if version == 0:
             # Derive the legacy properties from the same maintained schema.
             reference.execute("ALTER TABLE projects DROP COLUMN next_bug_number")
@@ -197,19 +218,24 @@ def create_tables():
     try:
         conn.execute("BEGIN IMMEDIATE")
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        if version not in (0, SCHEMA_VERSION):
+        if version not in (0, 1, 2, SCHEMA_VERSION):
             raise RuntimeError(f"Unsupported database schema version {version}.")
         has_objects = conn.execute("SELECT 1 FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*'").fetchone()
         if version == 0 and not has_objects:
             _create_schema(conn)
-        elif version == 0:
-            _verify_schema(conn, 0)
+        elif version < SCHEMA_VERSION:
+            _verify_schema(conn, version)
             _verify_data(conn)
-            _migrate_legacy(conn)
+            if version == 0:
+                _migrate_legacy(conn)
+            if version < 2:
+                _create_ai_requests(conn)
+            # Existing projects remain unmarked; only Demo seeding sets this value.
+            conn.execute("ALTER TABLE projects ADD COLUMN demo_kind TEXT")
         _verify_schema(conn, SCHEMA_VERSION)
         _verify_data(conn)
         _verify_counters(conn)
-        if version == 0:
+        if version != SCHEMA_VERSION:
             conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()
     except BaseException:

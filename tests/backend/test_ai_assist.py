@@ -42,9 +42,9 @@ def service_calls(monkeypatch):
     calls = []
     original = ai_triage.request_triage
 
-    def record(project_id, bug_id, form):
+    def record(project_id, bug_id, form, **kwargs):
         calls.append((project_id, bug_id, form.model_dump()))
-        return original(project_id, bug_id, form)
+        return original(project_id, bug_id, form, **kwargs)
 
     monkeypatch.setattr(ai_triage, "request_triage", record)
     return calls
@@ -183,3 +183,33 @@ def test_ai_assist_requires_complete_snapshot(test_client, ai_project, blank_for
     response = test_client.post(request_url(ai_project, True), headers=headers(ai_project[0]), json=blank_form)
     assert response.status_code == 422
     assert service_calls == []
+
+
+# TC-422 | AC-025.6, AC-023.1 — AI assist rejects oversized current form text before the provider
+@pytest.mark.parametrize("edit", [False, True])
+@pytest.mark.parametrize("field,label", [
+    ("title", "Title"), ("affected_version", "Affected Version"), ("environment", "Environment"),
+    ("description", "Description"), ("steps_to_reproduce", "Steps to Reproduce"),
+    ("expected_result", "Expected Result"), ("actual_result", "Actual Result"),
+])
+def test_ai_assist_rejects_oversized_form_text_before_provider(
+    test_client, ai_project, blank_form, service_calls, field, label, edit,
+):
+    from app.ai_context import FORM_TEXT_LIMIT
+
+    owner, developer, project, bug, base = ai_project
+    at_limit = blank_form | {field: "x" * FORM_TEXT_LIMIT}
+    response = test_client.post(request_url(ai_project, edit), headers=headers(owner), json=at_limit)
+    assert response.status_code == 503
+    assert len(service_calls) == 1
+
+    oversized = blank_form | {field: "x" * (FORM_TEXT_LIMIT + 1)}
+    response = test_client.post(request_url(ai_project, edit), headers=headers(owner), json=oversized)
+    assert response.status_code == 422
+    assert response.json() == {"detail": f"{label} is too long for AI Assist (maximum 5,000 characters)."}
+    # Authorization still comes first, so oversized input reveals nothing to a Developer.
+    response = test_client.post(request_url(ai_project, edit), headers=headers(developer), json=oversized)
+    assert response.status_code == 403
+    assert len(service_calls) == 1
+    assert test_client.get(f"{base}/bugs/{bug['bug_number']}", headers=headers(owner)).json() == bug
+    assert len(test_client.get(f"{base}/bugs", headers=headers(owner)).json()) == 1

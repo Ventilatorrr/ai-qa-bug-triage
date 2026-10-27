@@ -5,6 +5,10 @@ const params = new URLSearchParams(window.location.search);
 const projectId = params.get("id");
 
 const projectName = document.querySelector("#project-name");
+const demoNote = document.querySelector("#demo-note");
+const demoHistoryNote = document.querySelector("#demo-history-note");
+// Only the fictional Demo project contains intentionally imperfect reports.
+const DEMO_ECOMMERCE_PROJECT = "E-Commerce Demo";
 
 const membersContainer = document.querySelector("#members");
 const memberMessage = document.querySelector("#member-message");
@@ -101,6 +105,8 @@ async function loadProject() {
 
     if (response.ok) {
         projectName.textContent = data.name;
+        demoNote.hidden = data.name !== DEMO_ECOMMERCE_PROJECT;
+        demoHistoryNote.hidden = data.demo_kind !== "history";
         return true;
     } else if (response.status === 404) {
         window.location.replace("/projects.html");
@@ -476,7 +482,7 @@ async function updateBugAssigneeVisibility() {
 
 
 let projectBugs = [];
-let bugSortColumn = "updated_at";
+let bugSortColumn = "id";
 let bugSortDirection = "descending";
 let bugPageSize = 10;
 let bugCurrentPage = 1;
@@ -554,7 +560,8 @@ function getBugSortStorageKey() {
 }
 
 function restoreBugSortPreference() {
-    bugSortColumn = "updated_at";
+    // Default: newest reports first by project-local Bug ID.
+    bugSortColumn = "id";
     bugSortDirection = "descending";
     try {
         const key = getBugSortStorageKey();

@@ -100,7 +100,7 @@ def test_public_bug_routes_use_local_number_and_isolate_projects(
     assert target["id"] == 6 and target["id"] != target["bug_number"]
     captured = []
 
-    def suggestions(context, *, project_id):
+    def suggestions(context, *, project_id, user_id):
         captured.append((project_id, [bug.id for bug in context.recent_bugs]))
         return SuggestionResult(suggestions={})
 

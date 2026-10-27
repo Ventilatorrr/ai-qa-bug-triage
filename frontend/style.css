@@ -384,6 +384,23 @@ h3 {
     white-space: nowrap;
 }
 
+/* The title links to "/", which opens Projects when signed in and Login otherwise. */
+.site-title-link {
+    color: inherit;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.site-title-link:hover .wordmark {
+    /* A filter glow changes no layout. */
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--title-text) 55%, transparent));
+}
+
+.site-title-link:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 4px;
+}
+
 .wordmark {
     display: inline-flex;
     align-items: center;
@@ -841,6 +858,94 @@ form button {
 
     margin-left: auto;
     margin-right: auto;
+}
+
+/* Try Demo: one centered call to action with a restrained violet accent. */
+.demo-start {
+    --demo-gradient: linear-gradient(180deg, #c4b5fd, #a78bfa);
+    --demo-hover-gradient: linear-gradient(180deg, #ddd6fe, #c4b5fd);
+    --demo-border: #c4b5fd;
+    --demo-text: #241347;
+
+    max-width: 500px;
+
+    margin: 24px auto 0;
+    padding: 20px 0;
+
+    /* Matching subtle dividers frame the Demo introduction and the session notice. */
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+
+    text-align: center;
+}
+
+body.light-theme .demo-start {
+    --demo-gradient: linear-gradient(180deg, #7c3aed, #4c1d95);
+    --demo-hover-gradient: linear-gradient(180deg, #8b5cf6, #5b21b6);
+    --demo-border: #4c1d95;
+    --demo-text: var(--white);
+}
+
+.demo-start .page-description {
+    margin: 0 0 14px;
+}
+
+#try-demo {
+    background-color: transparent;
+    background-image: var(--demo-gradient);
+
+    color: var(--demo-text);
+
+    border: 1px solid var(--demo-border);
+
+    box-shadow: 0 2px 5px #00000022;
+}
+
+#try-demo:hover:not(:disabled) {
+    background-image: var(--demo-hover-gradient);
+}
+
+#try-demo:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
+}
+
+/* Loading: stay fully opaque so "Creating Demo..." keeps its contrast; desaturate only.
+   The theme-qualified selectors outrank the generic dark rule that clears disabled gradients. */
+body:not(.light-theme) .demo-start #try-demo:disabled,
+body.light-theme .demo-start #try-demo:disabled {
+    background-image: var(--demo-gradient);
+    border-color: var(--demo-border);
+
+    opacity: 1;
+
+    filter: saturate(0.55);
+
+    box-shadow: none;
+
+    cursor: progress;
+}
+
+.demo-start .demo-status {
+    margin: 10px 0 0;
+}
+
+.demo-notice {
+    margin: 12px 0 0;
+
+    color: var(--muted-text);
+
+    font-size: 14px;
+}
+
+/* Same hover and focus treatment as the footer links. */
+.demo-notice a:hover {
+    color: var(--secondary-text);
+}
+
+.demo-notice a:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 3px;
 }
 
 
@@ -3149,7 +3254,8 @@ body.light-theme button:is(.ai-assist-button, .ai-review-button):disabled {
 }
 
 .about-content a,
-#register-description a {
+#register-description a,
+.demo-notice a {
     color: inherit;
     text-decoration: underline;
 }
