@@ -862,10 +862,8 @@ form button {
 
 /* Try Demo: one centered call to action with a restrained violet accent. */
 .demo-start {
-    --demo-gradient: linear-gradient(180deg, #c4b5fd, #a78bfa);
-    --demo-hover-gradient: linear-gradient(180deg, #ddd6fe, #c4b5fd);
-    --demo-border: #c4b5fd;
-    --demo-text: #241347;
+    --demo-border: #a78bfa;
+    --demo-text: #c4b5fd;
 
     max-width: 500px;
 
@@ -880,29 +878,28 @@ form button {
 }
 
 body.light-theme .demo-start {
-    --demo-gradient: linear-gradient(180deg, #7c3aed, #4c1d95);
-    --demo-hover-gradient: linear-gradient(180deg, #8b5cf6, #5b21b6);
-    --demo-border: #4c1d95;
-    --demo-text: var(--white);
+    --demo-border: #8b5cf6;
+    --demo-text: #7c3aed;
 }
 
 .demo-start .page-description {
     margin: 0 0 14px;
+    color: var(--muted-text);
 }
 
 #try-demo {
     background-color: transparent;
-    background-image: var(--demo-gradient);
+    background-image: none;
 
     color: var(--demo-text);
 
     border: 1px solid var(--demo-border);
 
-    box-shadow: 0 2px 5px #00000022;
+    box-shadow: none;
 }
 
 #try-demo:hover:not(:disabled) {
-    background-image: var(--demo-hover-gradient);
+    background-color: color-mix(in srgb, var(--demo-text) 10%, transparent);
 }
 
 #try-demo:focus-visible {
@@ -910,11 +907,10 @@ body.light-theme .demo-start {
     outline-offset: 3px;
 }
 
-/* Loading: stay fully opaque so "Creating Demo..." keeps its contrast; desaturate only.
-   The theme-qualified selectors outrank the generic dark rule that clears disabled gradients. */
+/* Loading: stay fully opaque so "Creating Demo..." keeps its contrast; desaturate only. */
 body:not(.light-theme) .demo-start #try-demo:disabled,
 body.light-theme .demo-start #try-demo:disabled {
-    background-image: var(--demo-gradient);
+    background-image: none;
     border-color: var(--demo-border);
 
     opacity: 1;
@@ -933,7 +929,7 @@ body.light-theme .demo-start #try-demo:disabled {
 .demo-notice {
     margin: 12px 0 0;
 
-    color: var(--muted-text);
+    color: color-mix(in srgb, var(--muted-text) 95%, var(--page-background));
 
     font-size: 14px;
 }
@@ -946,6 +942,32 @@ body.light-theme .demo-start #try-demo:disabled {
 .demo-notice a:focus-visible {
     outline: 2px solid var(--focus-border);
     outline-offset: 3px;
+}
+
+body:not(.light-theme) .demo-start .page-description {
+    color: color-mix(in srgb, var(--muted-text) 88%, black);
+}
+
+body:not(.light-theme) .demo-notice {
+    --demo-notice-color: color-mix(in srgb, var(--muted-text) 95%, var(--page-background));
+    color: color-mix(in srgb, var(--demo-notice-color) 88%, black);
+}
+
+body:not(.light-theme) .demo-notice a:not(:hover) {
+    color: var(--demo-notice-color);
+}
+
+body.light-theme .demo-start .page-description {
+    color: color-mix(in srgb, var(--muted-text) 97%, white);
+}
+
+body.light-theme .demo-notice {
+    --demo-notice-color: color-mix(in srgb, var(--muted-text) 95%, var(--page-background));
+    color: color-mix(in srgb, var(--demo-notice-color) 99%, white);
+}
+
+body.light-theme .demo-notice a:not(:hover) {
+    color: var(--demo-notice-color);
 }
 
 
