@@ -42,7 +42,7 @@ SCENARIO_Q2 = {
     "context": {
         "current_form": DETAILED_FORM | {"environment": "", "affected_version": ""},
         "recent_bugs": [HISTORY_BASE | {
-            "id": 701, "title": "Filtered CSV contains only its header",
+            "id": 701, "bug_number": 701, "title": "Filtered CSV contains only its header",
             "environment": "TestOS 4 / Aster Browser 12", "affected_version": "0.8.2",
             "description": (
                 "Seven filtered rows produced a header-only CSV; the displayed rows remained intact.\n"
@@ -146,7 +146,7 @@ SCENARIO_Q6 = {
     "context": {
         "current_form": DETAILED_FORM | {"environment": "", "affected_version": ""},
         "recent_bugs": [HISTORY_BASE | {
-            "id": identifier, "title": "Filtered CSV contains only its header",
+            "id": identifier, "bug_number": identifier, "title": "Filtered CSV contains only its header",
             "description": "Seven State=Ready rows produce a header-only download.",
             "environment": environment, "affected_version": version,
         } for identifier, environment, version in (
@@ -172,27 +172,27 @@ SCENARIO_Q7 = {
         "current_form": DETAILED_FORM | {"environment": "", "affected_version": ""},
         "recent_bugs": [
             HISTORY_BASE | {
-                "id": 721, "title": "Avatar image blurred", "description": "Profile avatar only.",
+                "id": 721, "bug_number": 721, "title": "Avatar image blurred", "description": "Profile avatar only.",
                 "environment": "DecoyOS 91", "affected_version": "9.1-decoy", "assignee_id": 11,
             },
             HISTORY_BASE | {
-                "id": 722, "title": "Filtered CSV contains only its header",
+                "id": 722, "bug_number": 722, "title": "Filtered CSV contains only its header",
                 "description": "State=Ready shows seven rows but CSV has only its header.",
                 "environment": "TestOS 4 / Aster Browser 12", "affected_version": "0.8.2",
                 "assignee_id": 12,
             },
             HISTORY_BASE | {
-                "id": 723, "title": "Timezone badge label wrong", "description": "Profile timezone label only.",
+                "id": 723, "bug_number": 723, "title": "Timezone badge label wrong", "description": "Profile timezone label only.",
                 "environment": "DecoyOS 92", "affected_version": "9.2-decoy", "assignee_id": 11,
             },
             HISTORY_BASE | {
-                "id": 724, "title": "Ready filter CSV omits displayed rows",
+                "id": 724, "bug_number": 724, "title": "Ready filter CSV omits displayed rows",
                 "description": "Seven filtered rows; three attempts downloaded a header-only CSV.",
                 "environment": "TestOS 4 / Aster Browser 12", "affected_version": "0.8.2",
                 "assignee_id": 12,
             },
             HISTORY_BASE | {
-                "id": 725, "title": "Notification icon misaligned", "description": "Notification icon only.",
+                "id": 725, "bug_number": 725, "title": "Notification icon misaligned", "description": "Notification icon only.",
                 "environment": "DecoyOS 93", "affected_version": "9.3-decoy", "assignee_id": 11,
             },
         ],
@@ -243,7 +243,7 @@ SCENARIO_Q12 = {
             "steps_to_reproduce": "Open Reports.\nFilter State=Ready; seven rows remain.\nSelect Export CSV.",
         },
         "recent_bugs": [HISTORY_BASE | {
-            "id": identifier, "title": "Filtered CSV contains only its header",
+            "id": identifier, "bug_number": identifier, "title": "Filtered CSV contains only its header",
             "description": "State=Ready shows seven rows; the downloaded CSV has only its header.",
             "affected_version": "v0.8.2-rc.1+qa",
             "environment": "TestOS 4 (ARM64) / Aster Browser 12",

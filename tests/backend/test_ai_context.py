@@ -101,7 +101,9 @@ def test_ai_context_preserves_submitted_form_and_persisted_bugs(
     assert context.current_form.model_dump() == snapshot
     assert [bug.id for bug in context.recent_bugs] == ([] if edit else [stored["id"]])
     if not edit:
-        assert context.recent_bugs[0].model_dump() == {"id": stored["id"]} | {field: stored[field] for field in snapshot}
+        assert context.recent_bugs[0].model_dump() == {
+            "id": stored["id"], "bug_number": stored["bug_number"],
+        } | {field: stored[field] for field in snapshot}
     assert set(context.model_dump()) == {"current_form", "recent_bugs", "eligible_assignees"}
     response = test_client.get(f"{context_project['base']}/bugs/{stored['bug_number']}", headers=context_project["headers"])
     assert response.status_code == 200

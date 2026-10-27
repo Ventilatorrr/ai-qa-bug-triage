@@ -17,7 +17,7 @@ CONTENT_FIELDS = (
 )
 BUG_KEYS = {
     "number", *CONTENT_FIELDS, "status", "resolution", "fix_version", "assignee", "created_by",
-    "created_days_ago", "updated_days_ago",
+    "created_at", "updated_at",
 }
 
 
@@ -52,7 +52,7 @@ def lifecycle_path(bug, user_id):
 
 # TC-438 | AC-024.3, AC-024.5 — E-Commerce seed has twenty well-formed bugs with valid values
 def test_ecommerce_seed_has_twenty_well_formed_bugs(seed):
-    assert seed["project"] == "Demo E-Commerce Platform"
+    assert seed["project"] == "E-Commerce Demo"
     assert seed["team"] == TEAM
     bugs = seed["bugs"]
     assert len(bugs) == 20
@@ -65,9 +65,18 @@ def test_ecommerce_seed_has_twenty_well_formed_bugs(seed):
         assert all(bug[field] is None or len(bug[field]) <= 20 for field in ("affected_version", "fix_version")), number
         assert bug["created_by"] in seed["team"], number
         assert bug["assignee"] is None or seed["team"][bug["assignee"]] in ("QA Analyst", "Developer"), number
-        assert 0 <= bug["updated_days_ago"] <= bug["created_days_ago"], number
-    created = [bug["created_days_ago"] for bug in bugs]
-    assert created == sorted(created, reverse=True)  # Bug numbers follow reporting order.
+        created, updated = (datetime.fromisoformat(bug[field]) for field in ("created_at", "updated_at"))
+        assert created.tzinfo and created <= updated, number
+        assert (created.year, created.month, updated.year, updated.month) == (2026, 10, 2026, 10), number
+    created = [bug["created_at"] for bug in bugs]
+    assert created == sorted(created)  # Bug numbers follow reporting order.
+    # Version chronology: every 2.3.0 report precedes 2.3.1 reports, which precede 2.4.0 reports.
+    by_version = [[bug["created_at"] for bug in bugs if bug["affected_version"] == version] for version in ("2.3.0", "2.3.1", "2.4.0")]
+    assert all(max(earlier) < min(later) for earlier, later in zip(by_version, by_version[1:]))
+    # The newest report is also the most recently updated; the same-day Autumn Sale fix stays on 20 October.
+    latest = max(bugs, key=lambda bug: bug["updated_at"])
+    assert latest["number"] == 20 and latest["created_at"][:10] == latest["updated_at"][:10] == "2026-10-27"
+    assert bugs[13]["created_at"][:10] == bugs[13]["updated_at"][:10] == "2026-10-20"
 
 
 # TC-439 | AC-024.3 — E-Commerce seed covers a realistic workflow with intentional Triage examples
@@ -126,6 +135,56 @@ def test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api(
         assert {field: stored[field] for field in expected} == expected, bug["number"]
 
 
+# TC-458 | AC-019.2, AC-024.3 — Fictional BUG-19 reference reaches BUG-13 metadata through project-local history numbers
+def test_ecommerce_related_report_reaches_ai_context(
+    seed, test_client, test_database, authenticated_user_factory, project_factory, monkeypatch,
+):
+    from contextlib import closing
+
+    from app import ai_triage, database
+    from app.ai_generation import build_generation_input
+    from app.ai_suggestions import SuggestionResult
+    from app.api.demo import insert_seeded_project
+
+    assert database.DATABASE_NAME == str(test_database)
+    team = {ref: authenticated_user_factory(email=f"{ref}@example.com") for ref in seed["team"]}
+    headers = {"Authorization": f"Bearer {team['owner']['token']}"}
+    other = project_factory(team["owner"]["token"], name="Unrelated fictional project")
+    assert test_client.post(
+        f"/projects/{other['id']}/bugs", headers=headers, json={"title": "Unrelated fictional report"},
+    ).status_code == 201  # Make database IDs differ from the local report numbers.
+    with closing(database.get_connection()) as conn:
+        insert_seeded_project(conn, seed, {ref: user["user_id"] for ref, user in team.items()})
+        project_id = conn.execute("SELECT id FROM projects WHERE name=?", (seed["project"],)).fetchone()[0]
+        bug_ids = dict(conn.execute("SELECT bug_number, id FROM bugs WHERE project_id=?", (project_id,)))
+        conn.commit()
+
+    captured = []
+
+    def capture(context, **kwargs):
+        captured.append(build_generation_input(context)["context"])
+        return SuggestionResult({})
+
+    monkeypatch.setattr(ai_triage, "request_suggestions", capture)
+    current = next(bug for bug in seed["bugs"] if bug["number"] == 19)
+    form = {field: current[field] or "" for field in CONTENT_FIELDS}
+    form["assignee_id"] = None
+    response = test_client.post(
+        f"/projects/{project_id}/bugs/19/ai-assist", headers=headers, json=form,
+    )
+    assert response.status_code == 200
+    context = captured[0]
+    assert context["current_form"] == form
+    assert form["affected_version"] == form["environment"] == form["severity"] == form["priority"] == ""
+    assert [bug["id"] for bug in context["recent_bugs"]] == [bug_ids[n] for n in (20, 10, 13, 12, 11)]
+    assert [bug["bug_number"] for bug in context["recent_bugs"]] == [20, 10, 13, 12, 11]
+    related = next(bug for bug in context["recent_bugs"] if bug["bug_number"] == 13)
+    assert related["id"] != related["bug_number"]
+    assert form["description"] == "Price low to high puts some expensive things first. Saw this while testing the filters problem in bug 13."
+    assert related["affected_version"] == "2.4.0"
+    assert related["environment"] == "Production, Safari, iOS 26, iPhone 17"
+
+
 def required_assignee_role(bug):
     """Assignee role that a bug's final state requires under the existing lifecycle rules."""
     if bug["status"] == "Development" or (bug["status"] == "Closed" and bug["resolution"] != "Fixed"):
@@ -143,10 +202,9 @@ def test_genuine_snapshot_keeps_valid_numbered_bugs_and_original_timestamps(genu
     numbers = [bug["number"] for bug in bugs]
     assert len(bugs) == genuine["snapshot"]["bug_count"] > 0
     assert numbers == sorted(set(numbers)) and numbers[0] >= 1  # Unique original numbers; gaps are allowed.
-    keys = (BUG_KEYS - {"created_days_ago", "updated_days_ago"}) | {"created_at", "updated_at"}
     for bug in bugs:
         number = bug["number"]
-        assert set(bug) == keys, number
+        assert set(bug) == BUG_KEYS, number
         BugCreate(**{field: bug[field] for field in CONTENT_FIELDS})  # Existing field validation.
         assert all(bug[field] is None or len(bug[field]) <= 20 for field in ("affected_version", "fix_version")), number
         created, updated = (datetime.fromisoformat(bug[field]) for field in ("created_at", "updated_at"))

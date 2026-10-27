@@ -30,7 +30,7 @@ def provider_input(test_database):
     return build_generation_input(AiTriageContext(
         current_form=form,
         recent_bugs=[HistoricalBugContext(**(form.model_dump() | {
-            "id": 12, "title": "Historical title", "assignee_id": 99,
+            "id": 12, "bug_number": 3, "title": "Historical title", "assignee_id": 99,
         }))],
         eligible_assignees=[
             AssignableMemberContext(user_id=7, email="qa@example.com", role="QA Analyst"),

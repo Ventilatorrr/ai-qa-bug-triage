@@ -223,7 +223,7 @@ As a Project Owner, I want to delete a project so that I can remove projects tha
 
 ---
 
-## REQ-009 — Project Member Management
+### REQ-009 — Project Member Management
 
 The system shall allow a Project Owner to add and remove project members and allow project members to view project membership information.
 
@@ -264,7 +264,7 @@ As a Project Owner, I want to add and remove project members so that I can contr
 
 ---
 
-## REQ-010 — Project Roles and Permissions
+### REQ-010 — Project Roles and Permissions
 
 The system shall support role-based access control for project members. A project member's assigned project role shall determine the actions they are authorized to perform within the project.
 
@@ -377,7 +377,7 @@ As an authorized project member, I want to view and open bug reports in projects
 #### AC-012.4 — Sort Bug Reports
 
 - An authorized project member can sort the bug list by all columns.
-- The default bug list order is most recently updated first.
+- The default bug list order is Bug ID descending, so the newest report is first.
 - Selecting a different column starts ascending; selecting the active column toggles direction. The active column and direction are indicated.
 - Bug ID sorts numerically by the displayed project-local bug number, Title and the displayed Assignee value sort alphabetically without case sensitivity, and Last Updated sorts chronologically.
 - Severity is ordered from highest to lowest impact: Blocker, Major, Moderate, Minor.
@@ -387,7 +387,7 @@ As an authorized project member, I want to view and open bug reports in projects
 - Missing optional values, including Unassigned, are displayed last in both directions.
 - Sorting preserves displayed data and bug links without updating bug records. The active sort is retained when the list refreshes on the current page.
 - The selected column and direction are restored when returning to the project or reloading its page within the same browser tab/session. Preferences are stored separately for each signed-in user and project.
-- With no valid saved preference, or when session storage is unavailable, the initial sort remains Last Updated descending and sorting continues to work.
+- With no valid saved preference, or when session storage is unavailable, the initial sort remains Bug ID descending and sorting continues to work.
 
 #### AC-012.5 — Paginate Bug Reports
 
@@ -697,6 +697,7 @@ As a Project Owner or QA Analyst, I want AI suggestions that match the applicati
 - A suggested Assignee must identify a current member of the relevant project who can be assigned under the existing assignment rules.
 - Suggested Title, Environment, Description, Steps to Reproduce, Expected Result, Actual Result, and Affected Version must be text values.
 - A suggested Title must contain non-whitespace text; an empty or whitespace-only Title is treated as no valid suggestion.
+- Suggested text values are ready-to-use replacement values for their fields. Advice or requests to the user, questions, TODOs and placeholders are not offered.
 - Ambiguous or conflicting suggestions for the same field are excluded for that field.
 - Unsupported fields, invalid values, and suggestions that cannot be mapped unambiguously to an existing bug field are not offered to the user.
 
@@ -869,18 +870,19 @@ As a visitor, I want to try the application without registering so that I can ev
 - Choosing `Try Demo` creates a new normal account, signs the visitor in using the existing authentication mechanism, and opens the Projects page without the visitor entering an email address or password.
 - Each successful activation creates a separate Demo. Repeated activation while a request is in progress does not start another request.
 - Generated credentials are never shown to the visitor. After logout or authentication expiry, the visitor can start a new Demo.
+- The Login page states that Demo work is not accessible after logout or session expiry, and that registering an account creates projects the visitor can return to later.
 - Normal registration and login are unchanged.
 
 #### AC-024.2 — Demo Project Team
 
 - Each Demo creates five normal user accounts: the visitor's Project Owner account, two QA Analysts (QA1 and QA2), and two Developers (Dev1 and Dev2).
 - All five accounts are members of both seeded projects with those roles.
-- Each account has a short generated email address that identifies its Demo role (Project Owner, QA1, QA2, Dev1, or Dev2), includes a suffix unique to its Demo, and is valid under the existing email rules.
+- Each account has a short, unique, name-like generated email address at the reserved `example.com` domain that is valid under the existing email rules and displays without truncation in the Bug List. Roles are determined by project membership, not by the address.
 - Teammate credentials are randomly generated and never exposed. Accounts are not shared between Demos, and teammates belong only to their own Demo's projects.
 
-#### AC-024.3 — Demo E-Commerce Platform Project
+#### AC-024.3 — E-Commerce Demo
 
-- The `Demo E-Commerce Platform` project contains exactly 20 realistic fictional bug reports representing different lifecycle statuses, severities, priorities, assignments, and resolutions.
+- The `E-Commerce Demo` project contains exactly 20 realistic fictional bug reports representing different lifecycle statuses, severities, priorities, assignments, and resolutions.
 - The represented lifecycle statuses include `Development`, `Testing`, and `Closed`.
 - The bugs include bugs assigned to each of QA1, QA2, Dev1, and Dev2, and unassigned bugs.
 - Some fictional bugs in Triage intentionally contain incomplete information, unclear wording, or questionable classifications to demonstrate AI Assist. The Demo clearly identifies these imperfections as intentional.
@@ -888,6 +890,7 @@ As a visitor, I want to try the application without registering so that I can ev
 
 #### AC-024.4 — AI QA Bug Triage Project
 
+- The seeded project shows a centered two-sentence introduction about development QA and genuine defect reports between Show Members and New Bug, with the second sentence on a new line. Visibility follows its server-owned Demo identity, including after renaming; ordinary projects with the same name do not show it.
 - The `AI QA Bug Triage` project contains copies of the project's genuine tracked defects included in the approved sanitized seed dataset, a reviewed snapshot that is not synchronized with the original tracker.
 - Copies preserve the original visible Bug IDs, Date Created, Date Updated, and, where available, the genuine report content, classification, status, resolution, and versions.
 - A source bug's current assignee is mapped to a Demo teammate where appropriate and valid; otherwise the copy is unassigned, consistent with existing rules. Historical assignments are not invented.

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-450**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-464**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,25 +18,21 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (28 modules) | 252 | 263 | 663 cases; 103 parameterized functions |
+| Backend pytest (29 modules) | 259 | 270 | 681 cases; 104 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (11 files) | 118 registered tests | 118 | Internal loops are variants |
-| Playwright (6 modules) | 18 functions | 19 | 25 Chromium scenarios |
+| Frontend Node (12 files) | 122 registered tests | 123 | Internal loops are variants |
+| Playwright (7 modules) | 20 functions | 21 | 28 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 461 | **448** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 474 | **462** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
-The approved splits retain all existing functions: Passed Fix Version supplied/omitted/cleared;
-normal/deleted readback; AI eligibility/Developer/outsider; prohibited/invalid AI context;
-public identity/AI history; three legacy safeguards; two storage constraints; two deletion
-denials; and browser AI failure/empty output. The AI pre-pipeline guard and lifecycle
-unassignment state/role matrix each retain one ID.
-
+Some functions hold more than one approved conceptual case, each with its own ID and
+parameter selector.
 
 ## tests/backend/test_ai_assist.py
 
@@ -60,23 +56,23 @@ unassignment state/role matrix each retain one ID.
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-012"></a>TC-012 | AC-019.2, AC-022.2 | AI context preserves submitted form and persisted bugs | API / AI (mocked or unavailable provider) | [`test_ai_context_preserves_submitted_form_and_persisted_bugs`](../tests/backend/test_ai_context.py#L72); All variants |
-| <a id="tc-013"></a>TC-013 | AC-019.2, AC-022.2 | AI context retrieves bounded deterministic same project history | API / AI (mocked or unavailable provider) | [`test_ai_context_retrieves_bounded_deterministic_same_project_history`](../tests/backend/test_ai_context.py#L119); All variants |
-| <a id="tc-014"></a>TC-014 | AC-019.2, AC-022.2 | AI context includes only current assignable project members | API / AI (mocked or unavailable provider) | [`test_ai_context_includes_only_current_assignable_project_members`](../tests/backend/test_ai_context.py#L153); All variants |
-| <a id="tc-015"></a>TC-015 | AC-019.2 | AI context supports empty project history and assignees | API / AI (mocked or unavailable provider) | [`test_ai_context_supports_empty_project_history_and_assignees`](../tests/backend/test_ai_context.py#L205); All variants |
-| <a id="tc-016"></a>TC-016 | AC-019.2 | AI context is not constructed for rejected requests | API / AI (mocked or unavailable provider) | [`test_ai_context_is_not_constructed_for_rejected_requests`](../tests/backend/test_ai_context.py#L225); All variants |
-| <a id="tc-423"></a>TC-423 | AC-025.6, AC-022.2 | AI context shortens long historical text without changing stored bugs or the submitted form | API / AI (mocked or unavailable provider) | [`test_ai_context_shortens_long_historical_text_without_changing_stored_bugs`](../tests/backend/test_ai_context.py#L183); All variants |
+| <a id="tc-013"></a>TC-013 | AC-019.2, AC-022.2 | AI context retrieves bounded deterministic same project history | API / AI (mocked or unavailable provider) | [`test_ai_context_retrieves_bounded_deterministic_same_project_history`](../tests/backend/test_ai_context.py#L121); All variants |
+| <a id="tc-014"></a>TC-014 | AC-019.2, AC-022.2 | AI context includes only current assignable project members | API / AI (mocked or unavailable provider) | [`test_ai_context_includes_only_current_assignable_project_members`](../tests/backend/test_ai_context.py#L155); All variants |
+| <a id="tc-015"></a>TC-015 | AC-019.2 | AI context supports empty project history and assignees | API / AI (mocked or unavailable provider) | [`test_ai_context_supports_empty_project_history_and_assignees`](../tests/backend/test_ai_context.py#L207); All variants |
+| <a id="tc-016"></a>TC-016 | AC-019.2 | AI context is not constructed for rejected requests | API / AI (mocked or unavailable provider) | [`test_ai_context_is_not_constructed_for_rejected_requests`](../tests/backend/test_ai_context.py#L227); All variants |
+| <a id="tc-423"></a>TC-423 | AC-025.6, AC-022.2 | AI context shortens long historical text without changing stored bugs or the submitted form | API / AI (mocked or unavailable provider) | [`test_ai_context_shortens_long_historical_text_without_changing_stored_bugs`](../tests/backend/test_ai_context.py#L185); All variants |
 
 ## tests/backend/test_ai_generation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-017"></a>TC-017 | AC-019.2, AC-022.2 | AI generation preserves separate context without mutation | Python unit / AI (offline) | [`test_ai_generation_preserves_separate_context_without_mutation`](../tests/backend/test_ai_generation.py#L37); All variants |
-| <a id="tc-018"></a>TC-018 | AC-019.1 | AI generation defines only supported output fields | Python unit / AI (offline) | [`test_ai_generation_defines_only_supported_output_fields`](../tests/backend/test_ai_generation.py#L59); All variants |
-| <a id="tc-019"></a>TC-019 | AC-019.3 | AI generation classification rules match application | Python unit / AI (offline) | [`test_ai_generation_classification_rules_match_application`](../tests/backend/test_ai_generation.py#L78); All variants |
-| <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/backend/test_ai_generation.py#L91); All variants |
-| <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/backend/test_ai_generation.py#L103); All variants |
-| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/backend/test_ai_generation.py#L132); All variants |
-| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/backend/test_ai_generation.py#L152); All variants |
+| <a id="tc-017"></a>TC-017 | AC-019.2, AC-022.2 | AI generation preserves separate context without mutation | Python unit / AI (offline) | [`test_ai_generation_preserves_separate_context_without_mutation`](../tests/backend/test_ai_generation.py#L38); All variants |
+| <a id="tc-018"></a>TC-018 | AC-019.1 | AI generation defines only supported output fields | Python unit / AI (offline) | [`test_ai_generation_defines_only_supported_output_fields`](../tests/backend/test_ai_generation.py#L62); All variants |
+| <a id="tc-019"></a>TC-019 | AC-019.3 | AI generation classification rules match application | Python unit / AI (offline) | [`test_ai_generation_classification_rules_match_application`](../tests/backend/test_ai_generation.py#L81); All variants |
+| <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/backend/test_ai_generation.py#L102); All variants |
+| <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/backend/test_ai_generation.py#L114); All variants |
+| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/backend/test_ai_generation.py#L163); All variants |
+| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/backend/test_ai_generation.py#L183); All variants |
 
 ## tests/backend/test_ai_openai.py
 
@@ -120,6 +116,7 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-049"></a>TC-049 | AC-019.4, AC-022.3 | AI suggestions report malformed structure as error | Python unit / AI (offline) | [`test_ai_suggestions_report_malformed_structure_as_error`](../tests/backend/test_ai_suggestions.py#L110); All variants |
 | <a id="tc-050"></a>TC-050 | AC-019.4 | AI suggestions report no usable suggestions for valid structure | Python unit / AI (offline) | [`test_ai_suggestions_report_no_usable_suggestions_for_valid_structure`](../tests/backend/test_ai_suggestions.py#L122); All variants |
 | <a id="tc-051"></a>TC-051 | AC-019.3 | AI suggestions use current assignable project member context | Python unit / AI (offline) | [`test_ai_suggestions_use_current_assignable_project_member_context`](../tests/backend/test_ai_suggestions.py#L129); All variants |
+| <a id="tc-456"></a>TC-456 | AC-019.2, AC-019.3 | Text suggestions that are advice, questions, TODOs or placeholders are not offered; legitimate values, including numbered steps and quoted questions, are kept; the generation instructions carry the replacement-value rules | Python unit / AI (offline) | [`test_ai_text_suggestions_must_be_replacement_values`](../tests/backend/test_ai_suggestions.py#L169); All variants |
 
 ## tests/backend/test_ai_triage.py
 
@@ -294,37 +291,49 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/backend/test_database_migrations.py#L81); All variants |
 | <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/backend/test_database_migrations.py#L111); All variants |
 | <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation starts with ALTER or CREATE (7 variants) |
-| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=PRAGMA user_version=3 |
+| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=PRAGMA user_version=99 |
 | <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=DELETE FROM users WHERE id=2 |
-| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L282); field=bug_number; all associated values |
-| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L282); field=next_bug_number; all associated values |
-| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L294); All variants |
-| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L304); All variants |
-| <a id="tc-434"></a>TC-434 | — | Version 1 upgrade adds the empty usage table and preserves every existing definition and row; idempotent | Database / infrastructure | [`test_version_1_upgrade_adds_usage_table_and_preserves_all_data`](../tests/backend/test_database_migrations.py#L211); All variants (fresh, legacy-upgraded version 1) |
-| <a id="tc-435"></a>TC-435 | — | Version 1 upgrade failure rolls back the table and version, then succeeds on retry | Database / infrastructure | [`test_version_1_upgrade_failure_rolls_back_table_and_version`](../tests/backend/test_database_migrations.py#L231); All variants |
-| <a id="tc-436"></a>TC-436 | — | Startup rejects an unexpected version 1 or version 2 schema or usage relationship without changes | Database / infrastructure | [`test_startup_rejects_unexpected_version_1_or_2_schema`](../tests/backend/test_database_migrations.py#L262); All variants |
+| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L293); field=bug_number; all associated values |
+| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L293); field=next_bug_number; all associated values |
+| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L305); All variants |
+| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L315); All variants |
+| <a id="tc-434"></a>TC-434 | — | Version 1 upgrade adds the empty usage table and preserves every existing definition and row; idempotent | Database / infrastructure | [`test_version_1_upgrade_adds_usage_table_and_preserves_all_data`](../tests/backend/test_database_migrations.py#L212); All variants (fresh, legacy-upgraded version 1) |
+| <a id="tc-435"></a>TC-435 | — | Version 1 upgrade failure rolls back the table and version, then succeeds on retry | Database / infrastructure | [`test_version_1_upgrade_failure_rolls_back_table_and_version`](../tests/backend/test_database_migrations.py#L238); All variants |
+| <a id="tc-436"></a>TC-436 | — | Startup rejects an unexpected version 1 or version 2 schema or usage relationship without changes | Database / infrastructure | [`test_startup_rejects_unexpected_version_1_or_2_schema`](../tests/backend/test_database_migrations.py#L269); All variants |
+
+| <a id="tc-459"></a>TC-459 | — | Version 2 upgrade adds only the nullable Demo marker, preserves all original values and is idempotent | Database / infrastructure | [`test_version_2_upgrade_adds_demo_marker_without_changing_existing_values`](../tests/backend/test_database_migrations.py#L337); All variants |
+| <a id="tc-460"></a>TC-460 | — | Failed version 2 Demo-marker upgrade rolls back schema, data and version | Database / infrastructure | [`test_version_2_demo_marker_upgrade_failure_rolls_back`](../tests/backend/test_database_migrations.py#L355); All variants |
+
+## tests/backend/test_demo_introduction.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-461"></a>TC-461 | AC-024.4, AC-024.7 | A wholly fictional historical-seed stand-in gets a persistent server-owned marker; same-name ordinary projects and submitted forged markers do not; rename preserves it and unauthorized access remains denied | API / integration | [`test_historical_demo_marker_is_seeded_persistent_and_not_name_based`](../tests/backend/test_demo_introduction.py#L9); All variants |
 
 ## tests/backend/test_demo_seed.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-438"></a>TC-438 | AC-024.3, AC-024.5 | E-Commerce seed has exactly 20 numbered bugs with existing field validation, valid team references and consistent relative dates | Static data / Python unit | [`test_ecommerce_seed_has_twenty_well_formed_bugs`](../tests/backend/test_demo_seed.py#L54); All variants |
-| <a id="tc-439"></a>TC-439 | AC-024.3 | E-Commerce seed includes every lifecycle status, each teammate and unassigned bugs, Fixed and non-fix resolutions, varied classifications, and intentionally imperfect reports only in Triage | Static data / Python unit | [`test_ecommerce_seed_covers_realistic_workflow_with_intentional_triage_examples`](../tests/backend/test_demo_seed.py#L74); All variants |
-| <a id="tc-440"></a>TC-440 | AC-024.3, AC-024.5 | Every E-Commerce seed bug is created by its seeded reporter and reaches its seeded state through the existing lifecycle API with identical stored values | API | [`test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api`](../tests/backend/test_demo_seed.py#L94); All variants |
-| <a id="tc-441"></a>TC-441 | AC-024.4, AC-024.5 | Genuine snapshot keeps unique original numbers, valid fields, time-zoned original timestamps, consistent lifecycle values and valid team references | Static data / Python unit | [`test_genuine_snapshot_keeps_valid_numbered_bugs_and_original_timestamps`](../tests/backend/test_demo_seed.py#L139); All variants |
-| <a id="tc-442"></a>TC-442 | AC-024.4 | Genuine snapshot contains no obvious local user paths, API keys, JWTs, private keys, password values or non-example email domains | Static data / Python unit | [`test_genuine_snapshot_contains_no_obvious_private_data`](../tests/backend/test_demo_seed.py#L167); All variants |
+| <a id="tc-439"></a>TC-439 | AC-024.3 | E-Commerce seed includes every lifecycle status, each teammate and unassigned bugs, Fixed and non-fix resolutions, varied classifications, and intentionally imperfect reports only in Triage | Static data / Python unit | [`test_ecommerce_seed_covers_realistic_workflow_with_intentional_triage_examples`](../tests/backend/test_demo_seed.py#L83); All variants |
+| <a id="tc-440"></a>TC-440 | AC-024.3, AC-024.5 | Every E-Commerce seed bug is created by its seeded reporter and reaches its seeded state through the existing lifecycle API with identical stored values | API | [`test_ecommerce_seed_bugs_are_reachable_through_existing_lifecycle_api`](../tests/backend/test_demo_seed.py#L103); All variants |
+| <a id="tc-458"></a>TC-458 | AC-019.2, AC-024.3 | Fictional BUG-19 reference connects to BUG-13 metadata using project-local numbers distinct from database IDs in the unchanged five-report context | API / AI (offline capture) | [`test_ecommerce_related_report_reaches_ai_context`](../tests/backend/test_demo_seed.py#L139); All variants |
+| <a id="tc-441"></a>TC-441 | AC-024.4, AC-024.5 | Genuine snapshot keeps unique original numbers, valid fields, time-zoned original timestamps, consistent lifecycle values and valid team references | Static data / Python unit | [`test_genuine_snapshot_keeps_valid_numbered_bugs_and_original_timestamps`](../tests/backend/test_demo_seed.py#L198); All variants |
+| <a id="tc-442"></a>TC-442 | AC-024.4 | Genuine snapshot contains no obvious local user paths, API keys, JWTs, private keys, password values or non-example email domains | Static data / Python unit | [`test_genuine_snapshot_contains_no_obvious_private_data`](../tests/backend/test_demo_seed.py#L225); All variants |
 
 ## tests/backend/test_demo.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-443"></a>TC-443 | AC-024.1, AC-024.2, AC-024.3, AC-024.4, AC-024.5 | `POST /demo` returns only the visitor's token; five role-identifiable accounts with one suffix are members of both projects; every seeded bug is stored in its final state with mapped people and original or relative dates | API | [`test_demo_creates_team_projects_and_seeded_bugs`](../tests/backend/test_demo.py#L53); All variants |
-| <a id="tc-444"></a>TC-444 | AC-024.5 | New bugs continue after the highest seeded number, and restart integrity checks accept the seeded data | API | [`test_demo_numbering_continues_after_highest_seeded_number`](../tests/backend/test_demo.py#L89); All variants |
-| <a id="tc-445"></a>TC-445 | AC-024.2, AC-024.6 | Demo owner progresses, reopens, edits and deletes seeded bugs and removes and re-adds a teammate by its generated email | API | [`test_demo_owner_uses_existing_workflows_on_seeded_data`](../tests/backend/test_demo.py#L104); All variants |
-| <a id="tc-446"></a>TC-446 | AC-024.7 | Two Demos have disjoint projects and accounts, cannot access each other, and a later Demo receives unmodified seed data | API | [`test_demo_environments_are_independent`](../tests/backend/test_demo.py#L127); All variants |
-| <a id="tc-447"></a>TC-447 | AC-024.8 | A failure while seeding the second project or creating the token returns 500 and leaves no accounts, projects, memberships or bugs; retry succeeds | API; Database | [`test_demo_creation_failure_rolls_back_everything`](../tests/backend/test_demo.py#L151); All variants (second_project, token) |
-| <a id="tc-448"></a>TC-448 | AC-024.2 | A generated email that is already registered causes a new suffix; the existing account is untouched | API | [`test_demo_retries_when_generated_email_is_taken`](../tests/backend/test_demo.py#L180); All variants |
-| <a id="tc-449"></a>TC-449 | AC-025.1, AC-025.2, AC-024.6 | Demo owners are bound by the per-account limit and share the global limit with normal accounts | API / AI (mocked provider) | [`test_demo_accounts_share_regular_ai_usage_limits`](../tests/backend/test_demo.py#L195); All variants |
+| <a id="tc-443"></a>TC-443 | AC-024.1, AC-024.2, AC-024.3, AC-024.4, AC-024.5 | `POST /demo` returns only the visitor's token; five unique, name-like, fitting addresses belong to accounts that are members of both projects, with roles from memberships and consistent seeded assignments; every seeded bug is stored in its final state with mapped people and its fixed historical Created/Last Updated dates | API | [`test_demo_creates_team_projects_and_seeded_bugs`](../tests/backend/test_demo.py#L53); All variants |
+| <a id="tc-444"></a>TC-444 | AC-024.5 | New bugs continue after the highest seeded number, and restart integrity checks accept the seeded data | API | [`test_demo_numbering_continues_after_highest_seeded_number`](../tests/backend/test_demo.py#L84); All variants |
+| <a id="tc-445"></a>TC-445 | AC-024.2, AC-024.6 | Demo owner progresses, reopens, edits and deletes seeded bugs and removes and re-adds a teammate by its generated email | API | [`test_demo_owner_uses_existing_workflows_on_seeded_data`](../tests/backend/test_demo.py#L99); All variants |
+| <a id="tc-446"></a>TC-446 | AC-024.7 | Two Demos have disjoint projects and accounts, cannot access each other, and a later Demo receives unmodified seed data | API | [`test_demo_environments_are_independent`](../tests/backend/test_demo.py#L122); All variants |
+| <a id="tc-447"></a>TC-447 | AC-024.8 | A failure while seeding the second project or creating the token returns 500 and leaves no accounts, projects, memberships or bugs; retry succeeds | API; Database | [`test_demo_creation_failure_rolls_back_everything`](../tests/backend/test_demo.py#L147); All variants (second_project, token) |
+| <a id="tc-448"></a>TC-448 | AC-024.2 | Taken aliases are skipped and a batch with too few free aliases is retried; the existing account is untouched | API | [`test_demo_retries_when_generated_email_is_taken`](../tests/backend/test_demo.py#L176); All variants |
+| <a id="tc-449"></a>TC-449 | AC-025.1, AC-025.2, AC-024.6 | Demo owners are bound by the per-account limit and share the global limit with normal accounts | API / AI (mocked provider) | [`test_demo_accounts_share_regular_ai_usage_limits`](../tests/backend/test_demo.py#L191); All variants |
+| <a id="tc-454"></a>TC-454 | — | Demo starts are limited per rolling hour (429, nothing created); a failed attempt frees its slot and starts older than an hour stop counting | API; Database | [`test_demo_creation_is_limited_per_hour`](../tests/backend/test_demo.py#L215); All variants |
+| <a id="tc-455"></a>TC-455 | — | Demo creation stops at the stored-Demo cap, counted as five four-letter `@example.com` accounts per Demo (503, nothing created), while existing Demos and registration keep working | API; Database | [`test_demo_creation_stops_at_stored_demo_cap`](../tests/backend/test_demo.py#L241); All variants |
 
 ## tests/backend/test_fix_version_on_pass.py
 
@@ -517,7 +526,7 @@ unassignment state/role matrix each retain one ID.
 | --- | --- | --- | --- | --- |
 | <a id="tc-268"></a>TC-268 | AC-012.6 | Page size invalid or unavailable reads fall back to ten | Frontend JS / DOM substitutes | [`test_page_size_invalid_or_unavailable_reads_fall_back_to_ten`](../tests/frontend/bug-sort-persistence.test.cjs#L102); All variants |
 | <a id="tc-269"></a>TC-269 | AC-012.6 | Page size blocked writes preserve current pagination and sort | Frontend JS / DOM substitutes | [`test_page_size_blocked_writes_preserve_current_pagination_and_sort`](../tests/frontend/bug-sort-persistence.test.cjs#L123); All variants |
-| <a id="tc-270"></a>TC-270 | AC-012.4 | Bug sort first visit defaults to last updated descending | Frontend JS / DOM substitutes | [`test_bug_sort_first_visit_defaults_to_last_updated_descending`](../tests/frontend/bug-sort-persistence.test.cjs#L146); All variants |
+| <a id="tc-270"></a>TC-270 | AC-012.4 | Bug sort first visit defaults to Bug ID descending | Frontend JS / DOM substitutes | [`test_bug_sort_first_visit_defaults_to_bug_id_descending`](../tests/frontend/bug-sort-persistence.test.cjs#L146); All variants |
 | <a id="tc-271"></a>TC-271 | AC-012.1 | Bug mobile labels and header relationships survive sorting | Frontend JS / DOM substitutes | [`test_bug_mobile_labels_and_header_relationships_survive_sorting`](../tests/frontend/bug-sort-persistence.test.cjs#L151); All variants |
 | <a id="tc-272"></a>TC-272 | — | Bug list rejects invalid number response | Frontend JS / DOM substitutes | [`test_bug_list_rejects_invalid_number_response`](../tests/frontend/bug-sort-persistence.test.cjs#L173); All variants |
 | <a id="tc-273"></a>TC-273 | AC-012.4 | Bug sort saves column and direction on header click | Frontend JS / DOM substitutes | [`test_bug_sort_saves_column_and_direction_on_header_click`](../tests/frontend/bug-sort-persistence.test.cjs#L182); All variants |
@@ -614,6 +623,16 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-420"></a>TC-420 | AC-001.2, AC-001.3, AC-001.4 | Rejected registration shows the existing error and never authenticates or redirects | Frontend JS / DOM substitutes | [`test_rejected_registration_does_not_authenticate`](../tests/frontend/registration.test.cjs#L64); All variants (409, invalid email, invalid password, network failure) |
 | <a id="tc-421"></a>TC-421 | AC-001.1 | Login failure after registration reports the created account, links to Login and keeps the form disabled | Frontend JS / DOM substitutes | [`test_login_failure_after_registration_directs_to_manual_login`](../tests/frontend/registration.test.cjs#L85); All variants (401, missing token, network failure) |
 
+## tests/frontend/try-demo.test.cjs
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-450"></a>TC-450 | AC-024.1 | Try Demo sends one unauthenticated `POST /demo`, shows progress on the busy button without a separate message, ignores clicks while pending, stores the returned token like Login and opens Projects | Frontend JS / DOM substitutes | [`test_try_demo_signs_in_once_and_opens_projects`](../tests/frontend/try-demo.test.cjs#L54); All variants |
+| <a id="tc-451"></a>TC-451 | AC-024.1, AC-024.8 | Server, network and unreadable failures show the safe message under the Try Demo button, store no token, restore the button, stay on Login and allow a successful retry | Frontend JS / DOM substitutes | [`test_failed_try_demo_shows_error_and_allows_retry`](../tests/frontend/try-demo.test.cjs#L75); All variants |
+| <a id="tc-452"></a>TC-452 | AC-024.3 | The intentional-imperfection note is shown only for the E-Commerce Demo project | Frontend JS / DOM substitutes | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs#L101); All variants |
+| <a id="tc-462"></a>TC-462 | AC-024.4 | Exact consecutive-line historical introduction, shared message style and placement; visible only for the history marker, including renamed seeds; ordinary same-name and unrecognized markers stay hidden | Frontend JS / DOM substitutes and static HTML | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs); demoKind=history, undefined or unrecognized; all name variants |
+| <a id="tc-457"></a>TC-457 | AC-024.1 | Login shows the exact Demo introduction, Try Demo button and session notice in one section; other pages do not show the notice | Frontend JS / static HTML | [`test_login_demo_section_text_is_only_on_login`](../tests/frontend/try-demo.test.cjs#L131); All variants |
+
 ## tests/e2e/test_ai_triage.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
@@ -622,13 +641,14 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-326"></a>TC-326 | AC-020.5, AC-020.7, AC-020.8 | Edit AI cancel discards changes then save persists review | Playwright / Chromium (mocked AI) | [`test_edit_ai_cancel_discards_changes_then_save_persists_review`](../tests/e2e/test_ai_triage.py#L59); All variants |
 | <a id="tc-327"></a>TC-327 | AC-018.4, AC-023.1, AC-023.2 | Recover manually and retry after AI service failure | Playwright / Chromium (mocked AI) | [`test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry`](../tests/e2e/test_ai_triage.py#L105); outcome=failure |
 | <a id="tc-328"></a>TC-328 | AC-018.4, AC-019.4, AC-023.2 | Recover manually and retry after valid empty AI output | Playwright / Chromium (mocked AI) | [`test_ai_failure_or_empty_result_preserves_manual_work_and_allows_retry`](../tests/e2e/test_ai_triage.py#L105); outcome=empty |
+| <a id="tc-463"></a>TC-463 | AC-025.5 | A daily-limit `429` shows the per-account or global limit message, keeps unsaved form values and saved data unchanged, rejects a retry until the limit resets, then allows AI Assist again and manual Create/Save | Playwright / Chromium (simulated `429` AI response, mocked AI) | [`test_ai_daily_limit_preserves_form_and_allows_manual_work_and_retry`](../tests/e2e/test_ai_triage.py#L150); (form, message) = (Edit Bug, per-account limit), (New Bug, global limit) |
 
 ## tests/e2e/test_auth.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
 | <a id="tc-329"></a>TC-329 | AC-001.1, AC-002.1, AC-003.1, AC-003.2, AC-004.1, AC-004.2 | Registration automatically logs in, survives reload, logout, then manual login | Playwright / Chromium | [`test_registration_login_logout`](../tests/e2e/test_auth.py#L9); All variants |
-| <a id="tc-330"></a>TC-330 | AC-002.2 | Invalid login feedback allows correction | Playwright / Chromium | [`test_invalid_login_feedback_allows_correction`](../tests/e2e/test_auth.py#L38); All variants |
+| <a id="tc-330"></a>TC-330 | AC-002.2 | Invalid login feedback allows correction | Playwright / Chromium | [`test_invalid_login_feedback_allows_correction`](../tests/e2e/test_auth.py#L42); All variants |
 
 ## tests/e2e/test_authorization.py
 
@@ -663,6 +683,12 @@ unassignment state/role matrix each retain one ID.
 | <a id="tc-339"></a>TC-339 | AC-005.1, AC-005.2, AC-007.1, AC-008.1 | Project create rename and confirmed delete | Playwright / Chromium | [`test_project_create_rename_and_confirmed_delete`](../tests/e2e/test_projects.py#L42); All variants |
 | <a id="tc-409"></a>TC-409 | AC-005.1, AC-006.3, AC-009.1 | Audit B4 project creation feedback, project heading and Add Member feedback remain readable within the viewport | Playwright / Chromium | [`test_project_and_member_text_wraps`](../tests/e2e/test_projects.py#L89); text=normal/unbroken (213-character project name, 124-character member email), width=desktop (1280)/narrow (375); all four combinations; exact messages, visible text line bounds, no clipping or page overflow |
 
+## tests/e2e/test_try_demo.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with both seeded projects (20 and 41 bugs); each project shows its own introduction; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L17); Chromium |
+
 ## tests/frontend/native-input.test.html
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
@@ -688,17 +714,10 @@ unassignment state/role matrix each retain one ID.
 
 ## AC-019.2 opt-in evaluation
 
-Inputs and criteria were established in Stage B1 before any live execution.
-See the [frozen protocol](ai-testing-strategy.md) and
-[final evaluation review](test-execution.md#ac-0192-final-evaluation-review).
-Offline fixture responses do not establish real-model coverage. AC-019.2 is
-Covered by collective deterministic and reviewed live evidence: 12 original-prompt,
-12 historical-clarification and six final-formatting executions on 16 October 2026.
-Review provenance is Codex-assisted, with user-directed closure; raw review templates
-remain unchanged. Only one six-case run uses the final formatting instruction.
-The default/baseline CLI selects all six A–F scenarios once per invocation;
-explicit subsets may select one to six attempts. Repeats retain canonical IDs
-and receive separate invocation-local execution IDs.
+Real-model cases with inputs and criteria fixed in the [protocol](ai-testing-strategy.md)
+before live execution; 30 live executions on 16 October 2026 are summarized in the
+[execution report](test-execution.md#ac-0192-final-evaluation-review). Offline fixture
+responses do not establish real-model coverage. Repeats keep their TC ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
@@ -711,32 +730,27 @@ and receive separate invocation-local execution IDs.
 
 ## tests/ai_evaluation/test_ai_evaluation.py
 
-These are technical harness checks, not live-model AC passes. Normal pytest may
-run them safely; each uses an in-memory transport and independently blocks sockets/SQLite.
+Technical harness checks, not live-model AC evidence. They run in the default pytest
+suite with an in-memory transport and blocked sockets and SQLite.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-357"></a>TC-357 | — | Default offline CLI sends the unchanged production request (Medium reasoning, Fast tier), records production contracts and dataset version, and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/ai_evaluation/test_ai_evaluation.py); All six synthetic responses |
-| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/ai_evaluation/test_ai_evaluation.py); five gates; CLI and programmatic entry points |
-| <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/ai_evaluation/test_ai_evaluation.py); All variants |
-| <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/ai_evaluation/test_ai_evaluation.py); All eight failure variants; clients close on failure |
-| <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/ai_evaluation/test_ai_evaluation.py); All four variants |
-| <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/ai_evaluation/test_ai_evaluation.py); All three path variants |
-| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/ai_evaluation/test_ai_evaluation.py); returned tier=default (1x, exact threshold), priority (2x); synthetic usage only |
+| <a id="tc-357"></a>TC-357 | — | Default offline CLI sends the unchanged production request (Medium reasoning, Fast tier), records production contracts and dataset version, and closes clients | Python unit / AI harness (offline) | [`test_evaluation_offline_records_production_contracts`](../tests/ai_evaluation/test_ai_evaluation.py#L36); All six synthetic responses |
+| <a id="tc-358"></a>TC-358 | — | Live guards reject pytest, CI, missing opt-in and custom endpoint | Python unit / AI harness (offline) | [`test_evaluation_live_gates_precede_client_creation`](../tests/ai_evaluation/test_ai_evaluation.py#L112); five gates; CLI and programmatic entry points |
+| <a id="tc-359"></a>TC-359 | — | Cached database configuration is isolated/restored and all SQLite access blocked | Python unit / AI harness (offline) | [`test_evaluation_database_guard_restores_cached_configuration`](../tests/ai_evaluation/test_ai_evaluation.py#L142); All variants |
+| <a id="tc-360"></a>TC-360 | — | First provider/parse/validation/evidence failure or interruption stops without retry or leaked error text | Python unit / AI harness (offline) | [`test_evaluation_records_errors_without_leaking_or_retrying`](../tests/ai_evaluation/test_ai_evaluation.py#L168); All eight failure variants; clients close on failure |
+| <a id="tc-361"></a>TC-361 | — | Review flags distinguish supported history from possible conflict without grading semantics | Python unit / AI harness (offline) | [`test_evaluation_review_flags_are_prompts_not_semantic_scores`](../tests/ai_evaluation/test_ai_evaluation.py#L232); All four variants |
+| <a id="tc-362"></a>TC-362 | — | Evidence directories cannot overwrite existing output or escape their root | Python unit / AI harness (offline) | [`test_evaluation_output_directory_is_new_and_confined`](../tests/ai_evaluation/test_ai_evaluation.py#L245); All three path variants |
+| <a id="tc-363"></a>TC-363 | — | Observed-spend pause prevents subsequent requests | Python unit / AI harness (offline) | [`test_evaluation_pauses_after_observed_spend_threshold`](../tests/ai_evaluation/test_ai_evaluation.py#L266); returned tier=default (1x, exact threshold), priority (2x); synthetic usage only |
 
 ## Additional AI quality/security evaluation — reviewed live evidence
 
-These cases extend risk-based testing rather than acceptance-criteria coverage.
-The RTM remains 88 Covered / 0 Partial / 0 Not Covered. The
-[quality-1 protocol](ai-testing-strategy.md#additional-ai-qualitysecurity-evaluations--protocol-quality-1)
-defines inputs, pass/fail/exercise criteria, limitations and separately approved
-six/four-request batches. **Ten live executions completed on 19 October 2026**;
-user-directed Codex-assisted review found no critical semantic failure. See the
-[combined execution/review record](test-execution.md#combined-quality-evaluation-conclusions--19-october-2026)
-for per-dimension results and unexercised optional fields. Q5 remains Pass with
-its minor wording observation. Offline fixture responses exercise infrastructure
-only. Q2 is historical injection; Q3 is forged
-authority. Q8, Q9 and Q10 remain deferred. Q11:1/Q11:2 share TC-371 and identical input.
+Risk-based cases beyond acceptance-criteria coverage, defined in the
+[quality-1 protocol](ai-testing-strategy.md#additional-ai-qualitysecurity-evaluations--protocol-quality-1).
+Ten live executions on 19 October 2026 found no critical semantic failure; Q5 has a
+minor wording observation. See the
+[execution report](test-execution.md#combined-quality-evaluation-conclusions--19-october-2026).
+Q11's two executions share TC-371. Q8–Q10 are deferred.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
@@ -752,61 +766,47 @@ authority. Q8, Q9 and Q10 remain deferred. Q11:1/Q11:2 share TC-371 and identica
 
 ## Additional offline harness checks — tests/ai_evaluation/test_ai_evaluation.py
 
-Completed execution is recorded in [test-execution](test-execution.md#additional-ai-qualitysecurity-offline-verification--19-october-2026).
-These five conceptual checks expand to 17 pytest variants. The inventory above
-also includes subsequent latency checks and expanded live-guard variants.
-The module's autouse fixture independently blocks outgoing
-sockets and SQLite and confines generated evidence to pytest temporary directories.
+Offline checks for the quality scenarios; evidence is confined to pytest temporary
+directories.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/ai_evaluation/test_ai_evaluation.py); All nine quality fixtures and original A–F fingerprint |
-| <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/ai_evaluation/test_ai_evaluation.py); Five selection variants |
-| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); Six selection variants; CLI and programmatic runner |
-| <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, per-execution and run dataset versions (including mixed subsets), unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/ai_evaluation/test_ai_evaluation.py); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
-| <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/ai_evaluation/test_ai_evaluation.py); failure=filtered, malformed |
+| <a id="tc-373"></a>TC-373 | — | New quality cases match production context and revised identity; frozen baseline hash unchanged | Python unit / AI harness (offline) | [`test_quality_scenarios_preserve_schema_identity_and_baseline`](../tests/ai_evaluation/test_ai_evaluation.py#L289); All nine quality fixtures and original A–F fingerprint |
+| <a id="tc-374"></a>TC-374 | — | Default/named/subset selection preserves order and independent repeated input | Python unit / AI harness (offline) | [`test_evaluation_selection_preserves_order_and_independent_repeats`](../tests/ai_evaluation/test_ai_evaluation.py#L328); Five selection variants |
+| <a id="tc-375"></a>TC-375 | — | Invalid, empty, deferred, oversized or mutually exclusive selections fail before IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_selection_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py#L347); Six selection variants; CLI and programmatic runner |
+| <a id="tc-376"></a>TC-376 | — | Selected offline batches/subsets record real production contracts, per-execution and run dataset versions (including mixed subsets), unique repeats and protected evidence without live/DB access | Python unit / AI harness (offline) | [`test_quality_offline_batches_record_production_requests_and_unique_executions`](../tests/ai_evaluation/test_ai_evaluation.py#L368); Three variants: quality-batch-1, quality-batch-2, mixed explicit subset; inherited live configuration ignored; overwrite/escape rejected |
+| <a id="tc-377"></a>TC-377 | — | Raw failures remain visible after filtering; stopped selected batch retains unambiguous unrun repeats | Python unit / AI harness (offline) | [`test_quality_raw_failures_remain_visible_without_semantic_pass`](../tests/ai_evaluation/test_ai_evaluation.py#L439); failure=filtered, malformed |
 
 ## Latency-comparison preparation — tests/ai_evaluation/test_ai_evaluation.py
 
-These checks use only synthetic SDK responses, with sockets and SQLite blocked.
-On 22 October 2026 the default became the unchanged production request; the
-optional `--reasoning-effort` and `--service-tier` overrides remain, and
-`--explicit-medium` was removed. TC-379, TC-380 and TC-383 were narrowed to the
-current options; their earlier variants and historical results remain in the
-[execution report](test-execution.md). Retired IDs stay assigned and are never reused.
+Synthetic SDK responses only. The default run sends the production request; the
+optional `--reasoning-effort` and `--service-tier` overrides support configuration
+comparisons.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-379"></a>TC-379 | — | Explicit overrides change only the selected reasoning effort and/or service tier of the production adapter's request; `standard` omits the tier | Python unit / AI harness (offline) | [`test_evaluation_overrides_change_only_selected_settings`](../tests/ai_evaluation/test_ai_evaluation.py); (reasoning_effort, service_tier)=(low, —), (medium, —), (high, —), (—, fast), (—, standard), (high, standard); EVAL-D |
-| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); reasoning_effort=xhigh, empty string; CLI and programmatic runner |
-| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_records_timing_and_failure_evidence`](../tests/ai_evaluation/test_ai_evaluation.py); failure=success, filtered, timeout, http_error, malformed; deterministic clock |
+| <a id="tc-379"></a>TC-379 | — | Explicit overrides change only the selected reasoning effort and/or service tier of the production adapter's request; `standard` omits the tier | Python unit / AI harness (offline) | [`test_evaluation_overrides_change_only_selected_settings`](../tests/ai_evaluation/test_ai_evaluation.py#L480); (reasoning_effort, service_tier)=(low, —), (medium, —), (high, —), (—, fast), (—, standard), (high, standard); EVAL-D |
+| <a id="tc-380"></a>TC-380 | — | Unsupported reasoning effort is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_reasoning_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py#L513); reasoning_effort=xhigh, empty string; CLI and programmatic runner |
+| <a id="tc-381"></a>TC-381 | — | Provider timing excludes client setup; total duration, safe provider errors, parsing failures and validator exclusions survive unchanged stop behavior | Python unit / AI harness (offline) | [`test_evaluation_records_timing_and_failure_evidence`](../tests/ai_evaluation/test_ai_evaluation.py#L530); failure=success, filtered, timeout, http_error, malformed; deterministic clock |
 
 ## Fast-service evaluation preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-382"></a>TC-382 | — | Returned tier, usage details and cache-aware cost survive SDK serialization; default/standard cost 1x, Fast/priority 2x, missing/unknown tiers conservatively 2x | Python unit / AI harness (offline) | [`test_evaluation_records_returned_tier_and_conservative_cost`](../tests/ai_evaluation/test_ai_evaluation.py); returned_tier=fast, priority, default, standard, None, unknown |
-| <a id="tc-383"></a>TC-383 | — | Unsupported service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py); service_tier=priority, empty string; CLI and programmatic entry points |
-
-TC-358/TC-363/TC-375/TC-381 cover live guards, spend pause, request ceiling and
-stop-on-error; TC-359/TC-376 cover database/evidence guards.
+| <a id="tc-382"></a>TC-382 | — | Returned tier, usage details and cache-aware cost survive SDK serialization; default/standard cost 1x, Fast/priority 2x, missing/unknown tiers conservatively 2x | Python unit / AI harness (offline) | [`test_evaluation_records_returned_tier_and_conservative_cost`](../tests/ai_evaluation/test_ai_evaluation.py#L588); returned_tier=fast, priority, default, standard, None, unknown |
+| <a id="tc-383"></a>TC-383 | — | Unsupported service-tier selector is rejected before evidence, application or provider IO | Python unit / AI harness (offline) | [`test_evaluation_invalid_service_tier_precedes_io`](../tests/ai_evaluation/test_ai_evaluation.py#L620); service_tier=priority, empty string; CLI and programmatic entry points |
 
 ## Explicit Medium Fast preparation — tests/ai_evaluation/test_ai_evaluation.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-384"></a>TC-384 | — | The recorded evaluation request equals the production adapter's own wire request (Medium reasoning, Fast tier) | Python unit / AI harness (offline) | [`test_evaluation_default_request_matches_production_adapter`](../tests/ai_evaluation/test_ai_evaluation.py); EVAL-D, EVAL-F, Q1, Q5, Q7, Q11; six direct production adapter requests |
+| <a id="tc-384"></a>TC-384 | — | The recorded evaluation request equals the production adapter's own wire request (Medium reasoning, Fast tier) | Python unit / AI harness (offline) | [`test_evaluation_default_request_matches_production_adapter`](../tests/ai_evaluation/test_ai_evaluation.py#L636); EVAL-D, EVAL-F, Q1, Q5, Q7, Q11; six direct production adapter requests |
 | <a id="tc-385"></a>TC-385 | — | **Retired 22 October 2026.** Formerly: explicit Medium flag cannot change Low, High or Standard requests | — | Removed with `--explicit-medium`; the default already sends Medium Fast (TC-357, TC-384) |
-
-TC-357/TC-359/TC-376/TC-382 retain default, DB, evidence and cost checks.
 
 ## Executable BDD — tests/e2e/bdd/test_workflows.py
 
-The four feature files contain five scenarios total, all executable; none remain
-specifications only. Explicit `@scenario` bindings collect exactly five cases.
-Ordinary step functions reuse the E2E browser/server/database fixtures and helpers; the AI transport is
-mocked only at the provider boundary. See [run commands](../README.md#python-playwright-e2e-tests)
-and [execution evidence](test-execution.md#executable-bdd--19-october-2026).
+Five executable scenarios in four feature files, reusing the E2E fixtures; the AI
+transport is mocked at the provider boundary. See [run commands](../README.md#python-playwright-e2e-tests).
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
@@ -818,14 +818,9 @@ and [execution evidence](test-execution.md#executable-bdd--19-october-2026).
 
 ## Postman isolation verification
 
-**AI QA Bug Triage – API Regression Test Suite** adds implementation selectors
-to 27 existing conceptual cases. Its synthetic fixtures are independent of the
-application version recorded per run. Existing pytest selectors and TC numbers
-are unchanged. Its 25 requests and
-50 assertions are not 25 new conceptual cases. TC-055 maps only to request 15;
-request 23 is reopened-state persistence readback, not direct AI-failure evidence.
-This infrastructure group owns the disposable-run safeguard procedure; the launcher
-is supporting tooling.
+The Postman collection adds implementation selectors to 27 existing cases; its 25
+requests and 50 assertions are not new conceptual cases. TC-055 maps only to request 15.
+TC-391 owns the disposable-run safety procedure.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
@@ -833,9 +828,7 @@ is supporting tooling.
 
 ## JMeter API performance
 
-One technical workflow, with equivalent user/loop/duration configurations sharing
-one ID. Its seven HTTP requests and repeated samples are not additional cases or
-new business-AC evidence; the RTM is unchanged.
+One technical workflow; user, loop and duration configurations share one ID.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |

@@ -5,7 +5,7 @@ from contextlib import closing
 
 
 DATABASE_NAME = os.getenv("DATABASE_NAME", "bugtriage.db")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def get_connection():
@@ -29,7 +29,8 @@ def _create_schema(conn):
             id INTEGER PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             next_bug_number INTEGER NOT NULL DEFAULT 1
-                CHECK(typeof(next_bug_number) = 'integer' AND next_bug_number > 0)
+                CHECK(typeof(next_bug_number) = 'integer' AND next_bug_number > 0),
+            demo_kind TEXT
         )
         """
     )
@@ -146,6 +147,8 @@ def _schema_properties(conn):
 def _verify_schema(conn, version):
     with closing(sqlite3.connect(":memory:")) as reference:
         _create_schema(reference)
+        if version < 3:
+            reference.execute("ALTER TABLE projects DROP COLUMN demo_kind")
         if version < 2:
             reference.execute("DROP TABLE ai_requests")
         if version == 0:
@@ -215,7 +218,7 @@ def create_tables():
     try:
         conn.execute("BEGIN IMMEDIATE")
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        if version not in (0, 1, SCHEMA_VERSION):
+        if version not in (0, 1, 2, SCHEMA_VERSION):
             raise RuntimeError(f"Unsupported database schema version {version}.")
         has_objects = conn.execute("SELECT 1 FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*'").fetchone()
         if version == 0 and not has_objects:
@@ -225,8 +228,10 @@ def create_tables():
             _verify_data(conn)
             if version == 0:
                 _migrate_legacy(conn)
-            # Version 1 to 2 only adds the empty usage table; existing tables are unchanged.
-            _create_ai_requests(conn)
+            if version < 2:
+                _create_ai_requests(conn)
+            # Existing projects remain unmarked; only Demo seeding sets this value.
+            conn.execute("ALTER TABLE projects ADD COLUMN demo_kind TEXT")
         _verify_schema(conn, SCHEMA_VERSION)
         _verify_data(conn)
         _verify_counters(conn)

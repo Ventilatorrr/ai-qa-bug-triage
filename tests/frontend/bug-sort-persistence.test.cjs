@@ -94,8 +94,8 @@ async function page({
 }
 
 function assertDefault(f) {
-    assert.deepEqual(f.order(), ["BUG-11", "BUG-1", "BUG-2"]);
-    assert.deepEqual(f.active(), [{column: "updated_at", direction: "descending", label: "Last Updated ↓"}]);
+    assert.deepEqual(f.order(), ["BUG-11", "BUG-2", "BUG-1"]);
+    assert.deepEqual(f.active(), [{column: "id", direction: "descending", label: "Bug ID ↓"}]);
 }
 
 // TC-268 | AC-012.6 — Page size invalid or unavailable reads fall back to ten
@@ -142,8 +142,8 @@ test("test_page_size_blocked_writes_preserve_current_pagination_and_sort", async
     assert.equal(reloaded.order().length, 10);
 });
 
-// TC-270 | AC-012.4 — Bug sort first visit defaults to last updated descending
-test("test_bug_sort_first_visit_defaults_to_last_updated_descending", async () => {
+// TC-270 | AC-012.4 — Bug sort first visit defaults to Bug ID descending
+test("test_bug_sort_first_visit_defaults_to_bug_id_descending", async () => {
     assertDefault(await page());
 });
 

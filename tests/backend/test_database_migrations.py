@@ -68,7 +68,7 @@ def snapshot(database):
 def test_fresh_database_creates_numbering_schema(database):
     database.create_tables()
     with closing(database.get_connection()) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (2,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
         assert {row[1] for row in connection.execute("PRAGMA table_info(bugs)")} == {*BUG_COLUMNS, "bug_number"}
         assert [row[1] for row in connection.execute("PRAGMA table_info(ai_requests)")] == ["id", "user_id", "usage_date"]
         connection.execute("INSERT INTO projects(name) VALUES('New')")
@@ -90,7 +90,7 @@ def test_legacy_backfill_preserves_every_field_and_is_idempotent(database, appen
         assert connection.execute("SELECT id,next_bug_number FROM projects ORDER BY id").fetchall() == [(1, 3), (2, 3), (3, 1)]
         for table, values in unrelated.items():
             assert connection.execute(f"SELECT * FROM {table}").fetchall() == values
-        assert connection.execute("PRAGMA user_version").fetchone() == (2,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
         assert connection.execute("SELECT COUNT(*) FROM ai_requests").fetchone() == (0,)
         assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
@@ -120,7 +120,7 @@ def test_migration_failure_rolls_back_schema_data_and_version(database, monkeypa
         def commit(self):
             # Inspect the uncommitted state to prove replacement and version writes happened.
             assert self.in_transaction
-            assert self.execute("PRAGMA user_version").fetchone() == (2,)
+            assert self.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
             assert self.execute(f"SELECT {', '.join(BUG_COLUMNS)} FROM bugs ORDER BY id").fetchall() == original_rows
             assert self.execute("SELECT id,project_id,bug_number FROM bugs ORDER BY id").fetchall() == [(2, 1, 1), (7, 2, 1), (11, 1, 2), (40, 2, 2)]
             assert self.execute("SELECT id,next_bug_number FROM projects ORDER BY id").fetchall() == [(1, 3), (2, 3), (3, 1)]
@@ -152,7 +152,7 @@ def test_migration_failure_rolls_back_schema_data_and_version(database, monkeypa
         assert connection.execute("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").fetchall() == [("bugs",), ("project_members",), ("projects",), ("users",)]
     database.create_tables()
     with closing(original()) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (2,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
         assert connection.execute(f"SELECT {', '.join(BUG_COLUMNS)} FROM bugs ORDER BY id").fetchall() == original_rows
         assert connection.execute("SELECT id,project_id,bug_number FROM bugs ORDER BY id").fetchall() == [(2, 1, 1), (7, 2, 1), (11, 1, 2), (40, 2, 2)]
         assert connection.execute("SELECT id,next_bug_number FROM projects ORDER BY id").fetchall() == [(1, 3), (2, 3), (3, 1)]
@@ -167,7 +167,7 @@ def test_migration_failure_rolls_back_schema_data_and_version(database, monkeypa
     "CREATE TRIGGER unexpected AFTER INSERT ON bugs BEGIN SELECT 1; END",
     "CREATE VIEW unexpected AS SELECT id FROM bugs",
     "CREATE TABLE sqlitex_extra(id INTEGER)",
-    "PRAGMA user_version=3",
+    "PRAGMA user_version=99",
     "DELETE FROM users WHERE id=2",
 ])
 def test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema(database, mutation):
@@ -191,6 +191,7 @@ def version_1_database(database, origin):
         legacy_database(database)
     database.create_tables()
     with closing(database.get_connection()) as connection:
+        connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
         if origin == "fresh":
             connection.executemany("INSERT INTO users VALUES(?,?,?)", [(1, "owner@example.com", "hash"), (2, "qa@example.com", "hash")])
             connection.execute("INSERT INTO projects VALUES(1, 'Fresh', 3)")
@@ -214,9 +215,15 @@ def test_version_1_upgrade_adds_usage_table_and_preserves_all_data(database, ori
     assert version == 1
     database.create_tables()
     version, after = snapshot(database)
-    assert version == 2
-    # Every existing table definition and row is unchanged; only the empty usage table is new.
-    assert [line for line in after if "ai_requests" not in line] == list(before)
+    assert version == database.SCHEMA_VERSION
+    # The additive upgrade keeps all values; compare original tables without the new nullable marker.
+    with closing(database.get_connection()) as connection:
+        assert connection.execute("SELECT DISTINCT demo_kind FROM projects").fetchall() == [(None,)]
+        connection.execute("BEGIN")
+        connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
+        original_tables = tuple(connection.iterdump())
+        connection.rollback()
+    assert [line for line in original_tables if "ai_requests" not in line] == list(before)
     assert [line for line in after if "ai_requests" in line] == [line for line in after if line.startswith('CREATE TABLE ai_requests')]
     with closing(database.get_connection()) as connection:
         assert connection.execute("SELECT COUNT(*) FROM ai_requests").fetchone() == (0,)
@@ -236,7 +243,7 @@ def test_version_1_upgrade_failure_rolls_back_table_and_version(database, monkey
     class FailingConnection(sqlite3.Connection):
         def commit(self):
             # The uncommitted upgrade has created the table and set the version.
-            assert self.execute("PRAGMA user_version").fetchone() == (2,)
+            assert self.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
             assert self.execute("SELECT COUNT(*) FROM sqlite_schema WHERE name='ai_requests'").fetchone() == (1,)
             reached.append("before-commit")
             raise sqlite3.OperationalError("Injected upgrade commit failure")
@@ -248,7 +255,7 @@ def test_version_1_upgrade_failure_rolls_back_table_and_version(database, monkey
     assert reached == ["before-commit"]
     assert snapshot(database) == before
     database.create_tables()
-    assert snapshot(database)[0] == 2
+    assert snapshot(database)[0] == database.SCHEMA_VERSION
 
 
 # TC-436 | Technical — Startup rejects unexpected version 1 or version 2 schema without changes
@@ -265,6 +272,10 @@ def test_startup_rejects_unexpected_version_1_or_2_schema(database, version, mut
     else:
         legacy_database(database)
         database.create_tables()
+        with closing(database.get_connection()) as connection:
+            connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
+            connection.execute("PRAGMA user_version=2")
+            connection.commit()
     with closing(database.get_connection()) as connection:
         connection.execute(mutation)
         connection.commit()
@@ -310,4 +321,49 @@ def test_current_schema_rejects_invalid_counter_without_repair(database):
     before = snapshot(database)
     with pytest.raises(RuntimeError, match="counter"):
         database.create_tables()
+    assert snapshot(database) == before
+
+
+def version_2_database(database):
+    legacy_database(database)
+    database.create_tables()
+    with closing(database.get_connection()) as connection:
+        connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
+        connection.execute("PRAGMA user_version=2")
+        connection.commit()
+
+
+# TC-459 | Technical — Version 2 upgrade adds only an empty Demo marker and preserves data across restart
+def test_version_2_upgrade_adds_demo_marker_without_changing_existing_values(database):
+    version_2_database(database)
+    _, before = snapshot(database)
+    database.create_tables()
+    with closing(database.get_connection()) as connection:
+        assert connection.execute("PRAGMA user_version").fetchone() == (3,)
+        assert connection.execute("SELECT DISTINCT demo_kind FROM projects").fetchall() == [(None,)]
+        connection.execute("BEGIN")
+        connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
+        old_values = tuple(connection.iterdump())
+        connection.rollback()
+    assert old_values == before
+    upgraded = snapshot(database)
+    database.create_tables()
+    assert snapshot(database) == upgraded
+
+
+# TC-460 | Technical — A failed version 2 Demo-marker upgrade rolls back both schema and version
+def test_version_2_demo_marker_upgrade_failure_rolls_back(database, monkeypatch):
+    version_2_database(database)
+    before = snapshot(database)
+
+    class FailingConnection(sqlite3.Connection):
+        def commit(self):
+            assert self.execute("PRAGMA user_version").fetchone() == (3,)
+            assert self.execute("SELECT DISTINCT demo_kind FROM projects").fetchall() == [(None,)]
+            raise sqlite3.OperationalError("Synthetic marker migration failure")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(database, "get_connection", lambda: sqlite3.connect(database.DATABASE_NAME, factory=FailingConnection))
+        with pytest.raises(sqlite3.OperationalError, match="Synthetic marker"):
+            database.create_tables()
     assert snapshot(database) == before

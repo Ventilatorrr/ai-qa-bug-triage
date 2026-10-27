@@ -290,7 +290,12 @@ def test_quality_scenarios_preserve_schema_identity_and_baseline():
     cases = load_quality_scenarios()
     assert [case["id"] for case in cases] == ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q11", "Q12"]
     assert [case["tc_id"] for case in cases] == [f"TC-{number}" for number in range(364, 373)]
-    assert runner.fingerprint(load_scenarios()) == "f7ad0ba5cd12a4a612fe73f65ebd8821b19ffbadab09e156b63c84680376bbcc"
+    # Adding project-local numbers must leave every previously frozen scenario value intact.
+    baseline = load_scenarios()
+    for scenario in baseline:
+        for bug in scenario["context"]["recent_bugs"]:
+            bug.pop("bug_number")
+    assert runner.fingerprint(baseline) == "f7ad0ba5cd12a4a612fe73f65ebd8821b19ffbadab09e156b63c84680376bbcc"
     with runner.isolated_application(live=False):
         from app.ai_context import AiTriageContext
         from app.ai_generation import build_generation_input

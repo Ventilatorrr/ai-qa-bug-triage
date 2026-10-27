@@ -35,6 +35,9 @@ def test_client(test_database, monkeypatch):
     monkeypatch.delenv("AI_DAILY_GLOBAL_LIMIT", raising=False)
 
     from app.main import app
+    from app.api import demo
+
+    demo._recent_starts.clear()  # The hourly Demo allowance is process-wide; isolate each test.
     from app import database
 
     assert database.DATABASE_NAME == str(test_database)

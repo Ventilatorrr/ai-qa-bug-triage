@@ -16,6 +16,7 @@ HISTORY_TEXT_LIMIT = 1000
 
 class HistoricalBugContext(BaseModel):
     id: int
+    bug_number: int
     title: str
     affected_version: str | None
     environment: str | None
@@ -48,7 +49,7 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
     """Call after authorization. History supports, never fills, the submitted form.
 
     Retrieve at most five recent same-project bugs, excluding the edited bug.
-    Only suggestion-supported fields and a source bug ID are included in history.
+    History includes suggestion-supported fields, a database ID and a project-local bug number.
     History is not verified fact for the current bug, and historical assignee IDs
     do not confer eligibility: use the current eligible_assignee_ids for validation.
     Long historical text is shortened; the submitted form is never shortened.
