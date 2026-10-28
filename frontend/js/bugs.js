@@ -64,6 +64,10 @@ const cancelEditFormButton = document.querySelector("#cancel-edit-form");
 const editBugAssigneeLabel = document.querySelector("#edit-bug-assignee-label");
 
 let currentBug = null;
+// Bug values the open edit form was populated from. Save compares against them,
+// so refreshes while editing (such as Back/Forward restores) cannot turn
+// untouched stale fields into changes.
+let editBaseline = null;
 let projectMembers = [];
 let currentMember = null;
 let deleteInProgress = false;
@@ -1239,6 +1243,7 @@ showEditBugFormButton.addEventListener("click", async function() {
         }
 
         currentBug = data;
+        editBaseline = data;
         renderBug(currentBug);
         renderRoleSpecificActions();
         showMessage(bugMessage, "");
@@ -1295,41 +1300,41 @@ editBugForm.addEventListener("submit", async function(event) {
 
     const payload = {};
 
-    if (trimmedTitle !== currentBug.title) {
+    if (trimmedTitle !== editBaseline.title) {
         payload.title = trimmedTitle;
     }
 
     const envVal = editBugEnvironment.value || null;
-    if (envVal !== currentBug.environment) payload.environment = envVal;
+    if (envVal !== editBaseline.environment) payload.environment = envVal;
 
     const descVal = editBugDescription.value || null;
-    if (descVal !== currentBug.description) payload.description = descVal;
+    if (descVal !== editBaseline.description) payload.description = descVal;
 
     const stepsVal = editBugSteps.value || null;
-    if (stepsVal !== currentBug.steps_to_reproduce) payload.steps_to_reproduce = stepsVal;
+    if (stepsVal !== editBaseline.steps_to_reproduce) payload.steps_to_reproduce = stepsVal;
 
     const actualVal = editBugActual.value || null;
-    if (actualVal !== currentBug.actual_result) payload.actual_result = actualVal;
+    if (actualVal !== editBaseline.actual_result) payload.actual_result = actualVal;
 
     const expectedVal = editBugExpected.value || null;
-    if (expectedVal !== currentBug.expected_result) payload.expected_result = expectedVal;
+    if (expectedVal !== editBaseline.expected_result) payload.expected_result = expectedVal;
 
     const severityVal = editBugSeverity.value || null;
-    if (severityVal !== currentBug.severity) payload.severity = severityVal;
+    if (severityVal !== editBaseline.severity) payload.severity = severityVal;
 
     const priorityVal = editBugPriority.value || null;
-    if (priorityVal !== currentBug.priority) payload.priority = priorityVal;
+    if (priorityVal !== editBaseline.priority) payload.priority = priorityVal;
 
     const affectedVal = editBugAffectedVersion.value || null;
-    if (affectedVal !== currentBug.affected_version) payload.affected_version = affectedVal;
+    if (affectedVal !== editBaseline.affected_version) payload.affected_version = affectedVal;
 
-    if (currentBug.status === "Closed" && currentBug.resolution === "Fixed") {
+    if (editBaseline.status === "Closed" && editBaseline.resolution === "Fixed") {
         const fixVal = editBugFixVersion.value || null;
-        if (fixVal !== currentBug.fix_version) payload.fix_version = fixVal;
+        if (fixVal !== editBaseline.fix_version) payload.fix_version = fixVal;
     }
 
-    if (currentBug.status !== "Closed") {
-        const isAlreadyUnassigned = currentBug.assignee_id === null || currentBug.assignee_id === undefined;
+    if (editBaseline.status !== "Closed") {
+        const isAlreadyUnassigned = editBaseline.assignee_id === null || editBaseline.assignee_id === undefined;
         if (isAlreadyUnassigned) {
             // Only include assignee_id if the user picked a real replacement member.
             // An empty select value means "still unassigned" — do not patch.
@@ -1338,7 +1343,7 @@ editBugForm.addEventListener("submit", async function(event) {
             }
         } else {
             const assigneeVal = editBugAssignee.value ? parseInt(editBugAssignee.value, 10) : null;
-            if (assigneeVal !== currentBug.assignee_id) {
+            if (assigneeVal !== editBaseline.assignee_id) {
                 payload.assignee_id = assigneeVal;
             }
         }
