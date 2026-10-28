@@ -485,3 +485,24 @@ def test_ai_triage_client_factory_disables_retries_without_reading_credentials(t
     client = ai_triage.create_openai_client("explicit-dummy-key")
     assert client is constructor.return_value
     constructor.assert_called_once_with(api_key="explicit-dummy-key", timeout=60.0, max_retries=0)
+
+
+# TC-491 | — — AI provider failures are logged with only the error type and HTTP status, never content or credentials
+@pytest.mark.parametrize("failure,logged", [
+    ("transport", "AI provider request failed: InternalServerError (HTTP status 500)."),
+    ("malformed", "AI provider returned a malformed suggestion response."),
+])
+def test_ai_provider_failures_are_logged_without_content(
+    test_client, ai_project, blank_form, offline_provider, caplog, failure, logged,
+):
+    secret_error = "integration-test-key Private current draft sensitive provider error"
+    if failure == "transport":
+        offline_provider["error"] = secret_error
+    else:
+        offline_provider["raw"] = {"provider_details": secret_error}
+    with caplog.at_level("WARNING", logger="app.ai_triage"):
+        response = test_client.post(request_url(ai_project, False), headers=headers(ai_project[0]), json=blank_form)
+    assert response.status_code == 502
+    assert logged in caplog.text
+    for private_text in ("integration-test-key", "Private current draft", "sensitive provider error"):
+        assert private_text not in caplog.text

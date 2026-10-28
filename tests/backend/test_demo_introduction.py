@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 
-# TC-461 | AC-024.4, AC-024.7 — Only a seeded historical project gets the server-owned marker
+# TC-461 | AC-024.3, AC-024.4, AC-024.7 — Only seeded Demo projects get their server-owned markers
 def test_historical_demo_marker_is_seeded_persistent_and_not_name_based(
     test_client, test_database, authenticated_user_factory, monkeypatch,
 ):
@@ -24,7 +24,7 @@ def test_historical_demo_marker_is_seeded_persistent_and_not_name_based(
     history_id = next(p["id"] for p in projects if p["name"] == "AI QA Bug Triage")
     ecommerce_id = next(p["id"] for p in projects if p["name"] == "E-Commerce Demo")
     assert test_client.get(f"/projects/{history_id}", headers=headers).json()["demo_kind"] == "history"
-    assert "demo_kind" not in test_client.get(f"/projects/{ecommerce_id}", headers=headers).json()
+    assert test_client.get(f"/projects/{ecommerce_id}", headers=headers).json()["demo_kind"] == "ecommerce"
 
     ordinary = authenticated_user_factory(email="ordinary@example.com")
     ordinary_headers = {"Authorization": f"Bearer {ordinary['token']}"}

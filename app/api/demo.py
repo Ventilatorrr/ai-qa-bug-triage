@@ -1,6 +1,9 @@
 from collections import deque
+from contextlib import closing
 import json
 import logging
+import os
+import re
 import secrets
 import threading
 import time
@@ -8,7 +11,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.auth import create_access_token, hash_password
+from app.api.auth import PasswordWorkBusy, create_access_token, hash_password
 from app.database import get_connection
 
 
@@ -17,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 DEMO_DATA = Path(__file__).resolve().parents[1] / "demo_data"
 SEED_FILES = ("demo_ecommerce.json", "ai_qa_bug_triage.json")
+# Server-owned Demo identity of each seeded project, kept after renaming.
+DEMO_KINDS = {"E-Commerce Demo": "ecommerce", "AI QA Bug Triage": "history"}
 TEAM_REFS = ("owner", "qa1", "qa2", "dev1", "dev2")  # Roles come from project memberships.
 
 # Name-like four-letter aliases such as jane@example.com or noel@example.com. Measured in
@@ -41,12 +46,17 @@ SEEDED_FIELDS = (
 )
 
 # Lightweight protection for the public endpoint, without IP tracking or new tables:
-# a process-wide limit on Demos started per hour and a cap on stored Demo environments.
+# a process-wide limit on Demos started per hour and a lifetime cap on created Demos.
 DEMO_HOURLY_LIMIT = 20
+# Default lifetime cap. The DEMO_TOTAL_LIMIT environment setting overrides it per request;
+# 0 disables Try Demo. Demos are never deleted, so accounts only accumulate, and the
+# ~12,800 generated addresses (five per Demo) make 2,000 the practical maximum.
 DEMO_TOTAL_LIMIT = 1000
-# Stored Demos are counted conservatively as five accounts each among all four-letter
+DEMO_TOTAL_LIMIT_MAX = 2000
+# Created Demos are counted conservatively as five accounts each among all four-letter
 # @example.com addresses. Ordinary accounts with such an address also count toward the cap.
 DEMO_ACCOUNT_EMAILS = "[a-z][a-z][a-z][a-z]@example.com"  # Case-sensitive SQL GLOB pattern.
+DEMO_CAPACITY_MESSAGE = "The Demo is currently unavailable. Please register an account instead."
 _recent_starts = deque()
 _recent_starts_lock = threading.Lock()
 
@@ -93,12 +103,32 @@ def release_hourly_start(started):
             _recent_starts.remove(started)
 
 
+def configured_demo_limit():
+    value = (os.getenv("DEMO_TOTAL_LIMIT") or "").strip()
+    if not value:
+        return DEMO_TOTAL_LIMIT
+    if not re.fullmatch(r"[0-9]+", value) or int(value) > DEMO_TOTAL_LIMIT_MAX:
+        logger.error("DEMO_TOTAL_LIMIT must be a whole number from 0 to %d; Try Demo is unavailable.",
+                     DEMO_TOTAL_LIMIT_MAX)
+        return 0
+    return int(value)
+
+
+def demo_capacity_reached(conn, limit):
+    accounts = conn.execute("SELECT COUNT(*) FROM users WHERE email GLOB ?", (DEMO_ACCOUNT_EMAILS,)).fetchone()[0]
+    if accounts < limit * len(TEAM_REFS):
+        return False
+    # Operators watch for this: capacity is only recovered by raising DEMO_TOTAL_LIMIT.
+    logger.warning("Try Demo refused: limit %d reached (%d matching accounts).", limit, accounts)
+    return True
+
+
 def insert_seeded_project(conn, seed, user_ids):
     """Insert a project, its five members and its bugs directly in their final seeded state."""
     next_bug_number = max(bug["number"] for bug in seed["bugs"]) + 1
     project_id = conn.execute(
         "INSERT INTO projects (name, next_bug_number, demo_kind) VALUES (?, ?, ?)",
-        (seed["project"], next_bug_number, "history" if seed["project"] == "AI QA Bug Triage" else None),
+        (seed["project"], next_bug_number, DEMO_KINDS[seed["project"]]),
     ).lastrowid
     conn.executemany(
         "INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, ?)",
@@ -124,15 +154,23 @@ def create_demo():
     started = reserve_hourly_start()
     try:
         seeds = load_seeds()
+        limit = configured_demo_limit()
+        # Refuse at capacity before any bcrypt work; the check inside the
+        # transaction below remains authoritative.
+        with closing(get_connection()) as conn:
+            if demo_capacity_reached(conn, limit):
+                raise DemoUnavailable(503, DEMO_CAPACITY_MESSAGE)
         # Random passwords are never stored or returned in plain text. Hash them before
         # the transaction so the database write lock is not held during bcrypt.
-        password_hashes = {ref: hash_password(secrets.token_urlsafe(32)) for ref in TEAM_REFS}
+        try:
+            password_hashes = {ref: hash_password(secrets.token_urlsafe(32)) for ref in TEAM_REFS}
+        except PasswordWorkBusy as error:
+            raise DemoUnavailable(503, str(error)) from None
         conn = get_connection()
         try:
             conn.execute("BEGIN IMMEDIATE")
-            accounts = conn.execute("SELECT COUNT(*) FROM users WHERE email GLOB ?", (DEMO_ACCOUNT_EMAILS,)).fetchone()[0]
-            if accounts >= DEMO_TOTAL_LIMIT * len(TEAM_REFS):
-                raise DemoUnavailable(503, "The Demo is currently unavailable. Please register an account instead.")
+            if demo_capacity_reached(conn, limit):
+                raise DemoUnavailable(503, DEMO_CAPACITY_MESSAGE)
             # The IMMEDIATE lock serializes writers, so addresses found free stay free until commit.
             for _ in range(ALIAS_ATTEMPTS):
                 candidates = [f"{alias}@example.com" for alias in alias_candidates()]

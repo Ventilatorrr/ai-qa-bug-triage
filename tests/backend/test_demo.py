@@ -250,3 +250,46 @@ def test_demo_creation_stops_at_stored_demo_cap(test_client, test_database, user
     assert table_counts(test_database) == before
     assert len(demo_projects(test_client, first)) == 2  # The existing Demo keeps working.
     user_factory(email="registered@example.com")  # Normal registration is unaffected.
+
+
+# TC-476 | — — A Demo refused at the cap does no password hashing and keeps its hourly slot free
+def test_demo_refused_at_cap_does_no_password_hashing(test_client, monkeypatch):
+    from app.api import demo
+
+    monkeypatch.setattr(demo, "DEMO_TOTAL_LIMIT", 1)
+    start_demo(test_client)
+    starts = len(demo._recent_starts)
+
+    def no_hashing(password):
+        raise AssertionError("A Demo refused at the cap must not hash passwords.")
+
+    monkeypatch.setattr(demo, "hash_password", no_hashing)
+    response = test_client.post("/demo")
+    assert response.status_code == 503
+    assert response.json() == {"detail": demo.DEMO_CAPACITY_MESSAGE}
+    assert len(demo._recent_starts) == starts
+
+
+# TC-489 | — — DEMO_TOTAL_LIMIT overrides the lifetime cap; 0 disables Try Demo and invalid values make it unavailable, with logs
+@pytest.mark.parametrize("setting,allowed,log", [
+    ("2", True, None),
+    ("0", False, "Try Demo refused"),
+    ("2001", False, "DEMO_TOTAL_LIMIT must be a whole number"),
+    ("ten", False, "DEMO_TOTAL_LIMIT must be a whole number"),
+])
+def test_demo_total_limit_setting(test_client, test_database, monkeypatch, caplog, setting, allowed, log):
+    from app.api import demo
+
+    monkeypatch.setattr(demo, "DEMO_TOTAL_LIMIT", 1)  # The environment overrides the default.
+    monkeypatch.setenv("DEMO_TOTAL_LIMIT", setting)
+    before = table_counts(test_database)
+    if allowed:
+        start_demo(test_client)
+        start_demo(test_client)
+    with caplog.at_level("WARNING", logger="app.api.demo"):
+        response = test_client.post("/demo")
+    assert response.status_code == 503
+    assert response.json() == {"detail": demo.DEMO_CAPACITY_MESSAGE}
+    assert log is None or log in caplog.text
+    if not allowed:
+        assert table_counts(test_database) == before

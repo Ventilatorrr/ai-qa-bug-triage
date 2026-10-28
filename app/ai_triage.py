@@ -1,3 +1,4 @@
+import logging
 import os
 
 from app.ai_context import AiTriageContext, build_triage_context, load_eligible_assignees
@@ -7,6 +8,9 @@ from app.ai_response import process_provider_response
 from app.ai_suggestions import MalformedSuggestionResponse, SuggestionResult
 from app.ai_usage import AiUsageLimitReached, AiUsageMisconfigured, reserve_ai_request
 from app.schemas import AiAssistRequest
+
+
+logger = logging.getLogger(__name__)
 
 
 class AiTriageUnavailable(Exception):
@@ -44,9 +48,14 @@ def request_suggestions(context: AiTriageContext, *, project_id: int, user_id: i
             raw_response = request_openai_suggestions(generation_input, client=client)
     except (AiUsageLimitReached, AiUsageMisconfigured):
         raise  # Returned unchanged as 429/503 by the endpoint.
-    except Exception:
-        # SDK/client errors may contain credentials or request content. Do not
-        # propagate/log them; keep this catch limited to the provider boundary.
+    except Exception as error:
+        # SDK/client errors may contain credentials or request content. Log only
+        # the error type and HTTP status, never the message, so failures can still
+        # be diagnosed; keep this catch limited to the provider boundary.
+        logger.warning(
+            "AI provider request failed: %s (HTTP status %s).",
+            type(error).__name__, getattr(error, "status_code", None),
+        )
         raise AiTriageFailed("AI assistance could not generate suggestions. Please try again.") from None
     # Membership can change while generation runs. Keep the provider's snapshot,
     # but validate its output against current eligibility from the same project.
@@ -56,4 +65,5 @@ def request_suggestions(context: AiTriageContext, *, project_id: int, user_id: i
     try:
         return process_provider_response(validation_context, raw_response)
     except MalformedSuggestionResponse:
+        logger.warning("AI provider returned a malformed suggestion response.")
         raise AiTriageFailed("AI assistance returned an invalid suggestion response. Please try again.") from None

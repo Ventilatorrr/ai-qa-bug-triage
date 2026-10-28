@@ -1603,3 +1603,48 @@ def test_add_member_matches_email_like_login(
         ("case-owner@example.com", "Project Owner"),
         ("Case-Member@example.com", "Developer")
     ]
+
+
+# TC-486 | AC-009.6, AC-010.4 — A QA Analyst or Developer can leave a project; only their bugs there become unassigned and they lose access
+@pytest.mark.parametrize("role", ["QA Analyst", "Developer"])
+def test_member_can_leave_project(test_client, authenticated_user_factory, project_factory, member_factory, role):
+    owner = authenticated_user_factory(email="leave-owner@example.com")
+    member = authenticated_user_factory(email="leave-member@example.com")
+    other = authenticated_user_factory(email="leave-other@example.com")
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    member_headers = {"Authorization": f"Bearer {member['token']}"}
+    project = project_factory(owner["token"], name="Project to Leave")
+    other_project = project_factory(owner["token"], name="Project to Keep")
+    for target in (project, other_project):
+        member_factory(owner["token"], target["id"], member["user"]["email"], role)
+    member_factory(owner["token"], project["id"], other["user"]["email"], role)
+
+    bugs = [
+        test_client.post(f"/projects/{target['id']}/bugs", headers=owner_headers,
+                         json={"title": "Assigned before leaving", "assignee_id": assignee["user_id"]}).json()
+        for target, assignee in [(project, member), (project, other), (other_project, member)]
+    ]
+
+    # A member cannot remove someone else, and the owner's own entry is not "leaving".
+    assert test_client.delete(f"/projects/{project['id']}/members/{other['user_id']}",
+                              headers=member_headers).status_code == 404
+    response = test_client.delete(f"/projects/{project['id']}/members/{member['user_id']}", headers=member_headers)
+    assert response.status_code == 200
+    assert response.json() == {"message": "You left the project."}
+
+    for bug in bugs:
+        stored = test_client.get(f"/projects/{bug['project_id']}/bugs/{bug['bug_number']}", headers=owner_headers).json()
+        if bug["project_id"] == project["id"] and bug["assignee_id"] == member["user_id"]:
+            assert stored["assignee_id"] is None
+            assert stored["updated_at"] != bug["updated_at"]
+            assert stored == bug | {"assignee_id": None, "updated_at": stored["updated_at"]}
+        else:
+            assert stored == bug
+
+    assert test_client.get(f"/projects/{project['id']}", headers=member_headers).status_code == 404
+    assert test_client.get(f"/projects/{other_project['id']}", headers=member_headers).status_code == 200
+    members = test_client.get(f"/projects/{project['id']}/members", headers=owner_headers).json()
+    assert [entry["email"] for entry in members] == ["leave-owner@example.com", "leave-other@example.com"]
+    # The owner cannot leave (TC-210 keeps the existing 400).
+    assert test_client.delete(f"/projects/{project['id']}/members/{owner['user_id']}",
+                              headers=owner_headers).status_code == 400

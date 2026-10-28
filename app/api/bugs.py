@@ -209,6 +209,9 @@ def get_bugs(
     conn = get_connection()
 
     try:
+        # One read snapshot from the membership check through the data read, so a
+        # recycled project ID cannot be read with stale authorization (BUG-49).
+        conn.execute("BEGIN")
         membership = conn.execute(
             """
             SELECT 1
@@ -273,6 +276,9 @@ def get_bug(
     conn = get_connection()
 
     try:
+        # One read snapshot from the membership check through the data read, so a
+        # recycled project ID cannot be read with stale authorization (BUG-49).
+        conn.execute("BEGIN")
         membership = conn.execute(
             """
             SELECT 1
@@ -953,6 +959,9 @@ def delete_bug(
     conn = get_connection()
 
     try:
+        # Hold the write lock from authorization through deletion, as the other
+        # bug writes do, so a recycled project ID cannot be affected (BUG-49).
+        conn.execute("BEGIN IMMEDIATE")
         membership = conn.execute(
             """
             SELECT role
@@ -999,6 +1008,9 @@ def delete_bug(
 
         conn.commit()
 
+    except BaseException:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 

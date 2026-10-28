@@ -10,7 +10,8 @@ from tests.e2e.pages import BugForm
 
 # TC-378 | AC-011.1 — BUG-34 creation confirmation wraps without overflow
 @pytest.mark.parametrize("width", [1280, 375], ids=["desktop", "narrow"])
-@pytest.mark.parametrize("title", ["Synthetic bug", "W" * 2000], ids=["normal", "unbroken"])
+# The unbroken title uses the 255-character maximum (AC-011.5).
+@pytest.mark.parametrize("title", ["Synthetic bug", "W" * 255], ids=["normal", "unbroken"])
 def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, width, title):
     form = BugForm(page)
     page.set_viewport_size({"width": width, "height": 900})

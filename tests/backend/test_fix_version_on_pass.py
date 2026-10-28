@@ -363,3 +363,27 @@ def test_competing_testing_outcomes_cannot_both_apply(test_client, lifecycle_bug
         "Development", actors["developer"]["user_id"], None, None
     )
     assert "database is locked" in outcome.get("blocked", "")
+
+
+# TC-479 | AC-011.5, AC-017.5, AC-013.2 — Fix Version over 50 characters is rejected on the Passed transition and Closed/Fixed edit
+@pytest.mark.parametrize("operation", ["passed", "closed_edit"])
+def test_fix_version_length_limit(test_client, lifecycle_bug, operation):
+    url, before, actors = lifecycle_bug(state="Testing" if operation == "passed" else "Closed")
+    headers = {"Authorization": f"Bearer {actors['owner']['token']}"}
+
+    def send(value):
+        if operation == "passed":
+            return test_client.patch(
+                f"{url}/status", headers=headers,
+                json={"status": "Closed", "testing_outcome": "Passed", "fix_version": value},
+            )
+        return test_client.patch(url, headers=headers, json={"fix_version": value})
+
+    response = send("v" * 51)
+    assert response.status_code == 422
+    assert "Fix Version must be 50 characters or fewer." in response.json()["detail"][0]["msg"]
+    assert test_client.get(url, headers=headers).json() == before
+
+    response = send("v" * 50)
+    assert response.status_code == 200
+    assert response.json()["fix_version"] == "v" * 50
