@@ -683,7 +683,7 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-493"></a>TC-493 | AC-009.1, AC-009.2, AC-011.1 | Project page member and bug messages are polite status live regions, and empty `.section-message` regions are never `display: none` or hidden, so they stay in the accessibility tree (BUG-51 regression) | Frontend JS / static markup and CSS | [`test_project_page_status_messages_are_live_regions`](../tests/frontend/project-status-messages.test.cjs#L7); All variants |
+| <a id="tc-493"></a>TC-493 | AC-009.1, AC-009.2, AC-011.1 | Project page member and bug messages are polite status live regions, and empty `.section-message` regions are never `display: none` or hidden, so they stay in the accessibility tree (BUG-51 regression) | Frontend JS / static markup and CSS | [`test_project_page_status_messages_are_live_regions`](../tests/frontend/project-status-messages.test.cjs#L9); All variants |
 
 ## tests/frontend/registration.test.cjs
 
@@ -724,8 +724,8 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-331"></a>TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5 | Manage membership, verify displayed email/role grouping and alphabetical order after unsorted insertion, and revoke removed-user access | Playwright / Chromium | [`test_owner_manages_membership_and_removed_user_loses_access`](../tests/e2e/test_authorization.py#L7); All variants |
-| <a id="tc-332"></a>TC-332 | AC-012.3, AC-014.2, AC-022.1 | Developer cannot delete or request AI and outsider cannot open bug | Playwright / Chromium (mocked AI) | [`test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug`](../tests/e2e/test_authorization.py#L72); All variants |
+| <a id="tc-331"></a>TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5, AC-009.6 | Manage membership, verify displayed email/role grouping and alphabetical order after unsorted insertion, a Developer's single Leave Project button on their own entry and no Remove buttons, and revoke removed-user access | Playwright / Chromium | [`test_owner_manages_membership_and_removed_user_loses_access`](../tests/e2e/test_authorization.py#L7); All variants |
+| <a id="tc-332"></a>TC-332 | AC-012.3, AC-014.2, AC-022.1 | Developer cannot delete or request AI and outsider cannot open bug | Playwright / Chromium (mocked AI) | [`test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug`](../tests/e2e/test_authorization.py#L78); All variants |
 
 ## tests/e2e/test_bug_list.py
 
@@ -734,17 +734,17 @@ parameter selector.
 | <a id="tc-333"></a>TC-333 | AC-012.2, AC-012.4, AC-012.5, AC-012.6 | Sort pagination and page size survive navigation and reload | Playwright / Chromium | [`test_sort_pagination_and_page_size_survive_navigation_and_reload`](../tests/e2e/test_bug_list.py#L10); All variants |
 | <a id="tc-334"></a>TC-334 | AC-012.5, AC-012.6 | Page size preferences persist and are isolated by user | Playwright / Chromium | [`test_page_size_preferences_persist_and_are_isolated_by_user`](../tests/e2e/test_bug_list.py#L53); All variants |
 | <a id="tc-411"></a>TC-411 | AC-012.1 | Desktop rows clamp long titles to two lines; mobile cards show full titles | Playwright / Chromium | [`test_desktop_rows_clamp_long_titles_to_two_lines`](../tests/e2e/test_bug_list.py#L118); All variants |
-| <a id="tc-412"></a>TC-412 | — | Desktop column positions stay fixed across pages, sorting and page size | Playwright / Chromium | [`test_desktop_column_positions_stay_fixed_across_pages`](../tests/e2e/test_bug_list.py#L146); All variants |
+| <a id="tc-412"></a>TC-412 | — | Desktop column positions stay fixed across pages, sorting and page size | Playwright / Chromium | [`test_desktop_column_positions_stay_fixed_across_pages`](../tests/e2e/test_bug_list.py#L147); All variants |
 
 ## tests/e2e/test_bugs.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L79); All variants |
-| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L126); All variants |
-| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L171); All variants |
-| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L199); All variants |
-| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L15); title=normal/unbroken (255 characters, the AC-011.5 maximum), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
+| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L82); All variants |
+| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L129); All variants |
+| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L174); All variants |
+| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L202); All variants |
+| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L18); title=normal/unbroken (255 characters, the AC-011.5 maximum), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
 
 ## tests/e2e/test_projects.py
 

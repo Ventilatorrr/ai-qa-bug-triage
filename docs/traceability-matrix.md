@@ -49,7 +49,7 @@ only), **Manual**, and **Real-model evaluation / assisted review**.
 | REQ-009 | AC-009.3 — Invalid Member | [TC-207](test-cases.md#tc-207), [TC-408](test-cases.md#tc-408) | API | Covered |
 | REQ-009 | AC-009.4 — Duplicate Member | [TC-208](test-cases.md#tc-208), [TC-408](test-cases.md#tc-408) | API | Covered |
 | REQ-009 | AC-009.5 — View Project Members | [TC-209](test-cases.md#tc-209), [TC-331](test-cases.md#tc-331), [TC-485](test-cases.md#tc-485) | API; Playwright; Postman API | Covered |
-| REQ-009 | AC-009.6 — Leave Project | [TC-486](test-cases.md#tc-486), [TC-487](test-cases.md#tc-487), [TC-488](test-cases.md#tc-488) | API; Frontend JS | Partial |
+| REQ-009 | AC-009.6 — Leave Project | [TC-331](test-cases.md#tc-331), [TC-486](test-cases.md#tc-486), [TC-487](test-cases.md#tc-487), [TC-488](test-cases.md#tc-488) | API; Frontend JS; Playwright | Partial |
 | REQ-010 | AC-010.1 — Project Owner Role | [TC-211](test-cases.md#tc-211) | API; Postman API | Covered |
 | REQ-010 | AC-010.2 — QA Analyst Role | [TC-212](test-cases.md#tc-212) | API | Covered |
 | REQ-010 | AC-010.3 — Developer Role | [TC-213](test-cases.md#tc-213) | API | Covered |

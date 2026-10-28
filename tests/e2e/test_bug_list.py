@@ -116,7 +116,8 @@ def test_page_size_preferences_persist_and_are_isolated_by_user(page, e2e_api, w
 
 # TC-411 | AC-012.1 — Desktop rows clamp long titles to two lines; mobile cards show full titles
 def test_desktop_rows_clamp_long_titles_to_two_lines(page, e2e_api, workspace):
-    long_title = "Synthetic long title " + " ".join(["that keeps wrapping across the title column"] * 8)
+    # 240 characters: within the 255-character title limit (AC-011.5) but still more than two lines.
+    long_title = "Synthetic long title " + " ".join(["that keeps wrapping across the title column"] * 5)
     seed_bug(e2e_api, workspace, title="Synthetic short title")
     seed_bug(e2e_api, workspace, title=long_title)
     bugs = BugList(page)

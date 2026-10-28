@@ -8,10 +8,13 @@ from tests.e2e.helpers import api_call, bug_path, detail, login, open_bug, seed_
 from tests.e2e.pages import BugForm
 
 
+# The unbroken title uses the 255-character maximum (AC-011.5).
+UNBROKEN_TITLE = "W" * 255
+
+
 # TC-378 | AC-011.1 — BUG-34 creation confirmation wraps without overflow
 @pytest.mark.parametrize("width", [1280, 375], ids=["desktop", "narrow"])
-# The unbroken title uses the 255-character maximum (AC-011.5).
-@pytest.mark.parametrize("title", ["Synthetic bug", "W" * 255], ids=["normal", "unbroken"])
+@pytest.mark.parametrize("title", ["Synthetic bug", UNBROKEN_TITLE], ids=["normal", "unbroken"])
 def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, width, title):
     form = BugForm(page)
     page.set_viewport_size({"width": width, "height": 900})
@@ -69,7 +72,7 @@ def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, wid
     for line in layout["lines"]:
         assert layout["left"] - 1 <= line["left"] < line["right"] <= layout["right"] + 1, layout
         assert layout["top"] - 1 <= line["top"] < line["bottom"] <= layout["bottom"] + 1, layout
-    if len(title) == 2000:
+    if title == UNBROKEN_TITLE:
         assert len(layout["lines"]) > 1
     else:
         assert len(layout["lines"]) == 1
