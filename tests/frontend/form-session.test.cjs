@@ -232,7 +232,9 @@ test("test_new_create_invalid_number_response_preserves_form", async () => {
         assert.equal(f.form.hidden, false);
         assert.equal(f.inputs["#bug-title"].value, "Keep unsaved report");
         assert.equal(f.refreshes(), 0);
-        assert.ok(f.messages.some(([text]) => /Invalid server response/.test(text)));
+        // Submission errors stay beside Create while the form is open (BUG-53).
+        assert.match(f.node("#new-bug-message").textContent, /Invalid server response/);
+        assert.equal(f.messages.some(([text]) => /Invalid server response/.test(text)), false);
     }
 });
 
@@ -378,13 +380,16 @@ async function check_delayed_create_list_refresh_preserves_newer_session(boundar
         const aiFeedback = f.message.textContent;
         f.send = async () => ({ok: false, json: async () => ({detail: "Title must not be blank."})});
         await f.save();
-        assert.equal(f.node("#bug-message").textContent, "Title must not be blank.");
+        assert.equal(f.node("#new-bug-message").textContent, "Title must not be blank.");
+        assert.equal(f.node("#bug-message").textContent, "");
 
         if (boundary === "response") delayed.resolve({ok, json: async () => result});
         else delayed.resolve(result);
         await first;
-        assert.equal(f.node("#bug-message").textContent, "Title must not be blank.",
+        assert.equal(f.node("#new-bug-message").textContent, "Title must not be blank.",
             "earlier refresh must not overwrite validation feedback in the newer session");
+        assert.equal(f.node("#bug-message").textContent, "",
+            "earlier refresh must not add list feedback to the newer session");
         assert.equal(f.form.hidden, false);
         assert.equal(f.openButton.hidden, true);
         assert.equal(f.inputs["#bug-title"].value, "   ");
@@ -450,7 +455,8 @@ test("test_new_create_failure_reenables_create_for_retry", async () => {
         assert.equal(f.createButton.disabled, false, `${failure} allows another submission`);
         assert.equal(f.form.hidden, false);
         assert.equal(f.inputs["#bug-title"].value, "Retry after failure");
-        assert.match(f.messages.at(-1)[0], failure === "http_error" ? /Bug title is required/ : /Unable to create bug/);
+        assert.match(f.node("#new-bug-message").textContent, failure === "http_error" ? /Bug title is required/ : /Unable to create bug/);
+        assert.deepEqual(f.messages.filter(([text]) => text), [], "submission errors are not shown above the form");
         assert.equal(f.refreshes(), 0);
 
         f.send = async (url, options) => {
@@ -702,4 +708,62 @@ test("test_restored_read_only_bug_view_refreshes_newer_server_data", async () =>
     assert.equal(f.form.hidden, true);
     assert.equal(f.rendered.at(-1), "Newer title");
     assert.deepEqual(refreshedBug(f), {title: "Newer title", status: "Open", assignee_id: 7});
+});
+
+
+// TC-494 | AC-011.5 — New Bug submission errors appear beside Create without the validation prefix, keeping the form and values (BUG-53 regression)
+test("test_new_bug_submission_errors_appear_beside_create", async () => {
+    const tooLong = "x".repeat(256), retry = "Unable to create bug. Please try again.";
+    for (const [failure, reply, expected] of [
+        ["validation", {ok: false, json: async () => ({detail: [{msg: "Value error, Title must be 255 characters or fewer."}]})},
+            "Title must be 255 characters or fewer."],
+        ["authorization", {ok: false, json: async () => ({detail: "Project not found."})}, "Project not found."],
+        ["server", {ok: false, json: async () => { throw new SyntaxError("Unexpected token <"); }}, retry],
+        ["network", new Error("Offline"), retry],
+        ["invalid_response", {ok: true, json: async () => ({id: 2})}, "Unable to confirm bug creation. Invalid server response."],
+    ]) {
+        const f = pageFixture(false);
+        vm.runInContext(fs.readFileSync(path.join(__dirname, "../../frontend/js/api-errors.js"), "utf8"), f.runtime);
+        await f.open();
+        f.inputs["#bug-title"].value = tooLong;
+        f.inputs["#bug-description"].value = "Keep this description";
+        f.send = async () => { if (reply instanceof Error) throw reply; return reply; };
+        await f.save();
+        const message = f.node("#new-bug-message");
+        assert.equal(message.textContent, expected, failure);
+        assert.ok(message.classList.contains("message-error"), failure);
+        assert.deepEqual(f.messages.filter(([text]) => text), [], `${failure} is not reported above the form`);
+        assert.equal(f.form.hidden, false);
+        assert.equal(f.inputs["#bug-title"].value, tooLong);
+        assert.equal(f.inputs["#bug-description"].value, "Keep this description");
+        assert.equal(f.createButton.disabled, false);
+    }
+});
+
+// TC-495 | AC-011.1 — New Bug errors do not persist after Cancel, reopening, a new submission or success; success stays above the bug list (BUG-53 regression)
+test("test_new_bug_submission_errors_do_not_persist", async () => {
+    const f = pageFixture(false), message = f.node("#new-bug-message");
+    const fail = async () => ({ok: false, json: async () => ({detail: "Bug title is required."})});
+    await f.open();
+    f.inputs["#bug-title"].value = "Valid title";
+    f.send = fail;
+    await f.save();
+    assert.equal(message.textContent, "Bug title is required.");
+    await f.cancel();
+    assert.equal(message.textContent, "");
+    await f.open();
+    assert.equal(message.textContent, "");
+
+    f.inputs["#bug-title"].value = "Valid title";
+    await f.save();
+    assert.equal(message.textContent, "Bug title is required.");
+    const pending = deferred();
+    f.send = () => pending.promise;
+    const saving = f.save();
+    assert.equal(message.textContent, "", "a new submission clears the earlier error");
+    pending.resolve({ok: true, json: async () => ({...f.stored, bug_number: 12, title: "Valid title"})});
+    await saving;
+    assert.equal(f.form.hidden, true);
+    assert.equal(message.textContent, "");
+    assert.ok(f.messages.some(([text]) => text === 'BUG-12 "Valid title" created successfully.'));
 });

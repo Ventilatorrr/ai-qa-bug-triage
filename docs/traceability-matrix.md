@@ -11,7 +11,7 @@ Test types: **API** (pytest with FastAPI TestClient), **Python unit**, **Databas
 (manually launched native-control checks), **Postman API** (selected API variants
 only), **Manual**, and **Real-model evaluation / assisted review**.
 
-**102 Covered / 2 Partial / 0 Not Covered / 104 total.**
+**103 Covered / 1 Partial / 0 Not Covered / 104 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -55,11 +55,11 @@ only), **Manual**, and **Real-model evaluation / assisted review**.
 | REQ-010 | AC-010.3 — Developer Role | [TC-213](test-cases.md#tc-213) | API | Covered |
 | REQ-010 | AC-010.4 — Unauthorized Project Member Management | [TC-214](test-cases.md#tc-214), [TC-486](test-cases.md#tc-486) | API | Covered |
 | REQ-010 | AC-010.5 — Unauthorized Project Actions | [TC-215](test-cases.md#tc-215), [TC-216](test-cases.md#tc-216), [TC-388](test-cases.md#tc-388) | API; BDD; Playwright | Covered |
-| REQ-011 | AC-011.1 — Successful Bug Creation | [TC-066](test-cases.md#tc-066), [TC-132](test-cases.md#tc-132), [TC-133](test-cases.md#tc-133), [TC-138](test-cases.md#tc-138), [TC-335](test-cases.md#tc-335), [TC-378](test-cases.md#tc-378), [TC-389](test-cases.md#tc-389), [TC-492](test-cases.md#tc-492), [TC-493](test-cases.md#tc-493) | API; BDD; Playwright; Postman API | Covered |
+| REQ-011 | AC-011.1 — Successful Bug Creation | [TC-066](test-cases.md#tc-066), [TC-132](test-cases.md#tc-132), [TC-133](test-cases.md#tc-133), [TC-138](test-cases.md#tc-138), [TC-335](test-cases.md#tc-335), [TC-378](test-cases.md#tc-378), [TC-389](test-cases.md#tc-389), [TC-492](test-cases.md#tc-492), [TC-493](test-cases.md#tc-493), [TC-495](test-cases.md#tc-495) | API; BDD; Frontend JS; Playwright; Postman API | Covered |
 | REQ-011 | AC-011.2 — Missing Bug Title | [TC-067](test-cases.md#tc-067) | API; Postman API | Covered |
 | REQ-011 | AC-011.3 — Unauthorized Bug Creation | [TC-068](test-cases.md#tc-068) | API | Covered |
 | REQ-011 | AC-011.4 — Optional Bug Information | [TC-069](test-cases.md#tc-069), [TC-160](test-cases.md#tc-160), [TC-161](test-cases.md#tc-161), [TC-338](test-cases.md#tc-338) | API; Playwright; Postman API | Covered |
-| REQ-011 | AC-011.5 — Bug Information Length Limits | [TC-478](test-cases.md#tc-478), [TC-479](test-cases.md#tc-479) | API | Partial |
+| REQ-011 | AC-011.5 — Bug Information Length Limits | [TC-478](test-cases.md#tc-478), [TC-479](test-cases.md#tc-479), [TC-481](test-cases.md#tc-481), [TC-494](test-cases.md#tc-494), [TC-496](test-cases.md#tc-496), [TC-497](test-cases.md#tc-497) | API; Database; Python unit; Frontend JS; Playwright; Manual | Covered |
 | REQ-012 | AC-012.1 — View Bug List | [TC-070](test-cases.md#tc-070), [TC-271](test-cases.md#tc-271), [TC-343](test-cases.md#tc-343), [TC-411](test-cases.md#tc-411) | API; Frontend JS; Manual; Playwright | Covered |
 | REQ-012 | AC-012.2 — Open Bug Report | [TC-071](test-cases.md#tc-071), [TC-135](test-cases.md#tc-135), [TC-262](test-cases.md#tc-262), [TC-264](test-cases.md#tc-264), [TC-266](test-cases.md#tc-266), [TC-267](test-cases.md#tc-267), [TC-333](test-cases.md#tc-333), [TC-341](test-cases.md#tc-341), [TC-343](test-cases.md#tc-343), [TC-344](test-cases.md#tc-344) | API; Browser fixture; Frontend JS; Manual; Playwright; Postman API | Covered |
 | REQ-012 | AC-012.3 — Unauthorized Bug Access | [TC-072](test-cases.md#tc-072), [TC-073](test-cases.md#tc-073), [TC-332](test-cases.md#tc-332), [TC-485](test-cases.md#tc-485) | API; Playwright | Covered |

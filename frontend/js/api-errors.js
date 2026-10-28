@@ -9,7 +9,8 @@ function formatApiError(detail, fallback = "Request failed. Please try again.") 
                 return error && typeof error.msg === "string" && error.msg.trim();
             })
             .map(function (error) {
-                return error.msg;
+                // Pydantic prefixes custom validator messages; users only need the rule.
+                return error.msg.replace(/^Value error, /, "");
             });
 
         if (messages.length > 0) {

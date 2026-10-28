@@ -1,3 +1,5 @@
+from contextlib import closing
+
 import pytest
 
 
@@ -72,3 +74,36 @@ def test_project_name_length_limit(test_client, owner_project):
         response = test_client.request(method, url, headers=headers, json={"name": "p" * 255})
         assert response.status_code in (200, 201)
         assert response.json()["name"] == "p" * 255
+
+
+# TC-497 | AC-011.5, AC-013.2 — A stored value already over its limit is kept while other fields are edited and validated only when that field is changed
+@pytest.mark.parametrize("field,label,limit", [BUG_TEXT_LIMITS[0], BUG_TEXT_LIMITS[3]], ids=["title", "description"])
+def test_stored_over_limit_value_is_validated_only_when_changed(
+    test_client, test_database, owner_project, field, label, limit
+):
+    from app import database
+
+    base, headers = owner_project["base"], owner_project["headers"]
+    created = test_client.post(f"{base}/bugs", headers=headers, json={"title": "Stored title"})
+    assert created.status_code == 201
+    url = f"{base}/bugs/{created.json()['bug_number']}"
+    legacy = "L" * (limit + 10)
+    # Reproduce a value stored before the limits existed, only in the disposable test database.
+    assert database.DATABASE_NAME == str(test_database)
+    with closing(database.get_connection()) as conn:
+        conn.execute(f"UPDATE bugs SET {field} = ? WHERE id = ?", (legacy, created.json()["id"]))
+        conn.commit()
+
+    # Editing a different field succeeds and keeps the stored value.
+    response = test_client.patch(url, headers=headers, json={"severity": "Major"})
+    assert response.status_code == 200
+    assert (response.json()["severity"], response.json()[field]) == ("Major", legacy)
+
+    # Changing the field itself is validated: over the limit is rejected, at the limit is saved.
+    response = test_client.patch(url, headers=headers, json={field: "N" * (limit + 1)})
+    assert response.status_code == 422
+    assert f"{label} must be {limit:,} characters or fewer." in response.json()["detail"][0]["msg"]
+    assert test_client.get(url, headers=headers).json()[field] == legacy
+    response = test_client.patch(url, headers=headers, json={field: "N" * limit})
+    assert response.status_code == 200
+    assert response.json()[field] == "N" * limit

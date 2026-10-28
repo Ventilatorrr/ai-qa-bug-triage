@@ -14,7 +14,7 @@ test-runner cases, not conceptual TC IDs.
 | Deployed | Hosted on Render since 25 October 2026 |
 | Current work | v1.0.0 release hardening on `release/v1.0.0-hardening` (`1.0.0-dev`), after Try Demo (REQ-024) and AI usage limits (REQ-025); not released or deployed |
 | Current regression | Python **744 passed**, frontend JavaScript **122 passed**, Chromium Playwright + BDD **33 passed** |
-| AC coverage | **102 Covered / 2 Partial / 0 Not Covered** of 104 ACs; AC-009.6 and AC-011.5 await a browser check at the release candidate |
+| AC coverage | **103 Covered / 1 Partial / 0 Not Covered** of 104 ACs; AC-009.6 awaits a browser check at the release candidate |
 | Real AI testing | 40 live evaluations of fictional scenarios in October 2026, a configuration study, and a final six-report Demo evaluation, which was accepted |
 | Defects | 41 tracked defects closed for v0.2.0; BUG-42–BUG-52 tracked for v1.0.0, with fixes for BUG-48–BUG-52 on the hardening branch. Statuses are kept in the application tracker |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
@@ -48,6 +48,9 @@ Focused local runs only; comprehensive regression runs in PR CI and at the relea
 
 <a id="bug-51-narrator-verification--28-october-2026"></a>
 **BUG-51 status-message announcements (manual, Chrome with Windows Narrator, Windows 11): Passed.** A first check failed: empty status messages were `display: none`, so their live regions were not in the accessibility tree. After the CSS correction and a hard refresh, Narrator announced Create Bug success, Add Member success (mouse and keyboard), a tested error message and Remove Member success. Keyboard focus still moves to the page body when Create or Add is submitted; this is deferred. Chrome's native confirmation dialog text was not read by Narrator; this is a separate observation, not part of BUG-51.
+
+<a id="bug-53-ac-0115-limit-feedback--28-october-2026"></a>
+**BUG-53 and AC-011.5 length-limit feedback (manual, project owner): Passed.** New Bug: a 256-character title was rejected and its error appeared beside Create without scrolling. Edit Bug: a 256-character title was rejected, the error was visible beside Save, and the original title was unchanged after refreshing. The 255/256-character boundary is also automated: API create and edit (TC-478), New Bug error placement and messages (TC-494), and Chromium (TC-496: 256 rejected beside Create, 255 created). Local targeted runs on `fix/bug-53-new-bug-error-placement`: frontend JavaScript 138 passed; Playwright Bug and AI Assist modules 15 passed. TC-497 then verified, in a disposable test database, that a stored over-limit value is kept while another field is edited and validated only when that field is changed (`test_input_limits.py`: 17 passed), so AC-011.5 is now Covered.
 
 <a id="bug-52-light-theme-flash--28-october-2026"></a>
 **BUG-52 light-theme flash (manual, Claude desktop built-in Chromium browser, Windows 11).**
