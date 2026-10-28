@@ -25,8 +25,8 @@ only), **Manual**, and **Real-model evaluation / assisted review**.
 | REQ-001 | AC-001.3 — Invalid Email | [TC-219](test-cases.md#tc-219), [TC-420](test-cases.md#tc-420) | API; Frontend JS | Covered |
 | REQ-001 | AC-001.4 — Invalid Password | [TC-220](test-cases.md#tc-220), [TC-221](test-cases.md#tc-221), [TC-222](test-cases.md#tc-222), [TC-223](test-cases.md#tc-223), [TC-420](test-cases.md#tc-420) | API; Frontend JS | Covered |
 | REQ-001 | AC-001.5 — Password Security | [TC-225](test-cases.md#tc-225) | Database | Covered |
-| REQ-002 | AC-002.1 — Successful Login | [TC-169](test-cases.md#tc-169), [TC-177](test-cases.md#tc-177), [TC-329](test-cases.md#tc-329), [TC-419](test-cases.md#tc-419) | API; Frontend JS; Playwright; Postman API | Covered |
-| REQ-002 | AC-002.2 — Invalid Credentials | [TC-178](test-cases.md#tc-178), [TC-179](test-cases.md#tc-179), [TC-330](test-cases.md#tc-330) | API; Playwright | Covered |
+| REQ-002 | AC-002.1 — Successful Login | [TC-169](test-cases.md#tc-169), [TC-177](test-cases.md#tc-177), [TC-466](test-cases.md#tc-466), [TC-329](test-cases.md#tc-329), [TC-419](test-cases.md#tc-419) | API; Frontend JS; Playwright; Postman API | Covered |
+| REQ-002 | AC-002.2 — Invalid Credentials | [TC-178](test-cases.md#tc-178), [TC-179](test-cases.md#tc-179), [TC-465](test-cases.md#tc-465), [TC-330](test-cases.md#tc-330) | API; Playwright | Covered |
 | REQ-003 | AC-003.1 — Authenticated Access | [TC-180](test-cases.md#tc-180), [TC-329](test-cases.md#tc-329) | API; Playwright | Covered |
 | REQ-003 | AC-003.2 — Unauthenticated Access | [TC-181](test-cases.md#tc-181), [TC-329](test-cases.md#tc-329), [TC-414](test-cases.md#tc-414) | API; Frontend JS; Playwright; Postman API | Covered |
 | REQ-003 | AC-003.3 — Invalid Authentication | [TC-171](test-cases.md#tc-171), [TC-172](test-cases.md#tc-172), [TC-182](test-cases.md#tc-182) | API | Covered |

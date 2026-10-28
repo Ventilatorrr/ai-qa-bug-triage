@@ -138,9 +138,11 @@ def login(user: UserLogin):
 
     user_id = row[0]
     password_hash = row[1]
+    password = user.password.encode("utf-8")
 
-    if not bcrypt.checkpw(
-        user.password.encode("utf-8"),
+    # bcrypt raises for passwords over 72 bytes; registration never accepts them.
+    if len(password) > 72 or not bcrypt.checkpw(
+        password,
         password_hash.encode("utf-8")
     ):
         raise HTTPException(
