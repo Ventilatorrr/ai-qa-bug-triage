@@ -6,7 +6,8 @@ How a release candidate becomes a production release. Evidence lives in the
 ## 1. Freeze the release candidate
 
 1. Set `APP_VERSION` in `app/version.py` to the release version (for example `1.0.0`).
-2. Merge to `main` with all required CI checks green (Application, Postman, JMeter).
+2. Merge to `main` with all five required status checks passing (three Application CI
+   jobs, Postman and JMeter). Record the CI runs in the execution report.
 3. Tag the commit as a pre-release (for example `v1.0.0-rc.1`).
 
 ## 2. Build the image
@@ -62,13 +63,28 @@ fails with a database error: fix the mount permissions rather than changing the 
 
 ## 6. Go/No-Go and promotion
 
-Go when staging passes every smoke item and no Blocker or Major defect is open. Deploy the
-same digest to production, repeat the smoke checklist, then publish the GitHub Release.
+Go when all of these hold:
 
-**Rollback:** redeploy the previous v1.0.x digest. Versions before 1.0.0 cannot open a
-schema-3 database, so never roll back below 1.0.0 on an existing disk.
+- Staging passes every smoke item.
+- No Blocker or Major defect is open, and bug report statuses in the tracker are reconciled.
+- The privacy and data-handling review is complete, and the Privacy Policy matches the
+  release, including the controller and a privacy contact.
+- Deferred review findings have been assessed for release impact.
+- The release candidate's CI and verification evidence is recorded in the execution report.
+
+Deploy the same digest to production, repeat the smoke checklist, then publish the GitHub Release.
+
+**Rollback within v1.0.x:** redeploy the previous v1.0.x digest on the same disk. Versions
+before 1.0.0 cannot open a schema-3 database, so never roll back below 1.0.0 on an existing disk.
+
+**First release:** v1.0.0 has no earlier v1.0.x image to roll back to. Keep the separate
+v0.2.0 service and its disk until v1.0.0 production passes its smoke test, so the previous
+deployment remains available if the launch is abandoned before public use. It is not a
+safe rollback target after launch: v0.2.0 lacks the v1.0.0 public-hosting hardening and
+cannot carry over v1.0.0 accounts or data. If v1.0.0 fails after public launch, protect its
+disk and data first, then assess recovery; do not send public users to v0.2.0 automatically.
 
 ## 7. Retire the v0.2.0 service
 
 After production passes its smoke test, shut down the old v0.2.0 Render service and delete
-its disk. Its database is not migrated.
+its disk. Its database is not migrated, and the first-release fallback is no longer available.

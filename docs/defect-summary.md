@@ -1,25 +1,37 @@
 # Defect Summary
 
-This report summarizes 41 formally tracked defects. Other issues were identified and addressed during development without separate bug reports. The figures therefore represent recorded defects, not an exhaustive account of every issue encountered.
+This report summarizes the 53 defects recorded as bug reports in the application's own tracker during its development. Other issues were found and fixed during development without separate bug reports, so the figures represent recorded defects, not every issue encountered.
 
-**Snapshot:** 24 October 2026 · **Source:** read-only query (`mode=ro`) of the local application tracker, project **AI QA Bug Triage**. The application remains the source of truth; this is a dated record, not a live tracker. Records in four other local projects are fictional or scratch test data and are excluded.
+**Snapshot:** 28 October 2026 · **Source:** read-only extraction of the local application tracker, project **AI QA Bug Triage** (BUG-1–BUG-53). The application remains the source of truth; this is a dated record, not a live tracker. Fictional and scratch test projects and Try Demo copies are excluded. This snapshot is not a v1.0.0 Go/No-Go assessment; release verification is listed in the [execution report](test-execution.md#pending-release-verification).
 
-**Summary:** 41 recorded defects (BUG-1–BUG-41), all Closed: 39 Fixed · 1 Not a Bug · 1 Won't Fix. Discovered 10 in September and 31 in October 2026 (first 7 September, latest 23 October).
+## Summary
+
+**53 recorded defects, all Closed:** 51 Fixed · 1 Not a Bug (BUG-1) · 1 Won't Fix (BUG-36). Discovered 10 in September and 43 in October 2026 (first 7 September, latest 28 October). BUG-1 and BUG-36 were closed without a fix and have no Fix Version.
+
+| Fix Version | Fixed defects | Release |
+| --- | ---: | --- |
+| `0.1.0` | 5 | Released 21 September 2026 |
+| `0.2.0` | 34 | Released 24 October 2026 |
+| `1.0.0` | 12 | Planned; not yet released |
+| **Total** | **51** | |
 
 | Metric | Distribution |
 | --- | --- |
-| Severity | 6 Major · 13 Moderate · 22 Minor (no Blocker) |
-| Priority | 9 High · 20 Medium · 12 Low (no Urgent) |
-| Affected Version | 8 `0.1.0-dev` · 3 `0.1.0` · 30 `0.2.0-dev` |
-| Fix Version | 5 `0.1.0` · 34 `0.2.0` · 2 none (Not a Bug, Won't Fix) |
+| Severity | 1 Blocker · 8 Major · 15 Moderate · 29 Minor |
+| Priority | 13 High · 25 Medium · 15 Low (no Urgent) |
+| Affected Version | 8 `0.1.0-dev` · 3 `0.1.0` · 30 `0.2.0-dev` · 12 `1.0.0-dev` |
+
+Affected Version records the version in which a defect was observed; `-dev` labels are development builds, not releases. See [versioning and defect versions](qa-strategy.md#14-versioning-and-defect-versions).
 
 | Severity \ Priority | Urgent | High | Medium | Low |
 | --- | ---: | ---: | ---: | ---: |
-| Blocker | 0 | 0 | 0 | 0 |
-| Major | 0 | 5 | 1 | 0 |
-| Moderate | 0 | 4 | 9 | 0 |
-| Minor | 0 | 0 | 10 | 12 |
-| **Total** | **0** | **9** | **20** | **12** |
+| Blocker | 0 | 1 | 0 | 0 |
+| Major | 0 | 7 | 1 | 0 |
+| Moderate | 0 | 4 | 11 | 0 |
+| Minor | 0 | 1 | 13 | 15 |
+| **Total** | **0** | **13** | **25** | **15** |
+
+## Recorded defects
 
 | Bug ID | Title | Severity | Priority | Resolution | Affected | Fix |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -64,5 +76,19 @@ This report summarizes 41 formally tracked defects. Other issues were identified
 | BUG-39 | Inconsistent font family across application pages | Minor | Medium | Fixed | 0.2.0-dev | 0.2.0 |
 | BUG-40 | Bug List pagination controls shift vertically between pages with different title lengths | Minor | Medium | Fixed | 0.2.0-dev | 0.2.0 |
 | BUG-41 | Bug List background brightness changes with different Bugs per page settings | Minor | Low | Fixed | 0.2.0-dev | 0.2.0 |
+| BUG-42 | Try Demo button on the Login page is misaligned and lacks visual distinction | Minor | High | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-43 | Authorization race allows access to or modification of another user's project | Blocker | High | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-44 | Login returns HTTP 500 for passwords exceeding 72 UTF-8 bytes | Moderate | Medium | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-45 | Delayed project rename can overwrite newer edits | Minor | Medium | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-46 | Creating a project discards unsaved edits to another project's name | Minor | Low | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-47 | Browser navigation can cause stale bug editor to overwrite newer changes | Major | High | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-48 | JWT for nonexistent user can create orphan project membership and prevent application startup | Major | High | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-49 | Project-ID reuse race can delete or expose another project's bug and member data | Moderate | Medium | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-50 | New Bug form loses selected assignee when project membership changes | Minor | Medium | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-51 | Project page status messages are not automatically announced to screen-reader users | Minor | Low | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-52 | Light theme briefly flashes dark when loading a page | Minor | Low | Fixed | 1.0.0-dev | 1.0.0 |
+| BUG-53 | New Bug validation errors appear outside the visible viewport | Minor | Medium | Fixed | 1.0.0-dev | 1.0.0 |
 
-Recorded execution evidence: [BUG-34](test-execution.md#bug-34-success-confirmation-overflow--19-october-2026), [BUG-37](test-execution.md#bug-37-duplicate-new-bug-submission--22-october-2026), [BUG-38](test-execution.md#malformed-add-member-email-http-500-audit-b2--22-october-2026), [BUG-39](test-execution.md#bug-39-global-base-font--23-october-2026) and [BUG-41](test-execution.md#bug-41-page-background-brightness-with-page-size--23-october-2026). For BUG-40, the [Bug List layout record](test-execution.md#bug-list-layout--23-october-2026) measured every desktop row at 61px regardless of title length, so the pagination controls stay fixed across full pages; [TC-411](test-cases.md#tc-411) asserts equal row heights for short and long titles. A partial final page still moves the controls up, which was left unchanged. Earlier defects predate the dated execution records.
+## Verification evidence
+
+Dated verification is recorded in the [execution report](test-execution.md) for [BUG-28](test-execution.md#bug-28-ai-urgent-suggestion-backplate--13-october-2026), [BUG-31](test-execution.md#contrast-measurements--13-october-2026), [BUG-34](test-execution.md#bug-34-success-confirmation-overflow--19-october-2026), [BUG-37](test-execution.md#bug-37-duplicate-new-bug-submission--22-october-2026), [BUG-38](test-execution.md#malformed-add-member-email-http-500-audit-b2--22-october-2026), [BUG-39](test-execution.md#bug-39-global-base-font--23-october-2026), [BUG-41](test-execution.md#bug-41-page-background-brightness-with-page-size--23-october-2026), [BUG-42](test-execution.md#try-demo-and-ai-usage-limits--27-october-2026), [BUG-48–BUG-51](test-execution.md#release-hardening--28-october-2026), [BUG-52](test-execution.md#bug-52-light-theme-flash--28-october-2026) and [BUG-53](test-execution.md#bug-53-ac-0115-limit-feedback--28-october-2026). For BUG-40, the [Bug List layout record](test-execution.md#bug-list-layout--23-october-2026) measured every desktop row at 61px regardless of title length, so the pagination controls stay fixed across full pages; [TC-411](test-cases.md#tc-411) asserts equal row heights for short and long titles. A partial final page still moves the controls up, which was left unchanged. Other defects have no separate dated execution record; their regression tests are listed in the [test-case catalogue](test-cases.md).

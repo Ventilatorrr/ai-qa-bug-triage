@@ -1,29 +1,23 @@
-# ai-qa-bug-triage
+# AI QA Bug Triage
 
-Bug triage application built as a QA portfolio project with FastAPI, SQLite and a
-plain HTML/CSS/JavaScript frontend. It is used to demonstrate requirements-based
-testing, traceability, API, frontend and browser automation, and evaluation of an
-AI-assisted feature with a real model.
+A bug-tracking application with AI-assisted triage, built as a QA Automation and
+AI QA portfolio project. Teams record bug reports, move them from Triage to
+Closed and can ask AI Assist for suggested improvements, which a person
+reviews before anything is saved. The application also tracked its own genuine
+development defects.
 
-## Features
+The project demonstrates:
 
-- **Accounts:** registration with automatic login, login and logout; passwords
-  are stored as hashes and sessions use signed access tokens.
-- **Projects and roles:** project creation, renaming and deletion; members with
-  Project Owner, QA Analyst and Developer roles and role-based permissions.
-- **Bug reports:** creation, editing, deletion, assignment, severity and
-  priority, and a Triage → Open → Development → Testing → Closed lifecycle with
-  resolutions and Fix Version.
-- **Bug List:** sorting by every column, pagination and remembered page size.
-- **AI Assist:** on request, a Project Owner or QA Analyst receives validated
-  suggestions from OpenAI for the current New Bug or Triage Edit Bug form. Each
-  suggestion is reviewed with `Use`, `Dismiss`, `Use All` or `Dismiss All`;
-  nothing is saved until the user chooses `Create` or `Save`. Daily request
-  limits bound usage.
-- **Try Demo:** visitors can start a Demo from the Login page without
-  registering. Each Demo gets its own generated team and two seeded projects:
-  20 fictional E-Commerce bug reports and copies of this project's genuine
-  development defects.
+- requirements-based testing with traceability from every acceptance criterion
+  to its test cases;
+- automated API, frontend and browser testing with pytest, Node's test runner,
+  Playwright and pytest-bdd, plus Postman API regression and JMeter smoke tests,
+  all running in GitHub Actions;
+- testing an AI feature: deterministic tests with a mocked provider, and
+  separately approved real-model evaluations scored against fixed rubrics;
+- defect management, manual and exploratory testing, and documented limitations.
+
+It is built with FastAPI, SQLite and a plain HTML/CSS/JavaScript frontend.
 
 ## QA artifacts
 
@@ -37,6 +31,28 @@ AI-assisted feature with a real model.
 | [QA strategy](docs/qa-strategy.md) and [AI testing strategy](docs/ai-testing-strategy.md) | Test approach and AI evaluation protocol |
 | [Definition of Done](docs/definition-of-done.md) | Increment completion criteria |
 | [Postman suite](postman/README.md) and [JMeter plan](jmeter/README.md) | API regression and performance checks |
+| [Release runbook](docs/release-runbook.md) | Release candidate, staging and production steps |
+
+## Features
+
+- **Accounts:** registration with automatic login, login and logout; passwords
+  are stored as hashes and sessions use signed access tokens.
+- **Projects and roles:** project creation, renaming and deletion; members with
+  Project Owner, QA Analyst and Developer roles and role-based permissions;
+  QA Analysts and Developers can leave a project.
+- **Bug reports:** creation, editing, deletion, assignment, severity and
+  priority, and a Triage → Open → Development → Testing → Closed lifecycle with
+  resolutions and Fix Version.
+- **Bug List:** sorting by every column, pagination and remembered page size.
+- **AI Assist:** on request, a Project Owner or QA Analyst receives validated
+  suggestions from OpenAI for the current New Bug or Triage Edit Bug form. Each
+  suggestion is reviewed with `Use`, `Dismiss`, `Use All` or `Dismiss All`;
+  nothing is saved until the user chooses `Create` or `Save`. Daily request
+  limits bound usage.
+- **Try Demo:** visitors can start a Demo from the Login page without
+  registering. Each Demo gets its own generated team and two seeded projects:
+  20 fictional E-Commerce bug reports and copies of this project's genuine
+  development defects (a reviewed snapshot with account emails redacted).
 
 ## Setup
 
@@ -73,9 +89,9 @@ your Python 3.14 executable.
 
 AI Assist sends the current form, up to five recently updated reports from the
 same project and eligible assignee information to OpenAI (`gpt-6-luna`, Medium
-reasoning, Fast service tier, `store=false`). Form text fields are limited to
-5,000 characters, historical text is shortened to 1,000 characters, and output
-is limited to 8,000 tokens. Requests over a daily limit return HTTP 429 without
+reasoning, Fast service tier, `store=false`). Each form field sent to AI Assist
+is limited to 5,000 characters, historical text is shortened to 1,000 characters,
+and output is limited to 8,000 tokens. Requests over a daily limit return HTTP 429 without
 calling the provider. Provider failures return a generic HTTP 502 message and
 leave the form unchanged.
 
@@ -86,15 +102,17 @@ token, and nothing is kept if any step fails. Demo creation is limited to 20
 starts per hour and to `DEMO_TOTAL_LIMIT` Demos over the application's lifetime;
 Demos are never deleted.
 
-Public endpoints are bounded: request bodies over 1 MiB are rejected, bug and
-project text has length limits, and at most two password hashes run at once
+Public endpoints are bounded: request bodies over 1 MiB are rejected; project
+names and bug titles are limited to 255 characters, Affected and Fix Version to
+50, and other bug text fields to 5,000; and at most two password hashes run at once
 (further register, login or Try Demo requests get HTTP 503 and can retry).
 
 ## Running tests
 
-Tests use fictional data, a fresh temporary SQLite database for each test, and
-mocked AI responses; no API key is needed. Keep suites serial and never point
-tests at a real application database.
+Tests use fictional data and mocked AI responses; no API key is needed. Backend
+tests use a fresh temporary SQLite database for each test, and each browser-test
+run uses its own server and temporary database (see below). Keep suites serial
+and never point tests at a real application database.
 
 ```powershell
 Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
@@ -104,7 +122,8 @@ Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
 The default run includes `tests/backend/` (API, database, security and mocked
 AI) and the offline AI evaluation harness in `tests/ai_evaluation/`.
 
-Frontend JavaScript tests use DOM substitutes and Node's built-in runner:
+Frontend JavaScript tests need Node.js 24. They use DOM substitutes, with no
+server or database, and Node's built-in runner:
 
 ```powershell
 node --test tests/frontend/*.test.cjs
@@ -157,21 +176,22 @@ suggestion review:
 
 ## Continuous integration
 
-[Application CI](.github/workflows/application.yml) runs three required checks
-on pull requests to `main` and pushes to `main`: the Python suite, the
-JavaScript suite and the Playwright/BDD suite with Chromium. CI uses no OpenAI
+[Application CI](.github/workflows/application.yml) runs three jobs on pull
+requests to `main` and pushes to `main`: the Python suite, the JavaScript suite
+and the Playwright/BDD suite with Chromium. CI uses no OpenAI
 credentials and does not run live AI evaluations. Test reports are uploaded as
 workflow artifacts for seven days.
 
 Separate workflows run the [Postman API regression suite](.github/workflows/postman.yml)
 with Postman CLI 1.75.0 ([details](postman/README.md#github-actions)) and a short
-[JMeter smoke test](.github/workflows/jmeter.yml).
+[JMeter smoke test](.github/workflows/jmeter.yml). The repository's `main` ruleset
+requires pull requests and lists all five jobs as required status checks.
 
 ## Deployment
 
-The application ships as a Docker image built by the manually triggered
-[Release image](.github/workflows/release-image.yml) workflow from an approved
-commit, then deployed by digest to Render staging and production. Settings,
+Starting with v1.0.0, the release process builds a Docker image from an approved
+commit with the manually triggered [Release image](.github/workflows/release-image.yml)
+workflow and deploys it by digest to Render staging, then production. Settings,
 rules and the smoke checklist are in the [release runbook](docs/release-runbook.md).
 
 ## Versioning
@@ -179,14 +199,19 @@ rules and the smoke checklist are in the [release runbook](docs/release-runbook.
 The project follows Semantic Versioning. `APP_VERSION` in `app/version.py` is the
 source of truth for FastAPI metadata, `/version` and the About page.
 
-| Version | Meaning |
-| --- | --- |
-| `0.1.0-dev`, `0.2.0-dev` | Development-phase labels used for Affected Version; not releases or Git tags |
-| `0.1.0` | Previous published release: GitHub Release and Git tag `v0.1.0` |
-| `0.2.0` | Latest published release: core application GitHub development release `v0.2.0` |
-| `1.0.0-dev` | Current version: development toward the first production release |
-| `1.0.0-rc.1` | Planned production release candidate |
-| `1.0.0` | Planned first production release with Try Demo, `v1.0.0` |
+Published releases:
+
+| Version | Date | Release |
+| --- | --- | --- |
+| `0.1.0` | 21 September 2026 | Git tag and GitHub Release `v0.1.0` |
+| `0.2.0` | 24 October 2026 | Core application GitHub development release `v0.2.0` |
+
+Between releases, `APP_VERSION` carries a `-dev` label for the next version (for
+example `1.0.0-dev`). A release candidate sets `APP_VERSION` to the release
+version (for example `1.0.0`) and is identified by its Git tag and image tag
+(for example `v1.0.0-rc.1` and `1.0.0-rc.1`). Development labels such as
+`0.1.0-dev` and `0.2.0-dev` are not releases or Git tags; they and release-candidate
+labels may appear as Affected Version.
 
 Git tags and GitHub Releases record published versions. Affected Version is the
 version in which a bug was observed; Fix Version is the release that includes, or
