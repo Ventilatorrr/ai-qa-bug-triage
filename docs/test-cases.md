@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-467**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-471**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (29 modules) | 262 | 273 | 688 cases; 106 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (12 files) | 122 registered tests | 123 | Internal loops are variants |
+| Frontend Node (12 files) | 126 registered tests | 127 | Internal loops are variants |
 | Playwright (7 modules) | 20 functions | 21 | 28 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 477 | **465** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 481 | **469** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -617,6 +617,10 @@ parameter selector.
 | <a id="tc-397"></a>TC-397 | — | New project failure re-enables Create for retry | Frontend JS / DOM substitutes | [`test_new_project_failure_reenables_create_for_retry`](../tests/frontend/project-name-validation.test.cjs#L239); failure=http_error, invalid_json, network_error |
 | <a id="tc-398"></a>TC-398 | — | Late project Create completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_new_project_late_completion_keeps_reopened_form`](../tests/frontend/project-name-validation.test.cjs#L266); late outcome=success, error, rejection |
 | <a id="tc-399"></a>TC-399 | — | Overlapping project list refreshes render each project once | Frontend JS / DOM substitutes | [`test_overlapping_project_list_refreshes_render_each_project_once`](../tests/frontend/project-name-validation.test.cjs#L300); finish=interleaved, superseded_last |
+| <a id="tc-467"></a>TC-467 | AC-007.1 | Project edit Save makes the name read-only, disables Save, Cancel and Delete, and sends one PUT while pending (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_edit_save_locks_row_and_sends_one_put_while_pending`](../tests/frontend/project-name-validation.test.cjs#L350); All variants |
+| <a id="tc-468"></a>TC-468 | AC-007.1 | Project edit Save failure restores the row, keeps the name and shows feedback for retry (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_edit_save_failure_restores_row_for_retry`](../tests/frontend/project-name-validation.test.cjs#L370); failure=http_error, invalid_json, network_error |
+| <a id="tc-469"></a>TC-469 | AC-007.1 | Late project Save does not end another project's edit session (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_late_project_save_keeps_other_project_edit_session`](../tests/frontend/project-name-validation.test.cjs#L397); All variants |
+| <a id="tc-470"></a>TC-470 | AC-007.1 | A project-list refresh keeps a pending Save's locked row, so no second PUT is possible and the response settles the displayed row (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_list_refresh_keeps_pending_save_row_locked`](../tests/frontend/project-name-validation.test.cjs#L422); All variants |
 
 ## tests/frontend/registration.test.cjs
 

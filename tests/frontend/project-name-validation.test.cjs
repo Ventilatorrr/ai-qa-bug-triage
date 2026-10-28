@@ -42,7 +42,7 @@ function projectPage() {
     const click = selector => node(selector).click();
     return {
         node, requests, runtime, realLoadProjects, createButton: node("#create-project-button"), refreshes: () => refreshes, setSend: fn => { send = fn; },
-        showPageError: text => runtime.showProjectMessage(text, "error"),
+        showPageError: text => runtime.showProjectMessage(text, "error"), editRow: () => ({element: editElement, input: editInput, button: label => editElement.all("button").find(button => button.textContent === label)}),
         setServerError: (status, detail) => { serverError = {status, detail}; },
         open(edit, id = 1) {
             if (edit) {
@@ -338,4 +338,106 @@ test("test_overlapping_project_list_refreshes_render_each_project_once", async (
         assert.deepEqual(page.node("#projects").children.map(row => row.textContent), ["Alpha", "Beta", "Gamma"],
             `${finish}: the latest list renders once and a superseded refresh adds nothing`);
     }
+});
+
+const renamed = name => ({ok: true, status: 200, json: async () => ({id: 1, name})});
+const rowLocked = row => ({
+    input: row.input.readOnly,
+    ...Object.fromEntries(["Delete", "Cancel", "Save"].map(label => [label, row.button(label).disabled]))
+});
+
+// TC-467 | AC-007.1 — Project edit Save locks the row and sends one PUT while pending
+test("test_project_edit_save_locks_row_and_sends_one_put_while_pending", async () => {
+    const page = projectPage(), pending = deferred(), views = [];
+    page.runtime.renderProjectView = (element, project) => views.push(project.name);
+    page.open(true);
+    const row = page.editRow();
+    page.setSend(() => pending.promise);
+    const save = page.submit(true, "Saved Name");
+    // Newer typing, Cancel/re-edit, Delete and repeated Save cannot race the pending response.
+    assert.deepEqual(rowLocked(row), {input: true, Delete: true, Cancel: true, Save: true});
+    row.button("Save").click();
+    row.button("Save").click();
+    assert.equal(page.requests.length, 1, "only the first Save reaches the server");
+
+    pending.resolve(renamed("Saved Name"));
+    await save;
+    assert.equal(page.requests.length, 1);
+    assert.deepEqual(views, ["Saved Name"]);
+});
+
+// TC-468 | AC-007.1 — Project edit Save failure restores the row for retry
+test("test_project_edit_save_failure_restores_row_for_retry", async () => {
+    for (const failure of ["http_error", "invalid_json", "network_error"]) {
+        const page = projectPage(), pending = deferred(), views = [];
+        page.runtime.renderProjectView = (element, project) => views.push(project.name);
+        page.open(true);
+        const row = page.editRow();
+        page.setSend(() => pending.promise);
+        const save = page.submit(true, "Retry Name");
+        assert.equal(row.input.readOnly, true);
+        if (failure === "network_error") pending.reject(new Error("Offline"));
+        else if (failure === "invalid_json") pending.resolve({ok: false, status: 500, json: async () => { throw new SyntaxError("Unexpected token <"); }});
+        else pending.resolve({ok: false, status: 503, json: async () => ({detail: "Service unavailable."})});
+        await save;
+        assert.deepEqual(rowLocked(row), {input: false, Delete: false, Cancel: false, Save: false}, `${failure} allows a retry`);
+        assert.equal(row.input.value, "Retry Name");
+        assert.equal(page.node("#message").textContent,
+            failure === "http_error" ? "Service unavailable." : "Unable to save project. Please try again.");
+        assert.deepEqual(views, [], `${failure} keeps the edit open`);
+
+        page.setSend(async () => renamed("Retry Name"));
+        await page.submit(true, "Retry Name");
+        assert.equal(page.requests.length, 2);
+        assert.deepEqual(views, ["Retry Name"]);
+    }
+});
+
+// TC-469 | AC-007.1 — Late project Save does not end another project's edit session
+test("test_late_project_save_keeps_other_project_edit_session", async () => {
+    const page = projectPage(), pending = deferred(), views = [], edits = [];
+    page.runtime.renderProjectView = element => views.push(element);
+    page.open(true, 1);
+    const x = page.editRow();
+    page.setSend(() => pending.promise);
+    const save = page.submit(true, "X Renamed");
+    page.open(true, 2);
+    const y = page.editRow();
+    page.input(true, "Y Unsaved");
+
+    pending.resolve(renamed("X Renamed"));
+    await save;
+    assert.deepEqual(views, [x.element], "only project X's row leaves edit mode");
+    assert.equal(y.input.value, "Y Unsaved");
+
+    // A later list refresh must still render project Y in edit mode.
+    page.runtime.getProjectRole = async () => "Project Owner";
+    page.runtime.renderProjectEdit = (element, project) => edits.push(project.id);
+    page.setSend(async () => ({ok: true, json: async () => [{id: 1, name: "X Renamed"}, {id: 2, name: "Original"}]}));
+    await page.realLoadProjects();
+    assert.deepEqual(edits, [2]);
+});
+
+// TC-470 | AC-007.1 — Project list refresh keeps a pending Save row locked
+test("test_project_list_refresh_keeps_pending_save_row_locked", async () => {
+    const page = projectPage(), pending = deferred(), views = [];
+    page.runtime.renderProjectView = element => views.push(element);
+    page.runtime.getProjectRole = async () => "Project Owner";
+    page.open(true);
+    const x = page.editRow();
+    page.setSend((url, options) => options?.method === "PUT" ? pending.promise
+        : {ok: true, json: async () => [{id: 1, name: "Original"}]});
+    const save = page.submit(true, "Saved Name");
+
+    // A refresh (for example after New Project) must not redraw the pending row unlocked.
+    await page.realLoadProjects();
+    const [refreshed] = page.node("#projects").children;
+    assert.equal(refreshed, x.element, "the refreshed list keeps the pending row");
+    assert.equal(refreshed.querySelector("input").readOnly, true);
+    refreshed.all("button").find(button => button.textContent === "Save").click();
+    assert.equal(page.requests.filter(request => request.method === "PUT").length, 1);
+
+    pending.resolve(renamed("Saved Name"));
+    await save;
+    assert.deepEqual(views, [x.element], "the response settles the row shown in the list");
 });

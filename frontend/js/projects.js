@@ -8,6 +8,8 @@ const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
 const createProjectButton = document.querySelector("#create-project-button");
 let editingProjectId = null;
+// Project id -> locked edit row whose rename Save is still pending.
+const pendingProjectSaves = new Map();
 let projectFormFeedback = null;
 // Opening or cancelling New Project starts a new form interaction.
 let projectFormSession = 0;
@@ -94,6 +96,12 @@ async function loadProjects() {
         const projectElements = [];
 
         for (const project of data) {
+            // Keep a pending Save's locked row; its response settles that row.
+            if (pendingProjectSaves.has(project.id)) {
+                projectElements.push(pendingProjectSaves.get(project.id));
+                continue;
+            }
+
             const role = await getProjectRole(project.id);
 
             const projectElement = document.createElement("div");
@@ -226,7 +234,22 @@ function cancelProjectEdit(project, projectElement) {
 }
 
 
+function setProjectEditPending(projectElement, projectNameInput, pending) {
+    projectNameInput.readOnly = pending;
+
+    for (const button of projectElement.querySelectorAll("button")) {
+        button.disabled = pending;
+    }
+}
+
+
 async function saveProjectEdit(project, projectNameInput, projectElement) {
+    // One Save per edit: while the PUT is pending the row is locked, so newer
+    // typing, Cancel, Delete or another Save cannot race the earlier response.
+    if (projectNameInput.readOnly) {
+        return;
+    }
+
     const newName = projectNameInput.value;
 
     if (!newName.trim()) {
@@ -236,30 +259,44 @@ async function saveProjectEdit(project, projectNameInput, projectElement) {
         return;
     }
 
-    const response = await authenticatedFetch(`/projects/${project.id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: newName
-        })
-    });
+    setProjectEditPending(projectElement, projectNameInput, true);
+    pendingProjectSaves.set(project.id, projectElement);
 
-    if (!response) {
-        return;
-    }
+    try {
+        const response = await authenticatedFetch(`/projects/${project.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: newName
+            })
+        });
 
-    const data = await response.json();
+        if (!response) {
+            return;
+        }
 
-    if (response.ok) {
-        clearProjectFormFeedback(project.id);
-        editingProjectId = null;
-        renderProjectView(projectElement, data, "Project Owner");
-    } else {
-        showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
-            context: project.id, nameValidation: data.detail === "Project name is required."
-        } : null);
+        const data = await response.json();
+
+        if (response.ok) {
+            clearProjectFormFeedback(project.id);
+            // A late Save must not end another project's newer edit session.
+            if (editingProjectId === project.id) {
+                editingProjectId = null;
+            }
+            renderProjectView(projectElement, data, "Project Owner");
+        } else {
+            showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
+                context: project.id, nameValidation: data.detail === "Project name is required."
+            } : null);
+        }
+    } catch (error) {
+        showProjectMessage("Unable to save project. Please try again.", "error");
+    } finally {
+        // After success the row has been re-rendered, so this only affects a retry.
+        setProjectEditPending(projectElement, projectNameInput, false);
+        pendingProjectSaves.delete(project.id);
     }
 }
 
