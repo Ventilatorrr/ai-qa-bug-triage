@@ -174,3 +174,15 @@ def test_ai_text_suggestions_must_be_replacement_values(field, value, offered):
     for rule in ("ready-to-use replacement", "Never return advice", "Do not invent browser versions",
                  "When there is not enough evidence to improve a field, omit it"):
         assert rule in GENERATION_INSTRUCTIONS
+
+
+# TC-481 | AC-019.3, AC-011.5 — AI text suggestions longer than the field's stored limit are not offered
+@pytest.mark.parametrize("field", TEXT_FIELDS)
+def test_ai_text_suggestions_over_field_limit_are_not_offered(field):
+    from app.schemas import BUG_FIELD_LIMITS
+
+    limit = BUG_FIELD_LIMITS[field][1]
+    at_limit = validate([{"field": field, "value": "x" * limit}])
+    assert at_limit.suggestions == {field: "x" * limit}
+    over = validate([{"field": field, "value": "x" * (limit + 1)}, {"field": "priority", "value": "High"}])
+    assert over.suggestions == {"priority": "High"}

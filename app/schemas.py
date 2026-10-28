@@ -1,5 +1,26 @@
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, ValidationInfo, field_validator
+
+
+PROJECT_NAME_LIMIT = 255
+# Stored bug text limits (AC-011.5): field -> (label, maximum characters).
+BUG_FIELD_LIMITS = {
+    "title": ("Title", 255),
+    "affected_version": ("Affected Version", 50),
+    "fix_version": ("Fix Version", 50),
+    "environment": ("Environment", 5000),
+    "description": ("Description", 5000),
+    "steps_to_reproduce": ("Steps to Reproduce", 5000),
+    "expected_result": ("Expected Result", 5000),
+    "actual_result": ("Actual Result", 5000),
+}
+
+
+def check_bug_field_length(field, value):
+    label, limit = BUG_FIELD_LIMITS[field]
+    if value is not None and len(value) > limit:
+        raise ValueError(f"{label} must be {limit:,} characters or fewer.")
+    return value
 
 
 class UserCreate(BaseModel):
@@ -47,6 +68,11 @@ class BugCreate(BaseModel):
             raise ValueError("Bug title is required.")
         return title
 
+    @field_validator(*BUG_FIELD_LIMITS)
+    @classmethod
+    def validate_length(cls, value, info: ValidationInfo):
+        return check_bug_field_length(info.field_name, value)
+
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, severity):
@@ -82,6 +108,11 @@ class BugUpdate(BaseModel):
             raise ValueError("Bug title is required.")
         return title
 
+    @field_validator(*BUG_FIELD_LIMITS)
+    @classmethod
+    def validate_length(cls, value, info: ValidationInfo):
+        return check_bug_field_length(info.field_name, value)
+
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, severity):
@@ -103,6 +134,11 @@ class BugStatusUpdate(BaseModel):
     testing_outcome: Literal["Passed", "Failed"] | None = None
     resolution: Literal["Won't Fix", "Duplicate", "Cannot Reproduce", "Not a Bug"] | None = None
     fix_version: str | None = None
+
+    @field_validator("fix_version")
+    @classmethod
+    def validate_fix_version_length(cls, fix_version):
+        return check_bug_field_length("fix_version", fix_version)
 
 
 class AiAssistRequest(BaseModel):

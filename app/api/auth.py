@@ -1,6 +1,8 @@
 import os
 import sqlite3
+import threading
 
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -16,6 +18,27 @@ router = APIRouter(tags=["Authentication"])
 
 ALGORITHM = "HS256"
 
+# bcrypt work is deliberately slow. Bound it process-wide so floods of public
+# register, login or Try Demo requests cannot exhaust CPU and worker threads;
+# requests beyond the limit are refused immediately rather than queued.
+PASSWORD_WORK_LIMIT = 2
+_password_work = threading.BoundedSemaphore(PASSWORD_WORK_LIMIT)
+SERVER_BUSY_MESSAGE = "The server is busy. Please try again shortly."
+
+
+class PasswordWorkBusy(Exception):
+    pass
+
+
+@contextmanager
+def _password_work_slot():
+    if not _password_work.acquire(blocking=False):
+        raise PasswordWorkBusy(SERVER_BUSY_MESSAGE)
+    try:
+        yield
+    finally:
+        _password_work.release()
+
 
 def _get_secret_key():
     secret = os.environ.get("JWT_SECRET_KEY")
@@ -30,10 +53,16 @@ def _get_secret_key():
 
 
 def hash_password(password):
-    return bcrypt.hashpw(
-        password.encode("utf-8"),
-        bcrypt.gensalt()
-    ).decode("utf-8")
+    with _password_work_slot():
+        return bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+
+def verify_password(password, password_hash):
+    with _password_work_slot():
+        return bcrypt.checkpw(password, password_hash.encode("utf-8"))
 
 
 def create_access_token(user_id):
@@ -82,13 +111,38 @@ def get_current_user_id(authorization: str | None) -> int:
 
     token = authorization.removeprefix("Bearer ")
     payload = verify_access_token(token)
+    user_id = payload.get("user_id")
 
-    return payload["user_id"]
+    # A valid signature is not enough: the account must still exist, otherwise
+    # writes would create rows that fail the startup integrity check (BUG-48).
+    if type(user_id) is not int or not _user_exists(user_id):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token."
+        )
+
+    return user_id
+
+
+def _user_exists(user_id):
+    conn = get_connection()
+
+    try:
+        return conn.execute(
+            "SELECT 1 FROM users WHERE id = ?",
+            (user_id,)
+        ).fetchone() is not None
+
+    finally:
+        conn.close()
 
 
 @router.post("/register", status_code=201)
 def register(user: UserCreate):
-    password_hash = hash_password(user.password)
+    try:
+        password_hash = hash_password(user.password)
+    except PasswordWorkBusy as error:
+        raise HTTPException(status_code=503, detail=str(error)) from None
 
     conn = get_connection()
 
@@ -141,10 +195,12 @@ def login(user: UserLogin):
     password = user.password.encode("utf-8")
 
     # bcrypt raises for passwords over 72 bytes; registration never accepts them.
-    if len(password) > 72 or not bcrypt.checkpw(
-        password,
-        password_hash.encode("utf-8")
-    ):
+    try:
+        valid = len(password) <= 72 and verify_password(password, password_hash)
+    except PasswordWorkBusy as error:
+        raise HTTPException(status_code=503, detail=str(error)) from None
+
+    if not valid:
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password."

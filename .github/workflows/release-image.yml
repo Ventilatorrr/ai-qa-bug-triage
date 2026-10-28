@@ -1,0 +1,116 @@
+name: Release image
+
+# Builds the exact approved release-candidate commit, smoke-tests the container and
+# publishes it to GHCR. Staging and production deploy the recorded digest.
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Approved release-candidate commit (full 40-character SHA)
+        required: true
+      tag:
+        description: Image tag, for example 1.0.0-rc.1
+        required: true
+      publish:
+        description: Push the image to GHCR (leave off for a build-and-smoke dry run)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  image:
+    name: Build, smoke-test and publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      IMAGE: ghcr.io/ventilatorrr/ai-qa-bug-triage
+      COMMIT: ${{ inputs.commit }}
+      TAG: ${{ inputs.tag }}
+
+    steps:
+      - name: Validate inputs
+        run: |
+          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::commit must be a full lowercase SHA."; exit 1; }
+          [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::tag must be a version such as 1.0.0-rc.1."; exit 1; }
+
+      - name: Check out the approved commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+
+      - name: Confirm the exact commit
+        run: test "$(git rev-parse HEAD)" = "$COMMIT"
+
+      - name: Refuse to overwrite an existing tag
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          if docker manifest inspect "$IMAGE:$TAG" > /dev/null 2>&1; then
+            echo "::error::$IMAGE:$TAG already exists; choose a new tag."
+            exit 1
+          fi
+
+      - name: Build
+        run: docker build --tag "$IMAGE:$TAG" .
+
+      - name: Container smoke test
+        run: |
+          set -euo pipefail
+
+          # Startup must fail when the signing secret is missing.
+          status=0
+          timeout 60 docker run --rm -e DATABASE_NAME=/tmp/smoke.db "$IMAGE:$TAG" || status=$?
+          if [[ $status -eq 0 || $status -eq 124 ]]; then
+            echo "::error::Startup did not fail without JWT_SECRET_KEY."
+            exit 1
+          fi
+
+          docker run -d --name smoke -p 127.0.0.1:8000:8000 \
+            -e DATABASE_NAME=/tmp/smoke.db -e JWT_SECRET_KEY="ci-smoke-$(openssl rand -hex 24)" \
+            "$IMAGE:$TAG"
+          trap 'docker logs smoke; docker rm -f smoke > /dev/null' EXIT
+          wait_ready() {
+            for attempt in {1..30}; do
+              curl -fsS http://127.0.0.1:8000/version > /dev/null && return 0
+              sleep 1
+            done
+            return 1
+          }
+          wait_ready
+
+          expected=$(python3 -c 'import re; print(re.search(r"\"(.+)\"", open("app/version.py").read()).group(1))')
+          actual=$(curl -fsS http://127.0.0.1:8000/version | python3 -c 'import json, sys; print(json.load(sys.stdin)["version"])')
+          test "$actual" = "$expected"
+
+          headers=$(curl -fsSI http://127.0.0.1:8000/login.html)
+          grep -qi '^x-frame-options: DENY' <<< "$headers"
+          grep -qi '^x-content-type-options: nosniff' <<< "$headers"
+
+          # Fictional smoke account; the data must survive a container restart.
+          account='{"email": "smoke-test@example.org", "password": "SmokeTest1"}'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$account" http://127.0.0.1:8000/register)" = 201
+          docker restart smoke > /dev/null
+          wait_ready
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$account" http://127.0.0.1:8000/login)" = 200
+
+      - name: Publish and record the digest
+        if: ${{ inputs.publish }}
+        run: |
+          docker push "$IMAGE:$TAG"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$TAG")
+          {
+            echo "### Release image"
+            echo "- Commit: \`$COMMIT\`"
+            echo "- Tag: \`$IMAGE:$TAG\`"
+            echo "- Deploy by digest: \`$digest\`"
+          } >> "$GITHUB_STEP_SUMMARY"

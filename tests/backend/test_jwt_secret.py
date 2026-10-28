@@ -121,21 +121,19 @@ def test_correctly_signed_expired_token_is_rejected(
 
 # --- Missing configuration fails securely ---
 
-# TC-173 | Technical — Missing or blank JWT secret key rejects authentication
+# TC-173 | Technical — Missing or blank JWT secret key stops startup before the database is touched
 @pytest.mark.parametrize(
     "secret", [None, "", " " * 32, "\t\r\n" * 12],
     ids=["missing", "empty", "spaces", "mixed-whitespace"],
 )
-@pytest.mark.parametrize("endpoint", ["/login", "/protected"])
-def test_missing_or_blank_jwt_secret_key_rejects_authentication(
-    tmp_path, secret, endpoint
-):
+def test_missing_or_blank_jwt_secret_key_stops_startup(tmp_path, secret):
     """Configuration failures cannot cache database settings in the suite."""
     # Isolate imports as well as files: app.database caches DATABASE_NAME.
     # TemporaryDirectory removes the database even when the assertion fails.
     with TemporaryDirectory(dir=tmp_path) as directory:
+        database_path = Path(directory) / "jwt.db"
         environment = os.environ.copy()
-        environment["DATABASE_NAME"] = str(Path(directory) / "jwt.db")
+        environment["DATABASE_NAME"] = str(database_path)
         if secret is None:
             environment.pop("JWT_SECRET_KEY", None)
         else:
@@ -143,32 +141,14 @@ def test_missing_or_blank_jwt_secret_key_rejects_authentication(
 
         result = subprocess.run(
             [sys.executable, "-c", dedent("""
-                import sys
-                import jwt
                 import pytest
                 from fastapi.testclient import TestClient
-                from tests.conftest import TEST_JWT_SECRET
                 from app.main import app
 
-                with TestClient(app) as client:
-                    user = {
-                        "email": "invalid-secret@example.com",
-                        "password": "Password1",
-                    }
-                    response = client.post("/register", json=user)
-                    assert response.status_code == 201, response.text
-                    token = jwt.encode(
-                        {"user_id": 1}, TEST_JWT_SECRET, algorithm="HS256"
-                    )
-                    with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
-                        if sys.argv[1] == "/login":
-                            client.post("/login", json=user)
-                        else:
-                            client.get(
-                                "/protected",
-                                headers={"Authorization": f"Bearer {token}"},
-                            )
-            """), endpoint],
+                with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
+                    with TestClient(app):
+                        pass
+            """)],
             cwd=REPOSITORY_ROOT,
             env=environment,
             capture_output=True,
@@ -176,6 +156,8 @@ def test_missing_or_blank_jwt_secret_key_rejects_authentication(
             timeout=30,
         )
         assert result.returncode == 0, result.stdout + result.stderr
+        # Startup stopped before creating or migrating the database.
+        assert not database_path.exists()
 
     assert list(tmp_path.iterdir()) == []
 
@@ -235,3 +217,27 @@ def test_secret_not_in_error_response(test_client):
 
     response_text = response.text
     assert TEST_JWT_SECRET not in response_text
+
+
+# TC-484 | AC-003.3 — A correctly signed token for a missing account is rejected and writes nothing (BUG-48 regression)
+def test_token_for_missing_account_is_rejected(test_client, test_database, authenticated_user_factory):
+    from tests.backend.test_demo import table_counts
+
+    existing = authenticated_user_factory(email="existing-account@example.com")
+    token = jwt.encode(
+        {"user_id": existing["user_id"] + 1000, "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
+        key=TEST_JWT_SECRET,
+        algorithm="HS256",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+    before = table_counts(test_database)
+
+    for method, path, body in [("GET", "/projects", None), ("POST", "/projects", {"name": "Orphan"})]:
+        response = test_client.request(method, path, headers=headers, json=body)
+        assert response.status_code == 401
+        assert response.json() == {"detail": "Invalid or expired token."}
+
+    assert table_counts(test_database) == before
+    # The existing account's own token is unaffected.
+    valid = {"Authorization": f"Bearer {existing['token']}"}
+    assert test_client.get("/projects", headers=valid).status_code == 200

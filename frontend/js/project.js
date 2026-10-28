@@ -7,8 +7,6 @@ const projectId = params.get("id");
 const projectName = document.querySelector("#project-name");
 const demoNote = document.querySelector("#demo-note");
 const demoHistoryNote = document.querySelector("#demo-history-note");
-// Only the fictional Demo project contains intentionally imperfect reports.
-const DEMO_ECOMMERCE_PROJECT = "E-Commerce Demo";
 
 const membersContainer = document.querySelector("#members");
 const memberMessage = document.querySelector("#member-message");
@@ -105,7 +103,9 @@ async function loadProject() {
 
     if (response.ok) {
         projectName.textContent = data.name;
-        demoNote.hidden = data.name !== DEMO_ECOMMERCE_PROJECT;
+        // Only the fictional Demo project has intentionally imperfect reports; its
+        // server-owned identity survives renaming (AC-024.3).
+        demoNote.hidden = data.demo_kind !== "ecommerce";
         demoHistoryNote.hidden = data.demo_kind !== "history";
         return true;
     } else if (response.status === 404) {
@@ -205,6 +205,22 @@ async function loadMembers(preserveVisibleState = false) {
             );
 
             memberElement.appendChild(removeButton);
+        }
+
+        // QA Analysts and Developers can leave; a Project Owner deletes instead (AC-009.6).
+        if (
+            currentUser &&
+            currentUser.role !== "Project Owner" &&
+            member.user_id === currentUser.user_id
+        ) {
+            const leaveButton = document.createElement("button");
+            leaveButton.textContent = "Leave Project";
+            leaveButton.type = "button";
+            leaveButton.className = "context-action-button";
+            leaveButton.addEventListener("click", function () {
+                leaveProject(member, leaveButton);
+            });
+            memberElement.appendChild(leaveButton);
         }
 
         membersContainer.appendChild(
@@ -378,6 +394,57 @@ async function removeMember(member) {
 }
 
 
+async function leaveProject(member, leaveButton) {
+    const name = projectName.textContent || "this project";
+
+    if (leaveButton.disabled || !confirm(
+        `Are you sure you want to leave "${name}"? You will no longer have access to this project.`
+    )) {
+        return;
+    }
+
+    leaveButton.disabled = true;
+    let response;
+    let data = {};
+
+    try {
+        response = await authenticatedFetch(
+            `/projects/${projectId}/members/${member.user_id}`,
+            {method: "DELETE"}
+        );
+
+        if (!response) {
+            return;
+        }
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = {};
+        }
+    } catch (error) {
+        leaveButton.disabled = false;
+        showMemberMessage("Unable to leave the project. Please try again.", "error");
+        return;
+    }
+
+    if (!response.ok) {
+        leaveButton.disabled = false;
+        showMemberMessage(formatApiError(data.detail), "error");
+        return;
+    }
+
+    try {
+        sessionStorage.removeItem(`bug-list-sort:${getCurrentUserId()}:${Number(projectId)}`);
+        sessionStorage.setItem("project-list-feedback", `You left "${name}".`);
+    } catch (error) {
+        // Leaving does not depend on session storage availability.
+    }
+
+    window.location.replace("/projects.html");
+}
+
+
 async function loadBugAssignees() {
     const response = await authenticatedFetch(`/projects/${projectId}/members`);
 
@@ -391,6 +458,9 @@ async function loadBugAssignees() {
         bugMessage.textContent = formatApiError(data.detail);
         return;
     }
+
+    // Member changes rebuild the options; keep an open New Bug form's choice (BUG-50).
+    const selectedAssignee = bugAssigneeInput.value;
 
     bugAssigneeInput.innerHTML = "";
 
@@ -424,6 +494,18 @@ async function loadBugAssignees() {
             );
         }
     });
+
+    if (selectedAssignee) {
+        const stillEligible = Array.from(bugAssigneeInput.options).some(function (option) {
+            return option.value === selectedAssignee;
+        });
+
+        if (stillEligible) {
+            bugAssigneeInput.value = selectedAssignee;
+        } else if (!bugForm.hidden) {
+            showBugMessage("The selected assignee is no longer a project member.", "error");
+        }
+    }
 
     updateSelectPromptStyle(bugAssigneeInput);
 }

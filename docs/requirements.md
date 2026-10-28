@@ -97,6 +97,7 @@ As an authenticated user, I want to access protected areas of the application so
 #### AC-003.3 — Invalid Authentication
 
 - A request containing an invalid or expired authentication token cannot access a protected area.
+- A correctly signed token whose account does not exist is invalid.
 - The user receives a `401 Unauthorized` response.
 
 ---
@@ -136,7 +137,8 @@ The system shall allow authenticated users to create a project.
 #### AC-005.2 — Invalid Project Name
 
 - Project creation is rejected when the project name is not a string, is empty, or contains only whitespace.
-- The user is informed that a valid project name is required.
+- Project creation is rejected when the project name is longer than 255 characters.
+- The user is informed that a valid project name is required, or that the name exceeds 255 characters.
 - Name-validation feedback clears when the user corrects the name to a meaningful non-whitespace value; whitespace-only input retains the error.
 - Cancelling or starting a fresh Create/Edit interaction clears previous project-form feedback. Create success feedback may be shown immediately after creation but must not remain in a later form interaction.
 - Project-name correction and form lifecycle actions preserve unrelated page, network, authorization, and loading feedback.
@@ -194,8 +196,9 @@ As a Project Owner, I want to change a project's name so that I can keep project
 #### AC-007.3 — Invalid Project Name Editing
 
 - Project name editing is rejected when the new name is not a string, is empty, or contains only whitespace.
+- Project name editing is rejected when the new name is longer than 255 characters.
 - The original project name remains unchanged when validation fails.
-- The user is informed that a valid project name is required.
+- The user is informed that a valid project name is required, or that the name exceeds 255 characters.
 - Name-validation feedback clears when the user corrects the name to a meaningful non-whitespace value; whitespace-only input retains the error.
 - A successful Edit clears earlier validation feedback associated with that Edit interaction.
 - Cancelling or starting a fresh Create/Edit interaction clears previous project-form feedback.
@@ -225,7 +228,7 @@ As a Project Owner, I want to delete a project so that I can remove projects tha
 
 ### REQ-009 — Project Member Management
 
-The system shall allow a Project Owner to add and remove project members and allow project members to view project membership information.
+The system shall allow a Project Owner to add and remove project members, allow QA Analysts and Developers to leave a project, and allow project members to view project membership information.
 
 ### US-009 — Manage Project Members
 
@@ -262,6 +265,19 @@ As a Project Owner, I want to add and remove project members so that I can contr
 - Project members are displayed in the following order: Project Owner, QA Analyst, Developer.
 - Members within the same role are displayed alphabetically by email address.
 
+### US-009.2 — Leave a Project
+
+As a QA Analyst or Developer, I want to leave a project so that I am not kept in projects I don't want to take part in.
+
+#### AC-009.6 — Leave Project
+
+- A QA Analyst or Developer can leave a project they are a member of.
+- A confirmation is required before leaving.
+- After leaving, the user can no longer access the project and is returned to the Projects page with a confirmation message.
+- Bugs assigned to the leaving user in that project become unassigned under the same rules as AC-009.2: status and other fields are kept, Last Updated is updated, and other projects are unaffected.
+- A Project Owner cannot leave a project; they can delete it instead (AC-008.1).
+- Leaving doesn't delete the user's account or any content they supplied earlier.
+
 ---
 
 ### REQ-010 — Project Roles and Permissions
@@ -290,7 +306,7 @@ As a project user, I want my project role to determine what I can do within a pr
 #### AC-010.4 — Unauthorized Project Member Management
 
 - A user who is not the Project Owner cannot add project members.
-- A user who is not the Project Owner cannot remove project members.
+- A user who is not the Project Owner cannot remove other project members. Leaving a project is covered by AC-009.6.
 
 #### AC-010.5 — Unauthorized Project Actions
 
@@ -340,6 +356,15 @@ As an authorized project member, I want to create a bug report with the informat
 - Environment is free-text information describing the context in which the bug occurred, such as operating system, browser and version, device type, or relevant user/account context.
 - Affected Version identifies the application version in which the bug was observed or reproduced. It does not necessarily identify the version in which the defect was first introduced.
 - Optional bug information can be provided when the bug is created or added or updated later.
+
+#### AC-011.5 — Bug Information Length Limits
+
+- Title is limited to 255 characters.
+- Affected Version and Fix Version are each limited to 50 characters.
+- Environment, Description, Steps to Reproduce, Expected Result and Actual Result are each limited to 5,000 characters.
+- The limits apply when creating a bug, when editing one (REQ-013), and to a Fix Version supplied with a Passed testing outcome (AC-017.5).
+- A value over its limit is rejected and nothing is saved. The user is told which field is too long and what its maximum is.
+- A stored value that already exceeds a limit is only validated when that field is changed.
 
 ---
 
@@ -429,6 +454,7 @@ As an authorized project member, I want to edit bug report information so that I
 - Fix Version is visible and editable in ordinary Edit Bug only when the bug is `Closed` with resolution `Fixed`. It may be added, changed, or cleared in that state.
 - Ordinary edits cannot assign a nonempty Fix Version in any other state. Omitted, null, or empty values are allowed; editing a bug outside `Closed`/`Fixed` clears any legacy Fix Version.
 - Fix Version identifies the application release in which the fix is included or planned to be included; that release need not have been published yet. Affected Version remains independent.
+- The length limits in AC-011.5 apply to edited values.
 
 #### AC-013.3 — Unauthorized Bug Editing
 
@@ -698,6 +724,7 @@ As a Project Owner or QA Analyst, I want AI suggestions that match the applicati
 - Suggested Title, Environment, Description, Steps to Reproduce, Expected Result, Actual Result, and Affected Version must be text values.
 - A suggested Title must contain non-whitespace text; an empty or whitespace-only Title is treated as no valid suggestion.
 - Suggested text values are ready-to-use replacement values for their fields. Advice or requests to the user, questions, TODOs and placeholders are not offered.
+- A suggested text value longer than its field's maximum (AC-011.5) is not offered.
 - Ambiguous or conflicting suggestions for the same field are excluded for that field.
 - Unsupported fields, invalid values, and suggestions that cannot be mapped unambiguously to an existing bug field are not offered to the user.
 
@@ -886,6 +913,7 @@ As a visitor, I want to try the application without registering so that I can ev
 - The represented lifecycle statuses include `Development`, `Testing`, and `Closed`.
 - The bugs include bugs assigned to each of QA1, QA2, Dev1, and Dev2, and unassigned bugs.
 - Some fictional bugs in Triage intentionally contain incomplete information, unclear wording, or questionable classifications to demonstrate AI Assist. The Demo clearly identifies these imperfections as intentional.
+- Whether this explanation is shown follows the server-owned Demo identity, including after renaming; ordinary projects with the same name don't show it.
 - Intentionally imperfect bugs remain valid under the existing data and lifecycle rules. Intentional imperfections apply only to this project, not to the genuine defect copies in AC-024.4.
 
 #### AC-024.4 — AI QA Bug Triage Project

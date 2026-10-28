@@ -97,10 +97,11 @@ test("test_failed_try_demo_shows_error_and_allows_retry", async () => {
     assert.equal(page.state.requests.length, 4);
 });
 
-// TC-452, TC-462 | AC-024.3, AC-024.4 — E-Commerce note and server-marked historical introduction visibility
+// TC-452, TC-462 | AC-024.3, AC-024.4 — Server-marked E-Commerce note and historical introduction visibility
 test("test_demo_note_appears_only_for_demo_ecommerce_project", async () => {
     for (const [name, visible, demoKind] of [
-        ["E-Commerce Demo", true], ["AI QA Bug Triage", false], ["Shop", false],
+        ["E-Commerce Demo", true, "ecommerce"], ["Renamed Shop", true, "ecommerce"],
+        ["E-Commerce Demo", false], ["AI QA Bug Triage", false], ["Shop", false],
         ["AI QA Bug Triage", false, "history"], ["Renamed Demo", false, "history"],
         ["AI QA Bug Triage", false, "unrecognized"],
     ]) {

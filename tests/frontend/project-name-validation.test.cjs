@@ -158,6 +158,20 @@ for (const edit of [false, true]) {
         page.input(edit, "Corrected Project");
         assert.equal(page.node("#message").textContent, "");
     });
+
+    // TC-482, TC-483 | AC-005.2, AC-007.3 — Verify separately registered form variants
+    test(edit ? "test_project_edit_length_feedback_clears_only_within_limit" : "test_project_creation_length_feedback_clears_only_within_limit", async () => {
+        const page = projectPage();
+        const tooLong = "Project name must be 255 characters or fewer.";
+        page.open(edit);
+        page.setServerError(422, tooLong);
+        await page.submit(edit, "p".repeat(256));
+        assert.equal(page.node("#message").textContent, tooLong);
+        page.input(edit, "p".repeat(256));
+        assert.equal(page.node("#message").textContent, tooLong);
+        page.input(edit, "p".repeat(255));
+        assert.equal(page.node("#message").textContent, "");
+    });
 }
 
 // TC-319 | AC-007.3 — Project edit success clears prior validation feedback

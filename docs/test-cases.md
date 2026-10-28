@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-475**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-494**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,10 +18,10 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (29 modules) | 262 | 273 | 688 cases; 106 parameterized functions |
+| Backend pytest (34 modules) | 275 | 286 | 731 cases; 116 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (12 files) | 130 registered tests | 131 | Internal loops are variants |
+| Frontend Node (15 files) | 136 registered tests | 137 | Internal loops are variants |
 | Playwright (7 modules) | 20 functions | 21 | 28 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 485 | **473** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 504 | **492** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -69,10 +69,10 @@ parameter selector.
 | <a id="tc-017"></a>TC-017 | AC-019.2, AC-022.2 | AI generation preserves separate context without mutation | Python unit / AI (offline) | [`test_ai_generation_preserves_separate_context_without_mutation`](../tests/backend/test_ai_generation.py#L38); All variants |
 | <a id="tc-018"></a>TC-018 | AC-019.1 | AI generation defines only supported output fields | Python unit / AI (offline) | [`test_ai_generation_defines_only_supported_output_fields`](../tests/backend/test_ai_generation.py#L62); All variants |
 | <a id="tc-019"></a>TC-019 | AC-019.3 | AI generation classification rules match application | Python unit / AI (offline) | [`test_ai_generation_classification_rules_match_application`](../tests/backend/test_ai_generation.py#L81); All variants |
-| <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/backend/test_ai_generation.py#L102); All variants |
-| <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/backend/test_ai_generation.py#L114); All variants |
-| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/backend/test_ai_generation.py#L163); All variants |
-| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/backend/test_ai_generation.py#L183); All variants |
+| <a id="tc-020"></a>TC-020 | AC-019.3 | AI generation limits assignees to supplied eligible context | Python unit / AI (offline) | [`test_ai_generation_limits_assignees_to_supplied_eligible_context`](../tests/backend/test_ai_generation.py#L104); All variants |
+| <a id="tc-021"></a>TC-021 | AC-019.2, AC-022.3 | AI generation instructions define context and safety boundaries | Python unit / AI (offline) | [`test_ai_generation_instructions_define_context_and_safety_boundaries`](../tests/backend/test_ai_generation.py#L116); All variants |
+| <a id="tc-022"></a>TC-022 | AC-019.4 | AI generation reuses suggestion envelope and allows zero suggestions | Python unit / AI (offline) | [`test_ai_generation_reuses_suggestion_envelope_and_allows_zero_suggestions`](../tests/backend/test_ai_generation.py#L165); All variants |
+| <a id="tc-023"></a>TC-023 | AC-022.2 | AI generation does not introduce account information or secrets | Python unit / AI (offline) | [`test_ai_generation_does_not_introduce_account_information_or_secrets`](../tests/backend/test_ai_generation.py#L185); All variants |
 
 ## tests/backend/test_ai_openai.py
 
@@ -117,6 +117,7 @@ parameter selector.
 | <a id="tc-050"></a>TC-050 | AC-019.4 | AI suggestions report no usable suggestions for valid structure | Python unit / AI (offline) | [`test_ai_suggestions_report_no_usable_suggestions_for_valid_structure`](../tests/backend/test_ai_suggestions.py#L122); All variants |
 | <a id="tc-051"></a>TC-051 | AC-019.3 | AI suggestions use current assignable project member context | Python unit / AI (offline) | [`test_ai_suggestions_use_current_assignable_project_member_context`](../tests/backend/test_ai_suggestions.py#L129); All variants |
 | <a id="tc-456"></a>TC-456 | AC-019.2, AC-019.3 | Text suggestions that are advice, questions, TODOs or placeholders are not offered; legitimate values, including numbered steps and quoted questions, are kept; the generation instructions carry the replacement-value rules | Python unit / AI (offline) | [`test_ai_text_suggestions_must_be_replacement_values`](../tests/backend/test_ai_suggestions.py#L169); All variants |
+| <a id="tc-481"></a>TC-481 | AC-019.3, AC-011.5 | Text suggestions longer than the field's stored limit are not offered; values at the limit are kept | Python unit / AI (offline) | [`test_ai_text_suggestions_over_field_limit_are_not_offered`](../tests/backend/test_ai_suggestions.py#L181); All variants |
 
 ## tests/backend/test_ai_triage.py
 
@@ -137,6 +138,7 @@ parameter selector.
 | <a id="tc-064"></a>TC-064 | — | AI triage configuration is checked on each request | API / AI (mocked or unavailable provider) | [`test_ai_triage_configuration_is_checked_on_each_request`](../tests/backend/test_ai_triage.py#L462); All variants |
 | <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/backend/test_ai_triage.py#L478); All variants |
 | <a id="tc-424"></a>TC-424 | AC-025.6, AC-023.1 | AI triage sends the output-token limit and treats a response truncated by it as a safe failure without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_bounds_output_and_treats_truncated_output_as_safe_failure`](../tests/backend/test_ai_triage.py#L442); All variants |
+| <a id="tc-491"></a>TC-491 | — | AI provider failures are logged with only the error type and HTTP status (or a malformed-response notice), never content or credentials | API / AI (mocked provider) | [`test_ai_provider_failures_are_logged_without_content`](../tests/backend/test_ai_triage.py#L495); failure=transport, malformed |
 
 ## tests/backend/test_ai_usage.py
 
@@ -211,6 +213,12 @@ parameter selector.
 | <a id="tc-124"></a>TC-124 | AC-017.7 | Closed bug rejects invalid direct transition | API / integration | [`test_closed_bug_rejects_invalid_direct_transition`](../tests/backend/test_bug_closure.py#L754); All variants |
 | <a id="tc-125"></a>TC-125 | AC-017.7 | Closed to triage rejects extra transition data | API / integration | [`test_closed_to_triage_rejects_extra_transition_data`](../tests/backend/test_bug_closure.py#L790); All variants |
 
+## tests/backend/test_bug_id_reuse_races.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-485"></a>TC-485 | AC-012.3, AC-014.2, AC-009.5 | Bug deletion and bug/member reads authorized before a concurrent Delete Project cannot act on or reveal another user's project that reuses the deleted id (BUG-49 regression) | API / integration; database integrity | [`test_bug_operation_cannot_affect_project_that_reuses_deleted_id`](../tests/backend/test_bug_id_reuse_races.py#L9); operation=delete_bug, list_bugs, get_bug, list_members |
+
 ## tests/backend/test_bug_lifecycle.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
@@ -280,8 +288,8 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-143"></a>TC-143 | — | Importing application does not create database | Database / infrastructure | [`test_importing_application_does_not_create_database`](../tests/backend/test_database_lifecycle.py#L28); All variants |
-| <a id="tc-144"></a>TC-144 | — | Application lifespan initializes schema before requests | Database / infrastructure | [`test_application_lifespan_initializes_schema_before_requests`](../tests/backend/test_database_lifecycle.py#L38); All variants |
+| <a id="tc-143"></a>TC-143 | — | Importing application does not create database | Database / infrastructure | [`test_importing_application_does_not_create_database`](../tests/backend/test_database_lifecycle.py#L32); All variants |
+| <a id="tc-144"></a>TC-144 | — | Application lifespan initializes schema before requests | Database / infrastructure | [`test_application_lifespan_initializes_schema_before_requests`](../tests/backend/test_database_lifecycle.py#L42); All variants |
 
 ## tests/backend/test_database_migrations.py
 
@@ -308,7 +316,7 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-461"></a>TC-461 | AC-024.4, AC-024.7 | A wholly fictional historical-seed stand-in gets a persistent server-owned marker; same-name ordinary projects and submitted forged markers do not; rename preserves it and unauthorized access remains denied | API / integration | [`test_historical_demo_marker_is_seeded_persistent_and_not_name_based`](../tests/backend/test_demo_introduction.py#L9); All variants |
+| <a id="tc-461"></a>TC-461 | AC-024.3, AC-024.4, AC-024.7 | Seeded Demo projects get their server-owned markers (`ecommerce`, and `history` for a wholly fictional historical-seed stand-in), which persist; same-name ordinary projects and submitted forged markers do not; rename preserves it and unauthorized access remains denied | API / integration | [`test_historical_demo_marker_is_seeded_persistent_and_not_name_based`](../tests/backend/test_demo_introduction.py#L9); All variants |
 
 ## tests/backend/test_demo_seed.py
 
@@ -334,6 +342,8 @@ parameter selector.
 | <a id="tc-449"></a>TC-449 | AC-025.1, AC-025.2, AC-024.6 | Demo owners are bound by the per-account limit and share the global limit with normal accounts | API / AI (mocked provider) | [`test_demo_accounts_share_regular_ai_usage_limits`](../tests/backend/test_demo.py#L191); All variants |
 | <a id="tc-454"></a>TC-454 | — | Demo starts are limited per rolling hour (429, nothing created); a failed attempt frees its slot and starts older than an hour stop counting | API; Database | [`test_demo_creation_is_limited_per_hour`](../tests/backend/test_demo.py#L215); All variants |
 | <a id="tc-455"></a>TC-455 | — | Demo creation stops at the stored-Demo cap, counted as five four-letter `@example.com` accounts per Demo (503, nothing created), while existing Demos and registration keep working | API; Database | [`test_demo_creation_stops_at_stored_demo_cap`](../tests/backend/test_demo.py#L241); All variants |
+| <a id="tc-476"></a>TC-476 | — | A Demo refused at the cap does no password hashing and keeps its hourly slot free | API | [`test_demo_refused_at_cap_does_no_password_hashing`](../tests/backend/test_demo.py#L256); All variants |
+| <a id="tc-489"></a>TC-489 | — | `DEMO_TOTAL_LIMIT` overrides the lifetime cap; 0 switches Try Demo off and invalid or over-maximum values make it unavailable, with warning or error logs and nothing created | API; Database | [`test_demo_total_limit_setting`](../tests/backend/test_demo.py#L280); setting=2, 0, 2001, ten |
 
 ## tests/backend/test_fix_version_on_pass.py
 
@@ -355,6 +365,14 @@ parameter selector.
 | <a id="tc-168"></a>TC-168 | AC-017.5 | Passed fix version preserves authorization | API / integration | [`test_passed_fix_version_preserves_authorization`](../tests/backend/test_fix_version_on_pass.py#L276); All variants |
 | <a id="tc-406"></a>TC-406 | AC-017.5 | Edit overlapping a passed transition preserves its fix version | API / integration | [`test_edit_overlapping_passed_transition_preserves_fix_version`](../tests/backend/test_fix_version_on_pass.py#L321); Passed request sent between the edit's read and write |
 | <a id="tc-407"></a>TC-407 | AC-017.8 | Competing testing outcomes cannot both apply | API / integration | [`test_competing_testing_outcomes_cannot_both_apply`](../tests/backend/test_fix_version_on_pass.py#L344); Passed request sent between a Failed transition's read and write |
+| <a id="tc-479"></a>TC-479 | AC-011.5, AC-017.5, AC-013.2 | Fix Version over 50 characters is rejected on the Passed transition and the Closed/Fixed edit, naming the field; 50 is saved | API / integration | [`test_fix_version_length_limit`](../tests/backend/test_fix_version_on_pass.py#L370); operation=passed, closed_edit |
+
+## tests/backend/test_input_limits.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-478"></a>TC-478 | AC-011.5, AC-013.2 | Bug text over its limit is rejected on create and edit with a message naming the field, and nothing is saved; values at the limit are saved | API / integration | [`test_bug_text_length_limits`](../tests/backend/test_input_limits.py#L28); field=title, affected_version, environment, description, steps_to_reproduce, expected_result, actual_result; operation=create, edit |
+| <a id="tc-480"></a>TC-480 | AC-005.2, AC-007.3 | Project names over 255 characters are rejected on create and edit, leaving names unchanged; 255 is accepted | API / integration | [`test_project_name_length_limit`](../tests/backend/test_input_limits.py#L57); All variants |
 
 ## tests/backend/test_jwt_secret.py
 
@@ -364,10 +382,11 @@ parameter selector.
 | <a id="tc-170"></a>TC-170 | — | Token signed with configured secret | API / integration | [`test_token_signed_with_configured_secret`](../tests/backend/test_jwt_secret.py#L43); All variants |
 | <a id="tc-171"></a>TC-171 | AC-003.3 | Forged token with old secret is rejected | API / integration | [`test_forged_token_with_old_secret_is_rejected`](../tests/backend/test_jwt_secret.py#L65); All variants |
 | <a id="tc-172"></a>TC-172 | AC-003.3 | Correctly signed expired token is rejected | API / integration | [`test_correctly_signed_expired_token_is_rejected`](../tests/backend/test_jwt_secret.py#L91); All variants |
-| <a id="tc-173"></a>TC-173 | — | Missing or blank JWT secret key rejects authentication | API / integration | [`test_missing_or_blank_jwt_secret_key_rejects_authentication`](../tests/backend/test_jwt_secret.py#L130); All variants |
-| <a id="tc-174"></a>TC-174 | — | Secret not in login response | API / integration | [`test_secret_not_in_login_response`](../tests/backend/test_jwt_secret.py#L186); All variants |
-| <a id="tc-175"></a>TC-175 | — | Secret not in protected response | API / integration | [`test_secret_not_in_protected_response`](../tests/backend/test_jwt_secret.py#L208); All variants |
-| <a id="tc-176"></a>TC-176 | — | Secret not in error response | API / integration | [`test_secret_not_in_error_response`](../tests/backend/test_jwt_secret.py#L227); All variants |
+| <a id="tc-173"></a>TC-173 | — | Missing or blank JWT secret key stops startup before the database is created or migrated | API / integration | [`test_missing_or_blank_jwt_secret_key_stops_startup`](../tests/backend/test_jwt_secret.py#L129); secret=missing, empty, spaces, mixed-whitespace |
+| <a id="tc-174"></a>TC-174 | — | Secret not in login response | API / integration | [`test_secret_not_in_login_response`](../tests/backend/test_jwt_secret.py#L168); All variants |
+| <a id="tc-175"></a>TC-175 | — | Secret not in protected response | API / integration | [`test_secret_not_in_protected_response`](../tests/backend/test_jwt_secret.py#L190); All variants |
+| <a id="tc-176"></a>TC-176 | — | Secret not in error response | API / integration | [`test_secret_not_in_error_response`](../tests/backend/test_jwt_secret.py#L209); All variants |
+| <a id="tc-484"></a>TC-484 | AC-003.3 | A correctly signed token for a missing account is rejected with 401 on read and write, and nothing is written (BUG-48 regression) | API / integration; Database | [`test_token_for_missing_account_is_rejected`](../tests/backend/test_jwt_secret.py#L223); All variants |
 
 ## tests/backend/test_login.py
 
@@ -381,6 +400,12 @@ parameter selector.
 | <a id="tc-180"></a>TC-180 | AC-003.1 | Authenticated user can access protected endpoint | API / integration | [`test_authenticated_user_can_access_protected_endpoint`](../tests/backend/test_login.py#L119); All variants |
 | <a id="tc-181"></a>TC-181 | AC-003.2 | Unauthenticated user cannot access protected endpoint | API / integration; Postman API | [`test_unauthenticated_user_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L140); All variants; Postman: `16 Reject Missing Authentication` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
 | <a id="tc-182"></a>TC-182 | AC-003.3 | Invalid token cannot access protected endpoint | API / integration | [`test_invalid_token_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L147); All variants |
+
+## tests/backend/test_password_work_limit.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-475"></a>TC-475 | — | Password hashing beyond the process-wide limit is refused with 503 for register, login and Try Demo; nothing is created, a refused Demo frees its hourly slot, and the request succeeds once capacity is free | API; Database | [`test_password_work_beyond_limit_is_refused`](../tests/backend/test_password_work_limit.py#L13); endpoint=/register, /login, /demo |
 
 ## tests/backend/test_privacy.py
 
@@ -430,6 +455,7 @@ parameter selector.
 | <a id="tc-405"></a>TC-405 | — | Add member does not report unrelated integrity failures as conflicts | API / integration | [`test_add_member_does_not_report_unrelated_integrity_failure_as_conflict`](../tests/backend/test_projects.py#L1443); injected NOT NULL failure on insert |
 | <a id="tc-464"></a>TC-464 | — | An owner-only project change authorized before a concurrent Delete Project cannot affect another user's project that reuses the deleted id, nor leave orphaned memberships (Astra finding #1 regression) | API / integration; database integrity | [`test_project_change_cannot_affect_project_that_reuses_deleted_id`](../tests/backend/test_projects.py#L1497); operation=add_member, rename, delete |
 | <a id="tc-408"></a>TC-408 | AC-009.1, AC-009.3, AC-009.4 | Add member matches emails like login: domain case-insensitive, local part case-sensitive (audit B7 regression) | API / integration | [`test_add_member_matches_email_like_login`](../tests/backend/test_projects.py#L1562); registration-cased add 201, domain variant 409, local-part variant and malformed address 404 |
+| <a id="tc-486"></a>TC-486 | AC-009.6, AC-010.4 | A QA Analyst or Developer leaves a project: only their bugs there become unassigned (status kept, Last Updated changed), they lose access, other projects and members are unaffected, they cannot remove others, and the owner cannot leave | API / integration | [`test_member_can_leave_project`](../tests/backend/test_projects.py#L1610); role=QA Analyst, Developer |
 
 ## tests/backend/test_registration.py
 
@@ -445,6 +471,18 @@ parameter selector.
 | <a id="tc-224"></a>TC-224 | — | Registration rejects invalid password for existing email | API / integration | [`test_registration_rejects_invalid_password_for_existing_email`](../tests/backend/test_registration.py#L133); All variants |
 | <a id="tc-225"></a>TC-225 | AC-001.5 | Password is not stored as plain text | Database / security | [`test_password_is_not_stored_as_plain_text`](../tests/backend/test_registration.py#L155); All variants |
 | <a id="tc-226"></a>TC-226 | — | Registration rejects password over bcrypt limit | API / integration | [`test_registration_rejects_password_over_bcrypt_limit`](../tests/backend/test_registration.py#L178); All variants |
+
+## tests/backend/test_request_body_limit.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-477"></a>TC-477 | — | Request bodies over 1 MiB are rejected with 413 before parsing or authentication, whether declared or streamed; a body at the limit reaches the endpoint | API / security | [`test_oversized_request_body_is_rejected_before_authentication`](../tests/backend/test_request_body_limit.py#L17); transfer=declared, streamed |
+
+## tests/backend/test_security_headers.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-490"></a>TC-490 | — | API, static, 401 and 413 responses carry the minimal security headers | API / security | [`test_responses_carry_minimal_security_headers`](../tests/backend/test_security_headers.py#L16); request_kind=api, static, unauthenticated, too_large |
 
 ## tests/backend/test_version.py
 
@@ -587,6 +625,13 @@ parameter selector.
 | <a id="tc-473"></a>TC-473 | AC-013.1 | A Back/Forward-restored Edit Bug form keeps its unsaved edit, and Save sends only that field (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_bug_editor_keeps_unsaved_edit_and_saves_only_that_field`](../tests/frontend/form-session.test.cjs#L676); changed field=environment, assignee |
 | <a id="tc-474"></a>TC-474 | AC-013.1 | A Back/Forward-restored read-only bug view refreshes to newer server data (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_read_only_bug_view_refreshes_newer_server_data`](../tests/frontend/form-session.test.cjs#L696); All variants |
 
+## tests/frontend/leave-project.test.cjs
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-487"></a>TC-487 | AC-009.6 | Leave Project is offered only beside the current QA Analyst's or Developer's own entry; after confirmation it leaves, clears the project's sort preference and returns to Projects with a confirmation | Frontend JS / DOM substitutes | [`test_leave_project_offered_to_current_non_owner_and_redirects`](../tests/frontend/leave-project.test.cjs#L48); All variants |
+| <a id="tc-488"></a>TC-488 | AC-009.6 | Cancelling or a failed leave keeps the user on the project with feedback and allows retry | Frontend JS / DOM substitutes | [`test_leave_project_cancel_or_failure_stays_on_project`](../tests/frontend/leave-project.test.cjs#L68); All variants |
+
 ## tests/frontend/lifecycle-action-disabled-state.test.cjs
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
@@ -595,6 +640,12 @@ parameter selector.
 | <a id="tc-306"></a>TC-306 | AC-017.2 | Move to open requires eligible selection and resets after transition | Frontend JS / DOM substitutes | [`test_move_to_open_requires_eligible_selection_and_resets_after_transition`](../tests/frontend/lifecycle-action-disabled-state.test.cjs#L87); All variants |
 | <a id="tc-307"></a>TC-307 | AC-017.3 | Move to development requires developer selection and resets after transition | Frontend JS / DOM substitutes | [`test_move_to_development_requires_developer_selection_and_resets_after_transition`](../tests/frontend/lifecycle-action-disabled-state.test.cjs#L114); All variants |
 | <a id="tc-308"></a>TC-308 | AC-017.4, AC-017.6 | Send to testing and close retain required selection behavior | Frontend JS / DOM substitutes | [`test_send_to_testing_and_close_retain_required_selection_behavior`](../tests/frontend/lifecycle-action-disabled-state.test.cjs#L144); All variants |
+
+## tests/frontend/new-bug-assignee.test.cjs
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-492"></a>TC-492 | AC-011.1, AC-015.1 | New Bug keeps the selected assignee when members are added, and reports when the selected member is removed (BUG-50 regression) | Frontend JS / DOM substitutes | [`test_new_bug_keeps_selected_assignee_when_members_change`](../tests/frontend/new-bug-assignee.test.cjs#L68); All variants |
 
 ## tests/frontend/project-name-validation.test.cjs
 
@@ -610,29 +661,37 @@ parameter selector.
 | <a id="tc-316"></a>TC-316 | AC-007.3 | Project edit open clears previous form feedback | Frontend JS / DOM substitutes | [`test_project_edit_open_clears_previous_form_feedback`](../tests/frontend/project-name-validation.test.cjs#L107); All variants |
 | <a id="tc-317"></a>TC-317 | AC-007.3 | Project edit preserves unrelated feedback | Frontend JS / DOM substitutes | [`test_project_edit_preserves_unrelated_feedback`](../tests/frontend/project-name-validation.test.cjs#L121); All variants |
 | <a id="tc-318"></a>TC-318 | AC-007.3 | Project edit server validation feedback clears on correction | Frontend JS / DOM substitutes | [`test_project_edit_server_validation_feedback_clears_on_correction`](../tests/frontend/project-name-validation.test.cjs#L152); All variants |
-| <a id="tc-319"></a>TC-319 | AC-007.3 | Project edit success clears prior validation feedback | Frontend JS / DOM substitutes | [`test_project_edit_success_clears_prior_validation_feedback`](../tests/frontend/project-name-validation.test.cjs#L164); All variants |
-| <a id="tc-320"></a>TC-320 | AC-005.2, AC-007.3 | Project name input preserves other form feedback | Frontend JS / DOM substitutes | [`test_project_name_input_preserves_other_form_feedback`](../tests/frontend/project-name-validation.test.cjs#L176); All variants |
-| <a id="tc-321"></a>TC-321 | AC-005.2 | Project creation blocks blank name submission | Frontend JS / DOM substitutes | [`test_project_creation_blocks_blank_name_submission`](../tests/frontend/project-name-validation.test.cjs#L190); All variants |
-| <a id="tc-322"></a>TC-322 | AC-005.1 | Project creation submits valid name unchanged | Frontend JS / DOM substitutes | [`test_project_creation_submits_valid_name_unchanged`](../tests/frontend/project-name-validation.test.cjs#L200); All variants |
-| <a id="tc-323"></a>TC-323 | AC-007.3 | Project edit blocks blank name submission | Frontend JS / DOM substitutes | [`test_project_edit_blocks_blank_name_submission`](../tests/frontend/project-name-validation.test.cjs#L190); All variants |
-| <a id="tc-324"></a>TC-324 | AC-007.1 | Project edit submits valid name unchanged | Frontend JS / DOM substitutes | [`test_project_edit_submits_valid_name_unchanged`](../tests/frontend/project-name-validation.test.cjs#L200); All variants |
-| <a id="tc-396"></a>TC-396 | — | New project repeated submission sends one POST while pending | Frontend JS / DOM substitutes | [`test_new_project_repeated_submission_sends_one_post_while_pending`](../tests/frontend/project-name-validation.test.cjs#L216); four rapid submits, one POST, Create disabled while pending |
-| <a id="tc-397"></a>TC-397 | — | New project failure re-enables Create for retry | Frontend JS / DOM substitutes | [`test_new_project_failure_reenables_create_for_retry`](../tests/frontend/project-name-validation.test.cjs#L239); failure=http_error, invalid_json, network_error |
-| <a id="tc-398"></a>TC-398 | — | Late project Create completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_new_project_late_completion_keeps_reopened_form`](../tests/frontend/project-name-validation.test.cjs#L266); late outcome=success, error, rejection |
-| <a id="tc-399"></a>TC-399 | — | Overlapping project list refreshes render each project once | Frontend JS / DOM substitutes | [`test_overlapping_project_list_refreshes_render_each_project_once`](../tests/frontend/project-name-validation.test.cjs#L300); finish=interleaved, superseded_last |
-| <a id="tc-467"></a>TC-467 | AC-007.1 | Project edit Save makes the name read-only, disables Save, Cancel and Delete, and sends one PUT while pending (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_edit_save_locks_row_and_sends_one_put_while_pending`](../tests/frontend/project-name-validation.test.cjs#L350); All variants |
-| <a id="tc-468"></a>TC-468 | AC-007.1 | Project edit Save failure restores the row, keeps the name and shows feedback for retry (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_edit_save_failure_restores_row_for_retry`](../tests/frontend/project-name-validation.test.cjs#L370); failure=http_error, invalid_json, network_error |
-| <a id="tc-469"></a>TC-469 | AC-007.1 | Late project Save does not end another project's edit session, and a later list refresh keeps that edit row (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_late_project_save_keeps_other_project_edit_session`](../tests/frontend/project-name-validation.test.cjs#L397); All variants |
-| <a id="tc-470"></a>TC-470 | AC-007.1 | A project-list refresh keeps a pending Save's locked row, so no second PUT is possible and the response settles the displayed row (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_list_refresh_keeps_pending_save_row_locked`](../tests/frontend/project-name-validation.test.cjs#L423); All variants |
-| <a id="tc-471"></a>TC-471 | AC-007.1 | A project-list refresh, for example after New Project, keeps the open edit row and its unsaved name, which a later Save submits (BUG-46 regression) | Frontend JS / DOM substitutes | [`test_project_list_refresh_preserves_unsaved_project_name_edit`](../tests/frontend/project-name-validation.test.cjs#L447); All variants |
+| <a id="tc-482"></a>TC-482 | AC-005.2 | Project creation length feedback stays while the name is too long and clears within 255 characters | Frontend JS / DOM substitutes | [`test_project_creation_length_feedback_clears_only_within_limit`](../tests/frontend/project-name-validation.test.cjs#L163); All variants |
+| <a id="tc-483"></a>TC-483 | AC-007.3 | Project edit length feedback stays while the name is too long and clears within 255 characters | Frontend JS / DOM substitutes | [`test_project_edit_length_feedback_clears_only_within_limit`](../tests/frontend/project-name-validation.test.cjs#L163); All variants |
+| <a id="tc-319"></a>TC-319 | AC-007.3 | Project edit success clears prior validation feedback | Frontend JS / DOM substitutes | [`test_project_edit_success_clears_prior_validation_feedback`](../tests/frontend/project-name-validation.test.cjs#L178); All variants |
+| <a id="tc-320"></a>TC-320 | AC-005.2, AC-007.3 | Project name input preserves other form feedback | Frontend JS / DOM substitutes | [`test_project_name_input_preserves_other_form_feedback`](../tests/frontend/project-name-validation.test.cjs#L190); All variants |
+| <a id="tc-321"></a>TC-321 | AC-005.2 | Project creation blocks blank name submission | Frontend JS / DOM substitutes | [`test_project_creation_blocks_blank_name_submission`](../tests/frontend/project-name-validation.test.cjs#L204); All variants |
+| <a id="tc-322"></a>TC-322 | AC-005.1 | Project creation submits valid name unchanged | Frontend JS / DOM substitutes | [`test_project_creation_submits_valid_name_unchanged`](../tests/frontend/project-name-validation.test.cjs#L214); All variants |
+| <a id="tc-323"></a>TC-323 | AC-007.3 | Project edit blocks blank name submission | Frontend JS / DOM substitutes | [`test_project_edit_blocks_blank_name_submission`](../tests/frontend/project-name-validation.test.cjs#L204); All variants |
+| <a id="tc-324"></a>TC-324 | AC-007.1 | Project edit submits valid name unchanged | Frontend JS / DOM substitutes | [`test_project_edit_submits_valid_name_unchanged`](../tests/frontend/project-name-validation.test.cjs#L214); All variants |
+| <a id="tc-396"></a>TC-396 | — | New project repeated submission sends one POST while pending | Frontend JS / DOM substitutes | [`test_new_project_repeated_submission_sends_one_post_while_pending`](../tests/frontend/project-name-validation.test.cjs#L230); four rapid submits, one POST, Create disabled while pending |
+| <a id="tc-397"></a>TC-397 | — | New project failure re-enables Create for retry | Frontend JS / DOM substitutes | [`test_new_project_failure_reenables_create_for_retry`](../tests/frontend/project-name-validation.test.cjs#L253); failure=http_error, invalid_json, network_error |
+| <a id="tc-398"></a>TC-398 | — | Late project Create completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_new_project_late_completion_keeps_reopened_form`](../tests/frontend/project-name-validation.test.cjs#L280); late outcome=success, error, rejection |
+| <a id="tc-399"></a>TC-399 | — | Overlapping project list refreshes render each project once | Frontend JS / DOM substitutes | [`test_overlapping_project_list_refreshes_render_each_project_once`](../tests/frontend/project-name-validation.test.cjs#L314); finish=interleaved, superseded_last |
+| <a id="tc-467"></a>TC-467 | AC-007.1 | Project edit Save makes the name read-only, disables Save, Cancel and Delete, and sends one PUT while pending (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_edit_save_locks_row_and_sends_one_put_while_pending`](../tests/frontend/project-name-validation.test.cjs#L364); All variants |
+| <a id="tc-468"></a>TC-468 | AC-007.1 | Project edit Save failure restores the row, keeps the name and shows feedback for retry (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_edit_save_failure_restores_row_for_retry`](../tests/frontend/project-name-validation.test.cjs#L384); failure=http_error, invalid_json, network_error |
+| <a id="tc-469"></a>TC-469 | AC-007.1 | Late project Save does not end another project's edit session, and a later list refresh keeps that edit row (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_late_project_save_keeps_other_project_edit_session`](../tests/frontend/project-name-validation.test.cjs#L411); All variants |
+| <a id="tc-470"></a>TC-470 | AC-007.1 | A project-list refresh keeps a pending Save's locked row, so no second PUT is possible and the response settles the displayed row (BUG-45 regression) | Frontend JS / DOM substitutes | [`test_project_list_refresh_keeps_pending_save_row_locked`](../tests/frontend/project-name-validation.test.cjs#L437); All variants |
+| <a id="tc-471"></a>TC-471 | AC-007.1 | A project-list refresh, for example after New Project, keeps the open edit row and its unsaved name, which a later Save submits (BUG-46 regression) | Frontend JS / DOM substitutes | [`test_project_list_refresh_preserves_unsaved_project_name_edit`](../tests/frontend/project-name-validation.test.cjs#L461); All variants |
+
+## tests/frontend/project-status-messages.test.cjs
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-493"></a>TC-493 | AC-009.1, AC-009.2, AC-011.1 | Project page member and bug messages are polite status live regions, and empty `.section-message` regions are never `display: none` or hidden, so they stay in the accessibility tree (BUG-51 regression) | Frontend JS / static markup and CSS | [`test_project_page_status_messages_are_live_regions`](../tests/frontend/project-status-messages.test.cjs#L9); All variants |
 
 ## tests/frontend/registration.test.cjs
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-419"></a>TC-419 | AC-001.1, AC-002.1 | Registration logs in through /login once, stores the token and opens Projects; duplicate submission ignored | Frontend JS / DOM substitutes | [`test_successful_registration_logs_in_and_opens_projects_once`](../tests/frontend/registration.test.cjs#L45); All variants |
-| <a id="tc-420"></a>TC-420 | AC-001.2, AC-001.3, AC-001.4 | Rejected registration shows the existing error and never authenticates or redirects | Frontend JS / DOM substitutes | [`test_rejected_registration_does_not_authenticate`](../tests/frontend/registration.test.cjs#L64); All variants (409, invalid email, invalid password, network failure) |
-| <a id="tc-421"></a>TC-421 | AC-001.1 | Login failure after registration reports the created account, links to Login and keeps the form disabled | Frontend JS / DOM substitutes | [`test_login_failure_after_registration_directs_to_manual_login`](../tests/frontend/registration.test.cjs#L85); All variants (401, missing token, network failure) |
+| <a id="tc-419"></a>TC-419 | AC-001.1, AC-002.1 | Registration logs in through /login once, stores the token and opens Projects; duplicate submission ignored | Frontend JS / DOM substitutes | [`test_successful_registration_logs_in_and_opens_projects_once`](../tests/frontend/registration.test.cjs#L46); All variants |
+| <a id="tc-420"></a>TC-420 | AC-001.2, AC-001.3, AC-001.4 | Rejected registration shows the existing error and never authenticates or redirects | Frontend JS / DOM substitutes | [`test_rejected_registration_does_not_authenticate`](../tests/frontend/registration.test.cjs#L65); All variants (409, invalid email, invalid password, network failure) |
+| <a id="tc-421"></a>TC-421 | AC-001.1 | Login failure after registration reports the created account, links to Login and keeps the form disabled | Frontend JS / DOM substitutes | [`test_login_failure_after_registration_directs_to_manual_login`](../tests/frontend/registration.test.cjs#L86); All variants (401, missing token, network failure) |
 
 ## tests/frontend/try-demo.test.cjs
 
@@ -640,9 +699,9 @@ parameter selector.
 | --- | --- | --- | --- | --- |
 | <a id="tc-450"></a>TC-450 | AC-024.1 | Try Demo sends one unauthenticated `POST /demo`, shows progress on the busy button without a separate message, ignores clicks while pending, stores the returned token like Login and opens Projects | Frontend JS / DOM substitutes | [`test_try_demo_signs_in_once_and_opens_projects`](../tests/frontend/try-demo.test.cjs#L54); All variants |
 | <a id="tc-451"></a>TC-451 | AC-024.1, AC-024.8 | Server, network and unreadable failures show the safe message under the Try Demo button, store no token, restore the button, stay on Login and allow a successful retry | Frontend JS / DOM substitutes | [`test_failed_try_demo_shows_error_and_allows_retry`](../tests/frontend/try-demo.test.cjs#L75); All variants |
-| <a id="tc-452"></a>TC-452 | AC-024.3 | The intentional-imperfection note is shown only for the E-Commerce Demo project | Frontend JS / DOM substitutes | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs#L101); All variants |
+| <a id="tc-452"></a>TC-452 | AC-024.3 | The intentional-imperfection note follows the server-owned `ecommerce` marker, including after renaming; same-name ordinary projects do not show it | Frontend JS / DOM substitutes | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs#L101); All variants |
 | <a id="tc-462"></a>TC-462 | AC-024.4 | Exact consecutive-line historical introduction, shared message style and placement; visible only for the history marker, including renamed seeds; ordinary same-name and unrecognized markers stay hidden | Frontend JS / DOM substitutes and static HTML | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs); demoKind=history, undefined or unrecognized; all name variants |
-| <a id="tc-457"></a>TC-457 | AC-024.1 | Login shows the exact Demo introduction, Try Demo button and session notice in one section; other pages do not show the notice | Frontend JS / static HTML | [`test_login_demo_section_text_is_only_on_login`](../tests/frontend/try-demo.test.cjs#L131); All variants |
+| <a id="tc-457"></a>TC-457 | AC-024.1 | Login shows the exact Demo introduction, Try Demo button and session notice in one section; other pages do not show the notice | Frontend JS / static HTML | [`test_login_demo_section_text_is_only_on_login`](../tests/frontend/try-demo.test.cjs#L144); All variants |
 
 ## tests/e2e/test_ai_triage.py
 
@@ -665,8 +724,8 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-331"></a>TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5 | Manage membership, verify displayed email/role grouping and alphabetical order after unsorted insertion, and revoke removed-user access | Playwright / Chromium | [`test_owner_manages_membership_and_removed_user_loses_access`](../tests/e2e/test_authorization.py#L7); All variants |
-| <a id="tc-332"></a>TC-332 | AC-012.3, AC-014.2, AC-022.1 | Developer cannot delete or request AI and outsider cannot open bug | Playwright / Chromium (mocked AI) | [`test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug`](../tests/e2e/test_authorization.py#L72); All variants |
+| <a id="tc-331"></a>TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5, AC-009.6 | Manage membership, verify displayed email/role grouping and alphabetical order after unsorted insertion, a Developer's single Leave Project button on their own entry and no Remove buttons, and revoke removed-user access | Playwright / Chromium | [`test_owner_manages_membership_and_removed_user_loses_access`](../tests/e2e/test_authorization.py#L7); All variants |
+| <a id="tc-332"></a>TC-332 | AC-012.3, AC-014.2, AC-022.1 | Developer cannot delete or request AI and outsider cannot open bug | Playwright / Chromium (mocked AI) | [`test_developer_cannot_delete_or_request_ai_and_outsider_cannot_open_bug`](../tests/e2e/test_authorization.py#L78); All variants |
 
 ## tests/e2e/test_bug_list.py
 
@@ -675,17 +734,17 @@ parameter selector.
 | <a id="tc-333"></a>TC-333 | AC-012.2, AC-012.4, AC-012.5, AC-012.6 | Sort pagination and page size survive navigation and reload | Playwright / Chromium | [`test_sort_pagination_and_page_size_survive_navigation_and_reload`](../tests/e2e/test_bug_list.py#L10); All variants |
 | <a id="tc-334"></a>TC-334 | AC-012.5, AC-012.6 | Page size preferences persist and are isolated by user | Playwright / Chromium | [`test_page_size_preferences_persist_and_are_isolated_by_user`](../tests/e2e/test_bug_list.py#L53); All variants |
 | <a id="tc-411"></a>TC-411 | AC-012.1 | Desktop rows clamp long titles to two lines; mobile cards show full titles | Playwright / Chromium | [`test_desktop_rows_clamp_long_titles_to_two_lines`](../tests/e2e/test_bug_list.py#L118); All variants |
-| <a id="tc-412"></a>TC-412 | — | Desktop column positions stay fixed across pages, sorting and page size | Playwright / Chromium | [`test_desktop_column_positions_stay_fixed_across_pages`](../tests/e2e/test_bug_list.py#L146); All variants |
+| <a id="tc-412"></a>TC-412 | — | Desktop column positions stay fixed across pages, sorting and page size | Playwright / Chromium | [`test_desktop_column_positions_stay_fixed_across_pages`](../tests/e2e/test_bug_list.py#L147); All variants |
 
 ## tests/e2e/test_bugs.py
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L78); All variants |
-| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L125); All variants |
-| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L170); All variants |
-| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L198); All variants |
-| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L14); title=normal/unbroken (2,000 characters), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
+| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L82); All variants |
+| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L129); All variants |
+| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L174); All variants |
+| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L202); All variants |
+| <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L18); title=normal/unbroken (255 characters, the AC-011.5 maximum), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
 
 ## tests/e2e/test_projects.py
 

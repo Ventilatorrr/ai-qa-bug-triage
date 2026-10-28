@@ -4,6 +4,8 @@ import subprocess
 import sys
 from textwrap import dedent
 
+from tests.conftest import TEST_JWT_SECRET
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
@@ -12,6 +14,8 @@ def run_application_script(tmp_path, script):
     database_path = tmp_path / "lifecycle.db"
     environment = os.environ.copy()
     environment["DATABASE_NAME"] = str(database_path)
+    # Startup requires a signing secret; CI does not set one in the environment.
+    environment["JWT_SECRET_KEY"] = TEST_JWT_SECRET
     result = subprocess.run(
         [sys.executable, "-c", dedent(script)],
         cwd=REPOSITORY_ROOT,

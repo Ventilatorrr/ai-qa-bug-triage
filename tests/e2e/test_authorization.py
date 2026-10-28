@@ -3,7 +3,7 @@ from playwright.sync_api import expect
 from tests.e2e.helpers import api_call, bug_path, login, open_bug, seed_bug
 
 
-# TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5 — Owner manages membership and removed user loses access
+# TC-331 | AC-006.4, AC-009.1, AC-009.2, AC-009.5, AC-009.6 — Owner manages membership and removed user loses access
 def test_owner_manages_membership_and_removed_user_loses_access(
     page, e2e_api, workspace, account_factory,
 ):
@@ -46,8 +46,14 @@ def test_owner_manages_membership_and_removed_user_loses_access(
     expected_members += [f"{email} (Developer)" for email in developer_emails]
 
     # Member entries have no named container role; assert their rendered text/order.
+    # Each entry's first child holds "email (role)"; any action button follows it.
     expect(page.locator("#members")).to_be_visible()
-    expect(page.locator("#members > div")).to_have_text(expected_members)
+    expect(page.locator("#members > div > div")).to_have_text(expected_members)
+    # The Developer cannot remove anyone and can leave only from their own entry (AC-009.6).
+    expect(page.get_by_role("button", name="Remove", exact=True)).to_have_count(0)
+    expect(page.get_by_role("button", name="Leave Project", exact=True)).to_have_count(1)
+    own_entry = page.locator("#members > div").filter(has=page.get_by_text(member["email"], exact=True))
+    expect(own_entry.get_by_role("button", name="Leave Project", exact=True)).to_be_visible()
 
     login(page, workspace["owner"])
     page.get_by_role("link", name=project["name"], exact=True).click()

@@ -6,6 +6,7 @@ from pydantic import EmailStr, TypeAdapter, ValidationError
 
 from app.database import get_connection
 from app.api.auth import get_current_user_id
+from app.schemas import PROJECT_NAME_LIMIT
 
 
 router = APIRouter(tags=["Projects"])
@@ -19,6 +20,11 @@ def validate_project_name(name):
         raise HTTPException(
             status_code=422,
             detail="Project name is required."
+        )
+    if len(name) > PROJECT_NAME_LIMIT:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Project name must be {PROJECT_NAME_LIMIT} characters or fewer."
         )
     return name
 
@@ -143,6 +149,8 @@ def get_project_members(
     conn = get_connection()
 
     try:
+        # One read snapshot from the membership check through the member list (BUG-49).
+        conn.execute("BEGIN")
         project_member = conn.execute(
             """
             SELECT 1
@@ -447,26 +455,26 @@ def remove_project_member(
 
     try:
         conn.execute("BEGIN IMMEDIATE")
-        project = conn.execute(
+        caller = conn.execute(
             """
-            SELECT p.id
-            FROM projects p
-            JOIN project_members pm
-                ON p.id = pm.project_id
-            WHERE p.id = ?
-            AND pm.user_id = ?
-            AND pm.role = ?
+            SELECT role
+            FROM project_members
+            WHERE project_id = ? AND user_id = ?
             """,
-            (project_id, user_id, "Project Owner")
+            (project_id, user_id)
         ).fetchone()
 
-        if project is None:
+        is_owner = caller is not None and caller[0] == "Project Owner"
+        # QA Analysts and Developers may remove only themselves (Leave Project, AC-009.6).
+        leaving = caller is not None and not is_owner and member_user_id == user_id
+
+        if not is_owner and not leaving:
             raise HTTPException(
                 status_code=404,
                 detail="Project not found."
             )
 
-        if member_user_id == user_id:
+        if is_owner and member_user_id == user_id:
             raise HTTPException(
                 status_code=400,
                 detail="Project Owner cannot be removed from the project."
@@ -512,6 +520,6 @@ def remove_project_member(
         conn.close()
 
     return {
-        "message": "Project member removed successfully."
+        "message": "You left the project." if leaving else "Project member removed successfully."
     }
     

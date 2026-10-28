@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import re
 from typing import Literal
 
+from app.schemas import BUG_FIELD_LIMITS
+
 
 TEXT_FIELDS = frozenset({
     "title", "affected_version", "environment", "description",
@@ -77,7 +79,11 @@ def validate_suggestions(raw: object, *, eligible_assignee_ids: set[int]) -> Sug
         if any(type(other) is not type(value) or other != value for other in values[1:]):
             continue
         if field in TEXT_FIELDS:
-            valid = isinstance(value, str) and is_replacement_text(field, value)
+            # A value the field could not store would only fail on Create or Save.
+            valid = (
+                isinstance(value, str) and len(value) <= BUG_FIELD_LIMITS[field][1]
+                and is_replacement_text(field, value)
+            )
         elif field == "severity":
             valid = isinstance(value, str) and value in SEVERITIES
         elif field == "priority":

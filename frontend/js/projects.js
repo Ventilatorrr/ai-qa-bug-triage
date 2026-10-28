@@ -42,8 +42,15 @@ function clearProjectFormFeedback(context = null, nameValidationOnly = false) {
     }
 }
 
+const PROJECT_NAME_LIMIT = 255;
+
+function isProjectNameValidationMessage(detail) {
+    return detail === "Project name is required." ||
+        detail === `Project name must be ${PROJECT_NAME_LIMIT} characters or fewer.`;
+}
+
 function clearCorrectedProjectNameFeedback(input, context) {
-    if (input.value.trim()) {
+    if (input.value.trim() && input.value.length <= PROJECT_NAME_LIMIT) {
         clearProjectFormFeedback(context, true);
     }
 }
@@ -125,6 +132,22 @@ async function loadProjects() {
 }
 
 
+// One-time confirmation from another page, such as leaving a project.
+function showProjectListFeedback() {
+    try {
+        const feedback = sessionStorage.getItem("project-list-feedback");
+
+        if (feedback) {
+            sessionStorage.removeItem("project-list-feedback");
+            showProjectMessage(feedback, "success");
+        }
+    } catch (error) {
+        // The Projects page still works if session storage is unavailable.
+    }
+}
+
+
+showProjectListFeedback();
 loadProjects();
 
 window.addEventListener("pageshow", function(event) {
@@ -290,7 +313,7 @@ async function saveProjectEdit(project, projectNameInput, projectElement) {
             renderProjectView(projectElement, data, "Project Owner");
         } else {
             showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
-                context: project.id, nameValidation: data.detail === "Project name is required."
+                context: project.id, nameValidation: isProjectNameValidationMessage(data.detail)
             } : null);
         }
     } catch (error) {
@@ -420,7 +443,7 @@ projectForm.addEventListener("submit", async function (event) {
             loadProjects();
         } else {
             showProjectMessage(formatApiError(data.detail), "error", response.status === 422 ? {
-                context: "create", nameValidation: data.detail === "Project name is required."
+                context: "create", nameValidation: isProjectNameValidationMessage(data.detail)
             } : null);
         }
     } catch (error) {

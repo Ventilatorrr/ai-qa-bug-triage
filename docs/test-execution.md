@@ -12,11 +12,11 @@ test-runner cases, not conceptual TC IDs.
 | --- | --- |
 | Released | **v0.2.0** (GitHub development release, 24 October 2026): Increments 1–3, REQ-001–REQ-023 |
 | Deployed | Hosted on Render since 25 October 2026 |
-| Current work | Try Demo (REQ-024), AI usage limits (REQ-025) and AI Assist prompt improvements, on `1.0.0-dev`; not released or deployed |
+| Current work | v1.0.0 release hardening on `release/v1.0.0-hardening` (`1.0.0-dev`), after Try Demo (REQ-024) and AI usage limits (REQ-025); not released or deployed |
 | Current regression | Python **744 passed**, frontend JavaScript **122 passed**, Chromium Playwright + BDD **33 passed** |
-| AC coverage | **102 Covered / 0 Partial / 0 Not Covered** of 102 ACs |
+| AC coverage | **102 Covered / 2 Partial / 0 Not Covered** of 104 ACs; AC-009.6 and AC-011.5 await a browser check at the release candidate |
 | Real AI testing | 40 live evaluations of fictional scenarios in October 2026, a configuration study, and a final six-report Demo evaluation, which was accepted |
-| Defects | 41 tracked defects closed for v0.2.0; BUG-42 (Try Demo layout) is fixed in the current work but still open in the tracker |
+| Defects | 41 tracked defects closed for v0.2.0; BUG-42–BUG-52 tracked for v1.0.0, with fixes for BUG-48–BUG-52 on the hardening branch. Statuses are kept in the application tracker |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
 
 ## Environment and conventions
@@ -34,6 +34,32 @@ test-runner cases, not conceptual TC IDs.
   gitignored `ai-evaluation-results/` directory and is not published.
 - Suites run serially. Runs interrupted by sandbox or environment setup problems
   are not counted as passes.
+
+## v1.0.0 hardening — 28 October 2026
+
+Focused local runs only; comprehensive regression runs in PR CI and at the release candidate.
+
+| Area | Result |
+| --- | --- |
+| Backend modules affected by the hardening | All passed (targeted runs, including 222 in the final batch) |
+| Frontend JavaScript (`node --test`) | **136 passed**, 0 failed |
+| Regression detection | With the fix removed, the new tests **failed** for BUG-48 (TC-484), BUG-49 (TC-485, all four operations), BUG-50 (TC-492) and BUG-51 (TC-493, original markup and the original `display: none` empty-message rule). |
+| Not run locally | Playwright + BDD, Postman, JMeter (PR CI); container build (no local Docker) |
+
+<a id="bug-51-narrator-verification--28-october-2026"></a>
+**BUG-51 status-message announcements (manual, Chrome with Windows Narrator, Windows 11): Passed.** A first check failed: empty status messages were `display: none`, so their live regions were not in the accessibility tree. After the CSS correction and a hard refresh, Narrator announced Create Bug success, Add Member success (mouse and keyboard), a tested error message and Remove Member success. Keyboard focus still moves to the page body when Create or Add is submitted; this is deferred. Chrome's native confirmation dialog text was not read by Narrator; this is a separate observation, not part of BUG-51.
+
+<a id="bug-52-light-theme-flash--28-october-2026"></a>
+**BUG-52 light-theme flash (manual, Claude desktop built-in Chromium browser, Windows 11).**
+A frontend-only static server on `127.0.0.1:8148` delayed only `js/theme.js` by 4 s with
+caching disabled; `localStorage.theme` was `light` and the page visible. Before the fix,
+Chrome's paint timing on `/login.html` recorded the first paint at **68 ms** and `theme.js`
+arriving at **4,029 ms**, so the page was painted before the light theme could apply (the dark
+frames themselves were not captured; screenshots wait for page load). After the fix,
+`theme-init.js` was the first `<body>` element and finished in 22–96 ms on `/login.html` and
+`/privacy.html`, about 4 s before `theme.js`, and the light theme was active after every load.
+These later runs did not paint early, so the fix is verified by script order rather than by an
+observed early paint.
 
 ## Current results — Try Demo feature work
 
