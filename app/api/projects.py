@@ -202,6 +202,9 @@ def update_project(
     conn = get_connection()
 
     try:
+        # Hold the write lock from the owner check through every change below, so a
+        # concurrent Delete Project cannot free (and SQLite reuse) the project id in between.
+        conn.execute("BEGIN IMMEDIATE")
         row = conn.execute(
             """
             SELECT p.id
@@ -251,6 +254,7 @@ def delete_project(
     conn = get_connection()
 
     try:
+        conn.execute("BEGIN IMMEDIATE")
         project = conn.execute(
             """
             SELECT p.id
@@ -315,6 +319,7 @@ def add_project_member(
     conn = get_connection()
 
     try:
+        conn.execute("BEGIN IMMEDIATE")
         project = conn.execute(
             """
             SELECT p.id
@@ -405,7 +410,7 @@ def add_project_member(
                 (project_id, member_user_id, member_role)
             )
 
-        # A concurrent request can add the same member after the check above.
+        # Defensive: the IMMEDIATE transaction already serializes competing requests.
         except sqlite3.IntegrityError as error:
             conn.rollback()
 
@@ -441,6 +446,7 @@ def remove_project_member(
     conn = get_connection()
 
     try:
+        conn.execute("BEGIN IMMEDIATE")
         project = conn.execute(
             """
             SELECT p.id

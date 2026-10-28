@@ -1375,6 +1375,7 @@ def test_competing_add_member_requests_return_one_created_and_one_conflict(
     monkeypatch
 ):
     import sqlite3
+    import threading
 
     from app import database
     from app.api import projects
@@ -1386,17 +1387,21 @@ def test_competing_add_member_requests_return_one_created_and_one_conflict(
     headers = {"Authorization": f"Bearer {owner['token']}"}
     competing = {}
 
+    def add_competing_member():
+        competing["response"] = test_client.post(
+            members_url,
+            json={"email": member["user"]["email"], "role": "QA Analyst"},
+            headers=headers
+        )
+
     class CompetingConnection(sqlite3.Connection):
         def execute(self, sql, parameters=()):
-            # The competing request passes its own duplicate check and commits
-            # after this request's check, immediately before this insert.
+            # The competing request starts after this request's duplicate check,
+            # immediately before this insert, and must wait for this commit.
             if "INSERT INTO project_members" in sql and not competing:
-                competing["started"] = True
-                competing["response"] = test_client.post(
-                    members_url,
-                    json={"email": member["user"]["email"], "role": "QA Analyst"},
-                    headers=headers
-                )
+                competing["thread"] = threading.Thread(target=add_competing_member)
+                competing["thread"].start()
+                competing["thread"].join(timeout=1)
             return super().execute(sql, parameters)
 
     with monkeypatch.context() as patch:
@@ -1410,12 +1415,14 @@ def test_competing_add_member_requests_return_one_created_and_one_conflict(
             json={"email": member["user"]["email"], "role": "Developer"},
             headers=headers
         )
+        competing["thread"].join(timeout=10)
 
-    assert competing["response"].status_code == 201
-    assert competing["response"].json()["role"] == "QA Analyst"
-    assert response.status_code == 409
-    assert response.json() == {"detail": "This user is already a member of this project."}
-    assert stored_memberships(project["id"], member["user_id"]) == [("QA Analyst",)]
+    assert not competing["thread"].is_alive()
+    assert response.status_code == 201
+    assert response.json()["role"] == "Developer"
+    assert competing["response"].status_code == 409
+    assert competing["response"].json() == {"detail": "This user is already a member of this project."}
+    assert stored_memberships(project["id"], member["user_id"]) == [("Developer",)]
 
     members = test_client.get(members_url, headers=headers)
     assert members.status_code == 200
@@ -1475,6 +1482,80 @@ def test_add_member_does_not_report_unrelated_integrity_failure_as_conflict(
     after = test_client.get(members_url, headers=headers)
     assert after.status_code == 200
     assert after.json() == before.json()
+
+
+# TC-464 | Technical — Owner-only project changes cannot outlive deletion of the authorized project (Astra finding #1 regression)
+@pytest.mark.parametrize(
+    ("method", "path", "body", "gap_sql"),
+    [
+        ("POST", "/projects/{id}/members", {"email": "gap-member@example.com", "role": "Developer"}, "FROM users"),
+        ("PUT", "/projects/{id}", {"name": "Stale Rename"}, "UPDATE projects"),
+        ("DELETE", "/projects/{id}", None, "DELETE FROM bugs"),
+    ],
+    ids=["add_member", "rename", "delete"]
+)
+def test_project_change_cannot_affect_project_that_reuses_deleted_id(
+    test_client,
+    authenticated_user_factory,
+    project_factory,
+    monkeypatch,
+    method,
+    path,
+    body,
+    gap_sql
+):
+    import sqlite3
+    import threading
+    from contextlib import closing
+
+    from app import database
+    from app.api import projects
+
+    owner = authenticated_user_factory(email="gap-owner@example.com")
+    authenticated_user_factory(email="gap-member@example.com")
+    victim = authenticated_user_factory(email="gap-victim@example.com")
+    project = project_factory(owner["token"], name="Owner Throwaway")
+    owner_headers = {"Authorization": f"Bearer {owner['token']}"}
+    victim_headers = {"Authorization": f"Bearer {victim['token']}"}
+    gap = {}
+
+    def delete_and_recycle():
+        gap["delete"] = test_client.delete(f"/projects/{project['id']}", headers=owner_headers)
+        gap["victim"] = project_factory(victim["token"], name="Victim Private")
+
+    class GapConnection(sqlite3.Connection):
+        def execute(self, sql, parameters=()):
+            # After the owner check: delete the project and let another user's new
+            # project recycle its id. Without a held write lock this completes first.
+            if gap_sql in sql and "thread" not in gap:
+                gap["thread"] = threading.Thread(target=delete_and_recycle)
+                gap["thread"].start()
+                gap["thread"].join(timeout=1)
+            return super().execute(sql, parameters)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            projects,
+            "get_connection",
+            lambda: sqlite3.connect(database.DATABASE_NAME, factory=GapConnection)
+        )
+        response = test_client.request(method, path.format(id=project["id"]), json=body, headers=owner_headers)
+        gap["thread"].join(timeout=10)
+
+    assert not gap["thread"].is_alive()
+    assert response.status_code in (200, 201)
+    assert gap["delete"].status_code in (200, 404)
+    victim_project = gap["victim"]
+    assert victim_project["id"] == project["id"]  # SQLite reuses the deleted maximum id.
+
+    victim_view = test_client.get(f"/projects/{victim_project['id']}", headers=victim_headers)
+    assert victim_view.status_code == 200
+    assert victim_view.json()["name"] == "Victim Private"
+    victim_members = test_client.get(f"/projects/{victim_project['id']}/members", headers=victim_headers)
+    assert [row["email"] for row in victim_members.json()] == ["gap-victim@example.com"]
+
+    with closing(database.get_connection()) as connection:
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
 # TC-408 | AC-009.1, AC-009.3, AC-009.4 — Add member matches emails like login (audit B7 regression)
