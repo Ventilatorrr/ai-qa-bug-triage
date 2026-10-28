@@ -8,6 +8,8 @@ const showProjectFormButton = document.querySelector("#show-project-form");
 const cancelProjectFormButton = document.querySelector("#cancel-project-form");
 const createProjectButton = document.querySelector("#create-project-button");
 let editingProjectId = null;
+// Edit row of that session; list refreshes keep it so unsaved typing survives.
+let editingProjectElement = null;
 // Project id -> locked edit row whose rename Save is still pending.
 const pendingProjectSaves = new Map();
 let projectFormFeedback = null;
@@ -104,14 +106,13 @@ async function loadProjects() {
 
             const role = await getProjectRole(project.id);
 
-            const projectElement = document.createElement("div");
-
             if (editingProjectId === project.id && role === "Project Owner") {
-                renderProjectEdit(projectElement, project);
-            } else {
-                renderProjectView(projectElement, project, role);
+                projectElements.push(editingProjectElement);
+                continue;
             }
 
+            const projectElement = document.createElement("div");
+            renderProjectView(projectElement, project, role);
             projectElements.push(projectElement);
         }
 
@@ -223,6 +224,7 @@ function renderProjectEdit(projectElement, project) {
 function startProjectEdit(project, projectElement) {
     clearProjectFormFeedback();
     editingProjectId = project.id;
+    editingProjectElement = projectElement;
     renderProjectEdit(projectElement, project);
 }
 
