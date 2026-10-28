@@ -26,7 +26,7 @@ The Definition of Done (DoD) applies to every product increment. An increment is
 ## UI, Usability and Accessibility
 
 - Relevant UI functionality has been tested.
-- The interface behaves correctly across the supported browsers and screen sizes.
+- The interface behaves correctly in the browsers and screen sizes within the tested scope; untested browsers or devices are recorded with the evidence.
 - Relevant usability checks have been completed.
 - Relevant accessibility checks have been completed.
 
@@ -37,15 +37,14 @@ The Definition of Done (DoD) applies to every product increment. An increment is
 - Relevant input validation and security controls have been tested.
 - No known critical security vulnerabilities remain unresolved.
 
-## AI and Agent Behaviour
+## AI-Assisted Behaviour
 
 - AI functionality has been tested against defined expected behaviours and scenarios.
-- AI-generated suggestions can be reviewed and overridden by QA analysts.
+- AI suggestions can be reviewed, edited, used or dismissed by authorized users before anything is saved.
 - AI failures, invalid responses, and unavailable AI services are handled appropriately.
-- AI agents can access only explicitly permitted tools and data.
-- Attempts to use unauthorized tools or perform unauthorized actions are prevented.
-- Agents cannot access or modify data outside their authorized project or user context.
-- Relevant AI actions and tool calls are logged sufficiently to support testing and investigation.
+- AI context is limited to data from the user's authorized project, and AI requests carry no application-managed secrets.
+- AI output cannot perform actions or modify stored data; only the user's normal Create or Save action persists values.
+- AI usage is bounded, and AI failures are logged without request content or credentials.
 
 ## CI/CD
 

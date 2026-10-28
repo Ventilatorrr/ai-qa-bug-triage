@@ -8,14 +8,14 @@ Stage B1 validated the harness offline. On 16 October 2026, 30 live evaluations
 completed: 12 original-prompt, 12 historical-context clarification and six final
 formatting-correction requests. The [execution report](test-execution.md#ac-0192-final-evaluation-review)
 records the final A–F rubric assessment, historical observations and limitations.
-User-directed closure based on Codex-assisted review marks AC-019.2 Covered;
-current RTM counts are **88 Covered / 0 Partial / 0 Not Covered**. Raw review
+The project owner closed AC-019.2 on 16 October 2026 after an AI-assisted review;
+the RTM then recorded **88 Covered / 0 Partial / 0 Not Covered**. Raw review
 templates remain unchanged; independent human scoring is not claimed.
 
 The original protocol is preserved at commit `aa6977b` and within baseline run
 snapshots (protocol SHA256 `21b83707749ef6f6918bd80bd8505a4b7035a6ac18d5ab370086bb65bd8afc1d`).
-The dataset, rubric and closure criteria below are unchanged. Current procedural
-updates move future evidence outside pytest cleanup and distinguish prompt-change
+The dataset, rubric and closure criteria below are unchanged. Later procedural
+updates move evidence outside pytest cleanup and distinguish prompt-change
 verification from the original runs; they do not retrospectively regrade results.
 
 ## Scope and frozen inputs
@@ -116,14 +116,15 @@ Reuse `build_generation_input`, `create_openai_client`,
 `request_openai_suggestions` and `process_provider_response` unchanged. A forwarding
 recorder captures the actual SDK arguments/response without substituting prompts
 or generation settings: gpt-6-luna, strict schema, store=False, 60-second timeout,
-zero SDK retries; no explicit output cap, temperature or seed. Record returned
+zero SDK retries; no temperature or seed, and no output cap at the time (production
+added its 8,000-token cap on 26 October 2026). Record returned
 model as well as the requested alias; a dated alias snapshot is accepted and
 recorded. No new dependencies or changes to the provider adapter, output schema
 or validator are required.
 
-**Current request settings (22 October 2026).** Without options, every run sends
+**Request settings (from 22 October 2026).** Without options, every run sends
 the production request unchanged, including `reasoning={"effort":"medium"}` and
-`service_tier="fast"`. Optional evaluation-only overrides apply only when supplied:
+`service_tier="fast"`, and from 26 October 2026 `max_output_tokens=8000`. Optional evaluation-only overrides apply only when supplied:
 `--reasoning-effort medium|low|high` changes only the reasoning effort, and
 `--service-tier standard|fast` changes only the tier (`standard` omits it). Run-level
 `reasoning_effort`/`service_tier` record the selected overrides (null keeps
@@ -183,7 +184,8 @@ human review blocks further batches. Save completed/failed attempts and mark the
 remaining cases not run. No silent retries or replacement results.
 
 The $0.10 check is an observed-cost pause, not an enforceable per-request dollar
-cap; an in-flight request may exceed it. No output cap is added. The earlier $1
+cap; an in-flight request may exceed it. The protocol added no evaluation-specific
+output cap. The earlier $1
 contingency proposal still requires live-execution approval. Any evaluation-only
 generation cap or other configuration departure needs separate agreement.
 
@@ -218,13 +220,13 @@ Prepared **19 October 2026** on `test/ai-quality`. The nine fictional cases in
 [`quality_scenarios.py`](../tests/ai_evaluation/quality_scenarios.py) are additional
 risk-based evaluations, not new acceptance criteria. **Both separately approved
 live batches completed on 19 October: ten executions across nine unique cases,
-including Q11's repeat.** User-directed Codex-assisted review found no critical
-semantic failure; Q5 retains its minor wording observation and original Pass.
+including Q11's repeat.** An AI-assisted review directed by the project owner found
+no critical semantic failure; Q5 retains its minor wording observation and original Pass.
 See the [combined results](test-execution.md#combined-quality-evaluation-conclusions--19-october-2026)
 for exercised dimensions, limitations and usage. Raw assessment templates remain
 unchanged. Offline responses are synthetic harness
 fixtures, never evidence of injection resistance, grounding quality or usefulness.
-The existing RTM remains **88 Covered / 0 Partial / 0 Not Covered**.
+The RTM at the time remained **88 Covered / 0 Partial / 0 Not Covered**.
 
 The revised identifiers are authoritative: **Q2 is historical-report injection;
 Q3 is forged system role/output contract**. Q8, Q9 and Q10 remain deferred.
@@ -309,8 +311,8 @@ identify exact inputs. Default A–F data/hash and five-dimensional rubric remai
 unchanged. Raw historical artifacts are never rewritten. Existing protocol hashes
 remain historical; new requests snapshot this updated protocol separately.
 
-No-argument execution remains offline. Current coverage metadata states that the
-existing 88/88 assessment is complete and new semantic results are unassessed;
+No-argument execution remains offline. At the time, coverage metadata recorded the
+88/88 assessment as complete and the new semantic results as unassessed;
 historical records accurately describing the earlier Partial milestone remain unchanged.
 
 ### Approved batch commands — retained execution provenance
@@ -357,9 +359,8 @@ At preparation, no new live requests were authorized or run. The separately
 approved **Medium and Low batches each completed six requests on 19 October 2026**;
 see the [Medium control](test-execution.md#minimal-latency-experiment--medium-control-19-october-2026)
 and [Low comparison and assisted review](test-execution.md#minimal-latency-experiment--low-and-paired-comparison-19-october-2026).
-The Medium/Low comparison recommended Low after focused implementation/regression;
-see the Fast follow-up below for the current service-tier recommendation.
-Production remains unchanged; no additional live requests are authorized.
+The Medium/Low comparison provisionally recommended Low; the later configuration
+study selected Medium + Fast (see below).
 Use the existing fictional scenarios in this order: **EVAL-D, EVAL-F, Q1, Q5,
 Q7, Q11**, once per arm (six requests each, **12 total**). Q11 has one output
 per arm here; its historical repeat does not establish repeat consistency for
@@ -427,7 +428,7 @@ semantic quality. No historical artifact is edited or reused as a new result.
 | Option | Status and decision boundary |
 | --- | --- |
 | Low reasoning | Tested: 14.93% lower observed median provider latency in the initial six paired fictional cases. Low was not selected; the approved production configuration is explicit Medium + Fast. |
-| Fast service tier | Six-configuration study complete; Medium + Fast selected and merged to `main`. Focused offline regression, run in CI, verifies production/evaluation request equivalence. Not yet in a published release; exploratory timing is not a speed guarantee. |
+| Fast service tier | Six-configuration study complete; Medium + Fast selected, merged to `main` on 19 October 2026 and released in v0.2.0. Focused offline regression, run in CI, verifies production/evaluation request equivalence. Exploratory timing is not a speed guarantee. |
 | High reasoning | Tested on default and Fast tiers; High Fast's 3.7065s median and 23.74% higher estimated cost than Medium Fast were not justified by its localized Q7/Q11 rewrite gains. Production adoption deferred. |
 | Reasoning None | Deferred; no experiment or production change authorized here. |
 | Client reuse | Deferred; potentially a smaller connection/setup saving, unmeasured. |
@@ -510,7 +511,7 @@ execution provenance, not authorization to repeat the final batch:
 ```powershell
 $env:AI_EVALUATION_ALLOW_LIVE = '1'
 try {
-    .\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --live --reasoning-effort medium --service-tier fast --explicit-medium --scenarios EVAL-D EVAL-F Q1 Q5 Q7 Q11 --output D:\Portfolio\ai-qa-bug-triage\ai-evaluation-results\20261019T120120Z-e8edbfb5
+    .\.venv\Scripts\python.exe -m tests.ai_evaluation.run_evaluation --live --reasoning-effort medium --service-tier fast --explicit-medium --scenarios EVAL-D EVAL-F Q1 Q5 Q7 Q11 --output ai-evaluation-results\20261019T120120Z-e8edbfb5
 } finally {
     Remove-Item Env:AI_EVALUATION_ALLOW_LIVE -ErrorAction SilentlyContinue
 }
@@ -534,7 +535,7 @@ useful additional rewrites in EVAL-F/Q1/Q11 and cleaner Q5 values in this sample
 Its estimated six-request cost is $0.00315870 versus Low Fast's $0.00269970.
 Low Fast remains the fastest observed candidate. The final recommendation
 supersedes the earlier provisional Low Fast preference, not its recorded grades.
-Production remains unchanged at implicit Medium/default tier; all earlier
+Production was still at implicit Medium/default tier at that point; all earlier
 observations, nominal-Standard qualifications and small-sample limits remain.
 
 ## High reasoning completion — six-configuration comparison
@@ -553,6 +554,6 @@ use Low/Medium/High order, Standard then Fast, with nominal historical tiers
 qualified. The user selected Medium Fast; its production request configuration
 and evaluation-boundary normalization are implemented, with focused offline
 regression recorded [below the study](test-execution.md#production-medium-fast-implementation--19-october-2026).
-It is merged to `main` and covered by the offline CI suite, but not yet part of a
-published release. No new live request or production
+It was merged to `main` on 19 October 2026, is covered by the offline CI suite and
+was released in v0.2.0 (24 October 2026). No new live request or production
 timing verification was performed; the small-study limits remain.

@@ -6,7 +6,6 @@ This document defines the quality assurance approach for the **AI QA Bug Triage*
 
 The goal is to ensure that the application is functional, secure, maintainable, and appropriately tested across its different application layers while keeping the testing effort proportionate to the project's scope and risks.
 
-The strategy will evolve as new increments, requirements, technologies, and risks are introduced.
 
 ---
 
@@ -20,7 +19,12 @@ The QA Strategy forms part of the project's wider documentation and should be us
 | **Requirements**        | Defines what the system shall do through requirements, user stories, and acceptance criteria.       |
 | **QA Strategy**         | Defines how quality will be assessed and how testing will be approached.                            |
 | **Definition of Done**  | Defines the criteria that must be satisfied for an increment to be considered done.                 |
-| **Traceability Matrix** | Links requirements and acceptance criteria to automated tests and records test coverage and status. |
+| **Traceability Matrix** | Links each acceptance criterion to the test cases that verify it and records its overall coverage.  |
+| **Test Case Catalogue** | Owns stable TC IDs, their AC mappings and exact implementation references.                         |
+| **Test Execution Report** | Records dated test results, manual and exploratory evidence, and known limitations.               |
+| **Defect Summary**      | Summarizes the defects recorded in the application's own tracker.                                  |
+| **AI Testing Strategy** | Defines the AI evaluation protocols, rubrics and historical AI experiments.                        |
+| **Release Runbook**     | Describes how a release candidate is built, verified and promoted.                                 |
 
 These documents should remain independently maintained. The QA Strategy should not duplicate the detailed contents of the Definition of Done or other project documents.
 
@@ -38,7 +42,8 @@ The QA strategy covers the application's core functionality and quality risks, i
 * Project creation and management
 * Project membership and role-based access control
 * Bug tracking and bug lifecycle management
-* AI-assisted bug triage
+* AI-assisted bug triage and AI usage limits
+* Try Demo
 * User interaction and usability
 * Data persistence and integrity
 * Security and authorization
@@ -55,9 +60,10 @@ Testing will be performed across the application's main architectural layers.
 
 The presentation layer represents the interface users interact with directly.
 
-Primary tool:
+Primary tools:
 
-* Playwright
+* Playwright with Chromium for end-to-end user journeys
+* Node's test runner with DOM substitutes for page logic, form sessions and asynchronous race conditions
 
 Typical coverage includes:
 
@@ -108,6 +114,15 @@ Typical coverage includes:
 * Important data-integrity rules
 
 Database testing will be applied selectively where direct verification provides meaningful additional confidence.
+
+### Supporting Test Methods
+
+* **Executable BDD:** a small set of pytest-bdd scenarios on the Playwright fixtures illustrates key workflows.
+* **API regression:** a Postman collection exercises selected API workflows against a disposable server.
+* **Performance smoke:** a JMeter plan checks a short API workflow; it does not establish production capacity.
+* **AI evaluation:** an offline harness verifies the evaluation tooling; separately approved real-model runs assess suggestion quality against fixed rubrics.
+* **Standalone browser fixtures:** manually launched pages check native controls and styles with real markup.
+* **Manual and exploratory testing:** structured manual checks (M01–M05) and dated exploratory sessions cover behaviour that automation does not reach well, such as visual layout, accessibility and native dialogs.
 
 ### Layer Coverage Principle
 
@@ -174,7 +189,7 @@ Basic usability and accessibility checks will be performed where practical, part
 
 ### AI-Specific Testing
 
-Once AI-assisted triage is implemented, testing will also address AI-related risks such as:
+Testing of AI-assisted triage also addresses AI-related risks such as:
 
 * Relevance of AI suggestions
 * Handling incomplete or poor-quality bug descriptions
@@ -184,7 +199,7 @@ Once AI-assisted triage is implemented, testing will also address AI-related ris
 * The ability for a QA Analyst to review, modify, accept, or reject suggestions
 * Potential hallucination or unsupported recommendations
 * Unauthorized AI actions
-* AI access to data or tools outside its permitted scope
+* AI access to data outside its permitted scope
 
 AI output will be treated as **assistance rather than authoritative truth**.
 
@@ -212,7 +227,7 @@ Persistence and integrity verification where valuable
 
 The project will avoid excessive UI automation when the same logic can be tested more efficiently at the API layer.
 
-Focused Python Playwright automation now exercises stable, critical frontend
+Focused Python Playwright automation exercises stable, critical frontend
 journeys against a dedicated server with a temporary database. Detailed validation
 and permission matrices remain at the API/unit layers; broader browser coverage is tracked in
 the traceability matrix.
@@ -257,31 +272,24 @@ Automated tests should be:
 
 Where practical, test data should be created as part of test setup rather than relying on manually prepared records.
 
+Backend tests use a fresh SQLite database under a temporary directory for each test. Browser tests start their own server with a temporary database and verify it before any browser interaction. Node frontend tests use DOM substitutes, and offline AI evaluations use no application database. Suites run serially, and automated tests use mocked AI responses rather than the real provider.
+
 ---
 
 ## 9. Traceability
 
 Requirements and acceptance criteria connect to stable test case IDs through the project's Traceability Matrix. User stories remain in the requirements specification.
 
-The current matrix structure is:
+The matrix structure is:
 
 | REQ | AC | TC IDs | Test Type | Overall Coverage |
 | --- | -- | ------ | --------- | ---------------- |
 
-The `Test Type` field identifies the contributing verification layers and/or purposes, for example:
-
-* UI
-* API
-* Database
-* API / Security
-* API / Validation
-* UI / Security
-* API + UI
-* API + Database
+The `Test Type` field lists the contributing verification methods, for example API, Python unit, Database, Static data, Frontend JS, Playwright, BDD, Browser fixture, Postman API, Manual, and Real-model evaluation / assisted review.
 
 The RTM contains exactly one overall assessment per AC. The [test case catalogue](test-cases.md) owns stable global TC IDs, exact implementation references and parameter selectors, including technical, security and infrastructure cases without a business AC mapping. Equivalent parameter variants share an ID; distinct conceptual outcomes may share an implementation with explicit selectors.
 
-The [execution record](test-execution.md) separates dated suite results, structured manual groups and exploratory observations. The [defect summary](defect-summary.md) indexes only verified tracker information. Four feature files contain five representative BDD scenarios, all executable through pytest-bdd and the existing Playwright fixtures (TC-386–TC-390); no specifications-only BDD scenarios remain. BDD supplements existing coverage; expanded BDD coverage remains deferred. GitHub Actions CI runs the existing offline Python, JavaScript and Playwright/BDD suites in independent jobs, which are required checks protecting `main`. See the [README](../README.md#continuous-integration) for triggers and results.
+The [execution record](test-execution.md) separates dated suite results, structured manual groups and exploratory observations. The [defect summary](defect-summary.md) indexes only verified tracker information. Four feature files contain five representative BDD scenarios, all executable through pytest-bdd and the existing Playwright fixtures (TC-386–TC-390); no specifications-only BDD scenarios remain. BDD supplements existing coverage; expanded BDD coverage remains deferred. GitHub Actions CI runs the existing offline Python, JavaScript and Playwright/BDD suites in independent jobs; with the Postman and JMeter workflows, they are the required status checks in the repository's `main` ruleset. See the [README](../README.md#continuous-integration) for triggers and results.
 
 Layer coverage will be reviewed over time rather than assuming that every acceptance criterion requires UI, API, and Database tests.
 
@@ -303,7 +311,12 @@ Defects that reveal missing or unclear requirements should also lead to a review
 
 ## 11. Regression Testing
 
-Existing automated tests will be run regularly as the application evolves.
+Changes are verified in proportion to their risk:
+
+* Targeted local tests cover the areas a change affects.
+* GitHub Actions runs the full offline Python, JavaScript and Playwright/BDD suites, plus the Postman and JMeter workflows, on pull requests to `main`.
+* Full local regression is reserved for milestones such as a release candidate.
+* A defect fix receives an automated regression test when practical, ideally one shown to fail before the fix. Minor changes do not each require a new automated test.
 
 Changes to one feature should not be assumed to affect only that feature.
 
@@ -316,7 +329,7 @@ Regression testing will pay particular attention to shared functionality such as
 * Database relationships
 * Common frontend components
 
-As the project grows, the automated suite will provide the primary regression safety net.
+The automated suite is the primary regression safety net.
 
 ---
 
@@ -360,25 +373,10 @@ Where appropriate, tests will be implemented alongside or shortly after the rela
 
 ---
 
-## 14. Current Project Status
+## 14. Versioning and Defect Versions
 
-Current implementation status (15 October 2026; execution evidence is dated separately):
-
-* Core authentication functionality has been implemented and tested.
-* Project management functionality has been implemented and tested.
-* Project membership and role-based authorization have been implemented and tested.
-* The frontend has been developed alongside the existing API functionality.
-* Automated API coverage is currently the strongest test layer.
-* A focused Python Playwright E2E suite is implemented under `tests/e2e/`, with explicit collection opt-in, unique fictional data, a dedicated server with a temporary SQLite database, and deterministic mocked AI responses. README documents separate backend, frontend, and browser commands; the catalogue and execution record identify evidence and limitations.
-* Increment 2 has not yet been formally reviewed and completed.
-* Increment 2 APIs are implemented through REQ-017. Frontend bug creation, viewing, editing, deletion, assignment, lifecycle actions, sorting, and pagination are implemented. Maintained JavaScript tests and dated browser checks provide partial UI evidence; broader browser coverage remains outstanding.
-* Increment 3 AI-assisted triage is implemented, including validated suggestions, user-controlled review, and failure handling. Automated provider integration uses mocked responses; real-model evaluation remains deferred.
-* Existing API tests use fresh per-test SQLite paths under pytest temporary directories, with cached configuration rebound before application startup. Migration and subprocess tests retain separate temporary databases. Test suites remain serial.
-* Historical evidence (10 September 2026): pytest passed 148 cases in 114.52 seconds after the member-removal timestamp fix. The 38 temporary frontend validation-message checks recorded then were not a maintained regression suite. These historical results are not the current suite inventory or a new execution result.
-* Current maintained frontend coverage runs with `node --test tests/frontend/*.test.cjs`. Exact recorded suite results are in [test execution](test-execution.md).
-* About and Bugs have theme and Logout controls. Dated isolated browser/theme checks are linked from the execution record; broader cross-browser and accessibility verification remains outstanding.
-* Versioning: `APP_VERSION` in `app/version.py` is the single source reported through FastAPI metadata, `/version`, and the About page; it is currently `1.0.0-dev`. The annotated tag and published GitHub Release `v0.1.0` are the previous release; `v0.2.0` is the latest published release, the core application GitHub development release. Git tags and GitHub Releases record publication status. `0.1.0-dev` and `0.2.0-dev` denote development builds, not releases or Git tags.
-* The Semantic Versioning roadmap is core application `v0.2.0` (GitHub development release) -> `1.0.0-dev` (development phase toward the first production release) -> production release candidate `1.0.0-rc.1` -> first production release `v1.0.0`. Dated execution records keep the version reported at the time of testing.
+* `APP_VERSION` in `app/version.py` is the single source of the application version reported through FastAPI metadata, `/version`, and the About page. Git tags and GitHub Releases record published releases.
+* `-dev` versions such as `0.2.0-dev` or `1.0.0-dev` denote development builds, not releases or Git tags; `-rc.N` labels identify release candidates. Dated execution records keep the version reported at the time of testing.
 * Affected Version identifies the version where a defect was observed or reproduced, including an observed development build such as `0.2.0-dev`, not necessarily where it was introduced. It is not populated automatically. Fix Version identifies the release in which the fix is included or planned to be included, which need not be published yet. Leave Affected Version blank when no appropriate observed or released version is known, and Fix Version blank when no target release is known; do not assign released versions to defects found only in unreleased feature work.
 
 ---

@@ -168,20 +168,7 @@ Close the dedicated server shell. Runtime data under `test-results/`, JMeter
 results, JTL files and local property files are ignored. Never delete
 `bugtriage.db` or any pre-existing database/directory.
 
-## Historical local evidence
+## Execution evidence
 
-User-supplied manual measurements from JMeter 5.6.3 / Java 21 against fresh
-SQLite on port 8150; these were not independently verified by Codex:
-
-| Users / ramp-up / loops or duration | Samples | Average | Throughput | Errors |
-| --- | ---: | ---: | ---: | ---: |
-| 1 / default / 1 loop | 7 | 66 ms | 11.6/s | 0 |
-| 5 / 5s / 2 loops | 70 | 57 ms | 14.5/s | 0 |
-| 5 / 1s / 10 loops | 350 | 60 ms | 69.0/s | 0 |
-| 10 / 2s / 30 loops | 2100 | 61 ms | 142.3/s | 0 |
-| 15 / 5s / 120s | 23112 | 76 ms | 192.3/s | 0 |
-
-The last run's reported overall p95/p99 were approximately 254/313 ms. All runs
-created fictional data without think time; these are not production-capacity
-measurements. Current independent verification is recorded in
+Recorded results, including earlier user-run measurements, are in
 [test execution](../docs/test-execution.md#jmeter-finalization--21-october-2026).

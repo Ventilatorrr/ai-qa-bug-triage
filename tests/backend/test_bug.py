@@ -451,7 +451,7 @@ def test_non_member_cannot_retrieve_another_projects_bug_collection(
     assert created[0]["bug_number"] == created[1]["bug_number"] == 1
 
 
-# TC-074 | AC-012.4 — Bug list defaults to most recently updated first
+# TC-074 | Technical — Bug list API returns reports most recently updated first
 def test_bug_list_defaults_to_most_recently_updated_first(
     test_client,
     authenticated_user_factory,

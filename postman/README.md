@@ -75,8 +75,8 @@ No production application code or paid AI service is involved.
 ## GitHub Actions
 
 [Postman API regression](../.github/workflows/postman.yml) runs separately on pull
-requests targeting `main` and pushes to `main`. It preserves the existing CI
-workflow and its three required checks. The job uses Ubuntu 24.04, Python 3.14,
+requests targeting `main` and pushes to `main`. It runs separately from
+Application CI and is itself a required status check for `main`. The job uses Ubuntu 24.04, Python 3.14,
 the application's pinned `requirements.txt` runtime dependencies and a
 **10-minute** job timeout.
 
@@ -154,20 +154,8 @@ Request 23 verifies reopened persistence; it does not directly test AI failure.
 
 ## Execution evidence
 
-On 20 October 2026, a manual native Runner execution of the simplified suite confirmed
-**25 requests / 50 of 50 assertions passed** against isolated `1.0.0-dev`, with no
-reported failures and traceback-free Ctrl+C shutdown. The earlier 57/57 native run
-and Codex's compatibility/cleanup checks remain separate historical evidence.
-
-Record each execution's date, actual application version, suite, environment,
-method, request/assertion counts, result and commit/tag when available in
+Results of native Runner, CLI, compatibility and hosted CI runs are recorded in
 [test execution](../docs/test-execution.md#postman-api-regression-suite--20-october-2026).
-Version reporting is manual; `/version` may confirm it without adding a suite
-request. Record a separate run when testing `0.2.0` or another release. The earlier
-metadata/fixture cleanup did not execute a new native run.
-
-Separately, on **20 October 2026**, a manual run of the final collection with
-**Postman CLI 1.75.0** confirmed: **25 application requests + 25 identity checks; 50/50 named
-assertions passed; 0 failures; exit 0; 3.8 seconds; 29 ms average response time**,
-against isolated `1.0.0-dev` launched by `serve.py`. This is local CLI evidence,
-separate from native desktop Runner results and hosted CI runs.
+Record each new execution there with its date, actual application version, method,
+request/assertion counts, result and commit or tag when available. `/version` may
+confirm the version without adding a suite request.

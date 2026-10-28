@@ -1,22 +1,24 @@
 # QA test execution report
 
-Reporting date: **27 October 2026**. This report summarizes what was executed and
+Reporting date: **28 October 2026**. This report summarizes what was executed and
 what the results show. The [test-case catalogue](test-cases.md) defines the cases,
 the [RTM](traceability-matrix.md) owns acceptance-criteria coverage, and the
 [defect summary](defect-summary.md) records tracked defects. Counts below are
-test-runner cases, not conceptual TC IDs.
+test-runner results, not conceptual TC IDs; collection counts (tests discovered,
+not run) are labelled as such.
 
 ## Summary
 
 | Area | Status |
 | --- | --- |
 | Released | **v0.2.0** (GitHub development release, 24 October 2026): Increments 1–3, REQ-001–REQ-023 |
-| Deployed | Hosted on Render since 25 October 2026 |
-| Current work | v1.0.0 release hardening on `release/v1.0.0-hardening` (`1.0.0-dev`), after Try Demo (REQ-024) and AI usage limits (REQ-025); not released or deployed |
-| Current regression | Python **744 passed**, frontend JavaScript **122 passed**, Chromium Playwright + BDD **33 passed** |
-| AC coverage | **103 Covered / 1 Partial / 0 Not Covered** of 104 ACs; AC-009.6 awaits a browser check at the release candidate |
-| Real AI testing | 40 live evaluations of fictional scenarios in October 2026, a configuration study, and a final six-report Demo evaluation, which was accepted |
-| Defects | 41 tracked defects closed for v0.2.0; BUG-42–BUG-52 tracked for v1.0.0, with fixes for BUG-48–BUG-52 on the hardening branch. Statuses are kept in the application tracker |
+| Deployed | v0.2.0 development deployment on Render since 25 October 2026 |
+| In development | `main` at `1.0.0-dev`: Try Demo (REQ-024), AI usage limits (REQ-025) and v1.0.0 release hardening are merged; v1.0.0 is not yet released or deployed |
+| Latest full local regression | 27 October 2026, Try Demo work: Python **744 passed**, frontend JavaScript **122 passed**, Chromium Playwright + BDD **33 passed**. Later changes were verified with targeted local runs |
+| Pull request CI | Hardening and BUG-53 changes merged through pull requests #84 and #85; their CI run evidence is not yet recorded here |
+| Release-candidate checks | Not yet performed (see [pending release verification](#pending-release-verification)) |
+| AC coverage | **104 Covered / 0 Partial / 0 Not Covered** of 104 ACs. This assesses test evidence for each AC; it does not by itself establish release readiness |
+| Defects | 53 tracked defects in the 28 October 2026 [snapshot](defect-summary.md), all Closed: 39 fixed in v0.1.0–v0.2.0, 12 fixed for the planned v1.0.0, and 2 closed without a fix |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
 
 ## Environment and conventions
@@ -25,59 +27,30 @@ test-runner cases, not conceptual TC IDs.
   Playwright 1.64 with Chromium on `127.0.0.1:8148`.
 - **CI:** GitHub Actions on Ubuntu 24.04: Python 3.14, Node.js 24, and
   Playwright with Chromium, plus separate Postman and JMeter workflows.
-- **Isolation:** each automated run uses fictional data and a fresh disposable
-  SQLite database. The E2E fixture starts its own server and checks its database
-  path and identity before any browser interaction. Automated tests never call
-  the real AI provider; provider responses are mocked.
+- **Isolation:** automated tests use fictional data. Backend tests use a fresh
+  temporary SQLite database for each test. Each Playwright run starts its own
+  server with a new temporary database and checks its path and identity before
+  any browser interaction. Node frontend tests use DOM substitutes, and the
+  offline AI evaluation harness uses no application database. Automated tests
+  never call the real AI provider; provider responses are mocked.
 - **Real AI evaluations** were separately approved runs that sent fictional
   scenarios to OpenAI (`gpt-6-luna`). Raw evidence is kept locally in the
   gitignored `ai-evaluation-results/` directory and is not published.
 - Suites run serially. Runs interrupted by sandbox or environment setup problems
   are not counted as passes.
 
-## v1.0.0 hardening — 28 October 2026
-
-Focused local runs only; comprehensive regression runs in PR CI and at the release candidate.
-
-| Area | Result |
-| --- | --- |
-| Backend modules affected by the hardening | All passed (targeted runs, including 222 in the final batch) |
-| Frontend JavaScript (`node --test`) | **136 passed**, 0 failed |
-| Regression detection | With the fix removed, the new tests **failed** for BUG-48 (TC-484), BUG-49 (TC-485, all four operations), BUG-50 (TC-492) and BUG-51 (TC-493, original markup and the original `display: none` empty-message rule). |
-| Not run locally | Playwright + BDD, Postman, JMeter (PR CI); container build (no local Docker) |
-
-<a id="bug-51-narrator-verification--28-october-2026"></a>
-**BUG-51 status-message announcements (manual, Chrome with Windows Narrator, Windows 11): Passed.** A first check failed: empty status messages were `display: none`, so their live regions were not in the accessibility tree. After the CSS correction and a hard refresh, Narrator announced Create Bug success, Add Member success (mouse and keyboard), a tested error message and Remove Member success. Keyboard focus still moves to the page body when Create or Add is submitted; this is deferred. Chrome's native confirmation dialog text was not read by Narrator; this is a separate observation, not part of BUG-51.
-
-<a id="bug-53-ac-0115-limit-feedback--28-october-2026"></a>
-**BUG-53 and AC-011.5 length-limit feedback (manual, project owner): Passed.** New Bug: a 256-character title was rejected and its error appeared beside Create without scrolling. Edit Bug: a 256-character title was rejected, the error was visible beside Save, and the original title was unchanged after refreshing. The 255/256-character boundary is also automated: API create and edit (TC-478), New Bug error placement and messages (TC-494), and Chromium (TC-496: 256 rejected beside Create, 255 created). Local targeted runs on `fix/bug-53-new-bug-error-placement`: frontend JavaScript 138 passed; Playwright Bug and AI Assist modules 15 passed. TC-497 then verified, in a disposable test database, that a stored over-limit value is kept while another field is edited and validated only when that field is changed (`test_input_limits.py`: 17 passed), so AC-011.5 is now Covered.
-
-<a id="bug-52-light-theme-flash--28-october-2026"></a>
-**BUG-52 light-theme flash (manual, Claude desktop built-in Chromium browser, Windows 11).**
-A frontend-only static server on `127.0.0.1:8148` delayed only `js/theme.js` by 4 s with
-caching disabled; `localStorage.theme` was `light` and the page visible. Before the fix,
-Chrome's paint timing on `/login.html` recorded the first paint at **68 ms** and `theme.js`
-arriving at **4,029 ms**, so the page was painted before the light theme could apply (the dark
-frames themselves were not captured; screenshots wait for page load). After the fix,
-`theme-init.js` was the first `<body>` element and finished in 22–96 ms on `/login.html` and
-`/privacy.html`, about 4 s before `theme.js`, and the light theme was active after every load.
-These later runs did not paint early, so the fix is verified by script order rather than by an
-observed early paint.
-
-## Current results — Try Demo feature work
+## v1.0.0 development verification
 
 <a id="name-like-demo-email-aliases--27-october-2026"></a>
-Working tree: `feature/try-demo` at `6fbe9ae` plus uncommitted changes, application
-version `1.0.0-dev`. Final regression on 27 October 2026:
+### Try Demo and AI usage limits — 27 October 2026
+
+Final local regression of the Try Demo work (`1.0.0-dev`, before merging):
 
 | Suite | Result |
 | --- | --- |
 | Full default Python suite (API, database, security, mocked AI, offline evaluation harness) | **744 passed** in 560 s, 0 failed/skipped |
 | Frontend JavaScript (`node --test`, DOM substitutes) | **122 passed**, 0 failed/skipped |
 | Chromium Playwright + executable BDD (port 8148) | **33 passed** in 82 s (28 Playwright + 5 BDD) |
-| `git diff --check` | Passed |
-
-Hosted CI has not yet run on these uncommitted changes.
 
 Focused checks during development showed that the new tests detect the failures
 they target:
@@ -91,15 +64,45 @@ they target:
 | Bounded provider requests (TC-422–TC-424) | Field-named `422` for oversized form text; history text shortened to 1,000 characters; `max_output_tokens=8000` |
 | Demo email fit | Generated `@example.com` aliases are at most 147 px at 16 px Arial, within the 150 px Assignee column; TC-453 checks that no Assignee address is clipped in Chromium |
 
-### Manual Demo review
-
-The project owner manually reviewed and approved the Demo UI on 27 October 2026.
+**Manual Demo review.** The project owner manually reviewed and approved the Demo UI on 27 October 2026.
 Visual checks covered the Login page in light and dark themes at 1280 px and
 375 px, including Try Demo loading and failure states; both seeded Bug Lists; and
 navigation within the Demo. Corrections from the review included restoring the
 original Bug List column widths, renaming the fictional project to
 `E-Commerce Demo`, and the Try Demo styling tracked as BUG-42. Firefox, WebKit and
 real mobile devices were not checked.
+
+### Release hardening — 28 October 2026
+
+Focused local runs only; the full suites run in pull request CI and at the release candidate.
+
+| Area | Result |
+| --- | --- |
+| Backend modules affected by the hardening | All passed (targeted runs, including 222 in the final batch) |
+| Frontend JavaScript (`node --test`) | **136 passed**, 0 failed |
+| Regression detection | With the fix removed, the new tests **failed** for BUG-48 (TC-484), BUG-49 (TC-485, all four operations), BUG-50 (TC-492) and BUG-51 (TC-493, original markup and the original `display: none` empty-message rule). |
+| Not run locally | Playwright + BDD, Postman, JMeter (pull request CI); container build (no local Docker) |
+
+<a id="bug-51-narrator-verification--28-october-2026"></a>
+**BUG-51 status-message announcements (manual, Chrome with Windows Narrator, Windows 11): Passed.** A first check failed: empty status messages were `display: none`, so their live regions were not in the accessibility tree. After the CSS correction and a hard refresh, Narrator announced Create Bug success, Add Member success (mouse and keyboard), a tested error message and Remove Member success. Keyboard focus still moves to the page body when Create or Add is submitted; this is deferred. Chrome's native confirmation dialog text was not read by Narrator; this is a separate observation, not part of BUG-51.
+
+<a id="bug-53-ac-0115-limit-feedback--28-october-2026"></a>
+**BUG-53 and AC-011.5 length-limit feedback (manual, project owner): Passed.** New Bug: a 256-character title was rejected and its error appeared beside Create without scrolling. Edit Bug: a 256-character title was rejected, the error was visible beside Save, and the original title was unchanged after refreshing. The 255/256-character boundary is also automated: API create and edit (TC-478), New Bug error placement and messages (TC-494), and Chromium (TC-496: 256 rejected beside Create, 255 created). Local targeted runs on `fix/bug-53-new-bug-error-placement`: frontend JavaScript 138 passed; Playwright Bug and AI Assist modules 15 passed. TC-497 then verified, in a disposable test database, that a stored over-limit value is kept while another field is edited and validated only when that field is changed (`test_input_limits.py`: 17 passed), so AC-011.5 is now Covered.
+
+<a id="ac-0096-leave-project--28-october-2026"></a>
+**AC-009.6 Leave Project (manual, non-owner project member, disposable test project): Passed.** Signed in as a project member (QA Analyst/Developer), opened the project, chose Leave Project and confirmed; the browser returned to My Projects with a success message, the project no longer appeared in the list, and direct access through the previous project URL was denied. Automated coverage: TC-486 (API), TC-487 and TC-488 (frontend), TC-331 (Chromium).
+
+<a id="bug-52-light-theme-flash--28-october-2026"></a>
+**BUG-52 light-theme flash (manual, built-in Chromium browser of the development environment, Windows 11).**
+A frontend-only static server on `127.0.0.1:8148` delayed only `js/theme.js` by 4 s with
+caching disabled; `localStorage.theme` was `light` and the page visible. Before the fix,
+Chromium's paint timing on `/login.html` recorded the first paint at **68 ms** and `theme.js`
+arriving at **4,029 ms**, so the page was painted before the light theme could apply (the dark
+frames themselves were not captured; screenshots wait for page load). After the fix,
+`theme-init.js` was the first `<body>` element and finished in 22–96 ms on `/login.html` and
+`/privacy.html`, about 4 s before `theme.js`, and the light theme was active after every load.
+These later runs did not paint early, so the fix is verified by script order rather than by an
+observed early paint.
 
 ## Release v0.2.0 — completed
 
@@ -110,7 +113,7 @@ Try Demo and deployment were outside the scope of its release testing.
 
 The application was deployed to Render on 25 October 2026. That deployment is
 separate from the v0.2.0 release evidence below, and this report records no
-separate verification of it. The current Try Demo changes are not yet deployed.
+separate verification of it.
 
 | Area | Result |
 | --- | --- |
@@ -129,6 +132,10 @@ risk; they do not guarantee quality.
 <a id="automated-regression-milestones"></a>
 | Date | Milestone | Python | Frontend JS | Playwright + BDD |
 | --- | --- | ---: | ---: | ---: |
+| 10 Sep 2026 | Member-removal timestamp fix | 148 | — | — |
+| 7–8 Oct 2026 | Project-local bug numbers | 510 | 76 | — |
+| 7–8 Oct 2026 | Fix Version lifecycle correction | 544 | 77 | — |
+| 13 Oct 2026 | Frontend theme and control review | 544 | 80 | — |
 | 15 Oct 2026 | API coverage baseline | 575 | 96 | 15 |
 | 16 Oct 2026 | AC-019.2 preparation | 598 | 99 | 15 |
 | 19 Oct 2026 | Test reorganization and executable BDD | 724 | 99 | 24 |
@@ -140,11 +147,26 @@ risk; they do not guarantee quality.
 | 27 Oct 2026 | Try Demo, final regression | 744 | 122 | 33 |
 
 All results are passes with no failures. A dash means the suite was not rerun
-for that milestone. The Python count fell on 22 October because the offline
-harness stopped multiplying unchanged checks across request configurations.
+for that milestone. Python counts up to 15 October predate the offline AI
+evaluation harness, which the default Python run includes from 16 October (23
+cases that day), so earlier and later Python counts are not directly comparable.
+The Python count fell on 22 October because the offline harness stopped
+multiplying unchanged checks across request configurations.
+The 10 September pytest run took 114.52 seconds; the 38 temporary frontend
+validation-message checks recorded then were not a maintained suite and are not counted.
 During the 24 October E2E server ownership audit, one of seven consecutive
 Playwright runs had a single failure (29 passed, 1 failed) that could not be
 identified or reproduced; the other six runs passed.
+
+**Earlier regression detection (7–8 October 2026):** introducing project-local
+bug numbers first failed 18 Python and 16 frontend tests (one Python failure was
+a test-stub error; once corrected, that case failed on the intended global-ID
+routing assertion); focused API verification then passed 293 cases.
+The Fix Version lifecycle correction failed 11 focused tests before the change
+and passed 54 afterwards. Numbering and migration tests, on disposable databases,
+verify legacy-field preservation, deterministic per-project backfill, rollback
+before replacement and before commit, unchanged repeated startup, and no number
+consumption after a failed creation.
 
 **Test independence:** on 15 October 2026 the full Playwright suite passed both in
 normal order and in reversed order (15/15 each), each run with its own fresh
@@ -152,7 +174,7 @@ server and database, so the scenarios do not depend on execution order.
 
 **Refactoring safety:** two test refactors were checked for unchanged behavior,
 not just a passing run. Moving the backend tests into `tests/backend/`
-(19 October) kept the default collection at 724 and the Chromium collection at 24,
+(19 October) kept the default collection count at 724 and the Chromium collection at 24,
 with identical node IDs apart from the moved module paths. Splitting the
 5,231-line bug API test module into six feature modules (23 October) kept all
 66 definitions byte-identical and the collection unchanged at 649.
@@ -160,15 +182,17 @@ with identical node IDs apart from the moved module paths. Splitting the
 **Coverage progression:** reconciling manual evidence moved AC coverage from
 80 Covered / 8 Partial to 85 / 3; member-display and sort-rank tests then gave
 87 / 1, and the reviewed live AI evaluation gave 88 / 0 on 16 October 2026.
-Adding REQ-024 and REQ-025 on 26 October gave 97 / 5 of 102 ACs, and the current
-work brings this to 101 / 1, and TC-463 completes AC-025.5 for 102 / 0.
+Adding REQ-024 and REQ-025 on 26 October gave 97 / 5 of 102 ACs; the Try Demo
+work reached 102 / 0 on 27 October, with TC-463 completing AC-025.5. The v1.0.0
+hardening added AC-009.6 and AC-011.5, both Covered on 28 October, for 104 / 0.
 
 <a id="test-organization--19-october-2026"></a><a id="github-actions-ci--20-october-2026"></a>
 ### Continuous integration
 
 [Application CI](../.github/workflows/application.yml) runs the Python,
-JavaScript and Playwright/BDD suites as three required checks on pull requests
-and pushes to `main`. The first hosted run passed 724 + 99 + 24 = 847 tests on
+JavaScript and Playwright/BDD suites as three jobs on pull requests and pushes
+to `main`. With the Postman and JMeter workflows, they are the five required
+status checks in the repository's `main` ruleset (checked 28 October 2026). The first hosted run passed 724 + 99 + 24 = 847 tests on
 20 October 2026. CI supplies no OpenAI credentials and points any unmocked SDK
 client at an unused local address.
 
@@ -192,12 +216,16 @@ a fresh disposable server with AI disabled.
 
 | Execution | Result |
 | --- | --- |
-| Native Collection Runner, simplified suite (20 Oct 2026, manual) | **50/50 passed** |
+| Native Collection Runner, earlier 57-assertion suite (20 Oct 2026, manual) | **57/57 passed**, about 5 s; a rerun and a run after a server restart also passed |
+| Native Collection Runner, simplified suite (20 Oct 2026, manual) | **50/50 passed**; traceback-free Ctrl+C shutdown |
+| AI-assisted compatibility runs, two disposable servers (20 Oct 2026) | **50/50 passed** in each of four runs; the old environment was rejected after a restart |
 | Postman CLI 1.75.0, local (20 Oct 2026) | **50/50 passed**, 3.8 s |
 | Hosted [Postman CI run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303), `main` at `964a3b1` (24 Oct 2026) | **Success** (assertion counts not printed in silent mode) |
 
 The safety checks also confirmed that the launcher refuses an occupied port and
 that the collection refuses unsafe targets, stale IDs and live AI configuration.
+Git Bash simulations of the CI run step on Windows (syntax check and 7/7 exit-path
+simulations) validated its shell control flow, not Linux execution; hosted CI covers that.
 
 <a id="jmeter-finalization--21-october-2026"></a>
 ### JMeter API performance
@@ -210,8 +238,23 @@ JMeter 5.6.3 ran the [API performance plan](../jmeter/README.md) (TC-392) on
 | Smoke (1 user) | 7 | 0 | 70.1 ms | 212 ms | 13.3 req/s |
 | 2 users, 2 loops | 28 | 0 | 62.3 ms | 206.6 ms | 21.9 req/s |
 
-These local checks show the workflow runs without errors. They do not establish
-production capacity or a performance target.
+Earlier user-run measurements (JMeter 5.6.3, Java 21, fresh SQLite, port 8150)
+were recorded with the plan on 21 October 2026 (`a9f6271`). Exact run dates were
+not recorded, and these runs were not independently re-run:
+
+| Users / ramp-up / loops or duration | Samples | Errors | Mean | Throughput |
+| --- | ---: | ---: | ---: | ---: |
+| 1 / default / 1 loop | 7 | 0 | 66 ms | 11.6 req/s |
+| 5 / 5 s / 2 loops | 70 | 0 | 57 ms | 14.5 req/s |
+| 5 / 1 s / 10 loops | 350 | 0 | 60 ms | 69.0 req/s |
+| 10 / 2 s / 30 loops | 2100 | 0 | 61 ms | 142.3 req/s |
+| 15 / 5 s / 120 s | 23112 | 0 | 76 ms | 192.3 req/s |
+
+The 120-second run reported an overall p95/p99 of approximately 254/313 ms.
+
+All these local runs created fictional data without think time. They show that the
+workflow runs without errors; they are not production-capacity benchmarks and set
+no performance target.
 
 ## Manual testing
 
@@ -236,24 +279,83 @@ reproduced manually. Frontend tests TC-246 and TC-247 cover it.
 
 - **Dogfooding:** the application was used to track its own development.
   Genuine defects were recorded in it as bug reports; the
-  [defect summary](defect-summary.md) lists the 41 tracked for v0.2.0.
+  [defect summary](defect-summary.md) lists them.
+- **AI review smoke test (5 October 2026):** a disposable app with mocked AI
+  output, as Project Owner and QA Analyst. New and Edit Bug covered Use,
+  individual and bulk Dismiss, manual editing afterwards, repeat requests, safe
+  failure and empty results. Nothing was saved before Create or Save, Edit Cancel
+  restored stored values, blank-title validation stayed active after Use All,
+  pending Edit review was discarded on reload, and script-like suggestions
+  displayed as literal text. A later check with delayed Create and Save
+  responses, after Cancel and reopen, found that the late result did not
+  overwrite the newer form's values, review or feedback; the older submission
+  still saved and refreshed the surrounding data. This is workflow evidence, not
+  real-model quality.
+- **Frontend diagnostics (6–9 October 2026):** temporary DOM-substitute checks,
+  not maintained tests, exercised Bug List sorting, 13 pagination groups, 9
+  clickable-row groups and 13 lifecycle-visibility cases; BUG-20 form feedback
+  was also observed in the browser. They established no native layout or browser
+  behaviour; M02–M04 later covered that manually.
+- **Frontend theme and control review (12–13 October 2026):** both themes in the
+  development environment's built-in Chromium browser, on static previews with
+  the real renderers and deterministic AI responses and on earlier disposable
+  FastAPI pages. It covered Login/Register, projects and members, Bug List,
+  New/Edit Bug, read-only Details, AI suggestion cards and About. Keyboard row
+  focus matched hover, links kept visible 2 px outlines, and validation focus
+  showed no double outline. AI cards kept separate values and accessible names,
+  and pending review disabled AI Assist. Lifecycle dropdowns kept their empty
+  prompt until an option was chosen. Delete states and the native confirmation
+  were observed; cancelling preserved the report, but accepting it was not
+  browser-verified. At 390 × 844 px, inputs and AI cards did not overflow. The
+  standalone browser fixtures passed 9 divider, 4 destructive-state and 12
+  native-input variants.
+- **Mobile layout and AI data-sharing notice (14 October 2026):** narrow and
+  desktop widths in both themes, including mobile sorting and pagination. With a
+  verified temporary database and mocked provider, the New/Edit notice was
+  checked for placement, keyboard dismissal, removal from the accessible
+  description, and persistence across reloads and between forms.
 - **Responsive review (23 October 2026):** every page, signed in and out, at
   1440, 1120, 768, 390 and 320 px in both themes, with no page overflow,
   clipped text or header overlap.
 - **Bug List layout (23 October 2026):** 43 fictional bugs at 1120–1920 px,
   10/20/50 per page and all seven sorts. Column boundaries no longer move
   between pages, and every desktop row is the same height.
-- **Earlier verification records:**
-  - 5 October 2026: [AI review smoke test](qa-reports/historical-verification.md#ai-review-and-form-safety--5-october-2026)
-    with mocked suggestions (New/Edit review, Use/Dismiss, persistence,
-    cancellation and reload).
-  - 7–8 October 2026: [identity, persistence and Fix Version regressions](qa-reports/historical-verification.md#public-identity-and-persistence-regressions--78-october-2026),
-    with failures before correction and passing retests.
-  - 12–13 October 2026: [frontend review](ui-refinements-verification.md) of
-    themes, AI suggestion cards, native controls, layout and contrast; the
-    native browser fixtures passed 9 divider, 4 destructive-state and
-    12 native-input variants.
-  - 14 October 2026: [mobile layout and AI-notice review](qa-reports/historical-verification.md#mobile-layout-and-ai-disclosure--14-october-2026).
+
+<a id="contrast-measurements--13-october-2026"></a>
+### Contrast measurements
+
+A targeted contrast assessment on 13 October 2026, at the end of the 12–13 October
+frontend review. Severity and priority values are 16 px text (weight 700 in rows
+and Details, 400 in selects and AI cards), so none counts as large text and the
+[WCAG 2.2 SC 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
+AA threshold for normal text, 4.5:1, applies. Worst measured ratio per value
+across Bug List rows, Details, Create/Edit fields and AI cards, including hover
+and focus:
+
+| Severity / priority | Dark theme | Light theme |
+| --- | ---: | ---: |
+| Blocker / Urgent | 4.66:1 | 5.95:1 |
+| Major / High | 5.46:1 | 5.00:1 |
+| Moderate / Medium | 7.75:1 | 4.77:1 |
+| Minor / Low | 6.48:1 | 5.33:1 |
+
+Ratios came from the browser's computed foreground, font and background styles,
+with ancestor transparency layers and the Details gradients composited onto the
+background (the gradient base bounds the worst case). Hover and pressed states
+were measured by substituting test-only selectors with transitions disabled, and
+settled keyboard focus was exercised directly. Pass or fail used unrounded ratios,
+and disabled controls were treated as inactive rather than counted as passes.
+Every context passed AA, though not all reach the 7:1 AAA target. These results
+supported the BUG-31 remediation (dark-theme Blocker/Urgent contrast failure).
+Dark Create hover text measured 4.51:1.
+
+Non-text contrast falls under
+[SC 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html),
+with a 3:1 threshold. Input borders measured at least 3.35:1 (dark) and 3.92:1
+(light) against their fills. In the light theme, control borders measured 3.74:1
+against the Bug panel and 3.29:1 against the header, and the teal focus indicator
+measured 4.74:1 and 4.16:1. These measurements apply to the 13 October palette.
+They are not a complete WCAG accessibility audit; see the known limitations.
 
 ## Defect and audit-finding verification
 
@@ -262,9 +364,10 @@ code first (it failed), then against the fix (it passed). Rows with a BUG number
 are tracked bug reports in the application; the other rows are code-audit or
 exploratory findings that were fixed without a separate bug report.
 
-<a id="bug-34-success-confirmation-overflow--19-october-2026"></a><a id="bug-37-duplicate-new-bug-submission--22-october-2026"></a><a id="malformed-add-member-email-http-500-audit-b2--22-october-2026"></a><a id="bug-39-global-base-font--23-october-2026"></a><a id="bug-41-page-background-brightness-with-page-size--23-october-2026"></a><a id="bug-list-layout--23-october-2026"></a>
+<a id="bug-28-ai-urgent-suggestion-backplate--13-october-2026"></a><a id="bug-34-success-confirmation-overflow--19-october-2026"></a><a id="bug-37-duplicate-new-bug-submission--22-october-2026"></a><a id="malformed-add-member-email-http-500-audit-b2--22-october-2026"></a><a id="bug-39-global-base-font--23-october-2026"></a><a id="bug-41-page-background-brightness-with-page-size--23-october-2026"></a><a id="bug-list-layout--23-october-2026"></a>
 | Defect or finding | Found by | Cause and fix | Regression evidence |
 | --- | --- | --- | --- |
+| BUG-28 — black bar behind the AI Priority suggestion "Urgent" | Tracked bug report | The suggestion value had an opaque dark background (`rgb(7, 13, 22)`); made transparent with the text colour unchanged | Reproduced in a rendered preview, then rechecked without the bar during the 12–13 October review; no permanent test, because the check is visual |
 | BUG-34 — success message overflows with a very long title | Tracked bug report | Unbroken title had no wrap opportunity; added `overflow-wrap: anywhere` | TC-378 failed before the fix (page width 30,276 px at a 1280 px viewport); passes at 1280 and 375 px |
 | BUG-37 — repeated Create clicks saved duplicate bugs | Manual exploratory testing with browser network throttling (eight duplicates in about two seconds) | No in-flight guard on Create; button now disabled while pending | TC-393–TC-395 failed before (four POSTs instead of one) |
 | Duplicate New Project and Add Member submissions | Manual exploratory testing with network throttling | Same missing guard; also overlapping list refreshes rendered extra rows | TC-396–TC-402 failed before (four POSTs; five rows for three projects) |
@@ -276,6 +379,7 @@ exploratory findings that were fixed without a separate bug report.
 | BUG-39 — inconsistent font family | Frontend audit | `body` had no `font-family`; Arial baseline added | TC-410 failed before |
 | BUG-40 — pagination controls shifted between pages | Tracked bug report | Variable row heights; fixed column layout and two-line row clamp | TC-411/TC-412 failed before; all desktop rows measured 61 px |
 | BUG-41 — background brightness changed with page size | Tracked bug report | Background glow sized to the whole document; now sized to the viewport | Pixel comparison at 10/20/50 per page showed identical backgrounds; no permanent test, because the check needs pixel sampling |
+| Incomplete Assignee divider and missing explicit Delete focus outline | Frontend theme and control review | Divider and focus-outline styles corrected | Standalone browser fixtures failed before the correction and passed after it |
 | E2E port probe accepted listeners on `0.0.0.0` or `[::]` (Windows) | Test-infrastructure safety audit | Probe now binds every interface | TC-413 failed before for both cases |
 
 ## Real AI Assist testing
@@ -420,32 +524,35 @@ Covered. Token usage and cost were not recorded for this evaluation.
 
 ## Known limitations and open risks
 
-- **Browser coverage:** automation is Chromium-only. Firefox, WebKit, real
-  mobile devices and a full accessibility audit have not been tested.
-- **AI quality:** evaluations use small fictional samples with one output per
+- **Browser coverage:** Automation is Chromium-only. Firefox, WebKit and real
+  mobile devices have not been tested.
+- **Accessibility:** There is no full accessibility audit. Screen-reader use is
+  limited to the BUG-51 Narrator check; zoom/reflow and focus obscuration were
+  not tested, and contrast was last measured on 13 October 2026.
+- **AI quality:** Evaluations use small fictional samples with one output per
   case and assisted review. They do not establish statistical reliability or
   rule out hallucinations. Open minor observations: Q5 cross-field wording,
   BUG-18 title overstatement and BUG-17 provisional version.
-- **Try Demo:** Demo accounts and data are not deleted automatically. The
-  stored-Demo cap counts every four-letter `@example.com` account, and the
-  hourly start limit is held in memory, so it resets when the server restarts.
-  The alias blocklist is a basic safeguard, not a complete filter.
-- **Concurrency:** simultaneous edits to the same field follow
-  last-write-wins, and very heavy contention can still produce
-  `database is locked` errors.
-- **Bug List:** a partial final page moves the pagination controls up.
-- **Traceability:** TC-074 still maps to AC-012.4 but checks the API's
-  most-recently-updated order, while the UI default is now Bug ID descending
-  (covered by TC-270 and TC-333).
-- Four separately reported review findings are deferred and not assessed here.
+- **Try Demo:** Demo accounts and their associated data are not currently
+  deleted automatically. Demo creation is subject to usage and capacity limits.
+  Data retention and privacy practices will be reviewed before the public
+  release.
+- **Concurrency:** Simultaneous changes to the same data may result in
+  conflicting updates. High write contention may cause requests to fail.
+- **Bug List:** A partial final page moves the pagination controls up.
+- **Known limitations:** The pre-release reviews identified additional
+  limitations and issues that were evaluated and deliberately deferred based
+  on their potential impact and the scope of v1.0.0. Detailed assessments
+  are maintained privately.
 
-## Remaining verification for the current work
+## Pending release verification
 
-Before the Try Demo work can be considered complete under the
-[Definition of Done](definition-of-done.md):
+Not yet performed for v1.0.0; results will be recorded here when available. The
+[release runbook](release-runbook.md) defines the steps.
 
-- run hosted CI on the committed changes;
-- close BUG-42 in the tracker once its fix is confirmed;
-- complete the remaining documentation updates, including the About page.
-
-No release version has been assigned to this work.
+- CI run evidence for pull requests #84 and #85.
+- Full local regression at the release-candidate commit.
+- Release image build and container smoke test.
+- Assessment of the deferred review findings for release impact.
+- Staging smoke checklist and Go/No-Go; production smoke after promotion.
+- Tracker reconciliation and an updated defect snapshot at the release candidate.

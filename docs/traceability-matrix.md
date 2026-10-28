@@ -3,7 +3,7 @@
 One authoritative overall assessment per acceptance criterion in [requirements](requirements.md).
 TC definitions and selectors are in the [catalogue](test-cases.md); results and
 provenance are in the [execution report](test-execution.md). Assessed on 28 October 2026
-against `release/v1.0.0-hardening` (`1.0.0-dev`, in progress), including manual M01–M05 results. Partial and Not Covered rows await v1.0.0 hardening work still in progress.
+against `main` (`1.0.0-dev`), including manual M01–M05 results and the v1.0.0 hardening manual checks.
 
 Test types: **API** (pytest with FastAPI TestClient), **Python unit**, **Database**,
 **Static data**, **Frontend JS** (Node tests with DOM substitutes, not a browser),
@@ -11,7 +11,7 @@ Test types: **API** (pytest with FastAPI TestClient), **Python unit**, **Databas
 (manually launched native-control checks), **Postman API** (selected API variants
 only), **Manual**, and **Real-model evaluation / assisted review**.
 
-**103 Covered / 1 Partial / 0 Not Covered / 104 total.**
+**104 Covered / 0 Partial / 0 Not Covered / 104 total.**
 
 - **Covered:** every required behavior has sufficient combined evidence at suitable layers.
 - **Partial:** meaningful evidence exists, but a stated requirement remains unverified.
@@ -49,7 +49,7 @@ only), **Manual**, and **Real-model evaluation / assisted review**.
 | REQ-009 | AC-009.3 — Invalid Member | [TC-207](test-cases.md#tc-207), [TC-408](test-cases.md#tc-408) | API | Covered |
 | REQ-009 | AC-009.4 — Duplicate Member | [TC-208](test-cases.md#tc-208), [TC-408](test-cases.md#tc-408) | API | Covered |
 | REQ-009 | AC-009.5 — View Project Members | [TC-209](test-cases.md#tc-209), [TC-331](test-cases.md#tc-331), [TC-485](test-cases.md#tc-485) | API; Playwright; Postman API | Covered |
-| REQ-009 | AC-009.6 — Leave Project | [TC-331](test-cases.md#tc-331), [TC-486](test-cases.md#tc-486), [TC-487](test-cases.md#tc-487), [TC-488](test-cases.md#tc-488) | API; Frontend JS; Playwright | Partial |
+| REQ-009 | AC-009.6 — Leave Project | [TC-331](test-cases.md#tc-331), [TC-486](test-cases.md#tc-486), [TC-487](test-cases.md#tc-487), [TC-488](test-cases.md#tc-488) | API; Frontend JS; Playwright; Manual | Covered |
 | REQ-010 | AC-010.1 — Project Owner Role | [TC-211](test-cases.md#tc-211) | API; Postman API | Covered |
 | REQ-010 | AC-010.2 — QA Analyst Role | [TC-212](test-cases.md#tc-212) | API | Covered |
 | REQ-010 | AC-010.3 — Developer Role | [TC-213](test-cases.md#tc-213) | API | Covered |
@@ -63,11 +63,11 @@ only), **Manual**, and **Real-model evaluation / assisted review**.
 | REQ-012 | AC-012.1 — View Bug List | [TC-070](test-cases.md#tc-070), [TC-271](test-cases.md#tc-271), [TC-343](test-cases.md#tc-343), [TC-411](test-cases.md#tc-411) | API; Frontend JS; Manual; Playwright | Covered |
 | REQ-012 | AC-012.2 — Open Bug Report | [TC-071](test-cases.md#tc-071), [TC-135](test-cases.md#tc-135), [TC-262](test-cases.md#tc-262), [TC-264](test-cases.md#tc-264), [TC-266](test-cases.md#tc-266), [TC-267](test-cases.md#tc-267), [TC-333](test-cases.md#tc-333), [TC-341](test-cases.md#tc-341), [TC-343](test-cases.md#tc-343), [TC-344](test-cases.md#tc-344) | API; Browser fixture; Frontend JS; Manual; Playwright; Postman API | Covered |
 | REQ-012 | AC-012.3 — Unauthorized Bug Access | [TC-072](test-cases.md#tc-072), [TC-073](test-cases.md#tc-073), [TC-332](test-cases.md#tc-332), [TC-485](test-cases.md#tc-485) | API; Playwright | Covered |
-| REQ-012 | AC-012.4 — Sort Bug Reports | [TC-074](test-cases.md#tc-074), [TC-270](test-cases.md#tc-270), [TC-273](test-cases.md#tc-273), [TC-274](test-cases.md#tc-274), [TC-275](test-cases.md#tc-275), [TC-276](test-cases.md#tc-276), [TC-277](test-cases.md#tc-277), [TC-278](test-cases.md#tc-278), [TC-279](test-cases.md#tc-279), [TC-280](test-cases.md#tc-280), [TC-281](test-cases.md#tc-281), [TC-282](test-cases.md#tc-282), [TC-333](test-cases.md#tc-333), [TC-348](test-cases.md#tc-348), [TC-349](test-cases.md#tc-349), [TC-350](test-cases.md#tc-350), [TC-453](test-cases.md#tc-453) | API; Frontend JS; Playwright | Covered |
+| REQ-012 | AC-012.4 — Sort Bug Reports | [TC-270](test-cases.md#tc-270), [TC-273](test-cases.md#tc-273), [TC-274](test-cases.md#tc-274), [TC-275](test-cases.md#tc-275), [TC-276](test-cases.md#tc-276), [TC-277](test-cases.md#tc-277), [TC-278](test-cases.md#tc-278), [TC-279](test-cases.md#tc-279), [TC-280](test-cases.md#tc-280), [TC-281](test-cases.md#tc-281), [TC-282](test-cases.md#tc-282), [TC-333](test-cases.md#tc-333), [TC-348](test-cases.md#tc-348), [TC-349](test-cases.md#tc-349), [TC-350](test-cases.md#tc-350), [TC-453](test-cases.md#tc-453) | Frontend JS; Playwright | Covered |
 | REQ-012 | AC-012.5 — Paginate Bug Reports | [TC-275](test-cases.md#tc-275), [TC-333](test-cases.md#tc-333), [TC-334](test-cases.md#tc-334), [TC-345](test-cases.md#tc-345) | Frontend JS; Manual; Playwright | Covered |
 | REQ-012 | AC-012.6 — Remember Bug Page Size | [TC-268](test-cases.md#tc-268), [TC-269](test-cases.md#tc-269), [TC-333](test-cases.md#tc-333), [TC-334](test-cases.md#tc-334) | Frontend JS; Playwright | Covered |
 | REQ-013 | AC-013.1 — Edit Bug Report | [TC-075](test-cases.md#tc-075), [TC-134](test-cases.md#tc-134), [TC-335](test-cases.md#tc-335), [TC-472](test-cases.md#tc-472), [TC-473](test-cases.md#tc-473), [TC-474](test-cases.md#tc-474) | API; Frontend JS; Playwright; Postman API | Covered |
-| REQ-013 | AC-013.2 — Optional Bug Information | [TC-077](test-cases.md#tc-077), [TC-162](test-cases.md#tc-162), [TC-163](test-cases.md#tc-163), [TC-164](test-cases.md#tc-164), [TC-167](test-cases.md#tc-167), [TC-338](test-cases.md#tc-338), [TC-478](test-cases.md#tc-478), [TC-479](test-cases.md#tc-479) | API; Playwright | Covered |
+| REQ-013 | AC-013.2 — Optional Bug Information | [TC-077](test-cases.md#tc-077), [TC-162](test-cases.md#tc-162), [TC-163](test-cases.md#tc-163), [TC-164](test-cases.md#tc-164), [TC-167](test-cases.md#tc-167), [TC-338](test-cases.md#tc-338), [TC-478](test-cases.md#tc-478), [TC-479](test-cases.md#tc-479), [TC-497](test-cases.md#tc-497) | API; Database; Playwright | Covered |
 | REQ-013 | AC-013.3 — Unauthorized Bug Editing | [TC-078](test-cases.md#tc-078) | API | Covered |
 | REQ-014 | AC-014.1 — Successful Bug Deletion | [TC-079](test-cases.md#tc-079), [TC-263](test-cases.md#tc-263), [TC-335](test-cases.md#tc-335) | API; Frontend JS; Playwright; Postman API | Covered |
 | REQ-014 | AC-014.2 — Unauthorized Bug Deletion | [TC-080](test-cases.md#tc-080), [TC-081](test-cases.md#tc-081), [TC-332](test-cases.md#tc-332), [TC-485](test-cases.md#tc-485) | API; Playwright; Postman API | Covered |
@@ -129,7 +129,6 @@ only), **Manual**, and **Real-model evaluation / assisted review**.
 
 - **AC-019.2 — Use Bug and Project Context:** deterministic context, prompt and validator tests are combined with real-model evaluation: 30 live executions of [TC-351–TC-356](test-cases.md#ac-0192-opt-in-evaluation) on 16 October 2026 and an accepted real-provider evaluation of six fictional Try Demo reports on 27 October 2026 with the current instructions. Reviews were assisted, on small samples; they do not establish statistical reliability or rule out hallucinations. See the [execution report](test-execution.md#real-ai-assist-testing).
 - **AC-025.5 — Limit Reached:** the API tests produce the real `429` responses; TC-463 simulates those responses in Chromium for the per-account (Edit Bug) and global (New Bug) limits and verifies the message, unchanged form and saved data, rejected retry, and manual continuation.
-- **AC-012.4 — Sort Bug Reports:** TC-074 checks the API's most-recently-updated order; the UI default (Bug ID descending) is covered by TC-270, TC-333 and TC-453.
 - **REQ-024 — Try Demo:** Demo accounts are normal accounts, so existing project and bug workflow coverage also applies to them. The genuine defect snapshot was manually reviewed for sensitive information before inclusion (AC-024.4); TC-442 adds automated pattern checks.
 - Manual results (M01–M05) are recorded separately from automated executions. M05's race case, which could not be reproduced manually, is covered by frontend tests TC-246 and TC-247.
 - Cross-browser, accessibility and release criteria belong to the [QA strategy](qa-strategy.md) and [Definition of Done](definition-of-done.md); they are not repeated for every AC.
