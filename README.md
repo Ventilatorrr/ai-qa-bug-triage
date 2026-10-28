@@ -68,6 +68,8 @@ your Python 3.14 executable.
 | --- | --- |
 | `OPENAI_API_KEY` | Enables AI Assist. Without it, AI Assist returns HTTP 503 `AI assistance is not configured yet.` and the rest of the application works normally |
 | `AI_DAILY_USER_LIMIT`, `AI_DAILY_GLOBAL_LIMIT` | Daily AI Assist limits per account and across all accounts, per UTC day (defaults 50 and 500; `0` disables AI Assist). An invalid value returns HTTP 503 for AI Assist only |
+| `DEMO_TOTAL_LIMIT` | Lifetime number of Demos (default 1,000; maximum 2,000; `0` switches Try Demo off). An invalid value makes Try Demo unavailable |
+| `DATABASE_NAME` | SQLite database path (default `bugtriage.db` in the working directory; use an absolute path on persistent storage when deployed) |
 
 AI Assist sends the current form, up to five recently updated reports from the
 same project and eligible assignee information to OpenAI (`gpt-6-luna`, Medium
@@ -81,7 +83,12 @@ leave the form unchanged.
 with random, undisclosed passwords and name-like `@example.com` addresses, and
 the two seeded projects from `app/demo_data/`. It returns the Project Owner's
 token, and nothing is kept if any step fails. Demo creation is limited to 20
-starts per hour and 1,000 stored Demos.
+starts per hour and to `DEMO_TOTAL_LIMIT` Demos over the application's lifetime;
+Demos are never deleted.
+
+Public endpoints are bounded: request bodies over 1 MiB are rejected, bug and
+project text has length limits, and at most two password hashes run at once
+(further register, login or Try Demo requests get HTTP 503 and can retry).
 
 ## Running tests
 
@@ -159,6 +166,13 @@ workflow artifacts for seven days.
 Separate workflows run the [Postman API regression suite](.github/workflows/postman.yml)
 with Postman CLI 1.75.0 ([details](postman/README.md#github-actions)) and a short
 [JMeter smoke test](.github/workflows/jmeter.yml).
+
+## Deployment
+
+The application ships as a Docker image built by the manually triggered
+[Release image](.github/workflows/release-image.yml) workflow from an approved
+commit, then deployed by digest to Render staging and production. Settings,
+rules and the smoke checklist are in the [release runbook](docs/release-runbook.md).
 
 ## Versioning
 

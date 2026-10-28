@@ -1,0 +1,8 @@
+# Allowlist: only the runtime application enters the build context. Local databases
+# (including bugtriage.db), virtual environments, tests, docs and evaluation evidence never do.
+*
+!app/
+!frontend/
+!requirements.txt
+!requirements-ai.txt
+**/__pycache__
