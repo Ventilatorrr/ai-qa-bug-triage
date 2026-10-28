@@ -395,7 +395,7 @@ test("test_project_edit_save_failure_restores_row_for_retry", async () => {
 
 // TC-469 | AC-007.1 — Late project Save does not end another project's edit session
 test("test_late_project_save_keeps_other_project_edit_session", async () => {
-    const page = projectPage(), pending = deferred(), views = [], edits = [];
+    const page = projectPage(), pending = deferred(), views = [];
     page.runtime.renderProjectView = element => views.push(element);
     page.open(true, 1);
     const x = page.editRow();
@@ -412,10 +412,11 @@ test("test_late_project_save_keeps_other_project_edit_session", async () => {
 
     // A later list refresh must still render project Y in edit mode.
     page.runtime.getProjectRole = async () => "Project Owner";
-    page.runtime.renderProjectEdit = (element, project) => edits.push(project.id);
     page.setSend(async () => ({ok: true, json: async () => [{id: 1, name: "X Renamed"}, {id: 2, name: "Original"}]}));
     await page.realLoadProjects();
-    assert.deepEqual(edits, [2]);
+    const [, refreshedY] = page.node("#projects").children;
+    assert.equal(refreshedY, y.element);
+    assert.equal(refreshedY.querySelector("input").value, "Y Unsaved");
 });
 
 // TC-470 | AC-007.1 — Project list refresh keeps a pending Save row locked
@@ -440,4 +441,26 @@ test("test_project_list_refresh_keeps_pending_save_row_locked", async () => {
     pending.resolve(renamed("Saved Name"));
     await save;
     assert.deepEqual(views, [x.element], "the response settles the row shown in the list");
+});
+
+// TC-471 | AC-007.1 — Project list refresh preserves an unsaved project name edit
+test("test_project_list_refresh_preserves_unsaved_project_name_edit", async () => {
+    const page = projectPage();
+    page.runtime.renderProjectView = (element, project) => { element.textContent = project.name; };
+    page.runtime.getProjectRole = async () => "Project Owner";
+    page.open(true);
+    page.input(true, "Unsaved Name");
+
+    // Creating another project refreshes the list while the rename is unsaved.
+    page.setSend((url, options) => options?.method === "PUT" ? renamed(JSON.parse(options.body).name)
+        : {ok: true, json: async () => [{id: 1, name: "Original"}, {id: 2, name: "New Project"}]});
+    await page.realLoadProjects();
+    const [edited, created] = page.node("#projects").children;
+    assert.equal(edited.querySelector("input")?.value, "Unsaved Name", "the typed name survives the refresh");
+    assert.equal(created.textContent, "New Project");
+
+    edited.all("button").find(button => button.textContent === "Save").click();
+    await tick();
+    assert.deepEqual(page.requests.filter(request => request.method === "PUT").map(request => JSON.parse(request.body)),
+        [{name: "Unsaved Name"}]);
 });
