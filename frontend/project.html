@@ -11,6 +11,7 @@
 </head>
 
 <body>
+    <script src="js/theme-init.js"></script>
     <header class="site-header">
         <div class="header-left">
             <nav class="main-navigation" aria-label="Main navigation">
@@ -117,7 +118,7 @@
                     </form>
                 </div>
 
-                <p id="member-message" class="section-message"></p>
+                <p id="member-message" class="section-message" role="status" aria-live="polite"></p>
 
                 <div id="members"></div>
             </div>
@@ -135,7 +136,7 @@
                 </button>
             </div>
 
-            <p id="bug-message" class="section-message"></p>
+            <p id="bug-message" class="section-message" role="status" aria-live="polite"></p>
 
 
             <form id="bug-form" class="bug-form" hidden>

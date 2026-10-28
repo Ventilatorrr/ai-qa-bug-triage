@@ -698,8 +698,11 @@ body.light-theme #members > .project > button.context-action-button:active:not(:
     text-align: center;
 }
 
-.section-message:empty {
-    display: none;
+/* Empty messages take no space but stay rendered: display: none would remove these live
+   regions from the accessibility tree, so screen readers would not announce new text (BUG-51). */
+.section-message:empty,
+.demo-start .demo-status:empty {
+    margin: 0;
 }
 
 .section-message.message-success {
