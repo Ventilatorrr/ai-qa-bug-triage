@@ -626,3 +626,80 @@ test("test_add_member_late_completion_keeps_reopened_form", async () => {
         assert.equal(f.addButton.disabled, false);
     }
 });
+
+// Browser Back/Forward restores the page from bfcache; its refresh reloads the bug from the server.
+async function restoreFromBackForwardCache(f) {
+    f.runtime.localStorage = {getItem() { return "token"; }, removeItem() {}};
+    for (const type of ["pagehide", "pageshow"]) {
+        for (const handler of f.window.listeners[type] || []) await handler({persisted: true});
+    }
+}
+
+function editorRestoreFixture(baseline = {}) {
+    const f = pageFixture(true), writes = [];
+    Object.assign(f.stored, baseline);
+    f.send = async (url, options) => {
+        writes.push(JSON.parse(options.body));
+        return {ok: true, json: async () => ({...f.serverData, ...JSON.parse(options.body)})};
+    };
+    return Object.assign(f, {writes});
+}
+
+const newerServerChanges = {title: "Newer title", description: "Newer description", severity: "Major"};
+const refreshedBug = f => JSON.parse(vm.runInContext(
+    "JSON.stringify({title: currentBug.title, status: currentBug.status, assignee_id: currentBug.assignee_id})", f.runtime));
+
+// TC-472 | AC-013.1 — Restored untouched bug editor Save does not overwrite newer server data (BUG-47)
+test("test_restored_untouched_bug_editor_does_not_overwrite_newer_server_data", async () => {
+    const variants = {
+        assignee_added: [{}, {assignee_id: 7}],
+        assignee_changed_by_lifecycle: [{assignee_id: 5}, {status: "Open", assignee_id: 7}]
+    };
+    for (const [name, [baseline, serverAssignment]] of Object.entries(variants)) {
+        const f = editorRestoreFixture(baseline);
+        await f.open();
+        f.inputs["#edit-bug-assignee"].value = baseline.assignee_id ? String(baseline.assignee_id) : "";
+        f.serverData = {...f.stored, ...newerServerChanges, ...serverAssignment};
+        await restoreFromBackForwardCache(f);
+        assert.equal(f.rendered.at(-1), "Newer title", `${name}: surrounding details refresh`);
+        assert.equal(f.inputs["#edit-bug-title"].value, "Stored", `${name}: the open editor is not replaced`);
+
+        await f.save();
+        assert.deepEqual(f.writes, [], `${name}: an untouched editor sends no PATCH`);
+        assert.equal(f.form.hidden, true);
+        assert.deepEqual(refreshedBug(f), {title: "Newer title", status: "Triage", ...serverAssignment},
+            `${name}: the closed editor leaves the refreshed bug for details and lifecycle controls`);
+    }
+});
+
+// TC-473 | AC-013.1 — Restored bug editor keeps an unsaved edit and Save sends only that field (BUG-47)
+test("test_restored_bug_editor_keeps_unsaved_edit_and_saves_only_that_field", async () => {
+    const variants = {
+        environment: ["#edit-bug-environment", "Unsaved environment", {environment: "Unsaved environment"}],
+        assignee: ["#edit-bug-assignee", "9", {assignee_id: 9}]
+    };
+    for (const [name, [field, value, payload]] of Object.entries(variants)) {
+        const f = editorRestoreFixture({assignee_id: 5});
+        await f.open();
+        f.inputs["#edit-bug-assignee"].value = "5";
+        f.inputs[field].value = value;
+        f.serverData = {...f.stored, ...newerServerChanges, status: "Open", assignee_id: 7};
+        await restoreFromBackForwardCache(f);
+        assert.equal(f.inputs[field].value, value, `${name}: restore keeps the unsaved edit`);
+
+        await f.save();
+        assert.deepEqual(f.writes, [payload], `${name}: only the user's change is sent`);
+    }
+});
+
+// TC-474 | AC-013.1 — Restored read-only bug view refreshes to newer server data (BUG-47)
+test("test_restored_read_only_bug_view_refreshes_newer_server_data", async () => {
+    const f = editorRestoreFixture();
+    await f.open();
+    await f.cancel();
+    f.serverData = {...f.stored, ...newerServerChanges, status: "Open", assignee_id: 7};
+    await restoreFromBackForwardCache(f);
+    assert.equal(f.form.hidden, true);
+    assert.equal(f.rendered.at(-1), "Newer title");
+    assert.deepEqual(refreshedBug(f), {title: "Newer title", status: "Open", assignee_id: 7});
+});

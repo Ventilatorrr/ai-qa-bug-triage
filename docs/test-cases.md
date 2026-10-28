@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-472**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-475**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (29 modules) | 262 | 273 | 688 cases; 106 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (12 files) | 127 registered tests | 128 | Internal loops are variants |
+| Frontend Node (12 files) | 130 registered tests | 131 | Internal loops are variants |
 | Playwright (7 modules) | 20 functions | 21 | 28 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 482 | **470** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 485 | **473** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -583,6 +583,9 @@ parameter selector.
 | <a id="tc-400"></a>TC-400 | — | Add member repeated submission sends one POST while pending | Frontend JS / DOM substitutes | [`test_add_member_repeated_submission_sends_one_post_while_pending`](../tests/frontend/form-session.test.cjs#L539); four rapid submits, one POST, Add disabled while pending, success feedback without 409 |
 | <a id="tc-401"></a>TC-401 | — | Add member failure re-enables Add for correction and retry | Frontend JS / DOM substitutes | [`test_add_member_failure_reenables_add_for_retry`](../tests/frontend/form-session.test.cjs#L562); failure=conflict (409 shown), not_found, invalid_json, network_error |
 | <a id="tc-402"></a>TC-402 | — | Late Add Member completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_add_member_late_completion_keeps_reopened_form`](../tests/frontend/form-session.test.cjs#L595); late outcome=success, conflict, rejection |
+| <a id="tc-472"></a>TC-472 | AC-013.1 | A Back/Forward-restored, untouched Edit Bug form sends no PATCH on Save, so newer server values and assignment survive and the closed view keeps the refreshed bug (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_untouched_bug_editor_does_not_overwrite_newer_server_data`](../tests/frontend/form-session.test.cjs#L653); server change=assignee_added, assignee_changed_by_lifecycle |
+| <a id="tc-473"></a>TC-473 | AC-013.1 | A Back/Forward-restored Edit Bug form keeps its unsaved edit, and Save sends only that field (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_bug_editor_keeps_unsaved_edit_and_saves_only_that_field`](../tests/frontend/form-session.test.cjs#L676); changed field=environment, assignee |
+| <a id="tc-474"></a>TC-474 | AC-013.1 | A Back/Forward-restored read-only bug view refreshes to newer server data (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_read_only_bug_view_refreshes_newer_server_data`](../tests/frontend/form-session.test.cjs#L696); All variants |
 
 ## tests/frontend/lifecycle-action-disabled-state.test.cjs
 
