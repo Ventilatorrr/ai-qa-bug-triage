@@ -78,6 +78,35 @@ def test_bug_creation_confirmation_wraps(page, e2e_api, workspace, tmp_path, wid
         assert len(layout["lines"]) == 1
 
 
+# TC-496 | AC-011.5 — A New Bug length error is visible beside Create with the form kept; 255 characters are accepted (BUG-53 regression)
+def test_new_bug_length_error_is_visible_beside_create(page, workspace):
+    form = BugForm(page)
+    page.set_viewport_size({"width": 1280, "height": 720})
+    login(page, workspace["owner"])
+    page.get_by_role("link", name=workspace["project"]["name"], exact=True).click()
+    page.get_by_role("button", name="New Bug", exact=True).click()
+    form.title.fill("T" * 256)
+    form.description.fill("Keep this description")
+    form.create.click()
+
+    error = page.locator("#new-bug-message")
+    expect(error).to_have_text("Title must be 255 characters or fewer.")
+    expect(error).to_be_in_viewport()
+    expect(form.create).to_be_in_viewport()
+    error_box, create_box = error.bounding_box(), form.create.bounding_box()
+    assert 0 <= create_box["y"] - (error_box["y"] + error_box["height"]) <= 120, (error_box, create_box)
+    expect(page.locator("#bug-message")).to_have_text("")
+    expect(page.locator("#bug-form")).to_be_visible()
+    expect(form.title).to_have_value("T" * 256)
+    expect(form.description).to_have_value("Keep this description")
+
+    form.title.fill("T" * 255)
+    form.create.click()
+    expect(page.locator("#bug-message")).to_contain_text(f'"{"T" * 255}" created successfully.')
+    expect(page.locator("#bug-form")).to_be_hidden()
+    page.get_by_role("button", name="New Bug", exact=True).click()
+    expect(error).to_have_text("")
+
 # TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 — Bug create edit assign and confirmed delete
 def test_bug_create_edit_assign_and_confirmed_delete(page, e2e_api, workspace):
     form = BugForm(page)

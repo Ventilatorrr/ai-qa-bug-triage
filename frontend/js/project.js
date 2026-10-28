@@ -32,6 +32,8 @@ const cancelBugFormButton = document.querySelector("#cancel-bug-form");
 const createBugButton = document.querySelector("#create-bug-button");
 const newBugAiAssistButton = document.querySelector("#new-bug-ai-assist");
 const newBugAiMessage = document.querySelector("#new-bug-ai-message");
+// Submission errors appear beside Create while the form stays open (BUG-53).
+const newBugMessage = document.querySelector("#new-bug-message");
 const newBugAiSuggestions = document.querySelector("#new-bug-ai-suggestions");
 
 let bugFormSession = 0;
@@ -45,6 +47,7 @@ window.addEventListener("pageshow", event => {
     if (event.persisted && !bugForm.hidden) {
         ++bugFormSession;
         createBugButton.disabled = false;
+        showNewBugMessage("");
         beginAiAssistSession(bugForm, "bug-", newBugAiAssistButton, newBugAiMessage, newBugAiSuggestions);
     }
 });
@@ -684,6 +687,15 @@ function showBugMessage(text, type = "neutral") {
     }
 }
 
+function showNewBugMessage(text, type = "neutral") {
+    newBugMessage.classList.remove("message-success", "message-error");
+    newBugMessage.textContent = text;
+
+    if (text && type === "error") {
+        newBugMessage.classList.add("message-error");
+    }
+}
+
 function showBugDeletionFeedback() {
     try {
         const feedback = sessionStorage.getItem("bug-deletion-feedback");
@@ -1188,6 +1200,7 @@ showBugFormButton.addEventListener(
         createBugButton.disabled = false;
         newBugAiAssistButton.hidden = true;
         newBugAiMessage.textContent = "";
+        showNewBugMessage("");
         bugForm.hidden = false;
         updateBugEmptyState();
         beginAiAssistSession(bugForm, "bug-", newBugAiAssistButton, newBugAiMessage, newBugAiSuggestions);
@@ -1226,6 +1239,7 @@ cancelBugFormButton.addEventListener(
 
         bugMessage.textContent = "";
         newBugAiMessage.textContent = "";
+        showNewBugMessage("");
     }
 );
 
@@ -1291,6 +1305,7 @@ bugForm.addEventListener(
         };
 
         createBugButton.disabled = true;
+        showNewBugMessage("");
 
         try {
             const response = await authenticatedFetch(
@@ -1316,7 +1331,7 @@ bugForm.addEventListener(
             if (response.ok) {
                 if (!isValidBugResponse(data)) {
                     if (isCurrentSubmission()) {
-                        showBugMessage("Unable to confirm bug creation. Invalid server response.", "error");
+                        showNewBugMessage("Unable to confirm bug creation. Invalid server response.", "error");
                     }
                     return;
                 }
@@ -1342,11 +1357,11 @@ bugForm.addEventListener(
                 // rechecks it when writing feedback after its asynchronous work.
                 await loadBugs({ silent: !current, feedbackSession: bugFormSession });
             } else if (isCurrentSubmission()) {
-                showBugMessage(formatApiError(data.detail), "error");
+                showNewBugMessage(formatApiError(data.detail), "error");
             }
         } catch (error) {
             if (isCurrentSubmission()) {
-                showBugMessage("Unable to create bug. Please try again.", "error");
+                showNewBugMessage("Unable to create bug. Please try again.", "error");
             }
         } finally {
             // A late completion must not unlock a newer session's pending Create.

@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-494**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-498**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,18 +18,18 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (34 modules) | 275 | 286 | 731 cases; 116 parameterized functions |
+| Backend pytest (34 modules) | 276 | 287 | 733 cases; 117 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (15 files) | 136 registered tests | 137 | Internal loops are variants |
-| Playwright (7 modules) | 20 functions | 21 | 28 Chromium scenarios |
+| Frontend Node (15 files) | 138 registered tests | 139 | Internal loops are variants |
+| Playwright (7 modules) | 21 functions | 22 | 29 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
 | Structured manual | 5 groups | 5 | M01–M05 |
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 504 | **492** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 508 | **496** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -371,8 +371,9 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-478"></a>TC-478 | AC-011.5, AC-013.2 | Bug text over its limit is rejected on create and edit with a message naming the field, and nothing is saved; values at the limit are saved | API / integration | [`test_bug_text_length_limits`](../tests/backend/test_input_limits.py#L28); field=title, affected_version, environment, description, steps_to_reproduce, expected_result, actual_result; operation=create, edit |
-| <a id="tc-480"></a>TC-480 | AC-005.2, AC-007.3 | Project names over 255 characters are rejected on create and edit, leaving names unchanged; 255 is accepted | API / integration | [`test_project_name_length_limit`](../tests/backend/test_input_limits.py#L57); All variants |
+| <a id="tc-478"></a>TC-478 | AC-011.5, AC-013.2 | Bug text over its limit is rejected on create and edit with a message naming the field, and nothing is saved; values at the limit are saved | API / integration | [`test_bug_text_length_limits`](../tests/backend/test_input_limits.py#L30); field=title, affected_version, environment, description, steps_to_reproduce, expected_result, actual_result; operation=create, edit |
+| <a id="tc-480"></a>TC-480 | AC-005.2, AC-007.3 | Project names over 255 characters are rejected on create and edit, leaving names unchanged; 255 is accepted | API / integration | [`test_project_name_length_limit`](../tests/backend/test_input_limits.py#L59); All variants |
+| <a id="tc-497"></a>TC-497 | AC-011.5, AC-013.2 | A stored value already over its limit is kept while another field is edited; replacing it with an over-limit value is rejected (422) and leaves it unchanged, and a value at the limit is saved | API / integration; Database | [`test_stored_over_limit_value_is_validated_only_when_changed`](../tests/backend/test_input_limits.py#L81); field=title, description |
 
 ## tests/backend/test_jwt_secret.py
 
@@ -605,25 +606,27 @@ parameter selector.
 | <a id="tc-292"></a>TC-292 | AC-020.8 | Edit save late success preserves reopened form and AI | Frontend JS / DOM substitutes | [`test_edit_save_late_success_preserves_reopened_form_and_ai`](../tests/frontend/form-session.test.cjs#L215); All variants |
 | <a id="tc-293"></a>TC-293 | AC-020.7 | New create current success closes form and discards AI | Frontend JS / DOM substitutes | [`test_new_create_current_success_closes_form_and_discards_ai`](../tests/frontend/form-session.test.cjs#L220); All variants |
 | <a id="tc-294"></a>TC-294 | — | New create invalid number response preserves form | Frontend JS / DOM substitutes | [`test_new_create_invalid_number_response_preserves_form`](../tests/frontend/form-session.test.cjs#L225); All variants |
-| <a id="tc-295"></a>TC-295 | AC-020.7 | Edit save current success closes form and discards AI | Frontend JS / DOM substitutes | [`test_edit_save_current_success_closes_form_and_discards_ai`](../tests/frontend/form-session.test.cjs#L240); All variants |
-| <a id="tc-296"></a>TC-296 | AC-020.8 | New create late error does not overwrite reopened messages | Frontend JS / DOM substitutes | [`test_new_create_late_error_does_not_overwrite_reopened_messages`](../tests/frontend/form-session.test.cjs#L245); All variants |
-| <a id="tc-297"></a>TC-297 | AC-020.8 | Edit save late error does not overwrite reopened messages | Frontend JS / DOM substitutes | [`test_edit_save_late_error_does_not_overwrite_reopened_messages`](../tests/frontend/form-session.test.cjs#L250); All variants |
-| <a id="tc-298"></a>TC-298 | AC-020.8 | New create late JSON preserves newer pending submission | Frontend JS / DOM substitutes | [`test_new_create_late_json_preserves_newer_pending_submission`](../tests/frontend/form-session.test.cjs#L255); All variants |
-| <a id="tc-299"></a>TC-299 | AC-020.8 | Edit save late JSON preserves newer pending submission | Frontend JS / DOM substitutes | [`test_edit_save_late_json_preserves_newer_pending_submission`](../tests/frontend/form-session.test.cjs#L260); All variants |
-| <a id="tc-300"></a>TC-300 | AC-020.8 | Edit save late rejection preserves newer session | Frontend JS / DOM substitutes | [`test_edit_save_late_rejection_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L266); All variants |
-| <a id="tc-301"></a>TC-301 | AC-020.8 | New create stale list refresh failure preserves newer feedback | Frontend JS / DOM substitutes | [`test_new_create_stale_list_refresh_failure_preserves_newer_feedback`](../tests/frontend/form-session.test.cjs#L310); All variants |
-| <a id="tc-302"></a>TC-302 | AC-020.7 | New create current list refresh failure shows error | Frontend JS / DOM substitutes | [`test_new_create_current_list_refresh_failure_shows_error`](../tests/frontend/form-session.test.cjs#L338); All variants |
-| <a id="tc-303"></a>TC-303 | AC-020.8 | New create delayed list refresh response preserves newer session | Frontend JS / DOM substitutes | [`test_new_create_delayed_list_refresh_response_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L404); All variants |
-| <a id="tc-304"></a>TC-304 | AC-020.8 | New create delayed list refresh JSON preserves newer session | Frontend JS / DOM substitutes | [`test_new_create_delayed_list_refresh_json_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L409); All variants |
-| <a id="tc-393"></a>TC-393 | — | New create repeated submission sends one POST while pending (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_repeated_submission_sends_one_post_while_pending`](../tests/frontend/form-session.test.cjs#L414); four rapid submits, one POST, Create disabled until the form reopens |
-| <a id="tc-394"></a>TC-394 | — | New create failure re-enables Create for retry (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_failure_reenables_create_for_retry`](../tests/frontend/form-session.test.cjs#L438); failure=http_error, invalid_json, network_error |
-| <a id="tc-395"></a>TC-395 | — | Late Create completion does not unlock or close a reopened form (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_late_completion_keeps_reopened_create_guard`](../tests/frontend/form-session.test.cjs#L467); late outcome=success, error, rejection |
-| <a id="tc-400"></a>TC-400 | — | Add member repeated submission sends one POST while pending | Frontend JS / DOM substitutes | [`test_add_member_repeated_submission_sends_one_post_while_pending`](../tests/frontend/form-session.test.cjs#L539); four rapid submits, one POST, Add disabled while pending, success feedback without 409 |
-| <a id="tc-401"></a>TC-401 | — | Add member failure re-enables Add for correction and retry | Frontend JS / DOM substitutes | [`test_add_member_failure_reenables_add_for_retry`](../tests/frontend/form-session.test.cjs#L562); failure=conflict (409 shown), not_found, invalid_json, network_error |
-| <a id="tc-402"></a>TC-402 | — | Late Add Member completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_add_member_late_completion_keeps_reopened_form`](../tests/frontend/form-session.test.cjs#L595); late outcome=success, conflict, rejection |
-| <a id="tc-472"></a>TC-472 | AC-013.1 | A Back/Forward-restored, untouched Edit Bug form sends no PATCH on Save, so newer server values and assignment survive and the closed view keeps the refreshed bug (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_untouched_bug_editor_does_not_overwrite_newer_server_data`](../tests/frontend/form-session.test.cjs#L653); server change=assignee_added, assignee_changed_by_lifecycle |
-| <a id="tc-473"></a>TC-473 | AC-013.1 | A Back/Forward-restored Edit Bug form keeps its unsaved edit, and Save sends only that field (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_bug_editor_keeps_unsaved_edit_and_saves_only_that_field`](../tests/frontend/form-session.test.cjs#L676); changed field=environment, assignee |
-| <a id="tc-474"></a>TC-474 | AC-013.1 | A Back/Forward-restored read-only bug view refreshes to newer server data (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_read_only_bug_view_refreshes_newer_server_data`](../tests/frontend/form-session.test.cjs#L696); All variants |
+| <a id="tc-295"></a>TC-295 | AC-020.7 | Edit save current success closes form and discards AI | Frontend JS / DOM substitutes | [`test_edit_save_current_success_closes_form_and_discards_ai`](../tests/frontend/form-session.test.cjs#L242); All variants |
+| <a id="tc-296"></a>TC-296 | AC-020.8 | New create late error does not overwrite reopened messages | Frontend JS / DOM substitutes | [`test_new_create_late_error_does_not_overwrite_reopened_messages`](../tests/frontend/form-session.test.cjs#L247); All variants |
+| <a id="tc-297"></a>TC-297 | AC-020.8 | Edit save late error does not overwrite reopened messages | Frontend JS / DOM substitutes | [`test_edit_save_late_error_does_not_overwrite_reopened_messages`](../tests/frontend/form-session.test.cjs#L252); All variants |
+| <a id="tc-298"></a>TC-298 | AC-020.8 | New create late JSON preserves newer pending submission | Frontend JS / DOM substitutes | [`test_new_create_late_json_preserves_newer_pending_submission`](../tests/frontend/form-session.test.cjs#L257); All variants |
+| <a id="tc-299"></a>TC-299 | AC-020.8 | Edit save late JSON preserves newer pending submission | Frontend JS / DOM substitutes | [`test_edit_save_late_json_preserves_newer_pending_submission`](../tests/frontend/form-session.test.cjs#L262); All variants |
+| <a id="tc-300"></a>TC-300 | AC-020.8 | Edit save late rejection preserves newer session | Frontend JS / DOM substitutes | [`test_edit_save_late_rejection_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L268); All variants |
+| <a id="tc-301"></a>TC-301 | AC-020.8 | New create stale list refresh failure preserves newer feedback | Frontend JS / DOM substitutes | [`test_new_create_stale_list_refresh_failure_preserves_newer_feedback`](../tests/frontend/form-session.test.cjs#L312); All variants |
+| <a id="tc-302"></a>TC-302 | AC-020.7 | New create current list refresh failure shows error | Frontend JS / DOM substitutes | [`test_new_create_current_list_refresh_failure_shows_error`](../tests/frontend/form-session.test.cjs#L340); All variants |
+| <a id="tc-303"></a>TC-303 | AC-020.8 | New create delayed list refresh response preserves newer session | Frontend JS / DOM substitutes | [`test_new_create_delayed_list_refresh_response_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L409); All variants |
+| <a id="tc-304"></a>TC-304 | AC-020.8 | New create delayed list refresh JSON preserves newer session | Frontend JS / DOM substitutes | [`test_new_create_delayed_list_refresh_json_preserves_newer_session`](../tests/frontend/form-session.test.cjs#L414); All variants |
+| <a id="tc-393"></a>TC-393 | — | New create repeated submission sends one POST while pending (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_repeated_submission_sends_one_post_while_pending`](../tests/frontend/form-session.test.cjs#L419); four rapid submits, one POST, Create disabled until the form reopens |
+| <a id="tc-394"></a>TC-394 | — | New create failure re-enables Create for retry (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_failure_reenables_create_for_retry`](../tests/frontend/form-session.test.cjs#L443); failure=http_error, invalid_json, network_error |
+| <a id="tc-395"></a>TC-395 | — | Late Create completion does not unlock or close a reopened form (BUG-37 regression) | Frontend JS / DOM substitutes | [`test_new_create_late_completion_keeps_reopened_create_guard`](../tests/frontend/form-session.test.cjs#L473); late outcome=success, error, rejection |
+| <a id="tc-400"></a>TC-400 | — | Add member repeated submission sends one POST while pending | Frontend JS / DOM substitutes | [`test_add_member_repeated_submission_sends_one_post_while_pending`](../tests/frontend/form-session.test.cjs#L545); four rapid submits, one POST, Add disabled while pending, success feedback without 409 |
+| <a id="tc-401"></a>TC-401 | — | Add member failure re-enables Add for correction and retry | Frontend JS / DOM substitutes | [`test_add_member_failure_reenables_add_for_retry`](../tests/frontend/form-session.test.cjs#L568); failure=conflict (409 shown), not_found, invalid_json, network_error |
+| <a id="tc-402"></a>TC-402 | — | Late Add Member completion does not affect a reopened form | Frontend JS / DOM substitutes | [`test_add_member_late_completion_keeps_reopened_form`](../tests/frontend/form-session.test.cjs#L601); late outcome=success, conflict, rejection |
+| <a id="tc-472"></a>TC-472 | AC-013.1 | A Back/Forward-restored, untouched Edit Bug form sends no PATCH on Save, so newer server values and assignment survive and the closed view keeps the refreshed bug (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_untouched_bug_editor_does_not_overwrite_newer_server_data`](../tests/frontend/form-session.test.cjs#L659); server change=assignee_added, assignee_changed_by_lifecycle |
+| <a id="tc-473"></a>TC-473 | AC-013.1 | A Back/Forward-restored Edit Bug form keeps its unsaved edit, and Save sends only that field (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_bug_editor_keeps_unsaved_edit_and_saves_only_that_field`](../tests/frontend/form-session.test.cjs#L682); changed field=environment, assignee |
+| <a id="tc-474"></a>TC-474 | AC-013.1 | A Back/Forward-restored read-only bug view refreshes to newer server data (BUG-47 regression) | Frontend JS / DOM substitutes | [`test_restored_read_only_bug_view_refreshes_newer_server_data`](../tests/frontend/form-session.test.cjs#L702); All variants |
+| <a id="tc-494"></a>TC-494 | AC-011.5 | New Bug validation, authorization, server, network and invalid-response errors appear beside Create without the "Value error," prefix; nothing is reported above the form, which stays open with its values and Create re-enabled (BUG-53 regression) | Frontend JS / DOM substitutes | [`test_new_bug_submission_errors_appear_beside_create`](../tests/frontend/form-session.test.cjs#L715); failure=validation, authorization, server, network, invalid_response |
+| <a id="tc-495"></a>TC-495 | AC-011.1 | New Bug errors are cleared by Cancel, reopening, a new submission and success; the success confirmation stays above the bug list (BUG-53 regression) | Frontend JS / DOM substitutes | [`test_new_bug_submission_errors_do_not_persist`](../tests/frontend/form-session.test.cjs#L744); All variants |
 
 ## tests/frontend/leave-project.test.cjs
 
@@ -740,11 +743,12 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L82); All variants |
-| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L129); All variants |
-| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L174); All variants |
-| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L202); All variants |
+| <a id="tc-335"></a>TC-335 | AC-011.1, AC-013.1, AC-014.1, AC-015.1 | Bug create edit assign and confirmed delete | Playwright / Chromium | [`test_bug_create_edit_assign_and_confirmed_delete`](../tests/e2e/test_bugs.py#L111); All variants |
+| <a id="tc-336"></a>TC-336 | AC-017.2, AC-017.3, AC-017.4, AC-017.5, AC-017.7 | Bug handoff pass and reopen | Playwright / Chromium | [`test_bug_handoff_pass_and_reopen`](../tests/e2e/test_bugs.py#L158); All variants |
+| <a id="tc-337"></a>TC-337 | AC-017.5 | Failed testing returns to selected developer | Playwright / Chromium | [`test_failed_testing_returns_to_selected_developer`](../tests/e2e/test_bugs.py#L203); All variants |
+| <a id="tc-338"></a>TC-338 | AC-011.4, AC-013.2, AC-017.5, AC-017.6 | Fix version eligibility persistence and form reset | Playwright / Chromium | [`test_fix_version_eligibility_persistence_and_form_reset`](../tests/e2e/test_bugs.py#L231); All variants |
 | <a id="tc-378"></a>TC-378 | AC-011.1 | BUG-34 creation confirmation remains readable within the viewport | Playwright / Chromium | [`test_bug_creation_confirmation_wraps`](../tests/e2e/test_bugs.py#L18); title=normal/unbroken (255 characters, the AC-011.5 maximum), width=desktop (1280)/narrow (375); all four combinations; POST 201, API readback, exact message, visible text line bounds, no clipping or page overflow |
+| <a id="tc-496"></a>TC-496 | AC-011.5 | A 256-character New Bug title shows its length error in the viewport directly above Create, with the form and values kept and nothing above the form; a 255-character title is then created with the usual confirmation, and reopening shows no stale error (BUG-53 regression) | Playwright / Chromium | [`test_new_bug_length_error_is_visible_beside_create`](../tests/e2e/test_bugs.py#L82); 1280×720 viewport |
 
 ## tests/e2e/test_projects.py
 

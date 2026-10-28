@@ -346,6 +346,9 @@
 
                 <div class="ai-suggestions-footer" hidden></div>
 
+                <!-- Submission errors stay beside Create; success is reported above the bug list. -->
+                <p id="new-bug-message" class="section-message" role="alert" aria-live="polite"></p>
+
                 <div id="new-bug-ai-disclosure" class="section-message ai-assist-disclosure" role="note" data-ai-button="new-bug-ai-assist" hidden>
                     <p id="new-bug-ai-disclosure-text">AI Assist sends the current bug, up to five recently updated bugs from this project, and eligible assignee information to OpenAI. Avoid passwords, API keys, and sensitive personal information. For more information, see the <a href="/privacy.html">Privacy Policy</a>.</p>
                     <button class="ai-notice-dismiss" type="button" aria-label="Dismiss AI data-sharing notice">&times;</button>
