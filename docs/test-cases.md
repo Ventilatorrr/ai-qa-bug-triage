@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-465**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-467**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (29 modules) | 259 | 270 | 681 cases; 104 parameterized functions |
+| Backend pytest (29 modules) | 262 | 273 | 688 cases; 106 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (12 files) | 122 registered tests | 123 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 474 | **462** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 477 | **465** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -373,12 +373,14 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-177"></a>TC-177 | AC-002.1 | Successful login | API / integration; Postman API | [`test_successful_login`](../tests/backend/test_login.py#L2); All variants; Postman: `02 Login Owner`, `04 Login Developer`, `06 Login QA Analyst` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-178"></a>TC-178 | AC-002.2 | Login with incorrect password | API / integration | [`test_login_with_incorrect_password`](../tests/backend/test_login.py#L22); All variants |
-| <a id="tc-179"></a>TC-179 | AC-002.2 | Login with unknown email | API / integration | [`test_login_with_unknown_email`](../tests/backend/test_login.py#L45); All variants |
-| <a id="tc-180"></a>TC-180 | AC-003.1 | Authenticated user can access protected endpoint | API / integration | [`test_authenticated_user_can_access_protected_endpoint`](../tests/backend/test_login.py#L63); All variants |
-| <a id="tc-181"></a>TC-181 | AC-003.2 | Unauthenticated user cannot access protected endpoint | API / integration; Postman API | [`test_unauthenticated_user_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L84); All variants; Postman: `16 Reject Missing Authentication` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
-| <a id="tc-182"></a>TC-182 | AC-003.3 | Invalid token cannot access protected endpoint | API / integration | [`test_invalid_token_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L91); All variants |
+| <a id="tc-177"></a>TC-177 | AC-002.1 | Successful login | API / integration; Postman API | [`test_successful_login`](../tests/backend/test_login.py#L5); All variants; Postman: `02 Login Owner`, `04 Login Developer`, `06 Login QA Analyst` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-178"></a>TC-178 | AC-002.2 | Login with incorrect password | API / integration | [`test_login_with_incorrect_password`](../tests/backend/test_login.py#L25); All variants |
+| <a id="tc-179"></a>TC-179 | AC-002.2 | Login with unknown email | API / integration | [`test_login_with_unknown_email`](../tests/backend/test_login.py#L48); All variants |
+| <a id="tc-465"></a>TC-465 | AC-002.2 | Login rejects a password over bcrypt's 72-byte limit with the generic invalid-credentials response for registered and unregistered emails (BUG-44 regression) | API / integration | [`test_login_rejects_password_over_bcrypt_limit`](../tests/backend/test_login.py#L76); All variants |
+| <a id="tc-466"></a>TC-466 | AC-002.1 | Login accepts a multibyte password of exactly 72 UTF-8 bytes | API / integration | [`test_login_accepts_password_at_bcrypt_limit`](../tests/backend/test_login.py#L100); All variants |
+| <a id="tc-180"></a>TC-180 | AC-003.1 | Authenticated user can access protected endpoint | API / integration | [`test_authenticated_user_can_access_protected_endpoint`](../tests/backend/test_login.py#L119); All variants |
+| <a id="tc-181"></a>TC-181 | AC-003.2 | Unauthenticated user cannot access protected endpoint | API / integration; Postman API | [`test_unauthenticated_user_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L140); All variants; Postman: `16 Reject Missing Authentication` ([collection](../postman/AI%20QA%20Bug%20Triage.postman_collection.json), selected variants; [scope](../postman/README.md#requests-and-existing-conceptual-test-cases)) |
+| <a id="tc-182"></a>TC-182 | AC-003.3 | Invalid token cannot access protected endpoint | API / integration | [`test_invalid_token_cannot_access_protected_endpoint`](../tests/backend/test_login.py#L147); All variants |
 
 ## tests/backend/test_privacy.py
 
