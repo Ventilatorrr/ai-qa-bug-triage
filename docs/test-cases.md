@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-464**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-465**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -424,9 +424,10 @@ parameter selector.
 | <a id="tc-215"></a>TC-215 | AC-010.5 | Non owner cannot edit project | API / integration | [`test_non_owner_cannot_edit_project`](../tests/backend/test_projects.py#L1202); All variants |
 | <a id="tc-216"></a>TC-216 | AC-010.5 | Non owner cannot delete project | API / integration | [`test_non_owner_cannot_delete_project`](../tests/backend/test_projects.py#L1255); All variants |
 | <a id="tc-403"></a>TC-403 | — | Add member rejects empty or non-string email with 422 and no membership change (audit B2 regression) | API / integration | [`test_add_member_rejects_empty_or_non_string_email`](../tests/backend/test_projects.py#L1315); email=array, object, number, boolean, null, empty string |
-| <a id="tc-404"></a>TC-404 | — | Competing add member requests return one 201 and one 409 with a single stored membership | API / integration; database integrity | [`test_competing_add_member_requests_return_one_created_and_one_conflict`](../tests/backend/test_projects.py#L1371); competing request commits between the duplicate check and insert |
-| <a id="tc-405"></a>TC-405 | — | Add member does not report unrelated integrity failures as conflicts | API / integration | [`test_add_member_does_not_report_unrelated_integrity_failure_as_conflict`](../tests/backend/test_projects.py#L1436); injected NOT NULL failure on insert |
-| <a id="tc-408"></a>TC-408 | AC-009.1, AC-009.3, AC-009.4 | Add member matches emails like login: domain case-insensitive, local part case-sensitive (audit B7 regression) | API / integration | [`test_add_member_matches_email_like_login`](../tests/backend/test_projects.py#L1481); registration-cased add 201, domain variant 409, local-part variant and malformed address 404 |
+| <a id="tc-404"></a>TC-404 | — | Competing add member requests return one 201 and one 409 with a single stored membership | API / integration; database integrity | [`test_competing_add_member_requests_return_one_created_and_one_conflict`](../tests/backend/test_projects.py#L1371); competing request starts between the duplicate check and insert and waits for the first commit |
+| <a id="tc-405"></a>TC-405 | — | Add member does not report unrelated integrity failures as conflicts | API / integration | [`test_add_member_does_not_report_unrelated_integrity_failure_as_conflict`](../tests/backend/test_projects.py#L1443); injected NOT NULL failure on insert |
+| <a id="tc-464"></a>TC-464 | — | An owner-only project change authorized before a concurrent Delete Project cannot affect another user's project that reuses the deleted id, nor leave orphaned memberships (Astra finding #1 regression) | API / integration; database integrity | [`test_project_change_cannot_affect_project_that_reuses_deleted_id`](../tests/backend/test_projects.py#L1497); operation=add_member, rename, delete |
+| <a id="tc-408"></a>TC-408 | AC-009.1, AC-009.3, AC-009.4 | Add member matches emails like login: domain case-insensitive, local part case-sensitive (audit B7 regression) | API / integration | [`test_add_member_matches_email_like_login`](../tests/backend/test_projects.py#L1562); registration-cased add 201, domain variant 409, local-part variant and malformed address 404 |
 
 ## tests/backend/test_registration.py
 

@@ -93,8 +93,10 @@ def test_ai_generation_classification_rules_match_application(generation_context
     definitions = [line for line in requirements.splitlines()
                    if any(line.startswith(f"- `{value}`") for value in values)]
     assert len(definitions) == len(values)
+    # Compare wording only; the instructions may wrap a definition across lines.
+    instructions = " ".join(generation["instructions"].split())
     for line in definitions:
-        assert line.removeprefix("- ").replace("`", "") in generation["instructions"]
+        assert " ".join(line.removeprefix("- ").replace("`", "").split()) in instructions
 
 
 # TC-020 | AC-019.3 — AI generation limits assignees to supplied eligible context
