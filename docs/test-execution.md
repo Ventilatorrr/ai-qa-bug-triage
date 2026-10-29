@@ -381,6 +381,7 @@ exploratory findings that were fixed without a separate bug report.
 | BUG-41 — background brightness changed with page size | Tracked bug report | Background glow sized to the whole document; now sized to the viewport | Pixel comparison at 10/20/50 per page showed identical backgrounds; no permanent test, because the check needs pixel sampling |
 | Incomplete Assignee divider and missing explicit Delete focus outline | Frontend theme and control review | Divider and focus-outline styles corrected | Standalone browser fixtures failed before the correction and passed after it |
 | E2E port probe accepted listeners on `0.0.0.0` or `[::]` (Windows) | Test-infrastructure safety audit | Probe now binds every interface | TC-413 failed before for both cases |
+| BUG-43 — authorization race allowed access to or changes to another user's project | Code review | Owner check ran before the write, so a concurrent Delete Project and reused project ID redirected the change; Update, Delete, Add Member and Remove Member now hold `BEGIN IMMEDIATE` from the check through the write | 27 October, disposable database: a pending Add Member left an orphaned membership that gave access to the next user's project and bug, and restarting the app in-process on that database failed its startup integrity check. TC-464 failed before for Add Member, Rename and Delete; it checks the resulting data and `PRAGMA foreign_key_check`, not a restart. Remove Member is not covered by TC-464. |
 
 ## Real AI Assist testing
 
