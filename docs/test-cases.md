@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-498**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-513**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (34 modules) | 276 | 287 | 733 cases; 117 parameterized functions |
+| Backend pytest (36 modules) | 290 | 301 | 764 cases; 125 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (15 files) | 138 registered tests | 139 | Internal loops are variants |
@@ -29,10 +29,18 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 508 | **496** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 522 | **510** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
+
+## tests/backend/test_admin.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-506"></a>TC-506 | AC-026.3 | With `READ_ONLY_MODE=1`, POST, PUT and DELETE requests get 503 with the maintenance message and security headers, while reads, `/version` and static pages work; the mode is off by default | API / infrastructure | [`test_read_only_mode_refuses_writes`](../tests/backend/test_admin.py#L52); setting=off_by_default, on |
+| <a id="tc-507"></a>TC-507 | AC-026.1, AC-026.2, AC-026.3 | The dry run lists the plan and changes nothing; confirmed deletion removes the owned project for everyone, ends memberships, clears assignments (Last Updated changes), keeps the bug written elsewhere, deletes AI usage, leaves a placeholder without the email and with the original password hash replaced, rejects the old token and password, lets the address register with a new ID, and restart checks pass | API; Database | [`test_account_deletion_dry_run_and_confirmed_deletion`](../tests/backend/test_admin.py#L73); All variants |
+| <a id="tc-508"></a>TC-508 | AC-026.3 | Confirmed deletion outside read-only mode, an unknown, already deleted or Demo account, a missing database (not created) and an unexpected schema version are refused, and a failure mid-transaction rolls back; nothing changes | API; Database | [`test_account_deletion_refusals_and_failures_change_nothing`](../tests/backend/test_admin.py#L124); case=not_read_only, unknown_email, already_deleted, demo_account, missing_database, wrong_schema_version, failed_delete |
 
 ## tests/backend/test_ai_assist.py
 
@@ -139,6 +147,7 @@ parameter selector.
 | <a id="tc-065"></a>TC-065 | — | AI triage client factory disables retries without reading credentials | API / AI (mocked or unavailable provider) | [`test_ai_triage_client_factory_disables_retries_without_reading_credentials`](../tests/backend/test_ai_triage.py#L478); All variants |
 | <a id="tc-424"></a>TC-424 | AC-025.6, AC-023.1 | AI triage sends the output-token limit and treats a response truncated by it as a safe failure without persistence | API / AI (mocked or unavailable provider) | [`test_ai_triage_bounds_output_and_treats_truncated_output_as_safe_failure`](../tests/backend/test_ai_triage.py#L442); All variants |
 | <a id="tc-491"></a>TC-491 | — | AI provider failures are logged with only the error type and HTTP status (or a malformed-response notice), never content or credentials | API / AI (mocked provider) | [`test_ai_provider_failures_are_logged_without_content`](../tests/backend/test_ai_triage.py#L495); failure=transport, malformed |
+| <a id="tc-512"></a>TC-512 | AC-022.2, AC-019.3 | AI triage (New and Edit Bug) sends the offline provider eligible members' user IDs and roles only, never member email addresses; the suggested Assignee still validates and the Members list still shows emails | API / AI (mocked provider) | [`test_ai_triage_omits_member_emails_from_provider_request`](../tests/backend/test_ai_triage.py#L513); edit=False, True |
 
 ## tests/backend/test_ai_usage.py
 
@@ -154,6 +163,7 @@ parameter selector.
 | <a id="tc-437"></a>TC-437 | AC-025.4 | Local preparation failures (generation input, SDK client creation or context entry) before the provider are not counted | API / AI (mocked provider) | [`test_ai_usage_does_not_count_local_preparation_failures`](../tests/backend/test_ai_usage.py#L234); All variants (generation_input, client, context_enter) |
 | <a id="tc-432"></a>TC-432 | AC-025.4 | Usage survives an application restart and resets at 00:00 UTC | API / AI (mocked provider) | [`test_ai_usage_persists_across_restart_and_resets_at_utc_midnight`](../tests/backend/test_ai_usage.py#L264); All variants |
 | <a id="tc-433"></a>TC-433 | AC-025.4 | Concurrent reservations cannot exceed the per-account or global limit | Database / concurrency | [`test_ai_usage_concurrent_reservations_cannot_exceed_limits`](../tests/backend/test_ai_usage.py#L293); All variants (user, global) |
+| <a id="tc-505"></a>TC-505 | AC-025.7 | Usage records from earlier UTC days are deleted; today's record is kept and still counts toward the limit | API / AI (mocked provider); Database | [`test_earlier_day_usage_records_are_deleted`](../tests/backend/test_ai_usage.py#L329); All variants |
 
 ## tests/backend/test_bug.py
 
@@ -217,7 +227,9 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-485"></a>TC-485 | AC-012.3, AC-014.2, AC-009.5 | Bug deletion and bug/member reads authorized before a concurrent Delete Project cannot act on or reveal another user's project that reuses the deleted id (BUG-49 regression) | API / integration; database integrity | [`test_bug_operation_cannot_affect_project_that_reuses_deleted_id`](../tests/backend/test_bug_id_reuse_races.py#L9); operation=delete_bug, list_bugs, get_bug, list_members |
+| <a id="tc-485"></a>TC-485 | AC-012.3, AC-014.2, AC-009.5 | Bug deletion and bug/member reads authorized before a concurrent Delete Project cannot act on or reveal another user's project that reuses the deleted id (BUG-49 regression) | API / integration; database integrity | [`test_bug_operation_cannot_affect_project_that_reuses_deleted_id`](../tests/backend/test_bug_id_reuse_races.py#L13); operation=delete_bug, list_bugs, get_bug, list_members |
+| <a id="tc-510"></a>TC-510 | AC-012.3 | A bug edit or status update returns the authorized report it changed (status update: Open with its assignee), not another user's report stored under the same project id and bug number after a Delete Project between commit and response; the other report is unchanged | API / integration; database integrity | [`test_bug_update_response_never_returns_report_from_project_that_reuses_deleted_id`](../tests/backend/test_bug_id_reuse_races.py#L82); operation=edit, status |
+| <a id="tc-511"></a>TC-511 | AC-022.1, AC-022.2 | AI Assist (New and Edit Bug) authorized before a concurrent Delete Project sends the offline provider only the authorized project's recent reports and eligible members; a member of the project that reuses the id is not accepted as an Assignee suggestion | API / AI (mocked provider); database integrity | [`test_ai_assist_never_uses_project_that_reuses_deleted_id`](../tests/backend/test_bug_id_reuse_races.py#L145); edit=False, True |
 
 ## tests/backend/test_bug_lifecycle.py
 
@@ -273,8 +285,8 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-139"></a>TC-139 | — | Return committed edit/status data through durable readback | API / integration | [`test_bug_update_response_readback_after_commit`](../tests/backend/test_bug_update_readback.py#L10); delete_before_readback=False; operation in {edit, status} |
-| <a id="tc-140"></a>TC-140 | — | Return consistent not-found feedback if deleted before readback | API / integration | [`test_bug_update_response_readback_after_commit`](../tests/backend/test_bug_update_readback.py#L10); delete_before_readback=True; operation in {edit, status} |
+| <a id="tc-139"></a>TC-139 | — | The edit/status response is captured inside the write transaction, before commit; it matches the authorized change, which is durable after commit, and a later GET returns the same data | API / integration | [`test_bug_update_response_captured_before_commit`](../tests/backend/test_bug_update_readback.py#L10); delete_after_commit=False; operation in {edit, status} |
+| <a id="tc-140"></a>TC-140 | — | When the project is deleted right after a successful update commits, the retained response (200) is still the authorized change, and a later GET returns 404 | API / integration | [`test_bug_update_response_captured_before_commit`](../tests/backend/test_bug_update_readback.py#L10); delete_after_commit=True; operation in {edit, status} |
 
 ## tests/backend/test_database_isolation.py
 
@@ -295,22 +307,23 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-145"></a>TC-145 | — | Fresh database creates numbering schema | Database / infrastructure | [`test_fresh_database_creates_numbering_schema`](../tests/backend/test_database_migrations.py#L68); All variants |
-| <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/backend/test_database_migrations.py#L81); All variants |
-| <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/backend/test_database_migrations.py#L111); All variants |
-| <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation starts with ALTER or CREATE (7 variants) |
-| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=PRAGMA user_version=99 |
-| <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L173); mutation=DELETE FROM users WHERE id=2 |
-| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L293); field=bug_number; all associated values |
-| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L293); field=next_bug_number; all associated values |
-| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L305); All variants |
-| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L315); All variants |
-| <a id="tc-434"></a>TC-434 | — | Version 1 upgrade adds the empty usage table and preserves every existing definition and row; idempotent | Database / infrastructure | [`test_version_1_upgrade_adds_usage_table_and_preserves_all_data`](../tests/backend/test_database_migrations.py#L212); All variants (fresh, legacy-upgraded version 1) |
-| <a id="tc-435"></a>TC-435 | — | Version 1 upgrade failure rolls back the table and version, then succeeds on retry | Database / infrastructure | [`test_version_1_upgrade_failure_rolls_back_table_and_version`](../tests/backend/test_database_migrations.py#L238); All variants |
-| <a id="tc-436"></a>TC-436 | — | Startup rejects an unexpected version 1 or version 2 schema or usage relationship without changes | Database / infrastructure | [`test_startup_rejects_unexpected_version_1_or_2_schema`](../tests/backend/test_database_migrations.py#L269); All variants |
+| <a id="tc-145"></a>TC-145 | — | Fresh database creates numbering schema | Database / infrastructure | [`test_fresh_database_creates_numbering_schema`](../tests/backend/test_database_migrations.py#L75); All variants |
+| <a id="tc-146"></a>TC-146 | — | Legacy backfill preserves every field and is idempotent | Database / infrastructure | [`test_legacy_backfill_preserves_every_field_and_is_idempotent`](../tests/backend/test_database_migrations.py#L88); All variants |
+| <a id="tc-147"></a>TC-147 | — | Migration failure rolls back schema data and version | Database / infrastructure | [`test_migration_failure_rolls_back_schema_data_and_version`](../tests/backend/test_database_migrations.py#L120); All variants |
+| <a id="tc-148"></a>TC-148 | — | Refuse unexpected or partially migrated legacy schema | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L182); mutation starts with ALTER or CREATE (7 variants) |
+| <a id="tc-149"></a>TC-149 | — | Refuse unsupported database schema versions | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L182); mutation=PRAGMA user_version=99 |
+| <a id="tc-150"></a>TC-150 | — | Refuse legacy data with broken relationships | Database / infrastructure | [`test_migration_rejects_unexpected_partial_or_inconsistent_legacy_schema`](../tests/backend/test_database_migrations.py#L182); mutation=DELETE FROM users WHERE id=2 |
+| <a id="tc-151"></a>TC-151 | — | Enforce positive integer report numbers in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L305); field=bug_number; all associated values |
+| <a id="tc-152"></a>TC-152 | — | Enforce positive integer allocation counters in storage | Database / infrastructure | [`test_numbering_constraints_reject_invalid_storage`](../tests/backend/test_database_migrations.py#L305); field=next_bug_number; all associated values |
+| <a id="tc-153"></a>TC-153 | — | Numbering uniqueness is scoped to project | Database / infrastructure | [`test_numbering_uniqueness_is_scoped_to_project`](../tests/backend/test_database_migrations.py#L317); All variants |
+| <a id="tc-154"></a>TC-154 | — | Current schema rejects invalid counter without repair | Database / infrastructure | [`test_current_schema_rejects_invalid_counter_without_repair`](../tests/backend/test_database_migrations.py#L327); All variants |
+| <a id="tc-434"></a>TC-434 | — | Version 1 upgrade adds the empty usage table and preserves every existing definition and row; idempotent | Database / infrastructure | [`test_version_1_upgrade_adds_usage_table_and_preserves_all_data`](../tests/backend/test_database_migrations.py#L222); All variants (fresh, legacy-upgraded version 1) |
+| <a id="tc-435"></a>TC-435 | — | Version 1 upgrade failure rolls back the table and version, then succeeds on retry | Database / infrastructure | [`test_version_1_upgrade_failure_rolls_back_table_and_version`](../tests/backend/test_database_migrations.py#L249); All variants |
+| <a id="tc-436"></a>TC-436 | — | Startup rejects an unexpected version 1 or version 2 schema or usage relationship without changes | Database / infrastructure | [`test_startup_rejects_unexpected_version_1_or_2_schema`](../tests/backend/test_database_migrations.py#L280); All variants |
 
-| <a id="tc-459"></a>TC-459 | — | Version 2 upgrade adds only the nullable Demo marker, preserves all original values and is idempotent | Database / infrastructure | [`test_version_2_upgrade_adds_demo_marker_without_changing_existing_values`](../tests/backend/test_database_migrations.py#L337); All variants |
-| <a id="tc-460"></a>TC-460 | — | Failed version 2 Demo-marker upgrade rolls back schema, data and version | Database / infrastructure | [`test_version_2_demo_marker_upgrade_failure_rolls_back`](../tests/backend/test_database_migrations.py#L355); All variants |
+| <a id="tc-459"></a>TC-459 | — | Version 2 upgrade adds only the nullable Demo marker, preserves all original values and is idempotent | Database / infrastructure | [`test_version_2_upgrade_adds_demo_marker_without_changing_existing_values`](../tests/backend/test_database_migrations.py#L350); All variants |
+| <a id="tc-460"></a>TC-460 | — | Failed version 2 Demo-marker upgrade rolls back schema, data and version | Database / infrastructure | [`test_version_2_demo_marker_upgrade_failure_rolls_back`](../tests/backend/test_database_migrations.py#L369); All variants |
+| <a id="tc-499"></a>TC-499 | AC-024.9 | Version 3 upgrade adds empty Demo records and an empty `deleted_at`, keeps every existing value, leaves earlier Demo accounts unmarked and is idempotent | Database / infrastructure | [`test_version_3_upgrade_adds_demo_records_and_keeps_existing_accounts`](../tests/backend/test_database_migrations.py#L387); All variants |
 
 ## tests/backend/test_demo_introduction.py
 
@@ -337,13 +350,25 @@ parameter selector.
 | <a id="tc-444"></a>TC-444 | AC-024.5 | New bugs continue after the highest seeded number, and restart integrity checks accept the seeded data | API | [`test_demo_numbering_continues_after_highest_seeded_number`](../tests/backend/test_demo.py#L84); All variants |
 | <a id="tc-445"></a>TC-445 | AC-024.2, AC-024.6 | Demo owner progresses, reopens, edits and deletes seeded bugs and removes and re-adds a teammate by its generated email | API | [`test_demo_owner_uses_existing_workflows_on_seeded_data`](../tests/backend/test_demo.py#L99); All variants |
 | <a id="tc-446"></a>TC-446 | AC-024.7 | Two Demos have disjoint projects and accounts, cannot access each other, and a later Demo receives unmodified seed data | API | [`test_demo_environments_are_independent`](../tests/backend/test_demo.py#L122); All variants |
-| <a id="tc-447"></a>TC-447 | AC-024.8 | A failure while seeding the second project or creating the token returns 500 and leaves no accounts, projects, memberships or bugs; retry succeeds | API; Database | [`test_demo_creation_failure_rolls_back_everything`](../tests/backend/test_demo.py#L147); All variants (second_project, token) |
-| <a id="tc-448"></a>TC-448 | AC-024.2 | Taken aliases are skipped and a batch with too few free aliases is retried; the existing account is untouched | API | [`test_demo_retries_when_generated_email_is_taken`](../tests/backend/test_demo.py#L176); All variants |
-| <a id="tc-449"></a>TC-449 | AC-025.1, AC-025.2, AC-024.6 | Demo owners are bound by the per-account limit and share the global limit with normal accounts | API / AI (mocked provider) | [`test_demo_accounts_share_regular_ai_usage_limits`](../tests/backend/test_demo.py#L191); All variants |
-| <a id="tc-454"></a>TC-454 | — | Demo starts are limited per rolling hour (429, nothing created); a failed attempt frees its slot and starts older than an hour stop counting | API; Database | [`test_demo_creation_is_limited_per_hour`](../tests/backend/test_demo.py#L215); All variants |
-| <a id="tc-455"></a>TC-455 | — | Demo creation stops at the stored-Demo cap, counted as five four-letter `@example.com` accounts per Demo (503, nothing created), while existing Demos and registration keep working | API; Database | [`test_demo_creation_stops_at_stored_demo_cap`](../tests/backend/test_demo.py#L241); All variants |
-| <a id="tc-476"></a>TC-476 | — | A Demo refused at the cap does no password hashing and keeps its hourly slot free | API | [`test_demo_refused_at_cap_does_no_password_hashing`](../tests/backend/test_demo.py#L256); All variants |
-| <a id="tc-489"></a>TC-489 | — | `DEMO_TOTAL_LIMIT` overrides the lifetime cap; 0 switches Try Demo off and invalid or over-maximum values make it unavailable, with warning or error logs and nothing created | API; Database | [`test_demo_total_limit_setting`](../tests/backend/test_demo.py#L280); setting=2, 0, 2001, ten |
+| <a id="tc-498"></a>TC-498 | AC-024.2 | A Demo owner can add their own teammates to a project they created; another Demo's account or an ordinary account added to a Demo project, and a Demo account added to an ordinary project, get the same 404 as an unknown email and change nothing (BUG-54 regression) | API | [`test_add_member_stays_within_one_demo_or_ordinary_accounts`](../tests/backend/test_demo.py#L148); case=same_demo, other_demo, ordinary_into_demo, demo_into_ordinary |
+| <a id="tc-447"></a>TC-447 | AC-024.8 | A failure while seeding the second project or creating the token returns 500 and leaves no accounts, projects, memberships, bugs or Demo records; retry succeeds | API; Database | [`test_demo_creation_failure_rolls_back_everything`](../tests/backend/test_demo.py#L182); All variants (second_project, token) |
+| <a id="tc-448"></a>TC-448 | AC-024.2 | Taken aliases are skipped and a batch with too few free aliases is retried; the existing account is untouched | API | [`test_demo_retries_when_generated_email_is_taken`](../tests/backend/test_demo.py#L211); All variants |
+| <a id="tc-449"></a>TC-449 | AC-025.1, AC-025.2, AC-024.6 | Demo owners are bound by the per-account limit and share the global limit with normal accounts | API / AI (mocked provider) | [`test_demo_accounts_share_regular_ai_usage_limits`](../tests/backend/test_demo.py#L226); All variants |
+| <a id="tc-454"></a>TC-454 | — | Demo starts are limited per rolling hour (429, nothing created); a failed attempt frees its slot and starts older than an hour stop counting | API; Database | [`test_demo_creation_is_limited_per_hour`](../tests/backend/test_demo.py#L250); All variants |
+| <a id="tc-455"></a>TC-455 | — | Demo creation stops at the stored-Demo cap (503, nothing created), while existing Demos and registration keep working | API; Database | [`test_demo_creation_stops_at_stored_demo_cap`](../tests/backend/test_demo.py#L276); All variants |
+| <a id="tc-476"></a>TC-476 | — | A Demo refused at the cap does no password hashing and keeps its hourly slot free | API | [`test_demo_refused_at_cap_does_no_password_hashing`](../tests/backend/test_demo.py#L291); All variants |
+| <a id="tc-489"></a>TC-489 | — | `DEMO_TOTAL_LIMIT` overrides the stored-Demo cap; 0 switches Try Demo off and invalid or over-maximum values make it unavailable, with warning or error logs and nothing created | API; Database | [`test_demo_total_limit_setting`](../tests/backend/test_demo.py#L315); setting=2, 0, 2001, ten |
+
+## tests/backend/test_demo_retention.py
+
+| TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
+| --- | --- | --- | --- | --- |
+| <a id="tc-500"></a>TC-500 | AC-024.9 | A Demo records its creation time and marks exactly its five accounts; ordinary look-alike `@example.com` accounts are neither marked nor counted, and one stored Demo fills a cap of one | API; Database | [`test_demo_marks_its_accounts_and_only_stored_demos_use_capacity`](../tests/backend/test_demo_retention.py#L77); All variants |
+| <a id="tc-501"></a>TC-501 | AC-024.9 | One second before seven days nothing is deleted; at seven days the Demo's accounts, renamed and visitor-created projects, bugs, memberships and AI usage are deleted, every other row is unchanged, its token gets 401, restart checks pass and capacity is freed | API; Database | [`test_expired_demo_is_deleted_completely`](../tests/backend/test_demo_retention.py#L98); age=just_before, at_retention |
+| <a id="tc-502"></a>TC-502 | AC-024.9 | A Demo account in an ordinary project, an ordinary account in a Demo project, a Demo-authored bug in an ordinary project or a failed delete keeps that Demo and all ordinary data unchanged, logs an error without email addresses, is listed by `status`, does not stop another Demo's deletion, and is deleted by a later run once resolved | API; Database | [`test_unexpected_relationships_or_failures_keep_the_demo_whole`](../tests/backend/test_demo_retention.py#L150); fault=demo_member_of_ordinary_project, ordinary_member_of_demo_project, demo_bug_in_ordinary_project, failed_delete |
+| <a id="tc-503"></a>TC-503 | AC-024.9 | Two concurrent cleanup runs and a repeat delete each expired Demo exactly once, without failures or dangling references | Database / concurrency | [`test_concurrent_and_repeated_cleanup_deletes_each_demo_once`](../tests/backend/test_demo_retention.py#L217); All variants |
+| <a id="tc-504"></a>TC-504 | AC-024.9, AC-025.7 | Retention runs during startup, before requests, and then on its interval; a failing task is logged and stops neither the other task nor later runs | API / infrastructure | [`test_retention_runs_at_startup_and_on_interval`](../tests/backend/test_demo_retention.py#L242); All variants |
+| <a id="tc-509"></a>TC-509 | AC-024.9 | A Demo with a missing account association, or an extra one naming an ordinary account, is kept whole: nothing is deleted, including that ordinary account, and an error names the Demo and the account count. A swapped association that keeps the count at five is not covered | API; Database | [`test_demo_without_exactly_five_accounts_is_not_deleted`](../tests/backend/test_demo_retention.py#L268); change=missing_account_record, extra_account_record |
 
 ## tests/backend/test_fix_version_on_pass.py
 
@@ -761,7 +786,7 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with both seeded projects (20 and 53 bugs); each project shows its own introduction; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L17); Chromium |
+| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with both seeded projects (20 and 54 bugs); each project shows its own introduction; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L17); Chromium |
 
 ## tests/frontend/native-input.test.html
 

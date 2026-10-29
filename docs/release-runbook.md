@@ -45,10 +45,35 @@ fails with a database error: fix the mount permissions rather than changing the 
 
 - **Secrets:** never reuse a secret between environments or from an earlier deployment.
   Whenever a database is replaced, recreated or restored, rotate `JWT_SECRET_KEY` before
-  starting the service, so old tokens cannot attach to different accounts.
-- **Demo capacity:** a log line `Try Demo refused: limit … reached` means capacity is used
-  up. Raise `DEMO_TOTAL_LIMIT` (maximum 2000) or set it to `0` to switch Try Demo off.
-  Never delete Demo accounts or reset the database to recover capacity.
+  starting the service, so old tokens cannot attach to different accounts. After restoring
+  a snapshot, re-apply any account deletions in the request log made after that snapshot.
+- **Staging database:** start staging for v1.0.0 on a new database. Demos created before
+  schema version 4 have no Demo record, so they are never deleted automatically.
+- **Demo retention and capacity:** the cleanup at startup and every hour deletes each Demo
+  once it is seven days old, which frees capacity. `Try Demo refused: limit … reached` means
+  stored Demos fill the cap: wait for expiries, raise `DEMO_TOTAL_LIMIT` (maximum 2000) or set
+  it to `0` to switch Try Demo off. Never delete Demo data by hand or reset the database.
+- **Cleanup failures** are logged as `Expired Demo <id> (created …) was not deleted: <reason>`.
+  That Demo is kept whole and retried every hour. In Render Shell, `python -m app.admin status`
+  lists Demos past retention; one more than about 2 hours past needs manual resolution: take
+  a backup of the database first and investigate the logged reason. Never insert or alter
+  `demo_accounts` associations by hand, and never delete ordinary accounts' data to force
+  cleanup. Once resolved, run `python -m app.admin run-retention`.
+- **Account deletion on request:** confirm the request comes from the account's email
+  address. Set `READ_ONLY_MODE=1` on the running service in its Render environment settings
+  (the service restarts). The command checks only its own environment, so setting it just for
+  the command does not stop the application's writes. Before confirming, check that a write
+  to the application returns HTTP 503 with the maintenance message. In Render Shell, run
+  `python -m app.admin delete-account EMAIL`, review the dry run, then add `--confirm`.
+  Remove `READ_ONLY_MODE` from the service, record the request and reply
+  within one month. Owned projects are deleted; reports in other people's projects are kept
+  without attribution.
+- **Privacy-request records** stay in the privacy mailbox with only the information needed
+  to show how each request was handled. Delete them 12 months after the request is resolved,
+  unless a legal obligation or a specific dispute requires keeping them longer.
+- **Suspension and retirement:** suspending a service keeps its disk and database. To retire
+  a service permanently, delete the service and its persistent disk; Render keeps each daily
+  snapshot for 7 days after it was created.
 - **AI failures** are logged as `AI provider request failed: <type> (HTTP status <code>)`.
 
 ## 5. Smoke checklist (staging, then production)
@@ -58,6 +83,7 @@ fails with a database error: fix the mount permissions rather than changing the 
 - [ ] Try Demo opens both seeded projects; AI Assist returns suggestions (when configured).
 - [ ] A QA Analyst can leave a project.
 - [ ] Restart the service: the data created above is still there.
+- [ ] In Render Shell, `python -m app.admin status` shows the database path and runs without errors.
 - [ ] Response headers include `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`.
       Add HSTS only if Render does not already send `Strict-Transport-Security`.
 
@@ -68,7 +94,9 @@ Go when all of these hold:
 - Staging passes every smoke item.
 - No Blocker or Major defect is open, and bug report statuses in the tracker are reconciled.
 - The privacy and data-handling review is complete, and the Privacy Policy matches the
-  release, including the controller and a privacy contact.
+  release, including the controller and a privacy contact. The production service matches
+  its hosting statements: Frankfurt (EU Central) region, Hobby workspace (7-day logs) and
+  the database on the persistent disk at `/var/data`.
 - Deferred review findings have been assessed for release impact.
 - The release candidate's CI and verification evidence is recorded in the execution report.
 

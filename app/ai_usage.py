@@ -33,6 +33,17 @@ def utc_today():
     return datetime.now(timezone.utc).date().isoformat()
 
 
+def delete_old_ai_usage() -> int:
+    """Rows count only toward their own UTC day, so earlier days are deleted (AC-025.7)."""
+    conn = get_connection()
+    try:
+        deleted = conn.execute("DELETE FROM ai_requests WHERE usage_date < ?", (utc_today(),)).rowcount
+        conn.commit()
+        return deleted
+    finally:
+        conn.close()
+
+
 def reserve_ai_request(user_id: int) -> None:
     """Count one request toward today's limits, or reject it, before the provider is called.
 

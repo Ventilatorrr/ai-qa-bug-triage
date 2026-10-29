@@ -46,7 +46,7 @@ def table_counts(test_database):
     assert database.DATABASE_NAME == str(test_database)
     with closing(database.get_connection()) as connection:
         return {table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-                for table in ("users", "projects", "project_members", "bugs")}
+                for table in ("users", "projects", "project_members", "bugs", "demos", "demo_accounts")}
 
 
 # TC-443 | AC-024.1, AC-024.2, AC-024.3, AC-024.4, AC-024.5 — Demo creates the team, both projects and seeded bugs
@@ -140,6 +140,41 @@ def test_demo_environments_are_independent(test_client):
         response = test_client.get(f"/projects/{projects['E-Commerce Demo']}/bugs/1", headers=headers)
         assert response.json()["title"] == SEEDS["E-Commerce Demo"]["bugs"][0]["title"]
         assert test_client.get(f"/projects/{projects['AI QA Bug Triage']}/bugs/{last}", headers=headers).status_code == 200
+
+
+# TC-498 | AC-024.2 — Demo accounts belong only to their own Demo's projects (BUG-54)
+# Rejected: another Demo's account or an ordinary account added to a Demo project, a Demo account added to an ordinary project.
+@pytest.mark.parametrize("case", ["same_demo", "other_demo", "ordinary_into_demo", "demo_into_ordinary"])
+def test_add_member_stays_within_one_demo_or_ordinary_accounts(
+    test_client, authenticated_user_factory, project_factory, case,
+):
+    demo = start_demo(test_client)
+    genuine = demo_projects(test_client, demo)["AI QA Bug Triage"]
+    teammate = next(member for member in team_refs(test_client, demo, genuine).values() if member["role"] == "Developer")
+    if case == "same_demo":
+        headers, email = demo, teammate["email"]
+        project_id = project_factory(demo["Authorization"].removeprefix("Bearer "), name="Visitor project")["id"]
+    elif case == "other_demo":
+        headers, email = start_demo(test_client), teammate["email"]
+        project_id = demo_projects(test_client, headers)["AI QA Bug Triage"]
+    elif case == "ordinary_into_demo":
+        authenticated_user_factory(email="ordinary@example.org")
+        headers, email, project_id = demo, "ordinary@example.org", genuine
+    else:
+        ordinary = authenticated_user_factory(email="ordinary@example.org")
+        headers, email = {"Authorization": f"Bearer {ordinary['token']}"}, teammate["email"]
+        project_id = project_factory(ordinary["token"])["id"]
+    url = f"/projects/{project_id}/members"
+    before = test_client.get(url, headers=headers).json()
+    unknown = test_client.post(url, headers=headers, json={"email": "nobody@example.org", "role": "Developer"})
+    response = test_client.post(url, headers=headers, json={"email": email, "role": "Developer"})
+    if case == "same_demo":
+        assert response.status_code == 201
+    else:
+        # Same as an unknown email, so visitors cannot probe which addresses are registered.
+        assert (response.status_code, response.json()) == (unknown.status_code, unknown.json())
+        assert unknown.json() == {"detail": "User not found."}
+        assert test_client.get(url, headers=headers).json() == before
 
 
 # TC-447 | AC-024.8 — Demo creation failure rolls back every account, project, membership and bug
@@ -270,7 +305,7 @@ def test_demo_refused_at_cap_does_no_password_hashing(test_client, monkeypatch):
     assert len(demo._recent_starts) == starts
 
 
-# TC-489 | — — DEMO_TOTAL_LIMIT overrides the lifetime cap; 0 disables Try Demo and invalid values make it unavailable, with logs
+# TC-489 | — — DEMO_TOTAL_LIMIT overrides the stored-Demo cap; 0 disables Try Demo and invalid values make it unavailable, with logs
 @pytest.mark.parametrize("setting,allowed,log", [
     ("2", True, None),
     ("0", False, "Try Demo refused"),

@@ -98,8 +98,10 @@ def build_generation_input(context: "AiTriageContext") -> dict:
     field_rules["assignee_id"] = {"type": "integer", "allowed_values": sorted(context.eligible_assignee_ids)}
     return {
         "instructions": GENERATION_INSTRUCTIONS,
+        # Assignee suggestions need only member IDs and roles; email addresses stay in the application.
         "context": context.model_dump(
-            mode="json", include={"current_form", "recent_bugs", "eligible_assignees"},
+            mode="json",
+            include={"current_form": True, "recent_bugs": True, "eligible_assignees": {"__all__": {"user_id", "role"}}},
         ),
         "output_contract": {
             "field_rules": field_rules,

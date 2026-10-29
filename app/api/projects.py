@@ -381,12 +381,23 @@ def add_project_member(
             """
             SELECT id, email
             FROM users
-            WHERE email = ?
+            WHERE email = ? AND deleted_at IS NULL
             """,
             (member_email,)
         ).fetchone()
 
-        if member_user is None:
+        # Demo accounts belong only to their own Demo's projects (AC-024.2, BUG-54), so an
+        # expired Demo can be deleted whole. Refused like an unknown email, so visitors
+        # cannot probe which addresses are registered. The owner's Demo is the project's.
+        same_demo = member_user is not None and conn.execute(
+            """
+            SELECT (SELECT demo_id FROM demo_accounts WHERE user_id = ?)
+                IS (SELECT demo_id FROM demo_accounts WHERE user_id = ?)
+            """,
+            (user_id, member_user[0])
+        ).fetchone()[0]
+
+        if not same_demo:
             raise HTTPException(
                 status_code=404,
                 detail="User not found."

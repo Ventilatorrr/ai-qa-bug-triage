@@ -144,7 +144,7 @@ test("test_demo_note_appears_only_for_demo_ecommerce_project", async () => {
 test("test_login_demo_section_text_is_only_on_login", () => {
     const html = name => fs.readFileSync(path.join(__dirname, "../../frontend", name), "utf8").replace(/\s+/g, " ");
     const intro = "Explore bug tracking and AI-assisted triage with an interactive Demo. No registration required.";
-    const notice = ["Demo work won't be accessible after logout or session expiry.<br>",
+    const notice = ["Your Demo work can't be accessed after logout or session expiry.<br>",
         '<a href="/register.html">Register an account</a> to create projects you can return to later.'];
     const section = html("login.html").match(/<div class="demo-start">(.*?)<\/div>/)[1];
     assert.ok(section.indexOf(intro) < section.indexOf('id="try-demo"'));
@@ -152,6 +152,6 @@ test("test_login_demo_section_text_is_only_on_login", () => {
     assert.ok(section.indexOf('id="try-demo"') < section.indexOf(notice[0]));
     assert.ok(section.indexOf(notice[0]) < section.indexOf(notice[1]));
     for (const page of ["register.html", "projects.html", "project.html", "bugs.html"]) {
-        assert.doesNotMatch(html(page), /Demo work won't be accessible/, page);
+        assert.doesNotMatch(html(page), /Your Demo work can't be accessed/, page);
     }
 });

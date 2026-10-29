@@ -21,9 +21,15 @@ FORM_TEXT_LABELS = {
 
 
 def authorize_ai_assist(project_id, bug_number, authorization):
+    """Return the user, bug and the open read transaction that authorized them.
+
+    The context is read in the same transaction, so a project deleted and recreated
+    with the same ID cannot supply another user's reports or members.
+    """
     user_id = get_current_user_id(authorization)
     conn = get_connection()
     try:
+        conn.execute("BEGIN")
         member = conn.execute(
             "SELECT role FROM project_members WHERE project_id = ? AND user_id = ?",
             (project_id, user_id),
@@ -43,9 +49,10 @@ def authorize_ai_assist(project_id, bug_number, authorization):
             if bug[1] != "Triage":
                 raise HTTPException(status_code=409, detail="AI assistance requires a bug in Triage.")
             bug_id = bug[0]
-        return user_id, bug_id
-    finally:
+        return user_id, bug_id, conn
+    except BaseException:
         conn.close()
+        raise
 
 
 def reject_oversized_form(form):
@@ -59,10 +66,11 @@ def reject_oversized_form(form):
 
 
 def request_authorized_triage(project_id, bug_number, form, authorization):
-    user_id, bug_id = authorize_ai_assist(project_id, bug_number, authorization)
-    reject_oversized_form(form)
+    user_id, bug_id, conn = authorize_ai_assist(project_id, bug_number, authorization)
     try:
-        result = ai_triage.request_triage(project_id, bug_id, form, user_id=user_id)
+        reject_oversized_form(form)
+        # request_triage closes the connection after reading the context, before the provider call.
+        result = ai_triage.request_triage(project_id, bug_id, form, user_id=user_id, conn=conn)
         return {"outcome": result.outcome, "suggestions": result.suggestions}
     except ai_usage.AiUsageLimitReached as error:
         raise HTTPException(status_code=429, detail=str(error)) from None
@@ -70,6 +78,8 @@ def request_authorized_triage(project_id, bug_number, form, authorization):
         raise HTTPException(status_code=503, detail=str(error)) from error
     except ai_triage.AiTriageFailed as error:
         raise HTTPException(status_code=502, detail=str(error)) from None
+    finally:
+        conn.close()  # Already closed unless an earlier step failed; closing twice is harmless.
 
 
 @router.post("/projects/{project_id}/ai-assist")
