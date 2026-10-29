@@ -1484,7 +1484,7 @@ def test_add_member_does_not_report_unrelated_integrity_failure_as_conflict(
     assert after.json() == before.json()
 
 
-# TC-464 | Technical — Owner-only project changes cannot outlive deletion of the authorized project (Astra finding #1 regression)
+# TC-464 | Technical — Owner-only project changes cannot outlive deletion of the authorized project (BUG-43 regression)
 @pytest.mark.parametrize(
     ("method", "path", "body", "gap_sql"),
     [
