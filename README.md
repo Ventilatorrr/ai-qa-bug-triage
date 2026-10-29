@@ -84,7 +84,8 @@ your Python 3.14 executable.
 | --- | --- |
 | `OPENAI_API_KEY` | Enables AI Assist. Without it, AI Assist returns HTTP 503 `AI assistance is not configured yet.` and the rest of the application works normally |
 | `AI_DAILY_USER_LIMIT`, `AI_DAILY_GLOBAL_LIMIT` | Daily AI Assist limits per account and across all accounts, per UTC day (defaults 50 and 500; `0` disables AI Assist). An invalid value returns HTTP 503 for AI Assist only |
-| `DEMO_TOTAL_LIMIT` | Lifetime number of Demos (default 1,000; maximum 2,000; `0` switches Try Demo off). An invalid value makes Try Demo unavailable |
+| `DEMO_TOTAL_LIMIT` | Maximum number of stored Demos (default 1,000; maximum 2,000; `0` switches Try Demo off). Deleting expired Demos frees capacity. An invalid value makes Try Demo unavailable |
+| `READ_ONLY_MODE` | `1` refuses every request except GET and HEAD with HTTP 503; used while deleting an account. Off by default |
 | `DATABASE_NAME` | SQLite database path (default `bugtriage.db` in the working directory; use an absolute path on persistent storage when deployed) |
 
 AI Assist sends the current form, up to five recently updated reports from the
@@ -99,8 +100,15 @@ leave the form unchanged.
 with random, undisclosed passwords and name-like `@example.com` addresses, and
 the two seeded projects from `app/demo_data/`. It returns the Project Owner's
 token, and nothing is kept if any step fails. Demo creation is limited to 20
-starts per hour and to `DEMO_TOTAL_LIMIT` Demos over the application's lifetime;
-Demos are never deleted.
+starts per hour and to `DEMO_TOTAL_LIMIT` stored Demos.
+
+A cleanup at startup and then hourly deletes each Demo once it is seven days old
+(its accounts, their projects, bugs and memberships, and their AI usage records),
+one transaction per Demo, and deletes AI usage records from earlier UTC days. Operator
+commands run in Render Shell: `python -m app.admin delete-account EMAIL` (a dry run;
+`--confirm` requires `READ_ONLY_MODE=1`) deletes an ordinary account on request,
+`status` lists Demos past the retention period and `run-retention` runs the cleanup
+now. See the [release runbook](docs/release-runbook.md#4-rules).
 
 Public endpoints are bounded: request bodies over 1 MiB are rejected; project
 names and bug titles are limited to 255 characters, Affected and Fix Version to

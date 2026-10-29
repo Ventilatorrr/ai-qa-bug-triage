@@ -4,12 +4,12 @@ import sqlite3
 import pytest
 
 
-# TC-139, TC-140 | Technical — Bug update response readback after commit
+# TC-139, TC-140 | Technical — Bug update response captured inside the write transaction, before commit
 @pytest.mark.parametrize("operation", ["edit", "status"])
-@pytest.mark.parametrize("delete_before_readback", [False, True], ids=["normal", "deleted"])
-def test_bug_update_response_readback_after_commit(
+@pytest.mark.parametrize("delete_after_commit", [False, True], ids=["normal", "deleted"])
+def test_bug_update_response_captured_before_commit(
     test_client, authenticated_user_factory, project_factory, member_factory,
-    monkeypatch, operation, delete_before_readback,
+    monkeypatch, operation, delete_after_commit,
 ):
     from app import database
     from app.api import bugs
@@ -29,41 +29,38 @@ def test_bug_update_response_readback_after_commit(
     payload = {"title": "Edited report"} if operation == "edit" else {
         "status": "Open", "assignee_id": developer["user_id"],
     }
+    original = ("Original report", "Triage", None)
     expected = ("Edited report", "Triage", None) if operation == "edit" else (
         "Original report", "Open", developer["user_id"],
     )
+    durable = "SELECT title, status, assignee_id FROM bugs WHERE project_id=? AND bug_number=?"
     events = []
 
     class ReadbackConnection(sqlite3.Connection):
-        committed = False
+        def execute(self, sql, parameters=()):
+            if " ".join(sql.split()).startswith("SELECT id, project_id,"):
+                # The response is read inside the update's write transaction, before commit:
+                # this connection sees the change, while another connection does not yet.
+                assert self.in_transaction
+                assert parameters == (project["id"], before["bug_number"])
+                events.append("readback")
+                with closing(database.get_connection()) as concurrent:
+                    assert concurrent.execute(durable, parameters).fetchone() == original
+            return super().execute(sql, parameters)
 
         def commit(self):
             super().commit()
             assert not self.in_transaction
-            self.committed = True
             events.append("commit")
-
-        def execute(self, sql, parameters=()):
-            if self.committed:
-                # Intercept only the response SELECT, after the real update commit.
-                assert " ".join(sql.split()).startswith("SELECT id, project_id,")
-                assert parameters == (project["id"], before["bug_number"])
-                self.committed = False
-                events.append("readback")
-                with closing(database.get_connection()) as concurrent:
-                    # A separate connection proves the update is already durable.
-                    persisted = concurrent.execute(
-                        "SELECT title, status, assignee_id FROM bugs WHERE project_id=? AND bug_number=?",
-                        parameters,
-                    ).fetchone()
-                    assert persisted == expected
-                    if delete_before_readback:
-                        deleted = concurrent.execute(
-                            "DELETE FROM bugs WHERE project_id=? AND bug_number=?", parameters,
-                        )
-                        assert deleted.rowcount == 1
-                        concurrent.commit()
-            return super().execute(sql, parameters)
+            with closing(database.get_connection()) as concurrent:
+                # The committed change is durable and matches the captured response.
+                assert concurrent.execute(durable, (project["id"], before["bug_number"])).fetchone() == expected
+                if delete_after_commit:
+                    # The project is deleted, as Delete Project does, right after the update commits.
+                    for sql in ("DELETE FROM bugs WHERE project_id=?", "DELETE FROM project_members WHERE project_id=?",
+                                "DELETE FROM projects WHERE id=?"):
+                        concurrent.execute(sql, (project["id"],))
+                    concurrent.commit()
 
     with monkeypatch.context() as patch:
         patch.setattr(bugs, "get_connection", lambda: sqlite3.connect(
@@ -73,16 +70,16 @@ def test_bug_update_response_readback_after_commit(
             url if operation == "edit" else f"{url}/status", headers=headers, json=payload,
         )
 
-    assert events == ["commit", "readback"]
+    assert events == ["readback", "commit"]
+    # The retained response is the authorized change, whether or not the project still exists.
+    assert response.status_code == 200
+    result = response.json()
+    assert (result["title"], result["status"], result["assignee_id"]) == expected
+    for field in ["id", "project_id", "bug_number", "created_by", "created_at", "affected_version", "fix_version", "resolution"]:
+        assert result[field] == before[field]
+    assert result["updated_at"] != before["updated_at"]
     stored = test_client.get(url, headers=headers)
-    if delete_before_readback:
-        assert response.status_code == stored.status_code == 404
-        assert response.json() == stored.json() == {"detail": "Bug not found."}
+    if delete_after_commit:
+        assert (stored.status_code, stored.json()) == (404, {"detail": "Project not found."})
     else:
-        assert response.status_code == stored.status_code == 200
-        result = response.json()
-        assert stored.json() == result
-        assert (result["title"], result["status"], result["assignee_id"]) == expected
-        for field in ["id", "project_id", "bug_number", "created_at", "affected_version", "fix_version", "resolution"]:
-            assert result[field] == before[field]
-        assert result["updated_at"] != before["updated_at"]
+        assert stored.status_code == 200 and stored.json() == result

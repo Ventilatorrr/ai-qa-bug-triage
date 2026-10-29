@@ -59,7 +59,7 @@ def test_application_lifespan_initializes_schema_before_requests(tmp_path):
                     tables = {row[0] for row in connection.execute(
                         "SELECT name FROM sqlite_master WHERE type = 'table'"
                     )}
-                assert tables == {"users", "projects", "project_members", "bugs", "ai_requests"}
+                assert tables == {"users", "projects", "project_members", "bugs", "ai_requests", "demos", "demo_accounts"}
                 response = client.post("/register", json={
                     "email": "lifecycle@example.com", "password": "Password1"
                 })

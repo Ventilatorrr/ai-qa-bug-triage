@@ -90,7 +90,7 @@ def test_evaluation_offline_records_production_contracts(monkeypatch):
         assert request["text"]["format"]["strict"] is True
         assert request["text"]["format"]["schema"] == record["generation_input"]["output_contract"]["schema"]
         assert request["instructions"].startswith(record["generation_input"]["instructions"])
-        assert json.loads(request["input"][0]["content"]) == scenario["context"]
+        assert json.loads(request["input"][0]["content"]) == provider_context(scenario["context"])
         assert record["provider"]["output_text"] == json.dumps(record["decoded_response"])
         assert record["provider"]["usage"]["input_tokens"] == 1200
         assert record["execution"] == "completed"
@@ -303,7 +303,7 @@ def test_quality_scenarios_preserve_schema_identity_and_baseline():
         for case in cases:
             context = AiTriageContext.model_validate(case["context"])
             generation = build_generation_input(context)
-            assert generation["context"] == case["context"]
+            assert generation["context"] == provider_context(case["context"])
             assert len(context.recent_bugs) <= 5
             assert set(generation["context"]) == {"current_form", "recent_bugs", "eligible_assignees"}
             assert case["review"] not in json.dumps(generation)
@@ -407,7 +407,7 @@ def test_quality_offline_batches_record_production_requests_and_unique_execution
     assert execution_ids == [item["execution_id"] for item in report["execution_plan"]]
     for request, attempt, scenario in zip(requests, report["attempts"], report["scenarios"], strict=True):
         assert request == attempt["request"]
-        assert json.loads(request["input"][0]["content"]) == scenario["context"]
+        assert json.loads(request["input"][0]["content"]) == provider_context(scenario["context"])
         assert request["instructions"].startswith(attempt["generation_input"]["instructions"])
         assert request["store"] is False and request["text"]["format"]["strict"] is True
         assert attempt["client_config"] == {"timeout_seconds": 60.0, "max_retries": 0}
@@ -661,3 +661,10 @@ def test_evaluation_default_request_matches_production_adapter(monkeypatch):
 
 
 # TC-385 retired: --explicit-medium was removed; the default already sends Medium Fast.
+
+
+def provider_context(context):
+    """The scenario context as sent to the provider: member email addresses are never transmitted."""
+    return context | {"eligible_assignees": [
+        {"user_id": member["user_id"], "role": member["role"]} for member in context["eligible_assignees"]
+    ]}

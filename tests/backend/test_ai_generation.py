@@ -44,7 +44,7 @@ def test_ai_generation_preserves_separate_context_without_mutation(generation_co
     monkeypatch.setattr(ai_context, "get_connection", unexpected)
     before = generation_context.model_dump(mode="json")
     result = build_generation_input(generation_context)
-    assert result["context"] == before
+    assert result["context"] == generation_context.model_dump(mode="json", exclude={"eligible_assignees": {"__all__": {"email"}}})
     assert set(result["context"]) == {"current_form", "recent_bugs", "eligible_assignees"}
     assert result["context"]["current_form"]["environment"] == ""
     assert result["context"]["recent_bugs"][0]["environment"] == "Historical environment"
@@ -54,7 +54,7 @@ def test_ai_generation_preserves_separate_context_without_mutation(generation_co
     assert json.loads(json.dumps(result, ensure_ascii=False)) == result
     result["context"]["current_form"]["title"] = "Changed output"
     result["context"]["recent_bugs"][0]["title"] = "Changed history output"
-    result["context"]["eligible_assignees"][0]["email"] = "Changed output"
+    result["context"]["eligible_assignees"][0]["role"] = "Changed output"
     assert generation_context.model_dump(mode="json") == before
 
 
@@ -105,7 +105,7 @@ def test_ai_generation_limits_assignees_to_supplied_eligible_context(generation_
     if empty:
         generation_context.eligible_assignees = []
     result = build_generation_input(generation_context)
-    assert result["context"]["eligible_assignees"] == [member.model_dump() for member in generation_context.eligible_assignees]
+    assert result["context"]["eligible_assignees"] == [member.model_dump(exclude={"email"}) for member in generation_context.eligible_assignees]
     assert result["output_contract"]["field_rules"]["assignee_id"] == {
         "type": "integer", "allowed_values": [] if empty else [7, 8],
     }
@@ -194,8 +194,8 @@ def test_ai_generation_does_not_introduce_account_information_or_secrets(generat
     result = build_generation_input(generation_context)
     assert set(result) == {"instructions", "context", "output_contract"}
     assert set(result["context"]["current_form"]) == set(AiAssistRequest.model_fields)
-    assert all(set(member) == {"user_id", "email", "role"} for member in result["context"]["eligible_assignees"])
+    assert all(set(member) == {"user_id", "role"} for member in result["context"]["eligible_assignees"])
     assert all(set(bug) == {"id", "bug_number"} | set(AiAssistRequest.model_fields) for bug in result["context"]["recent_bugs"])
     serialized = json.dumps(result)
-    for value in secrets.values():
+    for value in [*secrets.values(), *(member.email for member in generation_context.eligible_assignees)]:
         assert value not in serialized

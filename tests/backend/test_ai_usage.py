@@ -323,3 +323,29 @@ def test_ai_usage_concurrent_reservations_cannot_exceed_limits(
     assert sorted(outcomes) == ["counted"] * 3 + ["rejected"] * (attempts - 3)
     with closing(database.get_connection()) as connection:
         assert connection.execute("SELECT COUNT(*) FROM ai_requests").fetchone() == (3,)
+
+
+# TC-505 | AC-025.7 — Usage records from earlier UTC days are deleted; today's records still count
+def test_earlier_day_usage_records_are_deleted(test_client, test_database, ai_project, blank_form, offline_provider, monkeypatch):
+    from app import ai_usage, database
+
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 27, 0, 0, tzinfo=timezone.utc).astimezone(tz)
+
+    monkeypatch.setattr(ai_usage, "datetime", FrozenDatetime)
+    monkeypatch.setenv("AI_DAILY_USER_LIMIT", "2")
+    owner = ai_project[0]
+    assert database.DATABASE_NAME == str(test_database)
+    with closing(database.get_connection()) as connection:
+        connection.executemany(
+            "INSERT INTO ai_requests (user_id, usage_date) VALUES (?, ?)",
+            [(owner["user_id"], day) for day in ("2026-10-25", "2026-10-26", "2026-10-27")],
+        )
+        connection.commit()
+    assert ai_usage.delete_old_ai_usage() == 2
+    with closing(database.get_connection()) as connection:
+        assert connection.execute("SELECT usage_date FROM ai_requests").fetchall() == [("2026-10-27",)]
+    assert ai_request(test_client, ai_project, owner, blank_form).status_code == 200
+    assert ai_request(test_client, ai_project, owner, blank_form).status_code == 429

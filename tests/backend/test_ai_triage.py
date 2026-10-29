@@ -506,3 +506,27 @@ def test_ai_provider_failures_are_logged_without_content(
     assert logged in caplog.text
     for private_text in ("integration-test-key", "Private current draft", "sensitive provider error"):
         assert private_text not in caplog.text
+
+
+# TC-512 | AC-022.2, AC-019.3 — AI triage sends eligible members' IDs and roles, never their email addresses
+@pytest.mark.parametrize("edit", [False, True])
+def test_ai_triage_omits_member_emails_from_provider_request(
+    test_client, ai_project, blank_form, offline_provider, authenticated_user_factory, member_factory, edit,
+):
+    owner, developer, project, _, base = ai_project
+    qa = authenticated_user_factory(email="qa-member@example.com")
+    member_factory(owner["token"], project["id"], qa["user"]["email"], "QA Analyst")
+    offline_provider["raw"] = {"suggestions": [{"field": "assignee_id", "value": qa["user_id"]}]}
+    response = test_client.post(request_url(ai_project, edit), headers=headers(owner), json=blank_form)
+    assert response.status_code == 200
+    assert response.json() == {"outcome": "suggestions", "suggestions": {"assignee_id": qa["user_id"]}}
+    sent = offline_provider["requests"][0]
+    assert json.loads(sent["input"][0]["content"])["eligible_assignees"] == sorted([
+        {"user_id": developer["user_id"], "role": "Developer"},
+        {"user_id": qa["user_id"], "role": "QA Analyst"},
+    ], key=lambda member: member["user_id"])
+    for email in ("owner@example.com", "developer@example.com", "qa-member@example.com"):
+        assert email not in json.dumps(sent)
+    # The application still shows member email addresses to project members.
+    members = test_client.get(f"{base}/members", headers=headers(owner)).json()
+    assert {"developer@example.com", "qa-member@example.com"} <= {member["email"] for member in members}

@@ -17,6 +17,8 @@ from app.schemas import UserCreate, UserLogin
 router = APIRouter(tags=["Authentication"])
 
 ALGORITHM = "HS256"
+# There is no refresh, so a session cannot outlast the token.
+TOKEN_LIFETIME = timedelta(hours=8)
 
 # bcrypt work is deliberately slow. Bound it process-wide so floods of public
 # register, login or Try Demo requests cannot exhaust CPU and worker threads;
@@ -66,7 +68,7 @@ def verify_password(password, password_hash):
 
 
 def create_access_token(user_id):
-    expiration = datetime.now(timezone.utc) + timedelta(hours=8)
+    expiration = datetime.now(timezone.utc) + TOKEN_LIFETIME
     payload = {
         "user_id": user_id,
         "exp": expiration
@@ -113,8 +115,8 @@ def get_current_user_id(authorization: str | None) -> int:
     payload = verify_access_token(token)
     user_id = payload.get("user_id")
 
-    # A valid signature is not enough: the account must still exist, otherwise
-    # writes would create rows that fail the startup integrity check (BUG-48).
+    # A valid signature is not enough: the account must still exist and not be deleted,
+    # otherwise writes would create rows that fail the startup integrity check (BUG-48).
     if type(user_id) is not int or not _user_exists(user_id):
         raise HTTPException(
             status_code=401,
@@ -129,7 +131,7 @@ def _user_exists(user_id):
 
     try:
         return conn.execute(
-            "SELECT 1 FROM users WHERE id = ?",
+            "SELECT 1 FROM users WHERE id = ? AND deleted_at IS NULL",
             (user_id,)
         ).fetchone() is not None
 
@@ -177,7 +179,7 @@ def login(user: UserLogin):
 
     try:
         row = conn.execute(
-            "SELECT id, password_hash FROM users WHERE email = ?",
+            "SELECT id, password_hash FROM users WHERE email = ? AND deleted_at IS NULL",
             (user.email,)
         ).fetchone()
 

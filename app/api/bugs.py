@@ -465,8 +465,8 @@ def update_bug(
             values
         )
 
-        conn.commit()
-
+        # Read the response while the write lock is held: after commit, a concurrent
+        # Delete Project could let another project reuse these numbers.
         updated_bug = _fetch_bug(conn, project_id, bug_number)
 
         if updated_bug is None:
@@ -474,6 +474,8 @@ def update_bug(
                 status_code=404,
                 detail="Bug not found."
             )
+
+        conn.commit()
 
     except BaseException:
         conn.rollback()
@@ -930,8 +932,7 @@ def update_bug_status(
             )
         )
 
-        conn.commit()
-
+        # Read the response while the write lock is held, as Edit Bug does.
         updated_bug = _fetch_bug(conn, project_id, bug_number)
 
         if updated_bug is None:
@@ -939,6 +940,8 @@ def update_bug_status(
                 status_code=404,
                 detail="Bug not found."
             )
+
+        conn.commit()
 
     except BaseException:
         conn.rollback()

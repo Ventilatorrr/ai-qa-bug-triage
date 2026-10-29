@@ -45,8 +45,11 @@ class AiTriageContext(BaseModel):
         return {member.user_id for member in self.eligible_assignees}
 
 
-def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequest) -> AiTriageContext:
+def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequest, conn=None) -> AiTriageContext:
     """Call after authorization. History supports, never fills, the submitted form.
+
+    Pass the connection whose read transaction authorized the request, so every read
+    sees the same project even if it is deleted and its ID reused meanwhile.
 
     Retrieve at most five recent same-project bugs, excluding the edited bug.
     History includes suggestion-supported fields, a database ID and a project-local bug number.
@@ -55,7 +58,8 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
     Long historical text is shortened; the submitted form is never shortened.
     """
     fields = tuple(HistoricalBugContext.model_fields)
-    conn = get_connection()
+    owned = conn is None
+    conn = get_connection() if owned else conn
     try:
         bug_rows = conn.execute(
             f"""
@@ -66,15 +70,17 @@ def build_triage_context(project_id: int, bug_id: int | None, form: AiAssistRequ
             """,
             (project_id, bug_id, bug_id, RECENT_BUG_LIMIT),
         ).fetchall()
+        eligible_assignees = load_eligible_assignees(project_id, conn)
     finally:
-        conn.close()
+        if owned:
+            conn.close()
     return AiTriageContext(
         current_form=form.model_copy(deep=True),
         recent_bugs=[
             HistoricalBugContext(**{field: _shorten_history(value) for field, value in zip(fields, row)})
             for row in bug_rows
         ],
-        eligible_assignees=load_eligible_assignees(project_id),
+        eligible_assignees=eligible_assignees,
     )
 
 
@@ -84,9 +90,10 @@ def _shorten_history(value):
     return value
 
 
-def load_eligible_assignees(project_id: int) -> list[AssignableMemberContext]:
+def load_eligible_assignees(project_id: int, conn=None) -> list[AssignableMemberContext]:
     """Read current same-project assignment eligibility without changing data."""
-    conn = get_connection()
+    owned = conn is None
+    conn = get_connection() if owned else conn
     try:
         member_rows = conn.execute(
             """
@@ -99,7 +106,8 @@ def load_eligible_assignees(project_id: int) -> list[AssignableMemberContext]:
             (project_id,),
         ).fetchall()
     finally:
-        conn.close()
+        if owned:
+            conn.close()
     return [
         AssignableMemberContext(user_id=user_id, email=email, role=role)
         for user_id, email, role in member_rows

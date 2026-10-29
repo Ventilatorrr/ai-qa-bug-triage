@@ -1,3 +1,5 @@
+import os
+
 from fastapi import HTTPException
 from starlette.responses import JSONResponse
 
@@ -59,6 +61,31 @@ class RequestBodyLimit:
     async def _reject(scope, receive, send):
         response = JSONResponse({"detail": TOO_LARGE_MESSAGE}, status_code=413)
         await response(scope, receive, send)
+
+
+READ_ONLY_MESSAGE = "The application is temporarily read-only for maintenance. Please try again shortly."
+
+
+def read_only_mode():
+    # Read per request, like the AI limits; only "1" turns it on.
+    return (os.getenv("READ_ONLY_MODE") or "").strip() == "1"
+
+
+class ReadOnlyMode:
+    """While READ_ONLY_MODE=1, refuse every request that could write, before any handler runs.
+
+    Manual account deletion runs only in this mode, so no request can write concurrently (AC-026.3).
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] not in ("GET", "HEAD") and read_only_mode():
+            response = JSONResponse({"detail": READ_ONLY_MESSAGE}, status_code=503)
+            await response(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
 
 
 SECURITY_HEADERS = [

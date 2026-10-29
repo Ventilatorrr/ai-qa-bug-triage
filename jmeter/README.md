@@ -170,5 +170,5 @@ results, JTL files and local property files are ignored. Never delete
 
 ## Execution evidence
 
-Recorded results, including earlier user-run measurements, are in
+Recorded results, including earlier manual measurements, are in
 [test execution](../docs/test-execution.md#jmeter-finalization--21-october-2026).

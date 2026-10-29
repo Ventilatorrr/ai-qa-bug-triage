@@ -64,6 +64,13 @@ def snapshot(database):
         return connection.execute("PRAGMA user_version").fetchone()[0], tuple(connection.iterdump())
 
 
+def drop_version_4(connection):
+    """Remove the version-4 objects, to derive an earlier schema from the current one."""
+    connection.execute("DROP TABLE demo_accounts")
+    connection.execute("DROP TABLE demos")
+    connection.execute("ALTER TABLE users DROP COLUMN deleted_at")
+
+
 # TC-145 | Technical — Fresh database creates numbering schema
 def test_fresh_database_creates_numbering_schema(database):
     database.create_tables()
@@ -82,14 +89,16 @@ def test_legacy_backfill_preserves_every_field_and_is_idempotent(database, appen
     legacy_database(database, appended)
     with closing(database.get_connection()) as connection:
         before = connection.execute(f"SELECT {', '.join(BUG_COLUMNS)} FROM bugs ORDER BY id").fetchall()
-        unrelated = {table: connection.execute(f"SELECT * FROM {table}").fetchall() for table in ("users", "project_members")}
+        # Legacy columns only: version 4 adds an empty users.deleted_at.
+        queries = ("SELECT id, email, password_hash FROM users", "SELECT * FROM project_members")
+        unrelated = {query: connection.execute(query).fetchall() for query in queries}
     database.create_tables()
     with closing(database.get_connection()) as connection:
         assert connection.execute(f"SELECT {', '.join(BUG_COLUMNS)} FROM bugs ORDER BY id").fetchall() == before
         assert connection.execute("SELECT id,project_id,bug_number FROM bugs ORDER BY id").fetchall() == [(2, 1, 1), (7, 2, 1), (11, 1, 2), (40, 2, 2)]
         assert connection.execute("SELECT id,next_bug_number FROM projects ORDER BY id").fetchall() == [(1, 3), (2, 3), (3, 1)]
-        for table, values in unrelated.items():
-            assert connection.execute(f"SELECT * FROM {table}").fetchall() == values
+        for query, values in unrelated.items():
+            assert connection.execute(query).fetchall() == values
         assert connection.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
         assert connection.execute("SELECT COUNT(*) FROM ai_requests").fetchone() == (0,)
         assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
@@ -124,7 +133,7 @@ def test_migration_failure_rolls_back_schema_data_and_version(database, monkeypa
             assert self.execute(f"SELECT {', '.join(BUG_COLUMNS)} FROM bugs ORDER BY id").fetchall() == original_rows
             assert self.execute("SELECT id,project_id,bug_number FROM bugs ORDER BY id").fetchall() == [(2, 1, 1), (7, 2, 1), (11, 1, 2), (40, 2, 2)]
             assert self.execute("SELECT id,next_bug_number FROM projects ORDER BY id").fetchall() == [(1, 3), (2, 3), (3, 1)]
-            assert self.execute("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").fetchall() == [("ai_requests",), ("bugs",), ("project_members",), ("projects",), ("users",)]
+            assert self.execute("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").fetchall() == [("ai_requests",), ("bugs",), ("demo_accounts",), ("demos",), ("project_members",), ("projects",), ("users",)]
             reached.append("before-commit")
             raise sqlite3.OperationalError("Injected migration commit failure")
 
@@ -191,6 +200,7 @@ def version_1_database(database, origin):
         legacy_database(database)
     database.create_tables()
     with closing(database.get_connection()) as connection:
+        drop_version_4(connection)
         connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
         if origin == "fresh":
             connection.executemany("INSERT INTO users VALUES(?,?,?)", [(1, "owner@example.com", "hash"), (2, "qa@example.com", "hash")])
@@ -220,6 +230,7 @@ def test_version_1_upgrade_adds_usage_table_and_preserves_all_data(database, ori
     with closing(database.get_connection()) as connection:
         assert connection.execute("SELECT DISTINCT demo_kind FROM projects").fetchall() == [(None,)]
         connection.execute("BEGIN")
+        drop_version_4(connection)
         connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
         original_tables = tuple(connection.iterdump())
         connection.rollback()
@@ -273,6 +284,7 @@ def test_startup_rejects_unexpected_version_1_or_2_schema(database, version, mut
         legacy_database(database)
         database.create_tables()
         with closing(database.get_connection()) as connection:
+            drop_version_4(connection)
             connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
             connection.execute("PRAGMA user_version=2")
             connection.commit()
@@ -328,6 +340,7 @@ def version_2_database(database):
     legacy_database(database)
     database.create_tables()
     with closing(database.get_connection()) as connection:
+        drop_version_4(connection)
         connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
         connection.execute("PRAGMA user_version=2")
         connection.commit()
@@ -339,9 +352,10 @@ def test_version_2_upgrade_adds_demo_marker_without_changing_existing_values(dat
     _, before = snapshot(database)
     database.create_tables()
     with closing(database.get_connection()) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (3,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
         assert connection.execute("SELECT DISTINCT demo_kind FROM projects").fetchall() == [(None,)]
         connection.execute("BEGIN")
+        drop_version_4(connection)
         connection.execute("ALTER TABLE projects DROP COLUMN demo_kind")
         old_values = tuple(connection.iterdump())
         connection.rollback()
@@ -358,7 +372,7 @@ def test_version_2_demo_marker_upgrade_failure_rolls_back(database, monkeypatch)
 
     class FailingConnection(sqlite3.Connection):
         def commit(self):
-            assert self.execute("PRAGMA user_version").fetchone() == (3,)
+            assert self.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
             assert self.execute("SELECT DISTINCT demo_kind FROM projects").fetchall() == [(None,)]
             raise sqlite3.OperationalError("Synthetic marker migration failure")
 
@@ -367,3 +381,29 @@ def test_version_2_demo_marker_upgrade_failure_rolls_back(database, monkeypatch)
         with pytest.raises(sqlite3.OperationalError, match="Synthetic marker"):
             database.create_tables()
     assert snapshot(database) == before
+
+
+# TC-499 | AC-024.9 — Version 3 upgrade adds empty Demo records, keeps every value and leaves earlier accounts active and unmarked
+def test_version_3_upgrade_adds_demo_records_and_keeps_existing_accounts(database):
+    legacy_database(database)
+    database.create_tables()
+    with closing(database.get_connection()) as connection:
+        drop_version_4(connection)
+        connection.execute("UPDATE projects SET demo_kind='ecommerce' WHERE id=1")  # A Demo created by version 3.
+        connection.execute("PRAGMA user_version=3")
+        connection.commit()
+    _, before = snapshot(database)
+    database.create_tables()
+    with closing(database.get_connection()) as connection:
+        assert connection.execute("PRAGMA user_version").fetchone() == (database.SCHEMA_VERSION,)
+        assert connection.execute("SELECT COUNT(*) FROM demos").fetchone() == (0,)
+        assert connection.execute("SELECT COUNT(*) FROM demo_accounts").fetchone() == (0,)
+        assert connection.execute("SELECT DISTINCT deleted_at FROM users").fetchall() == [(None,)]
+        connection.execute("BEGIN")
+        drop_version_4(connection)
+        old_values = tuple(connection.iterdump())
+        connection.rollback()
+    assert old_values == before
+    upgraded = snapshot(database)
+    database.create_tables()
+    assert snapshot(database) == upgraded

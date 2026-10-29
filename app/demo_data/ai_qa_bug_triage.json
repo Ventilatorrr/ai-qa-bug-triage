@@ -1,10 +1,10 @@
 {
   "project": "AI QA Bug Triage",
   "snapshot": {
-    "exported_at": "2026-10-29T12:17:53+00:00",
+    "exported_at": "2026-10-29T16:08:55+00:00",
     "source": "Read-only export of local tracker; account emails redacted and content reviewed for Demo",
     "schema_version": 1,
-    "bug_count": 53
+    "bug_count": 54
   },
   "team": {
     "owner": "Project Owner",
@@ -1020,6 +1020,25 @@
       "created_by": "owner",
       "created_at": "2026-10-28T17:40:58.811959+00:00",
       "updated_at": "2026-10-29T12:17:04.091371+00:00"
+    },
+    {
+      "number": 54,
+      "title": "Add Member allows membership across Demo and ordinary account boundaries",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, FastAPI TestClient, SQLite",
+      "description": "The Add Member API allows users from different Demo sessions and ordinary registered accounts to be added to each other's projects, violating the Demo membership isolation requirement (AC-024.2).",
+      "steps_to_reproduce": "1. Create two separate Demo accounts (A and B).\n2. Register an ordinary account and create a project.\n3. As Demo A's owner, use the Add Member API to add a teammate from Demo B to a project in Demo A.\n4. Using the same API, add the ordinary registered account to a project in Demo A.\n5. As the ordinary project's owner, add an account from Demo A to the ordinary project.",
+      "expected_result": "The API rejects membership additions across Demo boundaries with 404 \"User not found.\" and creates no memberships. Membership additions within the same Demo and between ordinary accounts remain permitted.",
+      "actual_result": "The API returns 201 Created and adds the requested accounts as project members in all three cross-boundary scenarios.\n\nThe defect is confirmed by backend regression test TC-498 against the existing implementation.",
+      "severity": "Major",
+      "priority": "High",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-29T13:34:29.730189+00:00",
+      "updated_at": "2026-10-29T15:57:52.072102+00:00"
     }
   ]
 }

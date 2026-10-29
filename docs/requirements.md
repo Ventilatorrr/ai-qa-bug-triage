@@ -905,7 +905,7 @@ As a visitor, I want to try the application without registering so that I can ev
 - Each Demo creates five normal user accounts: the visitor's Project Owner account, two QA Analysts (QA1 and QA2), and two Developers (Dev1 and Dev2).
 - All five accounts are members of both seeded projects with those roles.
 - Each account has a short, unique, name-like generated email address at the reserved `example.com` domain that is valid under the existing email rules and displays without truncation in the Bug List. Roles are determined by project membership, not by the address.
-- Teammate credentials are randomly generated and never exposed. Accounts are not shared between Demos, and teammates belong only to their own Demo's projects.
+- Teammate credentials are randomly generated and never exposed. Demo accounts may only belong to projects within their own Demo. Accounts from other Demos or ordinary registered accounts cannot be added to those projects, and Demo accounts cannot be added to ordinary projects.
 
 #### AC-024.3 — E-Commerce Demo
 
@@ -948,6 +948,14 @@ As a visitor, I want to try the application without registering so that I can ev
 
 - If Demo creation fails at any point, no accounts, projects, memberships, or bugs from that attempt remain.
 - The visitor is not signed in, sees a clear error, and can try again.
+
+#### AC-024.9 — Demo Retention
+
+- Each Demo has a server-owned record of its creation time and its five accounts. Demo accounts are never identified by their email addresses.
+- A Demo is deleted by the first cleanup run after it is seven days old: its accounts, the projects they own (including renamed and newly created ones) with their bugs and memberships, and the accounts' AI usage records. Cleanup runs when the application starts and hourly while it runs. The seed dataset is unchanged.
+- Each Demo is deleted in one transaction, completely or not at all. Cleanup never deletes or changes ordinary accounts or their data.
+- If a Demo does not have exactly five account records, has relationships outside the Demo, or its deletion fails, nothing of it is deleted. The failure is logged as an error without personal data and retried on every run, and the operator can list stored Demos past the retention period.
+- The Demo limit counts stored Demos, so deleting an expired Demo frees capacity.
 
 ---
 
@@ -997,5 +1005,42 @@ As the application owner, I want AI usage to be limited so that provider costs r
 - Current-form input exceeding the application's maximum AI input size is rejected with a clear error before the AI provider is invoked and is not counted.
 - Historical project context is limited as defined in AC-022.2, and long historical text is shortened before it is sent.
 - Each provider request sets a maximum output size. A response truncated by that limit is handled as a failed request under AC-023.1.
+
+#### AC-025.7 — Usage Record Retention
+
+- Usage records count only toward their own UTC day. Records from earlier UTC days are deleted by the first cleanup run after the day ends; cleanup runs at startup and hourly.
+- Deleting a Demo or an account also deletes its usage records.
+
+---
+
+## Data Retention and Account Deletion
+
+### REQ-026 — Account Deletion on Request
+
+The system shall let the operator delete an ordinary account and its personal data on a verified request, without a self-service interface.
+
+### US-026 — Delete My Account
+
+As a registered user, I want my account and personal data deleted on request so that the application does not keep them longer than necessary.
+
+### Acceptance Criteria
+
+#### AC-026.1 — Deletion Scope
+
+- Projects the account owns are deleted with their bugs and memberships.
+- In other projects, the account's memberships end and its assignments are cleared; those bugs change only their Last Updated.
+- Bugs the account created in other projects are kept without attribution.
+- The account's AI usage records are deleted.
+
+#### AC-026.2 — Deleted Account
+
+- Only a placeholder row without the email address or password remains, so the account ID is never reused.
+- The account's existing tokens are rejected and it cannot log in. Its email address can be registered again as a new account.
+
+#### AC-026.3 — Safe Operation
+
+- Deletion is an operator command. A dry run changes nothing and lists what would be deleted or kept.
+- Confirmed deletion runs only while the application is in read-only maintenance mode, which refuses every write request with `503`.
+- Deletion is one transaction. The command refuses Demo accounts, unknown or already deleted accounts, a missing database and an unexpected schema version, and changes nothing when it refuses or fails.
 
 ---

@@ -28,9 +28,17 @@ def create_openai_client(api_key: str):
     return OpenAI(api_key=api_key, timeout=60.0, max_retries=0)
 
 
-def request_triage(project_id: int, bug_id: int | None, form: AiAssistRequest, *, user_id: int) -> SuggestionResult:
-    """Build permitted context only after request authorization has succeeded."""
-    context = build_triage_context(project_id, bug_id, form)
+def request_triage(project_id: int, bug_id: int | None, form: AiAssistRequest, *, user_id: int, conn=None) -> SuggestionResult:
+    """Build permitted context only after request authorization has succeeded.
+
+    `conn` is the authorizing read transaction; it is closed once the context is read,
+    so no database transaction stays open during the provider call.
+    """
+    try:
+        context = build_triage_context(project_id, bug_id, form, conn)
+    finally:
+        if conn is not None:
+            conn.close()
     return request_suggestions(context, project_id=project_id, user_id=user_id)
 
 
@@ -58,10 +66,12 @@ def request_suggestions(context: AiTriageContext, *, project_id: int, user_id: i
         )
         raise AiTriageFailed("AI assistance could not generate suggestions. Please try again.") from None
     # Membership can change while generation runs. Keep the provider's snapshot,
-    # but validate its output against current eligibility from the same project.
-    validation_context = context.model_copy(
-        update={"eligible_assignees": load_eligible_assignees(project_id)}
-    )
+    # but validate its output against members who are still eligible now. Only members
+    # of the authorized snapshot count, so a project that reuses the ID adds none.
+    validation_context = context.model_copy(update={"eligible_assignees": [
+        member for member in load_eligible_assignees(project_id)
+        if member.user_id in context.eligible_assignee_ids
+    ]})
     try:
         return process_provider_response(validation_context, raw_response)
     except MalformedSuggestionResponse:

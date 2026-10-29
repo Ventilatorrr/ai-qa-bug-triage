@@ -1,10 +1,12 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.database import create_tables
-from app.middleware import RequestBodyLimit, SecurityHeaders
+from app.middleware import ReadOnlyMode, RequestBodyLimit, SecurityHeaders
+from app.retention import retention_loop, run_retention
 from app.api.auth import _get_secret_key, router as auth_router
 from app.api.projects import router as projects_router
 from app.api.bugs import router as bugs_router
@@ -18,10 +20,19 @@ async def lifespan(app: FastAPI):
     # Fail at startup, not on the first login, when the signing secret is missing.
     _get_secret_key()
     create_tables()
-    yield
+    # Delete whatever expired while the service was stopped, then keep checking hourly.
+    await asyncio.to_thread(run_retention)
+    retention = asyncio.create_task(retention_loop())
+    try:
+        yield
+    finally:
+        retention.cancel()
+        with suppress(asyncio.CancelledError):
+            await retention
 
 
 app = FastAPI(version=APP_VERSION, lifespan=lifespan)
+app.add_middleware(ReadOnlyMode)
 app.add_middleware(RequestBodyLimit)
 app.add_middleware(SecurityHeaders)
 

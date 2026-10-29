@@ -1,5 +1,6 @@
 from collections import deque
 from contextlib import closing
+from datetime import datetime, timedelta, timezone
 import json
 import logging
 import os
@@ -11,7 +12,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.auth import PasswordWorkBusy, create_access_token, hash_password
+from app.api.auth import TOKEN_LIFETIME, PasswordWorkBusy, create_access_token, hash_password
 from app.database import get_connection
 
 
@@ -45,18 +46,19 @@ SEEDED_FIELDS = (
     "created_at", "updated_at",
 )
 
-# Lightweight protection for the public endpoint, without IP tracking or new tables:
-# a process-wide limit on Demos started per hour and a lifetime cap on created Demos.
+# Lightweight protection for the public endpoint, without IP tracking:
+# a process-wide limit on Demos started per hour and a cap on stored Demos.
 DEMO_HOURLY_LIMIT = 20
-# Default lifetime cap. The DEMO_TOTAL_LIMIT environment setting overrides it per request;
-# 0 disables Try Demo. Demos are never deleted, so accounts only accumulate, and the
-# ~12,800 generated addresses (five per Demo) make 2,000 the practical maximum.
+# Default cap on stored Demos. The DEMO_TOTAL_LIMIT environment setting overrides it per request;
+# 0 disables Try Demo. Deleting expired Demos frees capacity, and the ~12,800 generated
+# addresses (five per stored Demo) make 2,000 the practical maximum.
 DEMO_TOTAL_LIMIT = 1000
 DEMO_TOTAL_LIMIT_MAX = 2000
-# Created Demos are counted conservatively as five accounts each among all four-letter
-# @example.com addresses. Ordinary accounts with such an address also count toward the cap.
-DEMO_ACCOUNT_EMAILS = "[a-z][a-z][a-z][a-z]@example.com"  # Case-sensitive SQL GLOB pattern.
 DEMO_CAPACITY_MESSAGE = "The Demo is currently unavailable. Please register an account instead."
+# Everything a Demo created is deleted by the first cleanup run after this age (AC-024.9).
+# It outlasts any token, so a deleted Demo has no valid session and reused IDs are safe.
+DEMO_RETENTION = timedelta(days=7)
+assert DEMO_RETENTION > TOKEN_LIFETIME
 _recent_starts = deque()
 _recent_starts_lock = threading.Lock()
 
@@ -65,6 +67,10 @@ class DemoUnavailable(Exception):
     def __init__(self, status_code, message):
         super().__init__(message)
         self.status_code = status_code
+
+
+class DemoNotDeleted(Exception):
+    """An expired Demo has unexpected relationships, so nothing of it was deleted."""
 
 
 def load_seeds():
@@ -115,11 +121,11 @@ def configured_demo_limit():
 
 
 def demo_capacity_reached(conn, limit):
-    accounts = conn.execute("SELECT COUNT(*) FROM users WHERE email GLOB ?", (DEMO_ACCOUNT_EMAILS,)).fetchone()[0]
-    if accounts < limit * len(TEAM_REFS):
+    stored = conn.execute("SELECT COUNT(*) FROM demos").fetchone()[0]
+    if stored < limit:
         return False
-    # Operators watch for this: capacity is only recovered by raising DEMO_TOTAL_LIMIT.
-    logger.warning("Try Demo refused: limit %d reached (%d matching accounts).", limit, accounts)
+    # Operators watch for this: capacity returns as expired Demos are deleted.
+    logger.warning("Try Demo refused: limit %d reached (%d stored Demos).", limit, stored)
     return True
 
 
@@ -189,6 +195,14 @@ def create_demo():
                 ).lastrowid
                 for ref, email in emails.items()
             }
+            # The server-owned record that identifies these accounts for capacity and deletion.
+            demo_id = conn.execute(
+                "INSERT INTO demos (created_at) VALUES (?)", (datetime.now(timezone.utc).isoformat(),)
+            ).lastrowid
+            conn.executemany(
+                "INSERT INTO demo_accounts (user_id, demo_id) VALUES (?, ?)",
+                [(user_id, demo_id) for user_id in user_ids.values()],
+            )
             for seed in seeds:
                 insert_seeded_project(conn, seed, user_ids)
             # Created before commit, so a token failure also rolls back the whole Demo.
@@ -203,6 +217,102 @@ def create_demo():
         release_hourly_start(started)
         raise
     return token
+
+
+def _placeholders(values):
+    return ", ".join("?" for _ in values)
+
+
+def retention_cutoff(now=None):
+    return (now or datetime.now(timezone.utc)) - DEMO_RETENTION
+
+
+def expired_demos(cutoff):
+    """IDs and creation times of stored Demos created at or before the cutoff, oldest first."""
+    with closing(get_connection()) as conn:
+        rows = conn.execute("SELECT id, created_at FROM demos ORDER BY id").fetchall()
+    return [(demo_id, datetime.fromisoformat(created)) for demo_id, created in rows
+            if datetime.fromisoformat(created) <= cutoff]
+
+
+def delete_demo(demo_id, cutoff):
+    """Delete one expired Demo with its accounts, projects, bugs, memberships and AI usage, or nothing."""
+    conn = get_connection()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute("SELECT created_at FROM demos WHERE id = ?", (demo_id,)).fetchone()
+        # Another run may already have deleted it; the age is rechecked under the lock.
+        if row is None or datetime.fromisoformat(row[0]) > cutoff:
+            conn.rollback()
+            return False
+        accounts = [user_id for (user_id,) in conn.execute(
+            "SELECT user_id FROM demo_accounts WHERE demo_id = ?", (demo_id,)
+        )]
+        # Every Demo records exactly its generated accounts; anything else needs a person to resolve it.
+        if len(accounts) != len(TEAM_REFS):
+            raise DemoNotDeleted(f"it has {len(accounts)} account records instead of {len(TEAM_REFS)}")
+        # The Demo's projects are those its accounts own, including renamed and newly created ones.
+        projects = [project_id for (project_id,) in conn.execute(
+            f"SELECT project_id FROM project_members WHERE role = 'Project Owner' AND user_id IN ({_placeholders(accounts)})",
+            accounts,
+        )]
+        # Delete only what belongs to this Demo. Anything else needs a person to resolve it.
+        checks = (
+            ("a project it owns has a member from outside the Demo",
+             f"SELECT 1 FROM project_members WHERE project_id IN ({_placeholders(projects)}) "
+             f"AND user_id NOT IN ({_placeholders(accounts)})", projects + accounts),
+            ("one of its accounts is a member of a project outside the Demo",
+             f"SELECT 1 FROM project_members WHERE user_id IN ({_placeholders(accounts)}) "
+             f"AND project_id NOT IN ({_placeholders(projects)})", accounts + projects),
+            ("a bug outside the Demo refers to one of its accounts",
+             f"SELECT 1 FROM bugs WHERE project_id NOT IN ({_placeholders(projects)}) "
+             f"AND (created_by IN ({_placeholders(accounts)}) OR assignee_id IN ({_placeholders(accounts)}))",
+             projects + accounts + accounts),
+        )
+        for reason, sql, parameters in checks:
+            if conn.execute(sql, parameters).fetchone() is not None:
+                raise DemoNotDeleted(reason)
+        for sql, parameters in (
+            (f"DELETE FROM bugs WHERE project_id IN ({_placeholders(projects)})", projects),
+            (f"DELETE FROM project_members WHERE project_id IN ({_placeholders(projects)})", projects),
+            (f"DELETE FROM projects WHERE id IN ({_placeholders(projects)})", projects),
+            (f"DELETE FROM ai_requests WHERE user_id IN ({_placeholders(accounts)})", accounts),
+            ("DELETE FROM demo_accounts WHERE demo_id = ?", (demo_id,)),
+            (f"DELETE FROM users WHERE id IN ({_placeholders(accounts)})", accounts),
+            ("DELETE FROM demos WHERE id = ?", (demo_id,)),
+        ):
+            conn.execute(sql, parameters)
+        # Startup refuses dangling references, so never commit one.
+        if conn.execute("PRAGMA foreign_key_check").fetchone() is not None:
+            raise DemoNotDeleted("deleting it would leave dangling references")
+        conn.commit()
+        return True
+    except BaseException:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def delete_expired_demos(now=None):
+    """Delete each expired Demo in its own transaction; return the number deleted and the IDs that failed.
+
+    A failed Demo is rolled back whole, logged as an error and retried on every later run.
+    """
+    cutoff = retention_cutoff(now)
+    deleted, failed = 0, []
+    for demo_id, created in expired_demos(cutoff):
+        try:
+            if delete_demo(demo_id, cutoff):
+                deleted += 1
+        except Exception as error:
+            failed.append(demo_id)
+            # IDs and times only: logs never contain account or project data.
+            logger.error(
+                "Expired Demo %d (created %s) was not deleted: %s. Manual resolution is needed.",
+                demo_id, created.isoformat(), error if isinstance(error, DemoNotDeleted) else type(error).__name__,
+            )
+    return deleted, failed
 
 
 @router.post("/demo", status_code=201)
