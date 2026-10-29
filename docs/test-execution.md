@@ -1,6 +1,6 @@
 # QA test execution report
 
-Reporting date: **28 October 2026**. This report summarizes what was executed and
+Reporting date: **29 October 2026**. This report summarizes what was executed and
 what the results show. The [test-case catalogue](test-cases.md) defines the cases,
 the [RTM](traceability-matrix.md) owns acceptance-criteria coverage, and the
 [defect summary](defect-summary.md) records tracked defects. Counts below are
@@ -14,11 +14,11 @@ not run) are labelled as such.
 | Released | **v0.2.0** (GitHub development release, 24 October 2026): Increments 1–3, REQ-001–REQ-023 |
 | Deployed | v0.2.0 development deployment on Render since 25 October 2026 |
 | In development | `main` at `1.0.0-dev`: Try Demo (REQ-024), AI usage limits (REQ-025) and v1.0.0 release hardening are merged; v1.0.0 is not yet released or deployed |
-| Latest full local regression | 27 October 2026, Try Demo work: Python **744 passed**, frontend JavaScript **122 passed**, Chromium Playwright + BDD **33 passed**. Later changes were verified with targeted local runs |
+| Latest full local regression | 29 October 2026, data retention and account deletion work: Python **823 passed** (backend 760, offline AI evaluation 63), frontend JavaScript **138 passed**, Chromium Playwright + BDD **34 passed**; no failures or skips. Postman CLI: 25 requests, **50/50** assertions (assertions, not test cases). The later [authorization race fixes](#authorization-race-fixes--29-october-2026) were verified with targeted runs only |
 | Pull request CI | Hardening and BUG-53 changes merged through pull requests #84 and #85; their CI run evidence is not yet recorded here |
 | Release-candidate checks | Not yet performed (see [pending release verification](#pending-release-verification)) |
-| AC coverage | **104 Covered / 0 Partial / 0 Not Covered** of 104 ACs. This assesses test evidence for each AC; it does not by itself establish release readiness |
-| Defects | 53 tracked defects in the 28 October 2026 [snapshot](defect-summary.md), all Closed: 39 fixed in v0.1.0–v0.2.0, 12 fixed for the planned v1.0.0, and 2 closed without a fix |
+| AC coverage | **109 Covered / 0 Partial / 0 Not Covered** of 109 ACs. This assesses test evidence for each AC; it does not by itself establish release readiness |
+| Defects | 54 tracked defects in the [defect summary](defect-summary.md) (28 October 2026 snapshot, plus BUG-54 on 29 October), all Closed: 39 fixed in v0.1.0–v0.2.0, 13 fixed for the planned v1.0.0 (including BUG-54), and 2 closed without a fix |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
 
 ## Environment and conventions
@@ -104,6 +104,48 @@ frames themselves were not captured; screenshots wait for page load). After the 
 These later runs did not paint early, so the fix is verified by script order rather than by an
 observed early paint.
 
+### Data retention and account deletion — 29 October 2026
+
+Focused local runs against disposable test databases during the change, followed by the
+full local regression recorded in [regression history](#regression-history).
+
+| Area | Result |
+| --- | --- |
+| BUG-54 reproduction | TC-498 against the unchanged code: **3 failed, 1 passed**. Adding another Demo's teammate or an ordinary account to a Demo project, and a Demo account to an ordinary project, returned 201 instead of 404 |
+| Backend modules affected by the change (16 modules) | **222 passed**, 0 failed |
+| Frontend JavaScript (`try-demo`, `ai-disclosure`) | **14 passed**, 0 failed; `try-demo` **4 passed** again after the final Login notice wording |
+| Five-account safeguard (TC-509) | Before it, both variants failed. An extra account record let cleanup delete an ordinary account and its project with the Demo. A missing record deleted nothing, because the unrecorded teammate's membership already blocked cleanup; that variant failed only because the logged reason was not the account count. After it, `test_demo_retention.py` **11 passed** |
+| Not run locally | JMeter (pull request CI); the operator commands in Render Shell on a deployment |
+
+### Authorization race fixes — 29 October 2026
+
+An independent pre-release review of Try Demo found two authorization race conditions
+after the full local regression above; both were fixed and verified with targeted runs
+against disposable databases and the offline AI provider (no real OpenAI calls).
+
+| Area | Result |
+| --- | --- |
+| Bug update responses (TC-510) | Edit Bug and Update Status read their response after commit, so a project deleted and recreated with the same id returned another user's report (HTTP 200). The response is now read inside the write transaction. TC-510 **2 failed** before the fix, **2 passed** after |
+| AI Assist context (TC-511) | Authorization and context reads used separate connections, so a recreated project's reports and members reached the offline provider. They now share one read transaction, closed before the provider call; assignee validation after generation accepts only members of that snapshot. TC-511 **2 failed** before the fix, **2 passed** after |
+| Updated technical cases (TC-139, TC-140) | Now verify that the response is captured before commit, and that a project deleted right after a successful update still gets the retained response (200) while a later GET returns 404 |
+| New and updated tests | `test_bug_id_reuse_races.py` and `test_bug_update_readback.py`: **12 passed**; the four new cases also passed three repeated runs |
+| Related modules (22: all AI, bug and project backend modules, fix version, input limits, Demo seed, offline AI evaluation) | **694 passed**, 0 failed, in 9 min 0 s. The backend suite now collects 764 tests |
+| Not run after the fixes | Full backend, frontend, Playwright + BDD and Postman suites (no frontend change; pull request CI runs all suites) |
+
+### AI context data minimisation and Privacy Policy — 29 October 2026
+
+AI Assist now sends eligible members' user IDs and roles to the provider, without their email
+addresses; assignee validation still uses the same IDs. Oxanium is self-hosted, so pages make no
+Google Fonts requests. Runs used disposable databases and the offline AI provider.
+
+| Area | Result |
+| --- | --- |
+| Member emails not sent (TC-512) | **2 failed** with the previous serialization, **2 passed** after |
+| AI backend modules (`test_ai_*.py`), `test_bug_id_reuse_races.py`, `test_privacy.py`, offline AI evaluation | First run: **401 passed**, 4 failed (evaluation tests still expected fixture emails on the wire); after updating those assertions, offline AI evaluation **63 passed** |
+| Frontend JavaScript (`base-typography`, `ai-disclosure`, `ai-assist`) | **34 passed**, 0 failed |
+| Self-hosted Oxanium | Static server on 127.0.0.1:8148 (no backend or database): 400 and 700 load from `/assets/fonts/oxanium/`; Project, Bug and Privacy pages make no external requests |
+| Not run | Full backend, Playwright + BDD, Postman and JMeter suites (pull request CI) |
+
 ## Release v0.2.0 — completed
 
 <a id="release-readiness-assessment--v020"></a>
@@ -145,6 +187,7 @@ risk; they do not guarantee quality.
 | 24 Oct 2026 | **v0.2.0 release** | 652 | 118 | 30 |
 | 26 Oct 2026 | AI usage limits (schema version 2) | 710 | — | — |
 | 27 Oct 2026 | Try Demo, final regression | 744 | 122 | 33 |
+| 29 Oct 2026 | Data retention and account deletion | 823 | 138 | 34 |
 
 All results are passes with no failures. A dash means the suite was not rerun
 for that milestone. Python counts up to 15 October predate the offline AI
@@ -152,6 +195,11 @@ evaluation harness, which the default Python run includes from 16 October (23
 cases that day), so earlier and later Python counts are not directly comparable.
 The Python count fell on 22 October because the offline harness stopped
 multiplying unchanged checks across request configurations.
+On 29 October the suites ran separately: backend pytest 760 passed in 11 min 42 s,
+offline AI evaluation 63 in 7.4 s, frontend 138 in about 0.5 s and Playwright + BDD 34
+in 1 min 42 s, with no skips or warnings. Each suite used its own disposable databases
+(or none), provider credentials were removed, and no real OpenAI calls were made; the
+genuine local database was not accessed.
 The 10 September pytest run took 114.52 seconds; the 38 temporary frontend
 validation-message checks recorded then were not a maintained suite and are not counted.
 During the 24 October E2E server ownership audit, one of seven consecutive
@@ -185,6 +233,8 @@ with identical node IDs apart from the moved module paths. Splitting the
 Adding REQ-024 and REQ-025 on 26 October gave 97 / 5 of 102 ACs; the Try Demo
 work reached 102 / 0 on 27 October, with TC-463 completing AC-025.5. The v1.0.0
 hardening added AC-009.6 and AC-011.5, both Covered on 28 October, for 104 / 0.
+Data retention and account deletion added AC-024.9, AC-025.7 and AC-026.1–AC-026.3,
+all Covered on 29 October, for 109 / 0.
 
 <a id="test-organization--19-october-2026"></a><a id="github-actions-ci--20-october-2026"></a>
 ### Continuous integration
@@ -221,6 +271,7 @@ a fresh disposable server with AI disabled.
 | AI-assisted compatibility runs, two disposable servers (20 Oct 2026) | **50/50 passed** in each of four runs; the old environment was rejected after a restart |
 | Postman CLI 1.75.0, local (20 Oct 2026) | **50/50 passed**, 3.8 s |
 | Hosted [Postman CI run 43](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/40091942303), `main` at `964a3b1` (24 Oct 2026) | **Success** (assertion counts not printed in silent mode) |
+| Postman CLI 1.75.0, local, data retention work (29 Oct 2026) | **50/50 passed**, 25 requests, 3.8 s; the server was stopped by its owned PID and its run directory removed |
 
 The safety checks also confirmed that the launcher refuses an occupied port and
 that the collection refuses unsafe targets, stale IDs and live AI configuration.
@@ -238,7 +289,7 @@ JMeter 5.6.3 ran the [API performance plan](../jmeter/README.md) (TC-392) on
 | Smoke (1 user) | 7 | 0 | 70.1 ms | 212 ms | 13.3 req/s |
 | 2 users, 2 loops | 28 | 0 | 62.3 ms | 206.6 ms | 21.9 req/s |
 
-Earlier user-run measurements (JMeter 5.6.3, Java 21, fresh SQLite, port 8150)
+Earlier manual measurements (JMeter 5.6.3, Java 21, fresh SQLite, port 8150)
 were recorded with the plan on 21 October 2026 (`a9f6271`). Exact run dates were
 not recorded, and these runs were not independently re-run:
 
@@ -320,6 +371,18 @@ reproduced manually. Frontend tests TC-246 and TC-247 cover it.
 - **Bug List layout (23 October 2026):** 43 fictional bugs at 1120–1920 px,
   10/20/50 per page and all seven sorts. Column boundaries no longer move
   between pages, and every desktop row is the same height.
+- **Manual release smoke test (29 October 2026):** manual smoke testing,
+  separate from the automated regression. It covered:
+  - Try Demo creation (seeded projects, members and bugs), plus BUG-54 isolation across
+    Demos and between Demo and ordinary accounts, including valid same-Demo memberships.
+  - Demo logout, after which a new Demo could not access earlier work.
+  - Ordinary project, member and bug creation, editing and lifecycle.
+  - AI Assist suggestions across different impact descriptions, and suggestion handling.
+  - The Login notice, UI layout and error messages.
+  - The `status` command and an account-deletion dry run.
+
+  All checks passed, with no new defects. Confirmed account deletion, automatic
+  retention and other destructive administrative operations were not tested manually.
 
 <a id="contrast-measurements--13-october-2026"></a>
 ### Contrast measurements
@@ -382,6 +445,7 @@ exploratory findings that were fixed without a separate bug report.
 | Incomplete Assignee divider and missing explicit Delete focus outline | Frontend theme and control review | Divider and focus-outline styles corrected | Standalone browser fixtures failed before the correction and passed after it |
 | E2E port probe accepted listeners on `0.0.0.0` or `[::]` (Windows) | Test-infrastructure safety audit | Probe now binds every interface | TC-413 failed before for both cases |
 | BUG-43 — authorization race allowed access to or changes to another user's project | Code review | Owner check ran before the write, so a concurrent Delete Project and reused project ID redirected the change; Update, Delete, Add Member and Remove Member now hold `BEGIN IMMEDIATE` from the check through the write | 27 October, disposable database: a pending Add Member left an orphaned membership that gave access to the next user's project and bug, and restarting the app in-process on that database failed its startup integrity check. TC-464 failed before for Add Member, Rename and Delete; it checks the resulting data and `PRAGMA foreign_key_check`, not a restart. Remove Member is not covered by TC-464. |
+| BUG-54 — Add Member accepted accounts across Demo boundaries | Test-first reproduction during the privacy and retention review | Add Member accepted any registered email; it now accepts only accounts from the owner's Demo, or ordinary accounts for ordinary projects, and otherwise answers like an unknown email | TC-498 failed before for all three cross-boundary cases (201 instead of 404) |
 
 ## Real AI Assist testing
 
@@ -534,10 +598,10 @@ Covered. Token usage and cost were not recorded for this evaluation.
   case and assisted review. They do not establish statistical reliability or
   rule out hallucinations. Open minor observations: Q5 cross-field wording,
   BUG-18 title overstatement and BUG-17 provisional version.
-- **Try Demo:** Demo accounts and their associated data are not currently
-  deleted automatically. Demo creation is subject to usage and capacity limits.
-  Data retention and privacy practices will be reviewed before the public
-  release.
+- **Try Demo:** Demos are deleted by the first hourly cleanup after they are
+  seven days old. Tests pass the time in rather than waiting seven days, and the
+  cleanup has not yet run on a deployment. Demo creation is subject to usage and
+  capacity limits.
 - **Concurrency:** Simultaneous changes to the same data may result in
   conflicting updates. High write contention may cause requests to fail.
 - **Bug List:** A partial final page moves the pagination controls up.
