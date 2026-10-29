@@ -1,10 +1,10 @@
 {
   "project": "AI QA Bug Triage",
   "snapshot": {
-    "exported_at": "2026-10-26T12:55:09+00:00",
+    "exported_at": "2026-10-29T12:17:53+00:00",
     "source": "Read-only export of local tracker; account emails redacted and content reviewed for Demo",
     "schema_version": 1,
-    "bug_count": 41
+    "bug_count": 53
   },
   "team": {
     "owner": "Project Owner",
@@ -20,7 +20,7 @@
       "affected_version": "0.1.0-dev",
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "The system allows a user to create multiple projects with the same name.",
-      "steps_to_reproduce": "1. Create a project named \"Test Project\".\n2. Create and submit another project named \"Test Project\".\n",
+      "steps_to_reproduce": "1. Create a project named \"Test Project\".\n2. Create and submit another project named \"Test Project\".",
       "expected_result": "The system rejects the second project because a project with that name already exists.",
       "actual_result": "The second project is created successfully.",
       "severity": "Moderate",
@@ -31,7 +31,7 @@
       "assignee": "dev2",
       "created_by": "owner",
       "created_at": "2026-09-07T15:43:53.036707+00:00",
-      "updated_at": "2026-10-08T13:56:17.540675+00:00"
+      "updated_at": "2026-10-29T11:00:28.310550+00:00"
     },
     {
       "number": 2,
@@ -59,7 +59,7 @@
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "Bug IDs are currently generated globally across all projects. As a result, a new bug in one project can receive an ID that reflects bugs created in other projects.\n\nFor example, the AI QA Bug Triage project currently contains BUG-8 and BUG-11 instead of starting its numbering from BUG-1.",
       "steps_to_reproduce": "1. Create a project and create several bug reports.\n2. Create a second project.\n3. Create a bug in the second project.\n4. Observe the Bug ID.",
-      "expected_result": "Bug IDs should start at BUG-1 for each project and increment independently within that project.   ",
+      "expected_result": "Bug IDs should start at BUG-1 for each project and increment independently within that project.",
       "actual_result": "Bug IDs continue from the global bug sequence across all projects.",
       "severity": "Minor",
       "priority": "Low",
@@ -69,17 +69,17 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-08T13:42:46.437711+00:00",
-      "updated_at": "2026-10-24T14:22:33.458738+00:00"
+      "updated_at": "2026-10-29T09:17:00.457473+00:00"
     },
     {
       "number": 4,
       "title": "New project owner can see bugs from a deleted project",
       "affected_version": "0.1.0-dev",
-      "environment": "Windows, Python 3.14.2, FastAPI TestClient, SQLite",
-      "description": "After User A deletes a project, its bugs remain in the database. If a new project created by User B receives the same project ID, User B can see those old bugs.\n\nThis exposes one user’s project data to another user.\n\nEnvironment and investigation evidence: Verified on 9 September 2026 at commit 6069f8c (main), on Windows with Python 3.14.2, FastAPI, SQLite, and FastAPI TestClient. The investigation used a fresh disposable database and two distinct registered users; no real projects were deleted. Project deletion returned HTTP 200. User B’s new project received the deleted project’s ID, and its bug-list response included User A’s original bug. SQLite foreign-key enforcement was disabled. The existing baseline suite passed all 119 tests despite this defect.",
-      "steps_to_reproduce": "Precondition: Use a fresh disposable test database and two registered users, A and B. Reproduce through the API, using the acting user’s bearer token for each request.\n\n1. As User A, create a project using POST /projects with a valid name. Record its project ID as {project_id}.\n2. As User A, create a bug in that project using POST /projects/{project_id}/bugs with a valid title.\n3. As User A, delete the project using DELETE /projects/{project_id}.\n4. As User B, create a new project using POST /projects with a valid name. Confirm it receives the deleted project’s ID.\n5. As User B, retrieve the new project’s bug list using GET /projects/{project_id}/bugs.",
-      "expected_result": "User B’s new project has an empty bug list. Bugs from User A’s deleted project are never visible in it.",
-      "actual_result": "User B’s new project displays the bug created in User A’s deleted project.",
+      "environment": "Windows 11, FastAPI TestClient, SQLite",
+      "description": "Deleting a project leaves its associated bugs in the database. If another user creates a project that reuses the deleted project's ID, the new project exposes the previous owner's bug reports.\n\nThis results in unauthorized access to another user's project data.",
+      "steps_to_reproduce": "1. Register Users A and B in a fresh disposable test database.\n2. As User A, create a project using POST /projects. Record its ID.\n3. As User A, create a bug using POST /projects/{project_id}/bugs.\n4. As User A, delete the project using DELETE /projects/{project_id}.\n5. As User B, create a project and confirm it receives the same ID.\n6. As User B, retrieve GET /projects/{project_id}/bugs and check whether User A's bug appears.",
+      "expected_result": "User B\u2019s new project has an empty bug list. Bugs from User A\u2019s deleted project are never visible in it.",
+      "actual_result": "User B\u2019s new project returns the bug created in User A\u2019s deleted project.",
       "severity": "Major",
       "priority": "High",
       "status": "Closed",
@@ -88,13 +88,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-09T12:40:59.046370+00:00",
-      "updated_at": "2026-10-08T13:56:35.877276+00:00"
+      "updated_at": "2026-10-29T10:57:27.039800+00:00"
     },
     {
       "number": 5,
       "title": "POST /register returns HTTP 500 for passwords over bcrypt's 72-byte limit",
       "affected_version": "0.1.0-dev",
-      "environment": "Windows 11, Chrome 153, Swagger UI, local development",
+      "environment": "Windows 11, Chrome, Swagger UI, FastAPI/Uvicorn",
       "description": "Registration accepts a password longer than bcrypt's supported 72-byte limit and passes it to password hashing. This causes an unhandled server error instead of a validation response.",
       "steps_to_reproduce": "1. Open the POST /register endpoint in Swagger UI.\n2. Enter a valid email address.\n3. Enter a password longer than 72 bytes that otherwise meets password requirements.\n4. Submit the request.",
       "expected_result": "POST /register should reject the password with HTTP 422 Unprocessable Content and a validation message.",
@@ -107,13 +107,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-10T15:23:21.928919+00:00",
-      "updated_at": "2026-10-08T13:56:42.052885+00:00"
+      "updated_at": "2026-10-29T09:54:33.732495+00:00"
     },
     {
       "number": 6,
       "title": "Project form feedback remains stale after correction, successful edit, cancel, or reopening",
       "affected_version": "0.1.0-dev",
-      "environment": "Windows 11, Chrome 153, local development",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "Project form feedback is not consistently cleared when it is no longer relevant.\n\nThe issue affects both Create and Edit project interactions. Validation or success feedback from a previous form state can remain visible after the user corrects the input, successfully saves an edit, cancels, or starts a new project interaction.\n\nThis can leave the page showing feedback that no longer matches the current state.",
       "steps_to_reproduce": "1. Open the Projects page.\n2. Edit an existing project.\n3. Replace the project name with only spaces.\n4. Click Save.\n5. Enter a valid project name.\n6. Click Save again.\n7. Observe the feedback message.\n\nAdditional reproduction:\n8. Trigger either a validation error or successful project creation message.\n9. Click Cancel.\n10. Open New Project again.\n11. Observe the feedback area.",
       "expected_result": "Project-specific transient feedback should reflect the current form state.\n\n- Project-name validation feedback should clear once the user enters a valid name.\n- A successful project edit should not leave an earlier validation error visible.\n- Cancel should clear feedback associated with the current form interaction.\n- Opening a new Create/Edit interaction should not display stale feedback from the previous interaction.\n- Unrelated page-level, network, or authorization errors should not be cleared by project-name input changes.",
@@ -126,13 +126,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-10T17:00:51.311389+00:00",
-      "updated_at": "2026-10-24T14:22:45.190005+00:00"
+      "updated_at": "2026-10-29T09:53:39.581052+00:00"
     },
     {
       "number": 7,
       "title": "Project edit accepts whitespace-only project name",
       "affected_version": "0.1.0-dev",
-      "environment": "Windows 11, Chrome 153, local development",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "A Project Owner can edit an existing project and save a project name that contains only whitespace characters.\n\nThe application should treat a whitespace-only project name as invalid in the same way as an empty project name. Currently, the update is accepted and the project is saved without a meaningful visible name.",
       "steps_to_reproduce": "1. Log in as the Project Owner.\n2. Open an existing project.\n3. Edit the project name.\n4. Replace the name with spaces only, for example \"   \".\n5. Save the changes.",
       "expected_result": "The update should be rejected because a project name containing only whitespace is not a valid project name.",
@@ -145,13 +145,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-10T17:04:51.332316+00:00",
-      "updated_at": "2026-10-24T14:23:00.642546+00:00"
+      "updated_at": "2026-10-29T09:53:46.479755+00:00"
     },
     {
       "number": 8,
       "title": "No success confirmation is displayed after project creation",
       "affected_version": "0.1.0-dev",
-      "environment": "Windows 11, Chrome 153, local development",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "After a project is created successfully, the application adds the new project to the project list but does not display any explicit success confirmation.\n\nThe user should receive clear feedback that the project creation completed successfully, for example through a success message or notification.",
       "steps_to_reproduce": "1. Log in.\n2. Open the Projects page.\n3. Enter a valid project name.\n4. Create the project.",
       "expected_result": "The user should receive a clear confirmation that the project was created successfully.",
@@ -164,13 +164,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-10T17:07:28.132884+00:00",
-      "updated_at": "2026-10-08T14:19:53.262576+00:00"
+      "updated_at": "2026-10-29T09:53:53.223037+00:00"
     },
     {
       "number": 9,
       "title": "Removing an assigned project member leaves bugs assigned to that user",
       "affected_version": "0.1.0-dev",
-      "environment": "Windows 11, Chrome 153, Desktop, Project Owner account, local development",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "When a Project Owner removes a project member who is currently assigned to one or more bugs, the member is removed from the project but their existing bug assignments remain unchanged.\n\nThis leaves bugs assigned to a user who is no longer a member of the project. When a project member is removed, any bugs assigned to that user within the project should automatically become unassigned.",
       "steps_to_reproduce": "1. Log in as a Project Owner.\n2. Open a project.\n3. Add another user to the project as a QA Analyst or Developer.\n4. Create or update a bug and assign it to that user.\n5. Verify that the user is shown as the bug assignee.\n6. Remove the assigned user from the project.\n7. View the bug again.",
       "expected_result": "The project member should be removed successfully and any bugs assigned to that user within the project should automatically become unassigned.\n\nThe bug status and other bug data should remain unchanged.",
@@ -183,14 +183,14 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-10T17:54:31.766953+00:00",
-      "updated_at": "2026-10-08T13:57:08.454355+00:00"
+      "updated_at": "2026-10-29T09:53:58.983088+00:00"
     },
     {
       "number": 10,
       "title": "AI Assist button is visible to Developer on New Bug form",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome 153, Desktop, Developer account, local development, branch: feat/ai-assist-access",
-      "description": "The AI Assist button is displayed on the New Bug form when the current project member has the Developer role.\n\nREQ-018 permits AI Assist only for Project Owners and QA Analysts. Developers must not have access to the feature.\n\nThe button was intended to be hidden, but the New Bug form's general button styling overrode the HTML hidden behavior.",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
+      "description": "The AI Assist button is displayed on the New Bug form when the current project member has the Developer role.\n\nREQ-018 permits AI Assist only for Project Owners and QA Analysts. Developers must not have access to the feature.\n\nThe button is intended to be hidden, but the New Bug form\u2019s general button styling overrides the HTML hidden behavior.",
       "steps_to_reproduce": "1. Sign in as a Developer who is a member of a project.\n2. Open the project.\n3. Open the New Bug form.\n4. Observe the available form actions.",
       "expected_result": "The AI Assist button is not displayed to a Developer.",
       "actual_result": "The AI Assist button is visible on the New Bug form.",
@@ -202,13 +202,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-09-24T17:26:42.534270+00:00",
-      "updated_at": "2026-10-24T14:46:05.500922+00:00"
+      "updated_at": "2026-10-29T11:18:41.530919+00:00"
     },
     {
       "number": 11,
       "title": "Whitespace-only JWT_SECRET_KEY is accepted",
       "affected_version": "0.2.0-dev",
-      "environment": "Local development, FastAPI/Python, Isolated JWT authentication probe",
+      "environment": "Windows 11, Python (isolated JWT authentication probe)",
       "description": "The application accepts a JWT_SECRET_KEY containing only whitespace.\nA whitespace-only key can be used to sign and verify authentication tokens.",
       "steps_to_reproduce": "1. Use the affected pre-fix application code in an isolated test environment.\n2. Set the JWT_SECRET_KEY environment variable to a whitespace-only value (for example, three spaces).\n3. Run an authentication probe using the JWT functionality in app/api/auth.py.\n4. Attempt to generate a signed JWT using the configured whitespace-only secret.\n5. Verify the generated token through the application's JWT authentication functionality.\n6. Observe that the whitespace-only secret is accepted and the token can be signed and verified successfully.",
       "expected_result": "Missing, empty, or whitespace-only JWT_SECRET_KEY values should be rejected.",
@@ -221,17 +221,17 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-02T15:40:38.101396+00:00",
-      "updated_at": "2026-10-24T14:46:31.781959+00:00"
+      "updated_at": "2026-10-29T10:04:09.469034+00:00"
     },
     {
       "number": 12,
       "title": "JWT security tests delete shared test database and cause order-dependent failures",
       "affected_version": "0.2.0-dev",
-      "environment": "Local development, Windows 11, Python 3.14.2, pytest, FastAPI TestClient, SQLite",
-      "description": "The JWT security tests `test_missing_jwt_secret_key_raises_on_login` and `test_empty_jwt_secret_key_raises_on_login` used the shared `test_bugtriage.db` database and deleted it during their cleanup.\n\nBecause `app.database.DATABASE_NAME` was cached at module import, subsequent tests continued referencing the same database path after the file had been deleted.\n\nThis caused order-dependent test failures, including missing database tables during later authentication tests.",
+      "environment": "Windows 11, pytest, FastAPI TestClient, SQLite",
+      "description": "The JWT security tests `test_missing_jwt_secret_key_raises_on_login` and `test_empty_jwt_secret_key_raises_on_login` use the shared `test_bugtriage.db` database and delete it during their cleanup.\n\nBecause `app.database.DATABASE_NAME` is cached at module import, subsequent tests continue referencing the same database path after the file had been deleted.\n\nThis causes order-dependent test failures, including missing database tables during later authentication tests.",
       "steps_to_reproduce": "1. Use the application test suite before the JWT test-isolation fix.\n2. Run the JWT security tests test_missing_jwt_secret_key_raises_on_login and test_empty_jwt_secret_key_raises_on_login.\n3. Allow their original cleanup code to execute, deleting the shared test_bugtriage.db database.\n4. In the same pytest process, execute a normal authentication test that uses the test_client fixture.\n5. Observe that the later test continues using the cached database path but encounters missing database tables.\n6. Run the affected test without the preceding JWT tests and compare the outcome.",
       "expected_result": "Each test should operate only against its intended disposable test database, independently of execution order.",
-      "actual_result": "When the JWT security tests ran before a normal authentication test, their cleanup deleted the shared test_bugtriage.db file. Subsequent tests continued using the cached database path and failed because required tables, including users, were missing.\n\nThe failures depended on test execution order.",
+      "actual_result": "When the JWT security tests run before a normal authentication test, their cleanup deletes the shared test_bugtriage.db file. Subsequent tests continue using the cached database path and fail because required tables, including users, are missing.\n\nThe failures depend on test execution order.",
       "severity": "Major",
       "priority": "High",
       "status": "Closed",
@@ -240,7 +240,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-02T15:41:04.639753+00:00",
-      "updated_at": "2026-10-24T14:46:38.225553+00:00"
+      "updated_at": "2026-10-29T11:20:33.852840+00:00"
     },
     {
       "number": 13,
@@ -266,8 +266,8 @@
       "title": "Late Create or Save response can discard a reopened bug form and newer AI suggestions",
       "affected_version": "0.2.0-dev",
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
-      "description": "A Create or Save request that was started in an older form session can still modify the UI after the user has cancelled that session and opened a new one.\n\nIf the original Create/Save response is delayed, the user can cancel and reopen the form, enter new values, and obtain new AI suggestions. When the older request eventually succeeds, its success handler acts on the newer session.\n\nFor New Bug, this can reset the newly entered form values. For New Bug and Edit Bug, it can hide the reopened form and discard the newer pending AI Suggestions state.\n\nThe underlying delayed-submission race predates REQ-020, but the REQ-020 cleanup now also causes the newer AI suggestion session to be discarded.\n\nInvestigation evidence: Reproduced in controlled browser tests for both New Bug Create and Edit Bug Save. The correction introduced session/request identity checks to prevent responses from abandoned form sessions from modifying newer sessions. Regression verification included delayed response completion scenarios.",
-      "steps_to_reproduce": "Precondition: Use the affected pre-fix frontend in a controlled browser test that can delay completion of Create and Save requests.\n\nNew Bug:\n1. Open the New Bug form and enter valid bug information.\n2. Click Create and hold the original request's response pending.\n3. Cancel the form and open New Bug again.\n4. Enter different bug information.\n5. Trigger AI Assist and obtain new pending suggestions.\n6. Release the original Create response and allow its success handler to complete.\n7. Observe the state of the reopened form and its pending suggestions.\n\nEdit Bug:\n8. Open an existing bug in Edit mode and modify its fields.\n9. Click Save and hold the original request's response pending.\n10. Cancel editing, reopen Edit mode and enter different values.\n11. Trigger AI Assist and obtain new pending suggestions.\n12. Release the original Save response and allow its success handler to complete.\n13. Observe the state of the reopened Edit form and its pending suggestions.",
+      "description": "A Create or Save request that was started in an older form session can still modify the UI after the user has cancelled that session and opened a new one.\n\nIf the original Create/Save response is delayed, the user can cancel and reopen the form, enter new values, and obtain new AI suggestions. When the older request eventually succeeds, its success handler acts on the newer session.\n\nFor New Bug, this can reset the newly entered form values. For New Bug and Edit Bug, it can hide the reopened form and discard the newer pending AI Suggestions state.\n\nThe underlying delayed-submission race predates REQ-020, but the REQ-020 cleanup now also causes the newer AI suggestion session to be discarded.",
+      "steps_to_reproduce": "1. Use the pre-fix frontend in a browser test that can delay API responses.\n\nNew Bug:\n2. Open New Bug, enter valid information and click Create. Hold the response.\n3. Cancel and reopen New Bug. Enter different values and obtain new AI suggestions.\n4. Release the original Create response.\n5. Check whether the reopened form, its values or AI suggestions are lost.\n\nEdit Bug:\n6. Open an existing bug, change its fields and click Save. Hold the response.\n7. Cancel and reopen Edit mode. Enter different values and obtain new AI suggestions.\n8. Release the original Save response.\n9. Check whether the reopened form or its AI suggestions are lost.",
       "expected_result": "A response belonging to an abandoned form session should not modify the state of a newer form session.\n\nThe newer form should remain open, its current values should remain intact, and its pending AI suggestions should remain available.",
       "actual_result": "The older successful Create/Save response acts on the newer session.\n\nDepending on the form:\n- the reopened form is hidden\n- pending AI suggestions are discarded\n- New Bug values can be reset\n- the user's newer work is lost from the UI",
       "severity": "Moderate",
@@ -278,7 +278,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-05T10:55:53.095768+00:00",
-      "updated_at": "2026-10-24T14:46:53.753580+00:00"
+      "updated_at": "2026-10-29T10:31:47.692699+00:00"
     },
     {
       "number": 15,
@@ -323,7 +323,7 @@
       "title": "Delayed bug-list refresh can overwrite feedback from a newer New Bug session",
       "affected_version": "0.2.0-dev",
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
-      "description": "After a successful New Bug creation, the application starts a bug-list refresh. If that refresh is delayed and the user opens a new New Bug session before it completes, an error from the older refresh can overwrite feedback belonging to the newer form session.\n\nThe originating Create was current when the refresh started, but the refresh becomes stale while it is still in progress.",
+      "description": "After a bug is created, the application refreshes the bug list. If the refresh is delayed and the user reopens the New Bug form, an error from the earlier refresh can overwrite validation feedback displayed in the reopened form.",
       "steps_to_reproduce": "1. Open the New Bug form.\n2. Enter valid bug data.\n3. Click Create.\n4. Allow the Create request to succeed normally.\n5. Delay the subsequent bug-list refresh response or its JSON processing.\n6. Open the New Bug form again.\n7. In the newly opened form, trigger validation feedback such as \"Title must not be blank.\"\n8. Allow the earlier bug-list refresh to complete with an error.\n9. Observe the feedback shown for the newer New Bug form.",
       "expected_result": "The newer New Bug session retains its validation feedback. The delayed refresh belonging to the previous completed Create must not modify feedback belonging to the newer form session.",
       "actual_result": "The newer validation feedback is overwritten by \"Unable to load bug list.\" when the delayed refresh from the previous Create finishes.",
@@ -335,7 +335,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-05T13:45:11.444432+00:00",
-      "updated_at": "2026-10-24T14:47:14.470557+00:00"
+      "updated_at": "2026-10-29T11:35:48.055200+00:00"
     },
     {
       "number": 18,
@@ -362,9 +362,9 @@
       "affected_version": "0.1.0",
       "environment": "Windows 11, Postman, FastAPI/Uvicorn",
       "description": "Project creation does not validate the type of the name field before calling string methods on it. An authenticated request with a truthy non-string name causes an unhandled AttributeError.",
-      "steps_to_reproduce": "1. Open Postman.\n2. Create a new POST request to:\n   http://127.0.0.1:8000/projects\n3. In Authorization, select Bearer Token and enter the token obtained after logging in.\n4. Open Body → raw → JSON.\n5. Enter:\n   {\n     \"name\": 123\n   }\n6. Click Send.\n7. Observe the response.",
+      "steps_to_reproduce": "1. Open Postman.\n2. Create a new POST request to:\n   http://127.0.0.1:8000/projects\n3. In Authorization, select Bearer Token and enter the token obtained after logging in.\n4. Open Body \u2192 raw \u2192 JSON.\n5. Enter:\n   {\n     \"name\": 123\n   }\n6. Click Send.\n7. Observe the response.",
       "expected_result": "The API rejects the invalid project name with a controlled validation response, such as HTTP 422, and no project is created.",
-      "actual_result": "The API returns HTTP 500 Internal Server Error.\n\nNo project is created or saved when the error occurs.\n",
+      "actual_result": "The API returns HTTP 500 Internal Server Error.\n\nNo project is created or saved when the error occurs.",
       "severity": "Moderate",
       "priority": "Medium",
       "status": "Closed",
@@ -373,7 +373,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-06T11:27:17.106945+00:00",
-      "updated_at": "2026-10-24T14:24:41.571618+00:00"
+      "updated_at": "2026-10-29T11:00:37.267729+00:00"
     },
     {
       "number": 20,
@@ -398,11 +398,11 @@
       "number": 21,
       "title": "Concurrent bug deletion can cause edit or status update to fail during response readback",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
-      "description": "A source review identified a concurrency race in the bug edit and lifecycle/status update flows. Both handlers commit their database update before reading the bug row again to build the API response. If another authorized request deletes the same bug after the update commits but before the response SELECT executes, the readback may return no row. The handler can then attempt to access fields on the missing row and return an unexpected server error. \n\nInitially identified through source review. The failure was subsequently reproduced with deterministic API regression tests that simulate deletion after the database update commits but before response readback.",
-      "steps_to_reproduce": "1. Create a bug in a project.\n2. Start an authorized edit or lifecycle/status update request for that bug.\n3. Using a controlled concurrency test, delete the bug after the update commits but before the handler performs its response readback.\n4. Allow the original request to continue.\n5. Observe the unexpected server error when the handler attempts to access the missing bug row.",
+      "environment": "Windows 11, FastAPI TestClient, SQLite",
+      "description": "A source review identified a concurrency race in the bug edit and lifecycle/status update flows. Both handlers commit their database update before reading the bug row again to build the API response. If another authorized request deletes the same bug after the update commits but before the response SELECT executes, the readback may return no row. The handler can then attempt to access fields on the missing row and return an unexpected server error.\n\nInitially identified through source review. The failure was subsequently reproduced with deterministic API regression tests that simulate deletion after the database update commits but before response readback.",
+      "steps_to_reproduce": "1. Create a bug in a project.\n2. Start an authorized edit or lifecycle/status update request for that bug.\n3. In a controlled test, delete the bug after the update commits but before response readback.\n4. Allow the original request to continue.\n5. Observe the unexpected server error when the handler attempts to access the missing bug row.",
       "expected_result": "The request should complete with a controlled response. If the bug is deleted concurrently before response readback, the API should handle the missing resource safely and must not return an unexpected server error.",
-      "actual_result": "Before the fix, deterministic API regression tests reproduced the concurrency defect by simulating deletion of a bug after an edit or lifecycle/status update committed but before its response readback.\n\nThe subsequent readback returned no bug row, causing the affected handler to attempt to access fields on a missing row and produce an unexpected server error.\n\nThe defect was reproduced through controlled API testing rather than manual browser testing.",
+      "actual_result": "When a bug is deleted after an update commits but before the response readback, the readback returns no bug row. The handler then attempts to access fields on the missing row, resulting in an unexpected server error.",
       "severity": "Moderate",
       "priority": "Medium",
       "status": "Closed",
@@ -411,7 +411,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-07T05:48:19.304052+00:00",
-      "updated_at": "2026-10-24T14:48:22.166490+00:00"
+      "updated_at": "2026-10-29T10:33:53.793515+00:00"
     },
     {
       "number": 22,
@@ -421,7 +421,7 @@
       "description": "When transient feedback is displayed after a bug lifecycle action, the feedback message appears above the bug action controls. Because the message occupies space in the normal document flow, the controls below it shift vertically when the message appears and shift back when it disappears.\n\nThis causes unnecessary layout movement during bug lifecycle actions.",
       "steps_to_reproduce": "1. Open an existing bug.\n2. Perform a valid lifecycle transition, for example move the bug to Triage.\n3. Observe the action controls when the success feedback message appears.\n4. Compare their position before and after the feedback message is displayed.",
       "expected_result": "The feedback message is displayed below the relevant action controls.\n\nThe action buttons remain in the same position when transient success or error feedback appears or disappears.",
-      "actual_result": "The feedback message, for example: \"Bug moved to Triage.\" appears above the action controls and pushes them downward. When the message disappears, the controls move back upward.",
+      "actual_result": "The feedback message (for example, \u201cBug moved to Triage.\u201d) appears above the action controls and pushes them downward. When the message disappears, the controls move back upward.",
       "severity": "Minor",
       "priority": "Low",
       "status": "Closed",
@@ -430,7 +430,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-07T15:04:52.708633+00:00",
-      "updated_at": "2026-10-24T14:48:28.243299+00:00"
+      "updated_at": "2026-10-29T10:59:37.663479+00:00"
     },
     {
       "number": 23,
@@ -440,7 +440,7 @@
       "description": "Transient success messages on the project page remain visible after the user moves on to a different workflow.\nFor example:\n- after adding a project member, the member success message remains visible while the user creates a bug;\n- after creating a bug, the bug creation success message remains visible while the user adds a member;\n- reopening the New Bug form can also display the success message from the previously created bug.\nThis can result in multiple stale success messages being displayed at the same time and makes it unclear which feedback relates to the user's current action.",
       "steps_to_reproduce": "1. Log in and open a project where you can manage members and create bugs.\n2. Open Add Member and successfully add a new project member.\n3. Verify that the member creation success message appears.\n4. Click New Bug and observe whether the previous member success message remains visible.\n5. Create a valid bug and verify that the bug creation success message appears.\n6. Click Add Member and observe whether the previous bug creation success message remains visible.\n7. Reopen New Bug and check whether the success message from the previous bug creation is still displayed.",
       "expected_result": "Transient feedback should relate to the user's current workflow.\n\nWhen the user begins another top-level action such as New Bug or Add Member, stale success/error feedback from a previous completed workflow should be cleared.\n\nA previous bug-creation message should not remain visible during member management, and a previous member-management message should not remain visible during bug creation.",
-      "actual_result": "Previously displayed success messages remain visible after the user moves to another workflow.\n\nFor example, both of the following messages can appear simultaneously:\n- Member \"qa@example.com\" (QA Analyst) added successfully.\n- BUG-26 \"Login doesn't work\" created successfully.",
+      "actual_result": "Previously displayed success messages remain visible after the user moves to another workflow.\n\nFor example, both of the following messages can appear simultaneously:\n- Member \"qa1@example.com\" (QA Analyst) added successfully.\n- BUG-26 \"Login doesn't work\" created successfully.",
       "severity": "Minor",
       "priority": "Medium",
       "status": "Closed",
@@ -456,10 +456,10 @@
       "title": "Fix Version is available when creating or editing unresolved bugs",
       "affected_version": "0.1.0",
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
-      "description": "The Fix Version field is currently available on the New Bug form, even though a newly reported bug has not yet been fixed.\n\nFix Version should represent the actual version containing a completed fix, not a planned or assumed version.\n\nThe field's visibility and editability should depend on the bug's lifecycle state. The backend should enforce the same rules to prevent invalid values being submitted directly through the API.",
-      "steps_to_reproduce": "1. Log in to the AI QA Bug Triage application.\n2. Open a project where you have permission to create bugs.\n3. Navigate to the project's Bugs page.\n4. Click the \"New Bug\" button.\n5. Observe the fields displayed on the New Bug form.\n6. Locate the \"Fix Version\" field.\n7. Verify that the field is displayed even though the bug has not yet been created or fixed.\n",
-      "expected_result": "Fix Version is hidden when creating a new bug.\n\nFix Version is hidden and cannot be assigned when editing bugs in Triage, Open, Development or Testing.\n\nAn optional Fix Version can be entered when Testing passes and the bug is closed as Fixed.\n\nFix Version is visible and editable on Closed bugs with resolution Fixed.\n\nClosed bugs with other resolutions must not retain a Fix Version.\n\nReopening a Closed bug clears both Resolution and Fix Version.\n\nBackend validation enforces these restrictions.",
-      "actual_result": "The New Bug form displays the Fix Version field before the bug has been fixed. The field is not restricted according to the agreed lifecycle rules.",
+      "description": "The Fix Version field is available both when creating a new bug and when editing a bug that has not yet been fixed. This allows a Fix Version to be entered before the bug is closed as Fixed, contrary to the agreed lifecycle rules.\n\nThe frontend does not restrict the field based on the bug's status, and the backend accepts Fix Version values during creation and editing of unresolved bugs.",
+      "steps_to_reproduce": "1. Sign in and open a project.\n2. Select New Bug.\n3. Observe that the Fix Version field is available before the bug is created.\n4. Create the bug and open it for editing while it is still in Triage.\n5. Check whether the Fix Version field remains available.",
+      "expected_result": "Fix Version is hidden during bug creation and when editing bugs in Triage, Open, Development or Testing.\n\nAn optional Fix Version can be assigned when Testing passes and the bug is closed as Fixed.\n\nFix Version is visible and editable on Closed bugs with resolution Fixed.\n\nClosed bugs with other resolutions must not retain a Fix Version.\n\nBackend validation enforces these restrictions.",
+      "actual_result": "The New Bug form displays the Fix Version field before the bug has been fixed. The field also remains available when editing a bug in Triage.",
       "severity": "Moderate",
       "priority": "Medium",
       "status": "Closed",
@@ -468,7 +468,7 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-08T09:52:35.572999+00:00",
-      "updated_at": "2026-10-24T15:09:15.634699+00:00"
+      "updated_at": "2026-10-29T11:31:51.704828+00:00"
     },
     {
       "number": 25,
@@ -495,7 +495,7 @@
       "affected_version": "0.2.0-dev",
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "When AI Assist provides a suggestion for a multiline field, the suggestion panel can become significantly taller than the original textarea displayed beside it.\n\nThe original textarea retains its normal height, even when substantial unused vertical space is available below it within the same side-by-side layout.\n\nAs a result, users must scroll inside the original textarea to read content that could otherwise be displayed using the available space. This makes comparing the original content with the AI suggestion less convenient.\n\nObserved in the Steps to Reproduce field.",
-      "steps_to_reproduce": "1. Log in to the AI QA Bug Triage application.\n2. Open a project containing an existing bug report.\n3. Open the bug's Details page and enter edit mode.\n4. Ensure the Steps to Reproduce field contains enough text to require scrolling at its normal height.\n5. Use AI Assist to generate a suggestion for Steps to Reproduce.\n6. When the suggestion appears beside the original field, observe the heights of the textarea and AI suggestion panel.\n7. Notice whether the original textarea expands into the available space beneath it.",
+      "steps_to_reproduce": "1. Log in to the AI QA Bug Triage application.\n2. Open a project containing an existing bug report.\n3. Open the bug's Details page and enter edit mode.\n4. Ensure the Steps to Reproduce field contains enough text to require scrolling at its normal height.\n5. Use AI Assist to generate a suggestion for Steps to Reproduce.\n6. Compare the heights of the original textarea and AI suggestion panel.\n7. Notice whether the original textarea expands into the available space beneath it.",
       "expected_result": "When an AI suggestion is displayed beside a multiline original field, the original textarea should expand to use the available vertical space.\n\nThe textarea should be at least as tall as its normal height and should approximately match the AI suggestion panel's height when that panel is taller.\n\nIf the original text exceeds the expanded textarea's height, the textarea should remain independently scrollable.\n\nWhen the AI suggestion is dismissed, the original textarea should return to its normal height.\n\nThe behavior should remain usable on narrower screens.",
       "actual_result": "The original Steps to Reproduce textarea retains its shorter height while the adjacent AI Suggestion panel extends significantly farther down the page.\n\nA large unused area remains beneath the original textarea, even though its content is long enough to require an internal scrollbar.\n\nThe user must scroll inside the original textarea to read the remaining text instead of benefiting from the available vertical space.",
       "severity": "Minor",
@@ -506,7 +506,7 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-08T13:39:30.567762+00:00",
-      "updated_at": "2026-10-24T14:50:41.199152+00:00"
+      "updated_at": "2026-10-28T15:53:16.980443+00:00"
     },
     {
       "number": 27,
@@ -531,9 +531,9 @@
       "number": 28,
       "title": "Unexpected black background bar behind AI Priority suggestion \"Urgent\"",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome, FastAPI/Uvicorn; dark mode; Futuristic QA theme enabled through UI theme lab",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn, dark mode, Futuristic QA theme (temporary Chrome DevTools theme lab)",
       "description": "When reviewing AI-generated suggestions on the bug editing page, a dark rectangular bar appears behind the suggested Priority value \"Urgent\".\n\nThe bar extends across most of the suggestion card's content area and looks inconsistent with the styling of other AI suggestion cards.",
-      "steps_to_reproduce": "1. Log in to the AI QA Bug Triage application.\n2. Open a project containing a bug report.\n3. Open the bug for editing.\n4. Enable the Futuristic QA theme through the UI theme lab.\n5. Request AI-assisted triage or open a bug with pending AI suggestions.\n6. Locate an AI Priority suggestion with the value \"Urgent\".\n7. Observe the appearance of the suggested value.",
+      "steps_to_reproduce": "1. Log in to the AI QA Bug Triage application.\n2. Open a project containing a bug report.\n3. Open the bug for editing.\n4. Enable the Futuristic QA theme through the temporary Chrome DevTools theme lab.\n5. Request AI-assisted triage or open a bug with pending AI suggestions.\n6. Locate an AI Priority suggestion with the value \"Urgent\".\n7. Observe the appearance of the suggested value.",
       "expected_result": "The suggested Priority value \"Urgent\" is displayed clearly, with its intended text color and consistent styling. No unexpected dark bar appears behind the text.",
       "actual_result": "A dark, nearly black rectangular bar appears behind \"Urgent\" and extends horizontally across most of the AI suggestion card.",
       "severity": "Minor",
@@ -544,15 +544,15 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-12T09:35:26.216379+00:00",
-      "updated_at": "2026-10-24T14:49:21.373027+00:00"
+      "updated_at": "2026-10-29T10:54:41.084672+00:00"
     },
     {
       "number": 29,
       "title": "Incomplete horizontal dividers in bug details when Fix Version and Resolution are hidden",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome, FastAPI/Uvicorn; dark mode; Futuristic QA theme enabled through the temporary Chrome DevTools theme lab.",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn, dark mode, Futuristic QA theme (temporary Chrome DevTools theme lab)",
       "description": "On the read-only Bug Details page, horizontal separator lines below the Assignee and Status sections extend only approximately halfway across the details container when Fix Version and Resolution are not displayed.\n\nThis creates an inconsistent appearance compared with other full-width section dividers.",
-      "steps_to_reproduce": "Preconditions:\nA bug exists in the Triage state, with Fix Version and Resolution not currently applicable or displayed.\n\n1. Log in to the AI QA Bug Triage application.\n2. Open a project containing a bug report in the Triage state.\n3. Open the read-only details page for that bug (for example, BUG-38).\n4. Scroll to the bottom metadata section containing Assignee, Status, Created, and Updated.\n5. Observe the horizontal separator lines below Assignee and Status.",
+      "steps_to_reproduce": "Preconditions:\nA bug exists in the Triage state, with Fix Version and Resolution not currently applicable or displayed.\n\n1. Log in to the AI QA Bug Triage application.\n2. Open a project containing a bug report in the Triage state.\n3. Scroll to the bottom metadata section containing Assignee, Status, Created, and Updated.\n4. Observe the horizontal separator lines below Assignee and Status.",
       "expected_result": "When Fix Version and Resolution are not displayed, horizontal dividers beneath Assignee and Status extend across the entire width of the details container, consistent with other section dividers.\n\nThe positioning of the existing fields must remain unchanged.\n\nWhen Fix Version and Resolution become applicable and visible, the layout should continue to display correctly.",
       "actual_result": "The divider lines below Assignee and Status extend only across the left half of the details container, leaving the right half visually empty.",
       "severity": "Minor",
@@ -563,13 +563,13 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-12T09:37:54.353670+00:00",
-      "updated_at": "2026-10-24T14:49:28.391876+00:00"
+      "updated_at": "2026-10-29T10:52:55.062309+00:00"
     },
     {
       "number": 30,
       "title": "Double turquoise border appears when focusing form fields",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome, FastAPI/Uvicorn; dark mode; Futuristic Refined — Vivid Colors theme enabled through the temporary Chrome DevTools theme lab.",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn, dark mode, Futuristic Refined \u2014 Vivid Colors theme (temporary Chrome DevTools theme lab)",
       "description": "When hovering over an editable form field, its border changes to turquoise as intended. However, clicking inside the field adds a second solid turquoise outline outside the existing border.\n\nThis creates an unnecessarily thick, double-border appearance. The issue affects the visual consistency of form controls but does not prevent users from entering or saving data.\n\nThe issue has been observed on the Bug Edit page, particularly with textareas and dropdowns.",
       "steps_to_reproduce": "1. Log in to AI QA Bug Triage.\n2. Open a project containing an existing bug.\n3. Open the bug details page and click \"Edit\".\n4. Hover over the \"Actual Result\" textarea and observe the turquoise border.\n5. Click inside the textarea while keeping the mouse pointer over it.\n6. Observe the double turquoise border.\n7. Repeat with the \"Assignee\" dropdown.",
       "expected_result": "Hovering over a field highlights its border in turquoise. When the field receives focus, a single clear turquoise border should be displayed, optionally with a subtle glow. Hover and focus effects should not produce overlapping solid outlines. Keyboard focus must remain clearly visible.",
@@ -582,17 +582,17 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-12T18:19:14.229781+00:00",
-      "updated_at": "2026-10-24T14:49:39.004426+00:00"
+      "updated_at": "2026-10-29T09:09:26.725641+00:00"
     },
     {
       "number": 31,
       "title": "WCAG 2.2 AA contrast failure for Blocker/Urgent text in dark theme",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome, FastAPI/Uvicorn; dark mode; Futuristic Refined — Vivid Colors theme enabled through the temporary Chrome DevTools theme lab.",
-      "description": "The Blocker severity and Urgent priority labels do not meet WCAG 2.2 Success Criterion 1.4.3 — Contrast (Minimum), Level AA, when displayed against the brighter backgrounds of the Bug List and read-only Bug Details page.\n\nThe original text color #FF1744 provides approximately 3.3–3.7:1 contrast, depending on the background and hover state. The minimum required ratio is 4.5:1 because the labels are 16px text.\n\nThis may reduce readability for users with low vision or reduced contrast sensitivity.",
-      "steps_to_reproduce": "1. Enable the Futuristic Refined — Vivid Colors dark theme.\n2. Open a project containing a bug with Severity = Blocker and Priority = Urgent.\n3. Locate the bug in the Bug List.\n4. Observe the Blocker/Urgent text in normal and hovered row states.\n5. Open the bug's read-only Bug Details page.\n6. Measure the foreground/background contrast using a WCAG contrast checker.",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn, dark mode, Futuristic Refined \u2014 Vivid Colors theme (temporary Chrome DevTools theme lab)",
+      "description": "The Blocker severity and Urgent priority labels do not meet WCAG 2.2 Success Criterion 1.4.3 \u2014 Contrast (Minimum), Level AA, when displayed against the brighter backgrounds of the Bug List and read-only Bug Details page.\n\nThe original text color #FF1744 provides approximately 3.3\u20133.7:1 contrast, depending on the background and hover state. The minimum required ratio is 4.5:1 because the labels are 16px text.\n\nThis may reduce readability for users with low vision or reduced contrast sensitivity.",
+      "steps_to_reproduce": "1. Enable the Futuristic Refined \u2014 Vivid Colors dark theme.\n2. Open a project containing a bug with Severity = Blocker and Priority = Urgent.\n3. Locate the bug in the Bug List.\n4. Observe the Blocker/Urgent text in normal and hovered row states.\n5. Open the bug's read-only Bug Details page.\n6. Measure the foreground/background contrast using a WCAG contrast checker.",
       "expected_result": "All severity and priority values meet WCAG 2.2 Level AA contrast requirements, including normal and hover states. Normal-sized text must achieve at least 4.5:1 contrast.",
-      "actual_result": "Bug List normal background (#1B2D46): approximately 3.61:1.\n\nBug List brighter hover background (previously measured): approximately 3.32:1.\n\nBug Details including gradient: approximately 3.61–3.68:1.\n\nAll labels are 16px and do not qualify for the large-text exception.",
+      "actual_result": "Bug List normal background (#1B2D46): approximately 3.61:1.\n\nBug List brighter hover background (previously measured): approximately 3.32:1.\n\nBug Details including gradient: approximately 3.61\u20133.68:1.\n\nAll labels are 16px and do not qualify for the large-text exception.",
       "severity": "Major",
       "priority": "High",
       "status": "Closed",
@@ -601,13 +601,13 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-13T11:30:41.167943+00:00",
-      "updated_at": "2026-10-24T14:51:27.025229+00:00"
+      "updated_at": "2026-10-29T09:09:34.065440+00:00"
     },
     {
       "number": 32,
       "title": "Bug List table does not fit mobile viewport, requiring horizontal scrolling to access bug information",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Chrome, FastAPI/Uvicorn; mobile viewport emulated using Chrome DevTools.",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn, mobile viewport (Chrome DevTools emulation)",
       "description": "On narrow mobile viewports, the Bug List retains a desktop-oriented table layout that exceeds the available screen width. As a result, only the first columns are visible, while additional bug information is positioned outside the viewport.\n\nUsers must scroll horizontally to access the remaining columns, making it difficult to scan, compare, and navigate bug reports on mobile devices.",
       "steps_to_reproduce": "1. Log in to the application.\n2. Open a project containing multiple bug reports.\n3. Set the browser viewport width to 390px using Chrome DevTools.\n4. Navigate to the Bug List.\n5. Observe the table layout and attempt to access the columns outside the visible area.",
       "expected_result": "The Bug List should adapt to narrow mobile viewports, presenting bug information in a readable and usable responsive layout.\n\nImportant bug details and available actions should be easily accessible without requiring users to navigate a desktop-width table.\n\nThe layout should maintain appropriate text wrapping, spacing, and touch-friendly interactive elements.",
@@ -620,13 +620,13 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-14T07:40:25.846193+00:00",
-      "updated_at": "2026-10-24T14:51:33.068095+00:00"
+      "updated_at": "2026-10-29T09:10:06.466026+00:00"
     },
     {
       "number": 33,
       "title": "AI suggestion validation accepts conflicting duplicate JSON properties",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Python 3.14.2, FastAPI backend, OpenAI API adapter (mocked provider response)",
+      "environment": "Windows 11, FastAPI backend, OpenAI API adapter (mocked provider response)",
       "description": "The AI-assisted triage backend accepts a malformed AI response containing duplicate JSON object properties with conflicting values.\n\nPython's default JSON decoder silently retains the last occurrence of a duplicate property. Consequently, the AI suggestion validator never receives both values and cannot detect the conflict.\n\nThis violates the intended AI output validation behavior under AC-019.3 and AC-019.4.\n\nThe issue was reproduced using a mocked provider response. No occurrence was confirmed with the live OpenAI API.",
       "steps_to_reproduce": "1. Prepare an AI-assisted triage request using a mocked OpenAI provider response.\n2. Configure the mock to return a suggestion containing duplicate JSON properties with conflicting values, for example:\n   {\"field\":\"title\",\"value\":\"First\",\"value\":\"Second\"}\n3. Pass the mocked response through the application's OpenAI response adapter and AI suggestion validation pipeline.\n4. Inspect the parsed response and resulting validated suggestion.\n5. Observe which Title value is accepted.",
       "expected_result": "The backend detects duplicate JSON object properties and rejects the ambiguous AI response before domain validation.\n\nNo suggestion derived from the malformed response is presented as usable. Existing AI failure handling preserves the user's form data and allows manual continuation or retry.",
@@ -639,15 +639,15 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-14T13:42:34.896374+00:00",
-      "updated_at": "2026-10-24T14:51:40.408742+00:00"
+      "updated_at": "2026-10-29T10:03:16.597315+00:00"
     },
     {
       "number": 34,
       "title": "Success message overflows the viewport when creating a bug with an extremely long title",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, Google Chrome, FastAPI/Uvicorn",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "When creating a bug with an extremely long title, the success confirmation message displays the entire bug title without properly constraining or wrapping the text.\n\nAs a result, the message extends beyond the page's content area and is clipped at the right edge of the viewport.\n\nThe bug title itself is displayed correctly in the bug list and bug details page. The issue is limited to the success confirmation message.\n\nThis is a minor UI presentation defect and does not prevent successful bug creation.",
-      "steps_to_reproduce": "1. Log in as a Project Owner.\n2. Open an existing project.\n3. Click \"New Bug\".\n4. Enter an extremely long title consisting of repeated characters (e.g., several hundred characters without spaces).\n5. Complete the other required fields.\n6. Click \"Create\".\n7. Observe the success confirmation message above the bug list.",
+      "steps_to_reproduce": "1. Log in as a Project Owner.\n2. Open an existing project.\n3. Click \"New Bug\".\n4. Enter a title with several hundred characters and no spaces.\n5. Complete the other required fields.\n6. Click \"Create\".\n7. Observe the success confirmation message above the bug list.",
       "expected_result": "The success confirmation message should remain within the page boundaries and be fully readable, regardless of the bug title's length.\n\nLong text should wrap, be truncated appropriately, or be omitted from the confirmation message.",
       "actual_result": "The bug is created successfully, but the confirmation message includes the entire extremely long title.\n\nThe message extends horizontally beyond the page content area and is clipped at the right edge of the viewport.\n\nThe title displays correctly in the bug list and bug details page.",
       "severity": "Minor",
@@ -658,14 +658,14 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-15T15:00:02.610550+00:00",
-      "updated_at": "2026-10-24T14:51:46.640795+00:00"
+      "updated_at": "2026-10-29T09:10:28.456386+00:00"
     },
     {
       "number": 35,
-      "title": "AI Assist does not use relevant historical bug data in suggestions",
+      "title": "AI Assist fails to suggest relevant historical values for missing bug fields",
       "affected_version": "0.2.0-dev",
-      "environment": "Windows 11, GPT-6 Luna (OpenAI API, Python evaluation harness)",
-      "description": "During real-model evaluation of AC-019.2, AI Assist generated valid suggestions but did not demonstrate use of relevant historical bug information.\n\nIn scenario EVAL-D (TC-354), two closely related historical bugs contained matching Environment, Affected Version, Severity, Priority and Assignee values.\n\nAcross two independent GPT-6 Luna evaluations, AI Assist only rewrote information already present in the current bug report. None of the distinctive historical values appeared in the suggestions.\n\nReproduced in 2/2 evaluation runs.\n\nThis is a suspected AI suggestion-quality issue. Further investigation is needed to determine whether the behavior results from overly conservative prompting or is acceptable under the current requirements.\n\nEvidence (stored locally):\nPass 1: ai-evaluation-results/20261016T130306Z-a7300483/run.json\nPass 2: ai-evaluation-results/20261016T131919Z-625454ca/run.json",
+      "environment": "Windows 11, Python evaluation harness, OpenAI API (GPT-6 Luna)",
+      "description": "During real-model evaluation of AC-019.2, AI Assist generated valid suggestions but did not demonstrate use of relevant historical bug information.\n\nIn scenario EVAL-D (TC-354), two closely related historical bugs contained matching Environment, Affected Version, Severity, Priority and Assignee values.\n\nAcross two independent GPT-6 Luna evaluations, AI Assist only rewrote information already present in the current bug report. None of the distinctive historical values appeared in the suggestions.\n\nReproduced in 2/2 evaluation runs.\n\nThis is a suggestion-quality issue rather than an invalid or fabricated response.\n\nEvidence (stored locally):\nPass 1: ai-evaluation-results/20261016T130306Z-a7300483/run.json\nPass 2: ai-evaluation-results/20261016T131919Z-625454ca/run.json",
       "steps_to_reproduce": "1. Open the AI evaluation scenario EVAL-D (TC-354).\n2. Use the fictional current bug \"Export stays disabled for an empty grid\", leaving Environment, Affected Version, Severity, Priority and Assignee unspecified.\n3. Include historical bugs 501 and 502, both containing Environment \"TestOS 4 / Aster Browser 12\", Affected Version \"0.8.2\", Severity \"Moderate\", Priority \"Medium\" and Assignee ID 12.\n4. Run the real-model evaluation using GPT-6 Luna with the existing production prompt and response validation.\n5. Inspect the generated suggestions for Scenario D.\n6. Repeat the evaluation with the same scenario inputs.\n7. Compare both responses against the current bug and historical data.",
       "expected_result": "AI Assist considers relevant historical reports when generating suggestions. Where reasonably supported, it may suggest missing field values or other useful improvements derived from that history without presenting historical information as independently verified facts about the current bug.",
       "actual_result": "Across two real-model evaluation runs, AI Assist generated valid suggestions that only rewrote existing current-bug information.\n\nNeither response suggested any distinctive values from the two relevant historical bugs, including Environment, Affected Version, Severity, Priority or Assignee.\n\nHistorical-context usefulness was therefore not demonstrated. No factual fabrication or invalid response was observed.",
@@ -677,7 +677,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-16T13:28:34.651550+00:00",
-      "updated_at": "2026-10-24T14:51:53.611184+00:00"
+      "updated_at": "2026-10-29T10:41:27.348434+00:00"
     },
     {
       "number": 36,
@@ -704,9 +704,9 @@
       "affected_version": "0.2.0-dev",
       "environment": "Windows 11, Chrome (DevTools Slow 4G throttling), FastAPI/Uvicorn",
       "description": "The New Bug form allows repeated submissions while the initial Create request is still pending. Multiple POST requests are processed, resulting in duplicate bug reports being saved from a single intended creation workflow.",
-      "steps_to_reproduce": "1. Open a project and click New Bug.\n2. Open Chrome DevTools (F12), go to Network and enable Slow 4G throttling.\n3. Enter some title for the bug.\n4. Click **Create** repeatedly while the request is pending.\n5. Check the bug list for duplicate reports.",
+      "steps_to_reproduce": "1. Open a project and click New Bug.\n2. Open Chrome DevTools (F12), go to Network and enable Slow 4G throttling.\n3. Enter a title.\n4. Click **Create** repeatedly while the request is pending.\n5. Check the bug list for duplicate reports.",
       "expected_result": "Only one bug report should be created per submission. The Create button should be disabled while the request is pending to prevent duplicate submissions. It should become available again if the request fails.",
-      "actual_result": "Multiple bug reports were created from repeated clicks on Create. During manual reproduction, eight separate reports (BUG-1 through BUG-8), all titled \"Aaa1\", were created within approximately two seconds.\n\nEach report received a unique bug ID, confirming that duplicate submissions were processed and persisted.\n\nThe defect was reproduced using Chrome DevTools with 3G network throttling.",
+      "actual_result": "Repeated clicks on Create while the initial request is pending result in duplicate bug reports.\n\nDuring manual reproduction using Chrome DevTools with Slow 4G throttling, eight separate reports (BUG-1 through BUG-8), all titled \"Aaa1\", were created within approximately two seconds.\n\nEach report received a unique bug ID, confirming that the duplicate submissions were processed and saved.",
       "severity": "Major",
       "priority": "High",
       "status": "Closed",
@@ -715,7 +715,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-22T12:40:31.414676+00:00",
-      "updated_at": "2026-10-24T14:52:11.556954+00:00"
+      "updated_at": "2026-10-29T11:35:34.280854+00:00"
     },
     {
       "number": 38,
@@ -723,8 +723,8 @@
       "affected_version": "0.2.0-dev",
       "environment": "Windows 11, Postman, FastAPI/Uvicorn (isolated test server)",
       "description": "The Add Member API does not properly validate the email field when it contains a non-string value. Sending an array instead of an email string results in HTTP 500 Internal Server Error instead of a validation error.",
-      "steps_to_reproduce": "1. Start the isolated Postman test server.\n2. Authenticate as a Project Owner.\n3. Send POST /projects/{project_id}/members with the following JSON body:\n   {\"email\": [\"qa@example.com\"], \"role\": \"Developer\"}\n4. Check the response status.",
-      "expected_result": "The API rejects the invalid email type with HTTP 422 Unprocessable Entity. No project membership is created.",
+      "steps_to_reproduce": "1. Start the isolated test server used for Postman runs.\n2. Authenticate as a Project Owner.\n3. Send POST /projects/{project_id}/members with the following JSON body:\n   {\"email\": [\"dev1@example.com\"], \"role\": \"Developer\"}\n4. Check the response status.",
+      "expected_result": "The API rejects the invalid email type with HTTP 422 Unprocessable Content. No project membership is created.",
       "actual_result": "The API returns HTTP 500 Internal Server Error when the email field contains an array instead of a string.",
       "severity": "Minor",
       "priority": "Medium",
@@ -734,7 +734,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-22T13:40:35.743033+00:00",
-      "updated_at": "2026-10-24T14:52:18.748680+00:00"
+      "updated_at": "2026-10-29T10:59:01.765389+00:00"
     },
     {
       "number": 39,
@@ -742,7 +742,7 @@
       "affected_version": "0.2.0-dev",
       "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "Some application text uses the browser-default serif font instead of Arial, causing inconsistent typography across pages and form controls.",
-      "steps_to_reproduce": "1. Log in to the application.\n2. Open a project and select Create Bug.\n3. Compare form labels with input text and buttons.\n4. Open the About page and compare its text with navigation and headings.",
+      "steps_to_reproduce": "1. Log in to the application.\n2. Open a project and click New Bug.\n3. Compare form labels with input text and buttons.\n4. Open the About page and compare its text with navigation and headings.",
       "expected_result": "Application text and form controls use consistent Arial typography, except intentionally styled elements such as AI suggestions.",
       "actual_result": "Form labels and other text appear in a serif font, while headings, inputs and some navigation elements use Arial.",
       "severity": "Minor",
@@ -753,13 +753,13 @@
       "assignee": "qa2",
       "created_by": "owner",
       "created_at": "2026-10-23T11:19:04.353750+00:00",
-      "updated_at": "2026-10-24T14:52:24.971428+00:00"
+      "updated_at": "2026-10-29T10:42:03.115915+00:00"
     },
     {
       "number": 40,
       "title": "Bug List pagination controls shift vertically between pages with different title lengths",
       "affected_version": "0.2.0-dev",
-      "environment": " Windows 11, Chrome, FastAPI/Uvicorn",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
       "description": "The Bug List's Previous/Next pagination controls change their vertical position when navigating between full pages containing bug reports with different title lengths.\n\nLonger titles cause table rows to expand, while shorter titles produce a shorter table. Because pagination controls are positioned beneath the table, these height differences cause the controls to move vertically, making repeated navigation inconvenient.\n\nNote that pagination controls may still change position on the last page when it contains fewer bugs than the selected page size. This is expected and acceptable because the table naturally contains fewer rows. It is outside the scope of this defect.",
       "steps_to_reproduce": "1. Log in and open a project containing multiple full pages of bug reports with varying title lengths.\n2. Set Bugs per page to 10.\n3. Navigate to a full page containing mostly short bug titles.\n4. Note the vertical position of the Previous/Next pagination controls.\n5. Navigate to another full page containing longer bug titles.\n6. Observe that the pagination controls have moved vertically.\n7. Navigate back and forth between these pages and observe the repeated position changes.",
       "expected_result": "Pagination controls should maintain a consistent vertical position when navigating between full pages containing the same number of bugs, regardless of title length.\n\nUsers should be able to navigate repeatedly without having to reposition the pointer or scroll to locate the controls.",
@@ -772,7 +772,7 @@
       "assignee": "qa1",
       "created_by": "owner",
       "created_at": "2026-10-23T13:39:32.366732+00:00",
-      "updated_at": "2026-10-24T14:52:31.177696+00:00"
+      "updated_at": "2026-10-29T09:17:43.582583+00:00"
     },
     {
       "number": 41,
@@ -792,6 +792,234 @@
       "created_by": "owner",
       "created_at": "2026-10-23T15:57:00.275506+00:00",
       "updated_at": "2026-10-24T14:52:37.619585+00:00"
+    },
+    {
+      "number": 42,
+      "title": "Try Demo button on the Login page is misaligned and lacks visual distinction",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
+      "description": "The Try Demo button on the Login page is left-aligned while its introductory text is centered, making the Demo section appear visually disconnected. The button also uses styling similar to the primary Login action, making it insufficiently distinguishable as an alternative way to explore the application.",
+      "steps_to_reproduce": "1. Open the Login page.\n2. Locate the Try Demo section below the Login form.\n3. Compare the button's alignment with the introductory text.\n4. Compare its appearance with the primary Login button.",
+      "expected_result": "The Try Demo text and button are aligned consistently within a visually cohesive section, and the Try Demo button is visually distinguishable from the primary Login action.",
+      "actual_result": "The introductory text is centered, but the Try Demo button is left-aligned. Its styling provides insufficient visual distinction from the Login button.",
+      "severity": "Minor",
+      "priority": "High",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-26T17:24:00.882099+00:00",
+      "updated_at": "2026-10-27T18:12:50.914758+00:00"
+    },
+    {
+      "number": 43,
+      "title": "Authorization race allows access to or modification of another user's project",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, FastAPI TestClient, SQLite",
+      "description": "Owner-only project operations check authorization before starting their write transaction. Concurrent project deletion and SQLite ID reuse can cause a pending operation to affect another user's project.\n\nAffected operations include Update Project, Delete Project, Add Member, and Remove Member.\n\nThis can expose private bugs, allow unauthorized project modifications or deletion, and create orphaned memberships that can prevent application startup.",
+      "steps_to_reproduce": "1. Create two users (User A and User B) in a disposable test database.\n2. As User A, create the newest project (ID N).\n3. Start POST /projects/N/members to add User A as Developer. Pause after the owner check using a test hook.\n4. As User A, execute DELETE /projects/N while the first request is paused.\n5. Resume Add Member and verify that an orphaned membership is created.\n6. As User B, create a project that reuses ID N and add a private bug.\n7. As User A, call GET /projects/N and GET /projects/N/bugs.\n8. As User B, call GET /projects/N/members and inspect the members.\n\nAdditional scenarios: Repeat with a pending PUT /projects/N or DELETE /projects/N, allowing User B to create a new project with the recycled ID before the pending write executes.",
+      "expected_result": "Owner-only operations must complete against the original project or fail safely if it has been deleted. No unauthorized access, project modifications, or orphaned memberships should occur.",
+      "actual_result": "When an Add Member operation continues after the original project is deleted and its ID is reused by User B, it creates an unauthorized Developer membership in User B's project. This grants User A access to User B's private project and its bug data.\n\nRelated race conditions also allow unauthorized renaming or deletion of User B's project.\n\nIf the race leaves an orphaned membership, the application's startup integrity check fails and prevents the application from starting.",
+      "severity": "Blocker",
+      "priority": "High",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-27T19:01:55.721832+00:00",
+      "updated_at": "2026-10-29T12:14:34.015902+00:00"
+    },
+    {
+      "number": 44,
+      "title": "Login returns HTTP 500 for passwords exceeding 72 UTF-8 bytes",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, FastAPI TestClient, SQLite, bcrypt 5.0.0",
+      "description": "The login endpoint does not handle passwords exceeding bcrypt's 72-byte limit. For registered email addresses, bcrypt raises an unhandled ValueError, resulting in HTTP 500. Unregistered email addresses return HTTP 401 instead, allowing unauthenticated users to determine whether an account exists.",
+      "steps_to_reproduce": "1. Register a user with email jane@example.com and password Password1.\n2. Send POST /login with that email and a 73-byte password (e.g., 73 \"a\" characters).\n3. Repeat the request using an unregistered email address and the same password.\n4. Compare the HTTP responses.\n5. Repeat with a multibyte password exceeding 72 UTF-8 bytes (e.g., 37 \"\u00e9\" characters).",
+      "expected_result": "Both registered and unregistered email addresses should return HTTP 401 with the generic message \"Invalid email or password.\" No account information should be disclosed.",
+      "actual_result": "Login returns HTTP 500 (\"Internal Server Error\") for registered email addresses with passwords exceeding 72 UTF-8 bytes, but HTTP 401 for unregistered addresses. This difference allows account enumeration without authentication.",
+      "severity": "Moderate",
+      "priority": "Medium",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa2",
+      "created_by": "owner",
+      "created_at": "2026-10-28T10:17:22.219823+00:00",
+      "updated_at": "2026-10-29T09:13:45.180560+00:00"
+    },
+    {
+      "number": 45,
+      "title": "Delayed project rename can overwrite newer edits",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chromium (Playwright), FastAPI/Uvicorn, SQLite",
+      "description": "The Projects list allows editing and repeated Save requests while a project rename is pending. Delayed or out-of-order API responses can discard newer unsaved edits, display an outdated project name, or cause an older name to overwrite a newer saved value. A delayed response can also disrupt editing another project.",
+      "steps_to_reproduce": "1. As Project Owner, open the Projects list and edit a project named \"A\".\n2. Use Playwright to delay the response from PUT /projects/{id}.\n3. Change the project name to \"B\" and click Save.\n4. While the response is pending, change the input to \"C\".\n5. Release the delayed response and observe that \"C\" disappears and the row displays \"B\".\n6. In a separate run, hold the first Save request (\"B\") before it reaches the server.\n7. Change the name to \"C\", click Save again, and let that request complete before releasing the first request.\n8. Reload the page and verify that the database retained \"B\" instead of the newer saved name \"C\".",
+      "expected_result": "Pending Save operations should not discard newer edits or interfere with other editing sessions. The displayed and stored project names should remain consistent, and an older request must not overwrite a newer saved value.",
+      "actual_result": "A delayed Save response discards newer unsaved input (\u201cC\u201d) and displays the name from that Save (\u201cB\u201d). Out-of-order responses display an outdated name, and reordered requests allow an older name to overwrite a newer saved value in the database. A delayed response can also interrupt editing another project.",
+      "severity": "Minor",
+      "priority": "Medium",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-28T10:58:24.782069+00:00",
+      "updated_at": "2026-10-29T11:23:38.062634+00:00"
+    },
+    {
+      "number": 46,
+      "title": "Creating a project discards unsaved edits to another project's name",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chromium (Playwright), FastAPI/Uvicorn, SQLite",
+      "description": "Creating a new project refreshes the Projects list and discards unsaved name changes in another project's edit form. The affected project remains in edit mode, but its input is reset to the previously saved name without warning.",
+      "steps_to_reproduce": "1. As Project Owner, open the Projects list.\n2. Click Edit on an existing project and change its name without saving.\n3. Click New Project and create another project.\n4. Return to the original project's edit form.\n5. Observe that the unsaved name has been replaced by the previously saved name.",
+      "expected_result": "Unsaved project name changes should be preserved when the Projects list refreshes, or the user should be warned before they are discarded.",
+      "actual_result": "Creating another project refreshes the Projects list and silently discards the original project\u2019s unsaved name changes. The project remains in edit mode, but the input reverts to the previously saved name. The database is unaffected.",
+      "severity": "Minor",
+      "priority": "Low",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa2",
+      "created_by": "owner",
+      "created_at": "2026-10-28T11:13:08.656617+00:00",
+      "updated_at": "2026-10-29T11:24:02.285396+00:00"
+    },
+    {
+      "number": 47,
+      "title": "Browser navigation can cause stale bug editor to overwrite newer changes",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chromium (Playwright), FastAPI/Uvicorn",
+      "description": "Browser Back/Forward navigation can restore an outdated bug edit form from the back-forward cache (bfcache). The application refreshes the bug data but does not update the open form, causing unchanged fields to appear modified. Saving the form can silently overwrite newer changes made by another user, including bug details, classification, and assignment.",
+      "steps_to_reproduce": "1. As Project Owner, open a bug in Triage with title \"Original title\", severity Minor, and priority Low.\n2. Click Edit without changing any fields.\n3. Navigate to the project page using the project link.\n4. As another user, update the bug's title to \"Newer title\", severity to Major, and priority to High.\n5. Use browser Back to return to the bug editor, restoring the page from bfcache.\n6. Observe that the heading shows the updated title, but the edit form still contains the original values.\n7. Click Save without changing any fields.\n8. Reload the bug and verify that the newer changes have been overwritten by the original values.",
+      "expected_result": "Restoring the bug editor through browser navigation must not cause unchanged fields to overwrite newer saved data. Only fields intentionally modified by the user should be submitted when saving.",
+      "actual_result": "After browser navigation, the restored edit form displays outdated values while the application has refreshed its underlying bug data. Clicking Save without modifying any fields submits the old values and silently overwrites another user\u2019s newer changes. The issue also affects bug assignments.",
+      "severity": "Major",
+      "priority": "High",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-28T11:52:22.118714+00:00",
+      "updated_at": "2026-10-29T11:24:13.714534+00:00"
+    },
+    {
+      "number": 48,
+      "title": "JWT for nonexistent user can create orphan project membership and prevent application startup",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, FastAPI TestClient, SQLite (isolated test database)",
+      "description": "The authentication dependency validates the JWT signature and expiration but does not verify that the referenced user ID exists in the database.\n\nA correctly signed token containing a nonexistent user ID can therefore be accepted by protected endpoints. Project creation can then insert a membership referencing that nonexistent user because SQLite foreign-key enforcement is not enabled on normal connections.\n\nSource inspection indicates that the application\u2019s startup integrity check would then detect the orphan membership and refuse to start, potentially making the application unavailable until the invalid database relationship is repaired.",
+      "steps_to_reproduce": "1. Start the app with an isolated SQLite database and a test JWT secret.\n2. Sign an unexpired JWT for a nonexistent user_id (e.g., 9999).\n3. Send GET /projects with the token in the Authorization: Bearer header.\n4. Send POST /projects with the same token and {\"name\": \"Orphan Membership Test\"}.\n5. Check whether the API creates a membership for the nonexistent user.\n6. Restart the app with the same database, or run its startup integrity checks.\n7. Check whether the invalid foreign key prevents startup.",
+      "expected_result": "The API rejects authentication tokens referencing nonexistent user accounts with HTTP 401 Unauthorized.\n\nNo projects or memberships are created using an invalid user identity.\n\nDatabase integrity remains intact, and the application starts successfully.",
+      "actual_result": "A correctly signed JWT referencing a nonexistent user is accepted by the authentication dependency instead of returning HTTP 401. Protected requests can therefore proceed using an invalid user identity.\n\nSource inspection indicates that project creation can insert an orphan membership because SQLite foreign-key constraints are not enforced on normal connections. Such an invalid relationship would cause the application's startup integrity check to fail, potentially preventing startup. The complete startup-failure sequence has not been reproduced end-to-end.",
+      "severity": "Major",
+      "priority": "High",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-28T15:09:58.747921+00:00",
+      "updated_at": "2026-10-29T10:46:32.121234+00:00"
+    },
+    {
+      "number": 49,
+      "title": "Project-ID reuse race can delete or expose another project's bug and member data",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, FastAPI TestClient, SQLite (isolated test database)",
+      "description": "The bug deletion, bug retrieval, and project member retrieval endpoints perform authorization checks separately from the database operations they authorize.\n\nIf a project is deleted after the membership check and another account creates a project that reuses the same database ID, the original request may continue against the replacement project without revalidating authorization.\n\nFor bug deletion, this can result in deleting another project's bug when the replacement project contains a matching bug number. For read endpoints, the request may retrieve bug information or project membership data belonging to another account.\n\nThis is a remaining instance of the project-ID-reuse authorization race previously addressed in BUG-43 for project-management operations.\n\nSource inspection identified the transaction-boundary gaps, and deterministic concurrency tests reproduced the resulting unauthorized operations.",
+      "steps_to_reproduce": "1. Start the app with an isolated SQLite database and test-only accounts.\n2. Create Project A as Owner A and add a QA Analyst.\n3. Create a bug in Project A; note its project ID and bug number.\n4. Create Owner B, who has no access to Project A.\n5. Begin deleting Project A's bug using the QA Analyst's token.\n6. Pause after the authorization and bug checks, just before DELETE executes.\n7. As Owner A, delete Project A while the request is paused.\n8. As Owner B, create Project B; confirm its ID matches Project A's.\n9. Create a bug in Project B with the same bug number.\n10. Resume the paused deletion request.\n11. Check whether it deletes Project B's bug without authorization.\n12. Repeat the ID-reuse sequence for bug-list, bug-detail and member-list reads.\n13. Check whether any read returns Project B's data to the former Project A member.",
+      "expected_result": "Authorization remains valid for the specific project throughout the database operation.\n\nIf a project is deleted or replaced while a request is in progress, the request must not delete or expose data belonging to the replacement project.\n\nBug deletion and project data retrieval must preserve authorization boundaries even when SQLite reuses project IDs.",
+      "actual_result": "The affected endpoints perform authorization checks separately from their subsequent database operations, without maintaining a consistent authorization boundary.\n\nDeterministic concurrency tests confirmed that when the original project is deleted and its ID is reused by another project, an already-authorized request can continue against the replacement project. This resulted in unauthorized bug deletion and retrieval of another project's bug list, bug details and membership data.",
+      "severity": "Moderate",
+      "priority": "Medium",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-28T15:14:24.614613+00:00",
+      "updated_at": "2026-10-29T09:32:09.402553+00:00"
+    },
+    {
+      "number": 50,
+      "title": "New Bug form loses selected assignee when project membership changes",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Node.js (frontend regression test with simulated DOM)",
+      "description": "The New Bug form does not preserve the selected assignee when project membership changes.\n\nAdding or removing a project member triggers a refresh of the assignee dropdown. The dropdown is rebuilt without restoring the previously selected member, causing the selection to revert to Unassigned.\n\nThe New Bug form remains open, and no warning informs the user that the selected assignee has changed.\n\nAs a result, a bug may be created without its intended assignee.",
+      "steps_to_reproduce": "1. Log in as a Project Owner.\n2. Open a project containing at least one Developer and one QA Analyst.\n3. Open the New Bug form.\n4. Enter a valid bug title and the required information.\n5. Select an existing Developer as the assignee.\n6. Without closing the New Bug form, add another user to the project through the Members section.\n7. Return to the New Bug form and inspect the Assignee dropdown.\n8. Observe whether the previously selected Developer is still selected.\n9. Submit the New Bug form without manually changing the assignee again.\n10. Open the created bug and inspect its assigned user.",
+      "expected_result": "The New Bug form preserves the selected assignee when project membership changes, provided that the selected member remains eligible for assignment.\n\nIf the selected member is removed or becomes ineligible, the application informs the user that the assignee selection must be updated.\n\nThe application must not silently discard a valid assignee selection.",
+      "actual_result": "Adding a project member rebuilds the Assignee dropdown without preserving the selected value. The selection reverts to Unassigned, even though the previously selected Developer remains an eligible project member.\n\nNo warning is displayed, and submitting the form can create a bug without the intended assignee.",
+      "severity": "Minor",
+      "priority": "Medium",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa2",
+      "created_by": "owner",
+      "created_at": "2026-10-28T15:15:59.398865+00:00",
+      "updated_at": "2026-10-29T10:48:04.746902+00:00"
+    },
+    {
+      "number": 51,
+      "title": "Project page status messages are not automatically announced to screen-reader users",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
+      "description": "The Project page displays feedback messages after bug creation and project member management operations, but the corresponding message elements are not configured as accessible live regions.\n\nThe #bug-message and #member-message elements lack role=\"status\" or an equivalent aria-live attribute.\n\nConsequently, screen-reader users may not receive automatic announcements when success or error messages appear, requiring them to navigate manually to discover the result of an action.\n\nThis is inconsistent with other application pages that already provide accessible status messages and may violate WCAG 2.2 Success Criterion 4.1.3 (Status Messages).",
+      "steps_to_reproduce": "1. Start the application and enable a screen reader, such as NVDA.\n2. Log in as a Project Owner.\n3. Open a project containing at least one QA Analyst or Developer.\n4. Open the New Bug form.\n5. Enter valid bug information and submit the form.\n6. Observe the visible success message confirming that the bug was created.\n7. Check whether the screen reader automatically announces the success message without moving focus to it.\n8. Return to the project's Members section.\n9. Add a valid project member.\n10. Observe the visible feedback message confirming that the member was added.\n11. Check whether the screen reader automatically announces this message without requiring manual navigation.\n12. Inspect the #bug-message and #member-message elements and verify whether they expose accessible status or live-region semantics.",
+      "expected_result": "Success and error messages displayed on the Project page are automatically announced by screen readers without requiring users to move keyboard focus.\n\nThe bug creation and project member feedback elements expose appropriate accessibility semantics, such as role=\"status\" and aria-live=\"polite\".\n\nThe messages remain visually accessible and do not unnecessarily interrupt the user's current interaction.",
+      "actual_result": "The Project page displays bug creation and member-management feedback messages visually, but the `#bug-message` and `#member-message` elements lack accessible live-region semantics (`role=\"status\"` or `aria-live`).\n\nConsequently, message updates are not explicitly exposed as live-region announcements to assistive technologies.",
+      "severity": "Minor",
+      "priority": "Low",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa2",
+      "created_by": "owner",
+      "created_at": "2026-10-28T15:17:54.011573+00:00",
+      "updated_at": "2026-10-29T11:36:50.850014+00:00"
+    },
+    {
+      "number": 52,
+      "title": "Light theme briefly flashes dark when loading a page",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chromium (Claude browser), local test server (cache disabled, 4-second script delay)",
+      "description": "The application may initially render using dark-theme colours even when the user has saved the light theme.\n\nThe saved preference is applied by theme.js, which loads at the end of the HTML body. If the script is delayed, the browser can paint the page using the default dark colours before the light-theme class is applied.\n\nThis can cause a brief dark-to-light flash during page loading. The issue is cosmetic and does not affect functionality.",
+      "steps_to_reproduce": "1. Serve the frontend locally with theme.js delayed by about 4 seconds and caching disabled.\n2. Open /login.html while signed out and save the light-theme preference.\n3. Reload the page and observe the initial appearance.\n4. Compare the first paint timing with the loading time of theme.js.",
+      "expected_result": "The saved light theme is applied before the page's first paint, without initially displaying dark-theme colours.",
+      "actual_result": "The first paint occurred at 68 ms, while theme.js finished downloading at 4,029 ms.\n\nThe page initially lacked the light-theme class, indicating that the default dark colours were used before the saved preference was applied.\n\nThe initial dark frame was not directly captured, but the timing and implementation support the reported flash. The page displayed the correct light theme after loading.",
+      "severity": "Minor",
+      "priority": "Low",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-28T15:39:45.831463+00:00",
+      "updated_at": "2026-10-29T12:15:20.786821+00:00"
+    },
+    {
+      "number": 53,
+      "title": "New Bug validation errors appear outside the visible viewport",
+      "affected_version": "1.0.0-dev",
+      "environment": "Windows 11, Chrome, FastAPI/Uvicorn",
+      "description": "When creating a bug fails validation, the error message appears above the New Bug form. Because the Create button is at the bottom of the form, the message can be outside the visible viewport. Users must scroll back up to understand why creation failed. Successful creation is unaffected because the form closes.",
+      "steps_to_reproduce": "1. Open a test project and click New Bug.\n2. Enter a title containing 256 or more characters.\n3. Scroll to the bottom and click Create.\n4. Observe where the validation error appears.",
+      "expected_result": "The error appears near the Create button and is immediately visible. The form remains open with its values preserved.",
+      "actual_result": "The bug is not created, but the validation error appears above the entire form, outside the visible viewport.",
+      "severity": "Minor",
+      "priority": "Medium",
+      "status": "Closed",
+      "resolution": "Fixed",
+      "fix_version": "1.0.0",
+      "assignee": "qa1",
+      "created_by": "owner",
+      "created_at": "2026-10-28T17:40:58.811959+00:00",
+      "updated_at": "2026-10-29T12:17:04.091371+00:00"
     }
   ]
 }

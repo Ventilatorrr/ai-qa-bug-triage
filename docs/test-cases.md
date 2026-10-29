@@ -761,7 +761,7 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with both seeded projects (20 and 41 bugs); each project shows its own introduction; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L17); Chromium |
+| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with both seeded projects (20 and 53 bugs); each project shows its own introduction; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L17); Chromium |
 
 ## tests/frontend/native-input.test.html
 
