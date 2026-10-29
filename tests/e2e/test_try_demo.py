@@ -44,7 +44,7 @@ def test_try_demo_opens_seeded_projects_with_demo_note(page: Page):
     page.go_back()
     page.get_by_role("link", name="AI QA Bug Triage", exact=True).click()
     expect(page.get_by_role("heading", level=2, name="AI QA Bug Triage", exact=True)).to_be_visible()
-    expect(page.get_by_text("Showing 1–10 of 41")).to_be_visible()
+    expect(page.get_by_text("Showing 1–10 of 53")).to_be_visible()
     expect(note).to_be_hidden()
     expect(page.locator("#demo-history-note")).to_have_text(HISTORY_NOTE)
     expect(page.locator("#demo-history-note")).to_be_visible()
