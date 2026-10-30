@@ -20,7 +20,7 @@ below. The GHCR package must be public so Render can pull it.
 
 | Release | Commit | Image digest |
 | --- | --- | --- |
-| | | |
+| `v1.0.0-rc.1` (image tag `1.0.0-rc.1`) | `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7` | `sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef` |
 
 ## 3. Render services
 
@@ -78,14 +78,22 @@ fails with a database error: fix the mount permissions rather than changing the 
 
 ## 5. Smoke checklist (staging, then production)
 
-- [ ] `/version` returns the expected version; About shows it.
-- [ ] Register, log in and log out; create a project and a bug; move it through the lifecycle.
-- [ ] Try Demo opens both seeded projects; AI Assist returns suggestions (when configured).
-- [ ] A QA Analyst can leave a project.
-- [ ] Restart the service: the data created above is still there.
-- [ ] In Render Shell, `python -m app.admin status` shows the database path and runs without errors.
+**Manual smoke testing**
+
+- [ ] `/version` returns the expected version; the About page shows it.
+- [ ] Register three accounts for the Project Owner, QA Analyst and Developer roles.
+      Registration logs in automatically, so also log out and log in again explicitly.
+- [ ] Create a project, add the QA Analyst and Developer as members, and create and assign a bug.
+- [ ] Move the bug through Triage → Open → Development → Testing → Closed with the required
+      roles and assignments.
+- [ ] Try Demo opens both seeded Demo projects; AI Assist returns real suggestions.
+- [ ] The QA Analyst and Developer members can each leave a project.
+- [ ] Restart the Render service: the projects, members and bugs created above are still there.
+
+**Deployment verification**
+
+- [ ] In Render Shell, `python -m app.admin status` shows the expected database path and no errors.
 - [ ] Response headers include `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`.
-      Add HSTS only if Render does not already send `Strict-Transport-Security`.
 
 ## 6. Go/No-Go and promotion
 
