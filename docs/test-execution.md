@@ -1,6 +1,6 @@
 # QA test execution report
 
-Reporting date: **29 October 2026**. This report summarizes what was executed and
+Reporting date: **30 October 2026**. This report summarizes what was executed and
 what the results show. The [test-case catalogue](test-cases.md) defines the cases,
 the [RTM](traceability-matrix.md) owns acceptance-criteria coverage, and the
 [defect summary](defect-summary.md) records tracked defects. Counts below are
@@ -12,11 +12,11 @@ not run) are labelled as such.
 | Area | Status |
 | --- | --- |
 | Released | **v0.2.0** (GitHub development release, 24 October 2026): Increments 1–3, REQ-001–REQ-023 |
-| Deployed | v0.2.0 development deployment on Render since 25 October 2026 |
-| In development | `main` at `1.0.0-dev`: Try Demo (REQ-024), AI usage limits (REQ-025) and v1.0.0 release hardening are merged; v1.0.0 is not yet released or deployed |
-| Latest full local regression | 29 October 2026, data retention and account deletion work: Python **823 passed** (backend 760, offline AI evaluation 63), frontend JavaScript **138 passed**, Chromium Playwright + BDD **34 passed**; no failures or skips. Postman CLI: 25 requests, **50/50** assertions (assertions, not test cases). The later [authorization race fixes](#authorization-race-fixes--29-october-2026) were verified with targeted runs only |
-| Pull request CI | Hardening and BUG-53 changes merged through pull requests #84 and #85; their CI run evidence is not yet recorded here |
-| Release-candidate checks | Not yet performed (see [pending release verification](#pending-release-verification)) |
+| Deployed | v0.2.0 development deployment on Render since 25 October 2026, currently suspended; `v1.0.0-rc.1` on Render staging since 30 October 2026. v1.0.0 is not deployed to production |
+| Release candidate | `v1.0.0-rc.1` at `22af3b3` (`APP_VERSION` 1.0.0), with Try Demo (REQ-024), AI usage limits (REQ-025) and the v1.0.0 release hardening. v1.0.0 is not publicly released |
+| Latest full local regression | 30 October 2026, release candidate: Python **829 passed** (backend 766, offline AI evaluation 63), frontend JavaScript **138 passed**, Chromium Playwright + BDD full suite passed (count not recorded), Postman **50/50** assertions, JMeter 0 errors. See [release-candidate verification](#v100-release-candidate-verification--30-october-2026) |
+| Pull request CI | All five required checks passed on the release-candidate pull request #90 and its merge commit. CI runs for the earlier pull requests #84 and #85 are not recorded here; the release-candidate runs cover the merged code |
+| Release-candidate checks | Staging verification **passed** on 30 October 2026. Production deployment, production smoke testing and the final Go/No-Go decision are pending (see [pending release verification](#pending-release-verification)) |
 | AC coverage | **109 Covered / 0 Partial / 0 Not Covered** of 109 ACs. This assesses test evidence for each AC; it does not by itself establish release readiness |
 | Defects | 54 tracked defects in the [defect summary](defect-summary.md) (28 October 2026 snapshot, plus BUG-54 on 29 October), all Closed: 39 fixed in v0.1.0–v0.2.0, 13 fixed for the planned v1.0.0 (including BUG-54), and 2 closed without a fix |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
@@ -38,6 +38,51 @@ not run) are labelled as such.
   gitignored `ai-evaluation-results/` directory and is not published.
 - Suites run serially. Runs interrupted by sandbox or environment setup problems
   are not counted as passes.
+
+## v1.0.0 release-candidate verification — 30 October 2026
+
+| Item | Value |
+| --- | --- |
+| Git tag | `v1.0.0-rc.1` |
+| Commit | `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7` (merge of pull request #90; `APP_VERSION` 1.0.0) |
+| Image | `ghcr.io/ventilatorrr/ai-qa-bug-triage@sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef` (tag `1.0.0-rc.1`) |
+
+**Automated verification.** The hosted runs are tied to the exact commits shown. The local
+records do not name the commit tested.
+
+| Check | Result |
+| --- | --- |
+| Local regression (serial, disposable databases, no real OpenAI calls) | Backend pytest **766 passed** in 529.61 s; offline AI evaluation **63 passed** in 10.92 s; frontend JavaScript **138 passed**; Chromium Playwright + BDD full suite passed (count not recorded), plus 2 tests in a separate headed run. Postman CLI: 25 requests, **50/50** assertions in 4.3 s. JMeter: smoke 7, small load 28 and timed load 335 samples, 0 errors. A first JMeter attempt failed because no server was listening; that setup failure is not counted |
+| Required checks on pull request #90 (`24458b5`) | **Passed:** [Application CI run 76](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41045547126) (Python, Frontend JavaScript, Playwright and BDD jobs), [Postman CI run 83](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41045547264), [JMeter CI run 77](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41045547232) |
+| Required checks on the merge commit (`22af3b3`, push to `main`) | **Passed:** [Application CI run 77](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41048019000), [Postman CI run 84](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41048019018), [JMeter CI run 78](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41048019066) |
+| Release image | **Passed:** [Release image run 1](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41063245078) confirmed the commit, built the image, smoke-tested the container and published it to GHCR. The registry returns the digest above for tag `1.0.0-rc.1` |
+
+**Render staging (manual, project owner).** The project owner performed and reported these
+checks; they are not independently verified automated results.
+
+| Check | Result |
+| --- | --- |
+| Deployment | Successful in Frankfurt (EU Central), with the SQLite database on the persistent disk at `/var/data` |
+| [Smoke checklist](release-runbook.md#5-smoke-checklist-staging-then-production) | Manual smoke testing passed |
+| AI Assist | Real provider requests succeeded, including classification suggestions (see the observation below) |
+| Restart | Data persisted after a Render service restart |
+| `python -m app.admin status` | Expected database path; no expired Demos |
+| Security headers | `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff` present |
+| HSTS | `Strict-Transport-Security` absent; Render provides HTTPS redirection. Accepted as a non-blocking hardening observation |
+
+**AI classification observation (quality, not a confirmed defect).** For an unusable
+application with no workaround and no stated affected-user scope, AI Assist suggested
+Blocker severity / Medium priority; adding "Affects all users" gave Blocker / Urgent, and a
+separate scenario affecting one user gave Medium priority. Priority suggestions are sensitive
+to the stated impact and scope, and Medium may underestimate urgency when scope is
+unspecified. Non-blocking for v1.0.0, because suggestions require human review before they
+are used; further AI evaluation is deferred.
+
+Six live AI evaluation attempts also ran locally on 30 October. Their outputs have not been
+semantically reviewed, so they are not reported as quality results.
+
+**Staging verification: Passed.** This is not a public release or a production Go decision;
+the remaining steps are listed under [pending release verification](#pending-release-verification).
 
 ## v1.0.0 development verification
 
@@ -188,10 +233,11 @@ risk; they do not guarantee quality.
 | 26 Oct 2026 | AI usage limits (schema version 2) | 710 | — | — |
 | 27 Oct 2026 | Try Demo, final regression | 744 | 122 | 33 |
 | 29 Oct 2026 | Data retention and account deletion | 823 | 138 | 34 |
+| 30 Oct 2026 | **v1.0.0-rc.1 release candidate** | 829 | 138 | Passed |
 
 All results are passes with no failures. A dash means the suite was not rerun
-for that milestone. Python counts up to 15 October predate the offline AI
-evaluation harness, which the default Python run includes from 16 October (23
+for that milestone; the 30 October Playwright + BDD count was not recorded.
+Python counts up to 15 October predate the offline AI evaluation harness, which the default Python run includes from 16 October (23
 cases that day), so earlier and later Python counts are not directly comparable.
 The Python count fell on 22 October because the offline harness stopped
 multiplying unchanged checks across request configurations.
@@ -599,8 +645,9 @@ Covered. Token usage and cost were not recorded for this evaluation.
   rule out hallucinations. Open minor observations: Q5 cross-field wording,
   BUG-18 title overstatement and BUG-17 provisional version.
 - **Try Demo:** Demos are deleted by the first hourly cleanup after they are
-  seven days old. Tests pass the time in rather than waiting seven days, and the
-  cleanup has not yet run on a deployment. Demo creation is subject to usage and
+  seven days old. Tests pass the time in rather than waiting seven days. Deletion of
+  an expired Demo has not been observed on a deployment; the 30 October staging check
+  only confirmed that no Demo was past retention. Demo creation is subject to usage and
   capacity limits.
 - **Concurrency:** Simultaneous changes to the same data may result in
   conflicting updates. High write contention may cause requests to fail.
@@ -612,12 +659,14 @@ Covered. Token usage and cost were not recorded for this evaluation.
 
 ## Pending release verification
 
-Not yet performed for v1.0.0; results will be recorded here when available. The
-[release runbook](release-runbook.md) defines the steps.
+Still outstanding for v1.0.0 after the
+[release-candidate verification](#v100-release-candidate-verification--30-october-2026);
+results will be recorded here when available. The [release runbook](release-runbook.md)
+defines the steps.
 
-- CI run evidence for pull requests #84 and #85.
-- Full local regression at the release-candidate commit.
-- Release image build and container smoke test.
 - Assessment of the deferred review findings for release impact.
-- Staging smoke checklist and Go/No-Go; production smoke after promotion.
+- Sign-off of the privacy and data-handling review.
 - Tracker reconciliation and an updated defect snapshot at the release candidate.
+- Final Go/No-Go decision.
+- Production deployment of the same digest, production smoke checklist and confirmation
+  that production matches the hosting statements; then the GitHub Release.
