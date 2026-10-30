@@ -2,7 +2,7 @@
 
 This report summarizes the 54 defects recorded as bug reports in the application's own tracker during its development. Other issues were found and fixed during development without separate bug reports, so the figures represent recorded defects, not every issue encountered.
 
-**Snapshot:** 28 October 2026 · **Source:** read-only extraction of the local application tracker, project **AI QA Bug Triage** (BUG-1–BUG-53). BUG-54 was added on 29 October 2026, after it was closed, from a read-only extraction of the same tracker. The application remains the source of truth; this is a dated record, not a live tracker. Fictional and scratch test projects and Try Demo copies are excluded. This snapshot is not a v1.0.0 Go/No-Go assessment; release verification is listed in the [execution report](test-execution.md#pending-release-verification).
+**Snapshot:** 28 October 2026 · **Source:** read-only extraction of the local application tracker, project **AI QA Bug Triage** (BUG-1–BUG-53). BUG-54 was added on 29 October 2026, after it was closed, from a read-only extraction of the same tracker. The application remains the source of truth; this is a dated record, not a live tracker. Fictional and scratch test projects and Try Demo copies are excluded. At the v1.0.0 release on 30 October 2026, the project owner reconciled this summary with the tracker: 54 defects, all Closed, with BUG-54 the latest. Release verification is recorded in the [execution report](test-execution.md#v100-production-release--30-october-2026).
 
 ## Summary
 
@@ -12,7 +12,7 @@ This report summarizes the 54 defects recorded as bug reports in the application
 | --- | ---: | --- |
 | `0.1.0` | 5 | Released 21 September 2026 |
 | `0.2.0` | 34 | Released 24 October 2026 |
-| `1.0.0` | 13 | Planned; not yet released |
+| `1.0.0` | 13 | Released 30 October 2026 |
 | **Total** | **52** | |
 
 | Metric | Distribution |
