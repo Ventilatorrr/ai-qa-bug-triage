@@ -83,6 +83,8 @@ def authenticated_user(page, account_factory, workflow):
 @when("I create a project with a valid project name")
 def create_project(page, workflow):
     workflow["name"] = unique_name("BDD project")
+    # Module scripts run before DOMContentLoaded; a new account's empty list renders nothing to await.
+    page.wait_for_load_state("domcontentloaded")
     page.get_by_role("button", name="New Project", exact=True).click()
     page.get_by_label("Project name:", exact=True).fill(workflow["name"])
     with page.expect_response(
@@ -110,6 +112,7 @@ def project_owner(page, e2e_api, workflow):
     member = next(member for member in members if member["user_id"] == workflow["account"]["id"])
     assert member["role"] == "Project Owner"
     page.get_by_role("link", name=workflow["name"], exact=True).click()
+    expect(page.get_by_role("heading", name=workflow["name"], exact=True)).to_be_visible()
     page.get_by_role("button", name="Show Members", exact=True).click()
     expect(page.locator("#members").get_by_text(
         f"{workflow['account']['email']} (Project Owner)", exact=True,

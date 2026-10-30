@@ -23,6 +23,7 @@ def test_owner_manages_membership_and_removed_user_loses_access(
 
     login(page, workspace["owner"])
     page.get_by_role("link", name=project["name"], exact=True).click()
+    expect(page.get_by_role("heading", name=project["name"], exact=True)).to_be_visible()
     page.get_by_role("button", name="Show Members").click()
 
     page.get_by_role("button", name="Add Member", exact=True).click()
@@ -57,6 +58,7 @@ def test_owner_manages_membership_and_removed_user_loses_access(
 
     login(page, workspace["owner"])
     page.get_by_role("link", name=project["name"], exact=True).click()
+    expect(page.get_by_role("heading", name=project["name"], exact=True)).to_be_visible()
     page.get_by_role("button", name="Show Members").click()
     # Dynamically rendered member entries have no named container role.
     member_entry = page.locator("#members > div").filter(
