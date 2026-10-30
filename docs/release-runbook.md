@@ -21,6 +21,7 @@ below. The GHCR package must be public so Render can pull it.
 | Release | Commit | Image digest |
 | --- | --- | --- |
 | `v1.0.0-rc.1` (image tag `1.0.0-rc.1`) | `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7` | `sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef` |
+| `v1.0.0` (promoted release candidate, not rebuilt) | `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7` | `sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef` |
 
 ## 3. Render services
 
@@ -113,14 +114,15 @@ Deploy the same digest to production, repeat the smoke checklist, then publish t
 **Rollback within v1.0.x:** redeploy the previous v1.0.x digest on the same disk. Versions
 before 1.0.0 cannot open a schema-3 database, so never roll back below 1.0.0 on an existing disk.
 
-**First release:** v1.0.0 has no earlier v1.0.x image to roll back to. Keep the separate
-v0.2.0 service and its disk until v1.0.0 production passes its smoke test, so the previous
-deployment remains available if the launch is abandoned before public use. It is not a
-safe rollback target after launch: v0.2.0 lacks the v1.0.0 public-hosting hardening and
-cannot carry over v1.0.0 accounts or data. If v1.0.0 fails after public launch, protect its
-disk and data first, then assess recovery; do not send public users to v0.2.0 automatically.
+**First release:** v1.0.0 has no earlier v1.0.x image to roll back to, and v0.2.0 is not a
+rollback target: its service was converted for v1.0.0 (section 7), it lacks the v1.0.0
+public-hosting hardening and it cannot carry over v1.0.0 accounts or data. If v1.0.0 fails,
+protect its disk and data first, then assess recovery.
 
-## 7. Retire the v0.2.0 service
+## 7. v0.2.0 service conversion (completed)
 
-After production passes its smoke test, shut down the old v0.2.0 Render service and delete
-its disk. Its database is not migrated, and the first-release fallback is no longer available.
+For v1.0.0, the existing `ai-qa-bug-triage` Render service, which ran v0.2.0 from Git with
+Python, was converted to the approved Docker image. It keeps its service identity and URL,
+<https://ai-qa-bug-triage.onrender.com/>. Its old persistent disk was deleted and a new 1 GB
+disk attached at `/var/data`, so no v0.2.0 data was migrated. No separate v0.2.0 service or
+disk remains to retire; this service is now production.

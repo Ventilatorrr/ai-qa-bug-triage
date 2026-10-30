@@ -11,14 +11,14 @@ not run) are labelled as such.
 
 | Area | Status |
 | --- | --- |
-| Released | **v0.2.0** (GitHub development release, 24 October 2026): Increments 1–3, REQ-001–REQ-023 |
-| Deployed | v0.2.0 development deployment on Render since 25 October 2026, currently suspended; `v1.0.0-rc.1` on Render staging since 30 October 2026. v1.0.0 is not deployed to production |
-| Release candidate | `v1.0.0-rc.1` at `22af3b3` (`APP_VERSION` 1.0.0), with Try Demo (REQ-024), AI usage limits (REQ-025) and the v1.0.0 release hardening. v1.0.0 is not publicly released |
+| Released | **v1.0.0** (first public portfolio release, 30 October 2026) at `22af3b3`, the tested release-candidate commit: REQ-001–REQ-026. Earlier: v0.2.0 (GitHub development release, 24 October 2026), Increments 1–3 |
+| Deployed | v1.0.0 in production on Render since 30 October 2026: the existing `ai-qa-bug-triage` service, which ran v0.2.0, now runs the release-candidate image on a new disk. `v1.0.0-rc.1` on Render staging |
+| Release candidate | `v1.0.0-rc.1` at `22af3b3` (`APP_VERSION` 1.0.0), with Try Demo (REQ-024), AI usage limits (REQ-025) and the v1.0.0 release hardening; promoted unchanged as v1.0.0 |
 | Latest full local regression | 30 October 2026, release candidate: Python **829 passed** (backend 766, offline AI evaluation 63), frontend JavaScript **138 passed**, Chromium Playwright + BDD full suite passed (count not recorded), Postman **50/50** assertions, JMeter 0 errors. See [release-candidate verification](#v100-release-candidate-verification--30-october-2026) |
 | Pull request CI | All five required checks passed on the release-candidate pull request #90 and its merge commit. CI runs for the earlier pull requests #84 and #85 are not recorded here; the release-candidate runs cover the merged code |
-| Release-candidate checks | Staging verification **passed** on 30 October 2026. Production deployment, production smoke testing and the final Go/No-Go decision are pending (see [pending release verification](#pending-release-verification)) |
+| Release checks | Staging verification **passed** and production smoke testing **passed** on 30 October 2026; release decision **GO** (see [v1.0.0 production release](#v100-production-release--30-october-2026)) |
 | AC coverage | **109 Covered / 0 Partial / 0 Not Covered** of 109 ACs. This assesses test evidence for each AC; it does not by itself establish release readiness |
-| Defects | 54 tracked defects in the [defect summary](defect-summary.md) (28 October 2026 snapshot, plus BUG-54 on 29 October), all Closed: 39 fixed in v0.1.0–v0.2.0, 13 fixed for the planned v1.0.0 (including BUG-54), and 2 closed without a fix |
+| Defects | 54 tracked defects in the [defect summary](defect-summary.md) (28 October 2026 snapshot, plus BUG-54 on 29 October; reconciled with the tracker at release), all Closed: 39 fixed in v0.1.0–v0.2.0, 13 fixed in v1.0.0 (including BUG-54), and 2 closed without a fix |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
 
 ## Environment and conventions
@@ -38,6 +38,29 @@ not run) are labelled as such.
   gitignored `ai-evaluation-results/` directory and is not published.
 - Suites run serially. Runs interrupted by sandbox or environment setup problems
   are not counted as passes.
+
+## v1.0.0 production release — 30 October 2026
+
+The release promoted the release candidate below unchanged: the final tag `v1.0.0` references
+commit `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7`, and production runs image digest
+`sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef`. Later commits on
+`main` change documentation only.
+
+| Gate | Result |
+| --- | --- |
+| Release-readiness review | Read-only, AI-assisted review of the remaining gates: no blockers. The Privacy Policy matched the implemented authentication, account deletion, Demo retention, AI data sharing and browser storage (source inspection) |
+| Privacy and data-handling review | **Signed off** by the project owner |
+| Defect reconciliation | The project owner reconciled the [defect summary](defect-summary.md) with the tracker: 54 defects, all Closed; BUG-54 is the latest; no open Blocker or Major |
+| Production deployment (project owner) | The existing `ai-qa-bug-triage` service in Frankfurt (EU Central) was converted from the v0.2.0 Python/Git deployment to the approved image, keeping its URL, <https://ai-qa-bug-triage.onrender.com/>. Its old disk was deleted, and a new 1 GB disk holds the SQLite database at `/var/data` |
+| [Production smoke checklist](release-runbook.md#5-smoke-checklist-staging-then-production) (manual, project owner) | Passed, including application functionality, AI Assist, and data persistence after a Render restart |
+| Independent production check (read-only HTTP requests) | `/version` returned `{"version":"1.0.0"}`; responses include `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`, and no HSTS header, as accepted at staging |
+| Go/No-Go | **GO**, project owner |
+| GitHub Release | [`v1.0.0`](https://github.com/Ventilatorrr/ai-qa-bug-triage/releases/tag/v1.0.0), published 30 October 2026 as a stable release (not a prerelease). The annotated tag points to `22af3b3`, and the notes name the digest above |
+
+The production deployment, including promoting the staging image unchanged, and the smoke
+results are reported by the project owner. The CI, image and registry results in the
+release-candidate section, the production check and the GitHub tag and Release are
+independently verified.
 
 ## v1.0.0 release-candidate verification — 30 October 2026
 
@@ -659,14 +682,15 @@ Covered. Token usage and cost were not recorded for this evaluation.
 
 ## Pending release verification
 
-Still outstanding for v1.0.0 after the
-[release-candidate verification](#v100-release-candidate-verification--30-october-2026);
-results will be recorded here when available. The [release runbook](release-runbook.md)
-defines the steps.
+v1.0.0 release verification is complete; see the
+[v1.0.0 production release](#v100-production-release--30-october-2026). One known,
+non-blocking correction remains:
 
-- Assessment of the deferred review findings for release impact.
-- Sign-off of the privacy and data-handling review.
-- Tracker reconciliation and an updated defect snapshot at the release candidate.
-- Final Go/No-Go decision.
-- Production deployment of the same digest, production smoke checklist and confirmation
-  that production matches the hosting statements; then the GitHub Release.
+- **Privacy Policy wording about the earlier deployment.** The v1.0.0 policy still says the
+  earlier version's service is suspended and its data not yet deleted; the service was
+  converted for production and its disk replaced. The page is part of the application, so
+  the correction needs a new application image, possibly v1.0.1. Replace that paragraph
+  with: "Version 1.0.0 started with a new database. Accounts and projects from earlier
+  versions were not migrated, and the earlier version's active database was deleted when
+  its persistent disk was replaced." Update the policy's "Last updated" date when the
+  correction is deployed.

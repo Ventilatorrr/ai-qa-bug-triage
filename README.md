@@ -213,6 +213,7 @@ Published releases:
 | --- | --- | --- |
 | `0.1.0` | 21 September 2026 | Git tag and GitHub Release `v0.1.0` |
 | `0.2.0` | 24 October 2026 | Core application GitHub development release `v0.2.0` |
+| `1.0.0` | 30 October 2026 | First public portfolio release, GitHub Release `v1.0.0` |
 
 Between releases, `APP_VERSION` carries a `-dev` label for the next version (for
 example `1.0.0-dev`). A release candidate sets `APP_VERSION` to the release
