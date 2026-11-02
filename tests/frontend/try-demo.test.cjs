@@ -29,12 +29,14 @@ function loginPage(responses, existingToken = null) {
         "#try-demo": demoButton,
         "#demo-status": {textContent: "", classList: {toggle: (name, on) => on ? statusClasses.add(name) : statusClasses.delete(name)}}
     };
-    const state = {requests: [], stored: [], destination: null};
+    const state = {requests: [], stored: [], removed: [], destination: null};
     const runtime = vm.createContext({
         document: {querySelector: selector => nodes[selector]},
+        atob,
         localStorage: {
             getItem: key => key === "access_token" ? existingToken : null,
-            setItem: (key, value) => state.stored.push([key, value])
+            setItem: (key, value) => state.stored.push([key, value]),
+            removeItem: key => state.removed.push(key)
         },
         window: {location: {replace: url => { state.destination = url; }}, addEventListener() {}},
         fetch: async (url, options) => {
@@ -62,13 +64,15 @@ test("test_try_demo_signs_in_once_and_opens_projects", async () => {
     assert.equal(page.message.textContent, "");
     assert.equal(page.status.textContent, "");
     await page.clickDemo();  // A second click while pending sends nothing.
-    finish(reply(201, {access_token: "demo.owner.token", token_type: "bearer"}));
+    const token = `header.${Buffer.from(JSON.stringify({user_id: 7})).toString("base64")}.signature`;
+    finish(reply(201, {access_token: token, token_type: "bearer"}));
     await first;
     assert.deepEqual(page.state.requests, [{url: "/demo", method: "POST"}]);  // No credentials or body.
-    assert.deepEqual(page.state.stored, [["access_token", "demo.owner.token"]]);
+    // The Demo owner's ID selects Demo guidance on Projects; the token itself is stored once.
+    assert.deepEqual(page.state.stored, [["access_token", token], ["demo_user_id", "7"]]);
     assert.equal(page.state.destination, "/projects.html");
     assert.equal(page.demoButton.disabled, true);  // Stays disabled while navigating.
-    assert.doesNotMatch(page.message.textContent, /demo\.owner\.token/);
+    assert.doesNotMatch(page.message.textContent, /signature/);
 });
 
 // TC-451 | AC-024.1, AC-024.8 — Failed Try Demo keeps the visitor signed out on Login and allows retry
@@ -133,11 +137,65 @@ test("test_demo_note_appears_only_for_demo_ecommerce_project", async () => {
         assert.equal(node("#demo-history-note").hidden, demoKind !== "history", name);
     }
     const html = fs.readFileSync(path.join(__dirname, "../../frontend/project.html"), "utf8");
-    const note = html.match(/<p id="demo-history-note" class="page-description" hidden>([\s\S]*?)<\/p>/)[1];
-    assert.equal(note.replace(/\s+/g, " ").trim(),
-        "This project showcases the testing and quality assurance work behind AI QA Bug Triage.<br> It contains genuine reports of defects discovered during development.");
-    assert.ok(html.indexOf('id="toggle-members"') < html.indexOf('id="demo-history-note"'));
-    assert.ok(html.indexOf('id="demo-history-note"') < html.indexOf('id="show-bug-form"'));
+    const text = id => html.match(new RegExp(`<p id="${id}" class="page-description" hidden>([\\s\\S]*?)</p>`))[1]
+        .replace(/\s+/g, " ").trim();
+    assert.equal(text("demo-note"),
+        "Some bug reports in Triage intentionally contain incomplete information, unclear wording, or questionable classifications.<br> " +
+        "To try AI Assist, open a bug with Status set to Triage and click Edit, or select New Bug and enter a report. " +
+        "Then click AI Assist to review suggested improvements.");
+    assert.equal(text("demo-history-note"),
+        "This project contains real defects discovered during development of AI QA Bug Triage.<br> " +
+        "Explore the reports to see how these defects were documented, classified, and tracked through to closure.");
+    // Both introductions follow the whole Members section, so expanding Members never moves them above it.
+    const membersEnd = html.indexOf("</section>", html.indexOf('class="members-section"'));
+    for (const id of ["demo-note", "demo-history-note"]) {
+        assert.ok(html.indexOf('id="toggle-members"') < membersEnd && membersEnd < html.indexOf(`id="${id}"`), id);
+        assert.ok(html.indexOf(`id="${id}"`) < html.indexOf('id="show-bug-form"'), id);
+    }
+});
+
+// TC-513 | — — My Projects shows Demo guidance only to the Try Demo account, outside project feedback
+test("test_projects_demo_instructions_follow_try_demo_account", async () => {
+    const tokenFor = userId => `header.${Buffer.from(JSON.stringify({user_id: userId})).toString("base64")}.signature`;
+    for (const [name, demoUserId, visible] of [
+        ["Try Demo account", "7", true], ["regular account", null, false], ["other account after a Demo", "8", false],
+    ]) {
+        const nodes = new Map();
+        const node = selector => {
+            if (!nodes.has(selector)) nodes.set(selector, new Element(selector === "#project-name" ? "input" : "div"));
+            return nodes.get(selector);
+        };
+        node("#demo-instructions").hidden = true;
+        node("#project-form").reset = () => {};
+        const stored = {access_token: tokenFor(7), demo_user_id: demoUserId};
+        const runtime = vm.createContext({
+            document: {querySelector: node, createElement: tag => new Element(tag)},
+            window: {location: {replace() {}}, addEventListener() {}}, atob, console,
+            localStorage: {getItem: key => stored[key] ?? null, setItem() {}, removeItem() {}},
+            sessionStorage: {getItem: () => null, setItem() {}, removeItem() {}},
+            formatApiError: detail => detail,
+            fetch: async (url, options = {}) => reply(options.method === "POST" ? 201 : 200,
+                options.method === "POST" ? {id: 3, name: "Extra"} : url.endsWith("/members")
+                    ? [{user_id: 7, email: "owner@example.com", role: "Project Owner"}] : [])
+        });
+        loadPageScript(runtime, "projects.js");
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(node("#demo-instructions").hidden, !visible, name);
+        // Creating another project shows feedback in #message without hiding the guidance.
+        node("#project-name").value = "Extra";
+        for (const handler of node("#project-form").listeners.submit) await handler({preventDefault() {}});
+        assert.equal(node("#message").textContent, 'Project "Extra" created successfully.', name);
+        assert.equal(node("#demo-instructions").hidden, !visible, name);
+    }
+    const html = fs.readFileSync(path.join(__dirname, "../../frontend/projects.html"), "utf8");
+    const guidance = html.match(/<p id="demo-instructions" class="page-description" hidden>([\s\S]*?)<\/p>/)[1];
+    assert.equal(guidance.replace(/\s+/g, " ").trim(),
+        "To explore AI Assist, open E-Commerce Demo.<br> To review real defects tracked during development, open AI QA Bug Triage.");
+    // Below New Project and the message area, directly above the project cards, and not inside #message.
+    const order = ['id="show-project-form"', 'id="message"', 'id="project-form"', 'id="demo-instructions"', 'id="projects"']
+        .map(marker => html.indexOf(marker));
+    assert.deepEqual(order, [...order].sort((a, b) => a - b));
+    assert.match(html, /<\/form>\s*<!--[^>]*-->\s*<p id="demo-instructions"[\s\S]*?<\/p>\s*<div id="projects"><\/div>/);
 });
 
 // TC-457 | AC-024.1 — Login shows the Demo introduction, button and session notice together; other pages do not

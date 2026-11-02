@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-513**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-514**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -21,7 +21,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Backend pytest (36 modules) | 290 | 301 | 764 cases; 125 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
-| Frontend Node (15 files) | 138 registered tests | 139 | Internal loops are variants |
+| Frontend Node (15 files) | 139 registered tests | 140 | Internal loops are variants |
 | Playwright (7 modules) | 21 functions | 22 | 29 Chromium scenarios |
 | Executable BDD (1 Python module, 4 features) | 5 scenarios | 5 | 5 Chromium scenarios via pytest-bdd |
 | Standalone browser fixtures (2 HTML files) | 3 routines | 3 | 9 divider + 4 destructive-state + 12 native-input variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 522 | **510** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 523 | **511** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -725,11 +725,12 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-450"></a>TC-450 | AC-024.1 | Try Demo sends one unauthenticated `POST /demo`, shows progress on the busy button without a separate message, ignores clicks while pending, stores the returned token like Login and opens Projects | Frontend JS / DOM substitutes | [`test_try_demo_signs_in_once_and_opens_projects`](../tests/frontend/try-demo.test.cjs#L54); All variants |
-| <a id="tc-451"></a>TC-451 | AC-024.1, AC-024.8 | Server, network and unreadable failures show the safe message under the Try Demo button, store no token, restore the button, stay on Login and allow a successful retry | Frontend JS / DOM substitutes | [`test_failed_try_demo_shows_error_and_allows_retry`](../tests/frontend/try-demo.test.cjs#L75); All variants |
-| <a id="tc-452"></a>TC-452 | AC-024.3 | The intentional-imperfection note follows the server-owned `ecommerce` marker, including after renaming; same-name ordinary projects do not show it | Frontend JS / DOM substitutes | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs#L101); All variants |
-| <a id="tc-462"></a>TC-462 | AC-024.4 | Exact consecutive-line historical introduction, shared message style and placement; visible only for the history marker, including renamed seeds; ordinary same-name and unrecognized markers stay hidden | Frontend JS / DOM substitutes and static HTML | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs); demoKind=history, undefined or unrecognized; all name variants |
-| <a id="tc-457"></a>TC-457 | AC-024.1 | Login shows the exact Demo introduction, Try Demo button and session notice in one section; other pages do not show the notice | Frontend JS / static HTML | [`test_login_demo_section_text_is_only_on_login`](../tests/frontend/try-demo.test.cjs#L144); All variants |
+| <a id="tc-450"></a>TC-450 | AC-024.1 | Try Demo sends one unauthenticated `POST /demo`, shows progress on the busy button without a separate message, ignores clicks while pending, stores the returned token like Login, records the Demo owner's user ID for Projects guidance and opens Projects | Frontend JS / DOM substitutes | [`test_try_demo_signs_in_once_and_opens_projects`](../tests/frontend/try-demo.test.cjs#L56); All variants |
+| <a id="tc-451"></a>TC-451 | AC-024.1, AC-024.8 | Server, network and unreadable failures show the safe message under the Try Demo button, store no token, restore the button, stay on Login and allow a successful retry | Frontend JS / DOM substitutes | [`test_failed_try_demo_shows_error_and_allows_retry`](../tests/frontend/try-demo.test.cjs#L79); All variants |
+| <a id="tc-452"></a>TC-452 | AC-024.3 | The intentional-imperfection note, with its exact AI Assist instruction, follows the server-owned `ecommerce` marker, including after renaming; same-name ordinary projects do not show it; it follows the whole Members section and precedes New Bug | Frontend JS / DOM substitutes and static HTML | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs#L105); All variants |
+| <a id="tc-462"></a>TC-462 | AC-024.4 | Exact consecutive-line historical introduction, shared message style and placement after the whole Members section and before New Bug; visible only for the history marker, including renamed seeds; ordinary same-name and unrecognized markers stay hidden | Frontend JS / DOM substitutes and static HTML | [`test_demo_note_appears_only_for_demo_ecommerce_project`](../tests/frontend/try-demo.test.cjs); demoKind=history, undefined or unrecognized; all name variants |
+| <a id="tc-513"></a>TC-513 | — | My Projects shows the exact two-line Demo guidance only to the account Try Demo signed in (not regular accounts or another account after a Demo), outside the project message area, directly above the project cards, and still after creating a project | Frontend JS / DOM substitutes and static HTML | [`test_projects_demo_instructions_follow_try_demo_account`](../tests/frontend/try-demo.test.cjs#L158); Try Demo account, regular account, other account after a Demo |
+| <a id="tc-457"></a>TC-457 | AC-024.1 | Login shows the exact Demo introduction, Try Demo button and session notice in one section; other pages do not show the notice | Frontend JS / static HTML | [`test_login_demo_section_text_is_only_on_login`](../tests/frontend/try-demo.test.cjs#L202); All variants |
 
 ## tests/e2e/test_ai_triage.py
 
@@ -786,7 +787,7 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with both seeded projects (20 and 54 bugs); each project shows its own introduction; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L17); Chromium |
+| <a id="tc-453"></a>TC-453 | AC-024.1, AC-024.3, AC-024.4, AC-024.6, AC-012.4 | The root page opens Login without a session; Try Demo opens Projects with its Demo guidance and both seeded projects (20 and 54 bugs); each project shows its own introduction, below expanded Members and above New Bug; the fictional project's Bug ID-descending first page shows BUG-20 first and BUG-14 with no clipped Assignee address; the session survives reload and the root page then opens Projects; following the guidance, a Triage bug's Edit form offers AI Assist | Playwright | [`test_try_demo_opens_seeded_projects_with_demo_note`](../tests/e2e/test_try_demo.py#L22); Chromium |
 
 ## tests/frontend/native-input.test.html
 

@@ -2,6 +2,7 @@ import {authenticatedFetch, getCurrentUserId, redirectToLogin} from "./auth.js";
 
 const projectsContainer = document.querySelector("#projects");
 const message = document.querySelector("#message");
+const demoInstructions = document.querySelector("#demo-instructions");
 const projectForm = document.querySelector("#project-form");
 
 const showProjectFormButton = document.querySelector("#show-project-form");
@@ -147,6 +148,14 @@ function showProjectListFeedback() {
 }
 
 
+// Guidance only for the account Try Demo signed in; set by login.js.
+function showDemoInstructions() {
+    const userId = getCurrentUserId();
+    demoInstructions.hidden = userId === null || localStorage.getItem("demo_user_id") !== String(userId);
+}
+
+
+showDemoInstructions();
 showProjectListFeedback();
 loadProjects();
 
