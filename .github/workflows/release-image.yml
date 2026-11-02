@@ -1,24 +1,33 @@
 name: Release image
 
-# Builds the exact approved release-candidate commit, smoke-tests the container and
-# publishes it to GHCR. Staging and production deploy the recorded digest.
+# Builds the exact approved commit once, smoke-tests the container and publishes it to GHCR.
+# Deployment modes then deploy that image, by digest, to staging and, after approval in the
+# protected production environment, the same digest to production. Nothing deploys on merge.
 on:
   workflow_dispatch:
     inputs:
       commit:
-        description: Approved release-candidate commit (full 40-character SHA)
+        description: Commit to build (full 40-character SHA; deployments require the current main HEAD)
         required: true
       tag:
-        description: Image tag, for example 1.0.0-rc.1
+        description: Image tag starting with APP_VERSION, for example 1.0.1-rc.1
         required: true
-      publish:
-        description: Push the image to GHCR (leave off for a build-and-smoke dry run)
-        type: boolean
-        default: false
+      mode:
+        description: build-only builds and smoke-tests without publishing; the other modes publish and deploy
+        type: choice
+        options:
+          - build-only
+          - staging
+          - staging-then-production
+        default: build-only
 
 permissions:
   contents: read
-  packages: write
+
+# One release run at a time, so overlapping runs cannot deploy different images in turn.
+concurrency:
+  group: release-image
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -29,6 +38,13 @@ jobs:
     name: Build, smoke-test and publish
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      checks: read
+    outputs:
+      image: ${{ steps.publish.outputs.image }}
+      version: ${{ steps.version.outputs.version }}
     env:
       IMAGE: ghcr.io/ventilatorrr/ai-qa-bug-triage
       COMMIT: ${{ inputs.commit }}
@@ -38,7 +54,35 @@ jobs:
       - name: Validate inputs
         run: |
           [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::commit must be a full lowercase SHA."; exit 1; }
-          [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::tag must be a version such as 1.0.0-rc.1."; exit 1; }
+          [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::tag must be a version such as 1.0.1-rc.1."; exit 1; }
+
+      - name: Require the current main commit with passing required checks
+        if: ${{ inputs.mode != 'build-only' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUIRED_CHECKS: |-
+            Python tests
+            Frontend JavaScript tests
+            Playwright and BDD tests
+            Postman API regression
+            JMeter API smoke
+        run: |
+          [[ "$GITHUB_REF" == refs/heads/main ]] || { echo "::error::Deployments must be dispatched from main."; exit 1; }
+          head=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          [[ "$COMMIT" == "$head" ]] || { echo "::error::$COMMIT is not the current main HEAD ($head)."; exit 1; }
+
+          gh api --paginate "repos/$GITHUB_REPOSITORY/commits/$COMMIT/check-runs?per_page=100" \
+            --jq '.check_runs[] | [.name, .status, (.conclusion // ""), .started_at] | @tsv' > check-runs.tsv
+          failed=0
+          while IFS= read -r name; do
+            # The most recent run of each required check must have completed successfully.
+            latest=$(awk -F '\t' -v name="$name" '$1 == name' check-runs.tsv | sort -t $'\t' -k 4 | tail -n 1)
+            if [[ "$latest" != "$name"$'\t'completed$'\t'success$'\t'* ]]; then
+              echo "::error::Required check '$name' has not succeeded on $COMMIT."
+              failed=1
+            fi
+          done <<< "$REQUIRED_CHECKS"
+          exit "$failed"
 
       - name: Check out the approved commit
         uses: actions/checkout@v7
@@ -49,8 +93,15 @@ jobs:
       - name: Confirm the exact commit
         run: test "$(git rev-parse HEAD)" = "$COMMIT"
 
+      - name: Read the application version
+        id: version
+        run: |
+          version=$(python3 -c 'import re; print(re.search(r"^APP_VERSION = \"([^\"]+)\"$", open("app/version.py").read(), re.M).group(1))')
+          [[ "$TAG" == "$version" || "$TAG" == "$version-"* ]] || { echo "::error::tag $TAG does not match APP_VERSION $version."; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Refuse to overwrite an existing tag
-        if: ${{ inputs.publish }}
+        if: ${{ inputs.mode != 'build-only' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -61,9 +112,11 @@ jobs:
           fi
 
       - name: Build
-        run: docker build --tag "$IMAGE:$TAG" .
+        run: docker build --build-arg GIT_COMMIT="$COMMIT" --tag "$IMAGE:$TAG" .
 
       - name: Container smoke test
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
 
@@ -88,9 +141,9 @@ jobs:
           }
           wait_ready
 
-          expected=$(python3 -c 'import re; print(re.search(r"\"(.+)\"", open("app/version.py").read()).group(1))')
-          actual=$(curl -fsS http://127.0.0.1:8000/version | python3 -c 'import json, sys; print(json.load(sys.stdin)["version"])')
-          test "$actual" = "$expected"
+          # The image reports the version and the exact commit it was built from.
+          curl -fsS http://127.0.0.1:8000/version | python3 -c 'import json, os, sys
+          assert json.load(sys.stdin) == {"version": os.environ["EXPECTED_VERSION"], "commit": os.environ["COMMIT"]}'
 
           headers=$(curl -fsSI http://127.0.0.1:8000/login.html)
           grep -qi '^x-frame-options: DENY' <<< "$headers"
@@ -104,13 +157,69 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$account" http://127.0.0.1:8000/login)" = 200
 
       - name: Publish and record the digest
-        if: ${{ inputs.publish }}
+        id: publish
+        if: ${{ inputs.mode != 'build-only' }}
         run: |
           docker push "$IMAGE:$TAG"
           digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$TAG")
+          [[ "$digest" =~ ^ghcr\.io/ventilatorrr/ai-qa-bug-triage@sha256:[0-9a-f]{64}$ ]] || { echo "::error::Unexpected digest reference $digest."; exit 1; }
+          echo "image=$digest" >> "$GITHUB_OUTPUT"
           {
             echo "### Release image"
             echo "- Commit: \`$COMMIT\`"
             echo "- Tag: \`$IMAGE:$TAG\`"
             echo "- Deploy by digest: \`$digest\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  staging:
+    name: Deploy to staging
+    needs: image
+    if: ${{ inputs.mode == 'staging' || inputs.mode == 'staging-then-production' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
+
+    steps:
+      - name: Check out the approved commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+
+      - name: Deploy the published digest and verify it
+        env:
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          APP_URL: ${{ vars.APP_URL }}
+          IMAGE: ${{ needs.image.outputs.image }}
+          EXPECTED_VERSION: ${{ needs.image.outputs.version }}
+          EXPECTED_COMMIT: ${{ inputs.commit }}
+        run: bash .github/scripts/deploy-to-render.sh
+
+  # Skipped entirely in staging mode, so no production approval is requested.
+  production:
+    name: Deploy to production
+    needs: [image, staging]
+    if: ${{ inputs.mode == 'staging-then-production' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+
+    steps:
+      - name: Check out the approved commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+
+      - name: Deploy the staging-verified digest and verify it
+        env:
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          APP_URL: ${{ vars.APP_URL }}
+          IMAGE: ${{ needs.image.outputs.image }}
+          EXPECTED_VERSION: ${{ needs.image.outputs.version }}
+          EXPECTED_COMMIT: ${{ inputs.commit }}
+        run: bash .github/scripts/deploy-to-render.sh

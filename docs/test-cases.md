@@ -6,7 +6,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 ## Conventions
 
-- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-514**.
+- Global sequence: TC-001 onward. Never renumber or reuse an assigned ID; next available: **TC-515**.
 - One row per conceptual case. Equivalent values/roles/states share an ID; approved distinct outcomes have explicit selectors.
 - `All variants` includes every declared parameter combination and internal loop for that named test.
 - References identify Python functions or exact Node registered names; generated Node names may share one source registration site.
@@ -18,7 +18,7 @@ own results. Test bodies and parameter data remain the executable specification.
 
 | Group | Maintained definitions/groups | TC IDs | Runner cases / variants |
 | --- | ---: | ---: | --- |
-| Backend pytest (36 modules) | 290 | 301 | 764 cases; 125 parameterized functions |
+| Backend pytest (36 modules) | 291 | 302 | 771 cases; 126 parameterized functions |
 | Offline evaluation harness pytest (1 module) | 18 | 18 | 63 cases; no real provider calls; TC-385 retired |
 | Opt-in real-model evaluation | 15 | 15 | Six A–F cases with 30 historical live executions; nine quality cases with ten reviewed live executions, including Q11's repeat |
 | Frontend Node (15 files) | 139 registered tests | 140 | Internal loops are variants |
@@ -29,7 +29,7 @@ own results. Test bodies and parameter data remain the executable specification.
 | Postman collection (seven folders) | 25 requests | 27 reused IDs | 50 named assertions; selected API variants only |
 | Postman isolation verification | 1 structured group | TC-391 | Infrastructure safety procedure |
 | JMeter API performance | 1 workflow | TC-392 | Seven HTTP requests per completed iteration; configurable users/loops/duration |
-| Total | 523 | **511** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
+| Total | 524 | **512** | Definition, conceptual-case and execution counts differ; reused IDs counted once; retired TC-385 remains assigned and is never reused |
 
 Some functions hold more than one approved conceptual case, each with its own ID and
 parameter selector.
@@ -514,8 +514,9 @@ parameter selector.
 
 | TC ID | AC mapping | Scenario | Test type | Implementation and parameter selector |
 | --- | --- | --- | --- | --- |
-| <a id="tc-227"></a>TC-227 | — | Application version is shared by openapi and endpoint | API / integration | [`test_application_version_is_shared_by_openapi_and_endpoint`](../tests/backend/test_version.py#L5); All variants |
-| <a id="tc-228"></a>TC-228 | — | About page includes application version loader | API / integration | [`test_about_page_includes_application_version_loader`](../tests/backend/test_version.py#L18); All variants |
+| <a id="tc-227"></a>TC-227 | — | Application version is shared by openapi and endpoint; without a recorded build the commit is null | API / integration | [`test_application_version_is_shared_by_openapi_and_endpoint`](../tests/backend/test_version.py#L10); All variants |
+| <a id="tc-514"></a>TC-514 | — | `/version` reports the build commit only when the image recorded a full lowercase SHA; a missing, empty, uppercase, short or extended value gives null | API / infrastructure | [`test_version_reports_only_a_valid_build_commit`](../tests/backend/test_version.py#L33); content=valid with newline, valid, missing, empty, uppercase, short, extra text |
+| <a id="tc-228"></a>TC-228 | — | About page includes application version loader | API / integration | [`test_about_page_includes_application_version_loader`](../tests/backend/test_version.py#L49); All variants |
 
 ## tests/frontend/ai-assist.test.cjs
 
