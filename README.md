@@ -19,6 +19,51 @@ The project demonstrates:
 
 It is built with FastAPI, SQLite and a plain HTML/CSS/JavaScript frontend.
 
+## Try the live Demo
+
+[**Open AI QA Bug Triage**](https://ai-qa-bug-triage.onrender.com/) and select
+**Try Demo** on the Login page. No registration is required: each Demo gets its
+own generated team and two seeded projects.
+
+| Project | What it shows |
+| --- | --- |
+| **E-Commerce Demo** | Fictional bug reports across the whole lifecycle. Some reports in Triage intentionally contain incomplete information, unclear wording or questionable classifications for AI Assist to improve. |
+| **AI QA Bug Triage** | Copies of the real defects discovered during development, showing how each was documented, classified and tracked through to closure. |
+
+To try AI Assist, open a bug with Status set to Triage and click **Edit**, or
+select **New Bug** and enter a report. Then click **AI Assist** and review each
+suggestion with **Use** or **Dismiss**; nothing is saved until you choose
+**Save** or **Create**.
+
+Demo work can't be accessed after logout or session expiry, and Demos are
+deleted after seven days. AI Assist sends report information and relevant
+project context to OpenAI and has daily usage limits, so don't enter sensitive
+information. See the [Privacy Policy](https://ai-qa-bug-triage.onrender.com/privacy.html).
+
+<p align="center"><sub>Select a screenshot to open it at full resolution.</sub></p>
+
+<p align="center">
+  <a href="docs/images/bug-list.png"><img src="docs/images/bug-list.png" width="900" alt="E-Commerce Demo Bug List with fictional bug reports, their severity, priority, status and assignee, and pagination"></a>
+  <br>
+  <em>1. E-Commerce Demo - Bug List</em>
+</p>
+
+<br>
+
+<p align="center">
+  <a href="docs/images/ai-assist-suggestions.png"><img src="docs/images/ai-assist-suggestions.png" width="750" alt="Edit Bug form for BUG-20 with pending AI suggestions for the title, description, reproduction steps, expected and actual results and severity, each with Use and Dismiss"></a>
+  <br>
+  <em>2. AI Assist - Reviewing BUG-20</em>
+</p>
+
+<br>
+
+<p align="center">
+  <a href="docs/images/bug-20-report.png"><img src="docs/images/bug-20-report.png" width="750" alt="BUG-20 report, still in Triage, after review with the improved title, description, reproduction steps, expected and actual results and Major severity"></a>
+  <br>
+  <em>3. BUG-20 - Report after review</em>
+</p>
+
 ## QA artifacts
 
 | Document | Contents |
@@ -52,7 +97,8 @@ It is built with FastAPI, SQLite and a plain HTML/CSS/JavaScript frontend.
 - **Try Demo:** visitors can start a Demo from the Login page without
   registering. Each Demo gets its own generated team and two seeded projects:
   20 fictional E-Commerce bug reports and copies of this project's genuine
-  development defects (a reviewed snapshot with account emails redacted).
+  development defects (a reviewed snapshot with account emails redacted). See
+  [Try the live Demo](#try-the-live-demo).
 
 ## Setup
 
