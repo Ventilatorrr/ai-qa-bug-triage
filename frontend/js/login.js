@@ -66,6 +66,7 @@ form.addEventListener("submit", async function (event) {
 
         if (response.ok) {
             localStorage.setItem("access_token", data.access_token);
+            localStorage.removeItem("demo_user_id");
             authenticatedRedirectInProgress = true;
             window.location.replace("/projects.html");
         } else {
@@ -83,6 +84,16 @@ form.addEventListener("submit", async function (event) {
 function showDemoStatus(text) {
     demoStatus.classList.toggle("message-error", Boolean(text));
     demoStatus.textContent = text;
+}
+
+// Demo accounts have no usable password, so only Try Demo in this browser signs one in.
+// The stored user ID only selects Demo guidance on Projects; it grants nothing.
+function rememberDemoUser(token) {
+    try {
+        localStorage.setItem("demo_user_id", String(JSON.parse(atob(token.split(".")[1])).user_id));
+    } catch (error) {
+        localStorage.removeItem("demo_user_id");
+    }
 }
 
 // Try Demo creates normal accounts on the server and signs in exactly like Login.
@@ -103,6 +114,7 @@ demoButton.addEventListener("click", async function () {
 
         if (response.ok && data.access_token) {
             localStorage.setItem("access_token", data.access_token);
+            rememberDemoUser(data.access_token);
             authenticatedRedirectInProgress = true;
             window.location.replace("/projects.html");
             return;

@@ -5,11 +5,16 @@ from tests.e2e.pages import BugList
 
 DEMO_NOTE = (
     "Some bug reports in Triage intentionally contain incomplete information, unclear wording, or questionable "
-    "classifications. AI Assist can help identify potential improvements to these reports."
+    "classifications. To try AI Assist, open a bug with Status set to Triage and click Edit, or select New Bug and "
+    "enter a report. Then click AI Assist to review suggested improvements."
 )
 HISTORY_NOTE = (
-    "This project showcases the testing and quality assurance work behind AI QA Bug Triage. "
-    "It contains genuine reports of defects discovered during development."
+    "This project contains real defects discovered during development of AI QA Bug Triage. "
+    "Explore the reports to see how these defects were documented, classified, and tracked through to closure."
+)
+DEMO_INSTRUCTIONS = (
+    "To explore AI Assist, open E-Commerce Demo. "
+    "To review real defects tracked during development, open AI QA Bug Triage."
 )
 
 
@@ -23,6 +28,8 @@ def test_try_demo_opens_seeded_projects_with_demo_note(page: Page):
     expect(page).to_have_url("/projects.html")
     expect(page.get_by_role("link", name="E-Commerce Demo", exact=True)).to_be_visible()
     expect(page.get_by_role("link", name="AI QA Bug Triage", exact=True)).to_be_visible()
+    expect(page.locator("#demo-instructions")).to_have_text(DEMO_INSTRUCTIONS)
+    expect(page.locator("#demo-instructions")).to_be_visible()
 
     note = page.locator("#demo-note")
     page.get_by_role("link", name="E-Commerce Demo", exact=True).click()
@@ -30,6 +37,13 @@ def test_try_demo_opens_seeded_projects_with_demo_note(page: Page):
     expect(note).to_be_visible()
     expect(note).to_have_text(DEMO_NOTE)
     expect(page.locator("#demo-history-note")).to_be_hidden()
+    # Expanded Members stay above the introduction, which stays above New Bug.
+    page.get_by_role("button", name="Show Members", exact=True).click()
+    members_bottom = page.locator("#members-content").bounding_box()
+    note_box = note.bounding_box()
+    assert members_bottom["y"] + members_bottom["height"] <= note_box["y"]
+    assert note_box["y"] + note_box["height"] <= page.locator("#show-bug-form").bounding_box()["y"]
+    page.get_by_role("button", name="Hide Members", exact=True).click()
     expect(page.get_by_text("Showing 1–10 of 20")).to_be_visible()
     # Default order is Bug ID descending: the newest report and BUG-14 are both on page one.
     bugs = BugList(page)
@@ -54,3 +68,11 @@ def test_try_demo_opens_seeded_projects_with_demo_note(page: Page):
     expect(page.get_by_role("heading", level=2, name="AI QA Bug Triage", exact=True)).to_be_visible()
     page.goto("/")
     expect(page).to_have_url("/projects.html")
+
+    # Following the E-Commerce Demo instructions reaches AI Assist on a Triage bug.
+    page.get_by_role("link", name="E-Commerce Demo", exact=True).click()
+    triage_row = BugList(page).rows.filter(has=page.locator("td[data-label='Status']", has_text="Triage")).first
+    triage_row.get_by_role("link").first.click()
+    expect(page.locator("#bug-status-detail")).to_have_text("Triage")
+    page.get_by_role("button", name="Edit", exact=True).click()
+    expect(page.get_by_role("button", name="AI Assist", exact=True)).to_be_visible()
