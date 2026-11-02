@@ -10,13 +10,45 @@ How a release candidate becomes a production release. Evidence lives in the
    jobs, Postman and JMeter). Record the CI runs in the execution report.
 3. Tag the commit as a pre-release (for example `v1.0.0-rc.1`).
 
-## 2. Build the image
+## 2. Build and deploy the image
 
-Run the **Release image** workflow with the full commit SHA, the tag `1.0.0-rc.1` and
-**publish** on. (With publish off it only builds and smoke-tests, which is useful as a dry run.)
-It builds exactly that commit, smoke-tests the container and pushes
-`ghcr.io/ventilatorrr/ai-qa-bug-triage:<tag>`. Record the digest from the job summary
-below. The GHCR package must be public so Render can pull it.
+Run the **Release image** workflow from `main` with the full commit SHA, an image tag that
+starts with `APP_VERSION` (for example `1.0.1-rc.1`) and a mode:
+
+| Mode | What it does |
+| --- | --- |
+| `build-only` | Builds and smoke-tests any commit; publishes and deploys nothing (dry run) |
+| `staging` | Publishes the image and deploys it to staging only; no production approval is requested |
+| `staging-then-production` | As `staging`, then waits for approval and deploys the same digest to production |
+
+For both deploy modes the commit must be the current `main` HEAD with all five required checks
+passed. The workflow builds that commit once, records it in the image, smoke-tests the
+container and pushes `ghcr.io/ventilatorrr/ai-qa-bug-triage:<tag>`. Each deploy calls the
+environment's Render deploy hook with an explicit `imgURL=<image>@sha256:…`, waits until
+`/version` reports the expected version and commit, then checks the security headers, the
+Privacy Policy page and that an unauthenticated `/projects` request returns 401. Timeouts and
+errors fail the run; nothing writes to either database. Production is never rebuilt and
+never deploys on a merge. Only one run executes at a time: a newer run waits, and replaces
+(cancels) any run that was already waiting. A `staging` run cannot be promoted later; to
+release, start a `staging-then-production` run with a new tag.
+
+Record the digest from the job summary below. The GHCR package must be public so Render can pull it.
+
+**GitHub environments** (Settings → Environments):
+
+| Setting | `staging` | `production` |
+| --- | --- | --- |
+| Deployment branches | `main` only | `main` only |
+| Required reviewers | None | The maintainer; **Prevent self-review off** (a single maintainer approves their own run) |
+| Allow administrators to bypass | — | Off |
+| Secret `RENDER_DEPLOY_HOOK_URL` | Staging service deploy hook | Production service deploy hook |
+| Variable `APP_URL` | Staging `https://…` origin | `https://ai-qa-bug-triage.onrender.com` |
+
+Copy each deploy hook straight from the Render service settings into its environment secret;
+regenerate the hook in Render if it is ever exposed. Configure both environments **before** the
+first deploy run: GitHub creates an environment that a workflow references without any
+protection rules, so the `production` name alone does not require approval. Never add a
+repository-level `RENDER_DEPLOY_HOOK_URL` secret, which every job could read without approval.
 
 | Release | Commit | Image digest |
 | --- | --- | --- |
@@ -41,6 +73,15 @@ Staging and production are separate Render web services that deploy the image **
 
 The application runs as a non-root user. If the disk mount is not writable for it, startup
 fails with a database error: fix the mount permissions rather than changing the path.
+
+**Configured image:** a deploy hook with `imgURL` deploys that digest but does not change the
+service's configured image, which stays at the previous digest. **Manual Deploy → Deploy latest
+reference**, or a hook call without `imgURL`, would redeploy that older image. After each
+successful deploy, review the service's Image URL in its Render settings and update it to the
+deployed digest; until then, use only the workflow to deploy. Before relying on restarts after
+the first automated staging deploy, restart staging once and confirm `/version` still reports
+the deployed commit. A service with a disk stops its old instance before starting the new one,
+so each deploy causes a brief outage.
 
 ## 4. Rules
 
@@ -109,10 +150,17 @@ Go when all of these hold:
 - Deferred review findings have been assessed for release impact.
 - The release candidate's CI and verification evidence is recorded in the execution report.
 
-Deploy the same digest to production, repeat the smoke checklist, then publish the GitHub Release.
+Approve the production job of the `staging-then-production` run, so production receives the
+digest that staging verified in the same run. After it passes, align both services' configured
+images (section 3), repeat the manual smoke checklist, then publish the GitHub Release.
 
-**Rollback within v1.0.x:** redeploy the previous v1.0.x digest on the same disk. Versions
-before 1.0.0 cannot open a schema-3 database, so never roll back below 1.0.0 on an existing disk.
+**Rollback within v1.0.x (manual):** in the production service's Render settings, set the Image
+URL to the previous known-good digest from the table in section 2, save, and deploy that
+reference. Confirm `/version` reports that release (images before 1.0.1 report only `version`;
+later ones also report their commit), check the headers and sign-in, and record the rollback.
+Restoring a disk snapshot is not part of a rollback: it loses later data and needs its own
+review. Versions before 1.0.0 cannot open a schema-3 database, so never roll back below 1.0.0
+on an existing disk, and check that the target image supports the database's schema version.
 
 **First release:** v1.0.0 has no earlier v1.0.x image to roll back to, and v0.2.0 is not a
 rollback target: its service was converted for v1.0.0 (section 7), it lacks the v1.0.0

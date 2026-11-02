@@ -12,7 +12,7 @@ from app.api.projects import router as projects_router
 from app.api.bugs import router as bugs_router
 from app.api.ai_assist import router as ai_assist_router
 from app.api.demo import router as demo_router
-from app.version import APP_VERSION
+from app.version import APP_VERSION, BUILD_COMMIT
 
 
 @asynccontextmanager
@@ -45,7 +45,8 @@ app.include_router(demo_router)
 
 @app.get("/version")
 def get_version():
-    return {"version": app.version}
+    # The commit lets a deployment confirm which build is live; it is null outside release images.
+    return {"version": app.version, "commit": BUILD_COMMIT}
 
 
 app.mount(
