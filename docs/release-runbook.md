@@ -54,6 +54,7 @@ repository-level `RENDER_DEPLOY_HOOK_URL` secret, which every job could read wit
 | --- | --- | --- |
 | `v1.0.0-rc.1` (image tag `1.0.0-rc.1`) | `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7` | `sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef` |
 | `v1.0.0` (promoted release candidate, not rebuilt) | `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7` | `sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef` |
+| `v1.0.1` (image tag `1.0.1-rc.1`, promoted from staging by digest) | `7aabfdf13ac10c93585101c32c97c97f97e62002` | `sha256:051f0df6ce4083c6dfff7c83ef002b6f39ddf980574af1ef5cad0c3b6d7f9328` |
 
 ## 3. Render services
 

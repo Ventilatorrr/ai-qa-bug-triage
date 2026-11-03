@@ -11,15 +11,14 @@ not run) are labelled as such.
 
 | Area | Status |
 | --- | --- |
-| Released | **v1.0.0** (first public portfolio release, 30 October 2026) at `22af3b3`, the tested release-candidate commit: REQ-001–REQ-026. Earlier: v0.2.0 (GitHub development release, 24 October 2026), Increments 1–3 |
-| Deployed | v1.0.0 in production on Render since 30 October 2026: the existing `ai-qa-bug-triage` service, which ran v0.2.0, now runs the release-candidate image on a new disk. `v1.0.0-rc.1` on Render staging |
-| Release candidate | `v1.0.0-rc.1` at `22af3b3` (`APP_VERSION` 1.0.0), with Try Demo (REQ-024), AI usage limits (REQ-025) and the v1.0.0 release hardening; promoted unchanged as v1.0.0 |
-| In preparation | v1.0.1 on `release/v1.0.1`: not yet merged, published or deployed (see [pending release verification](#pending-release-verification)) |
+| Released | **v1.0.1** (patch release, 3 November 2026) at `7aabfdf`. Earlier: v1.0.0 (first public portfolio release, 30 October 2026) at `22af3b3`, the tested release-candidate commit: REQ-001–REQ-026; v0.2.0 (GitHub development release, 24 October 2026), Increments 1–3 |
+| Deployed | v1.0.1 on Render staging and production since 3 November 2026, the same image digest in both. Production is the existing `ai-qa-bug-triage` service, keeping the disk and database it received for v1.0.0 |
+| Release candidate | v1.0.1: image tag `1.0.1-rc.1`, verified on staging and promoted to production by digest. v1.0.0: `v1.0.0-rc.1` at `22af3b3` (`APP_VERSION` 1.0.0), with Try Demo (REQ-024), AI usage limits (REQ-025) and the v1.0.0 release hardening; promoted unchanged as v1.0.0 |
 | Latest full local regression | 30 October 2026, release candidate: Python **829 passed** (backend 766, offline AI evaluation 63), frontend JavaScript **138 passed**, Chromium Playwright + BDD full suite passed (count not recorded), Postman **50/50** assertions, JMeter 0 errors. See [release-candidate verification](#v100-release-candidate-verification--30-october-2026) |
-| Pull request CI | All five required checks passed on the release-candidate pull request #90 and its merge commit. CI runs for the earlier pull requests #84 and #85 are not recorded here; the release-candidate runs cover the merged code |
-| Release checks | Staging verification **passed** and production smoke testing **passed** on 30 October 2026; release decision **GO** (see [v1.0.0 production release](#v100-production-release--30-october-2026)) |
+| Pull request CI | All five required checks passed for v1.0.1 (pull request #95 and its merge commit `7aabfdf`) and for v1.0.0 (pull request #90 and its merge commit). CI runs for the earlier pull requests #84 and #85 are not recorded here; the release-candidate runs cover the merged code |
+| Release checks | v1.0.1: staging verification and production smoke checks **passed** on 3 November 2026; release decision **GO** (see [v1.0.1 release](#v101-release--3-november-2026)). v1.0.0: both passed on 30 October 2026; **GO** (see [v1.0.0 production release](#v100-production-release--30-october-2026)) |
 | AC coverage | **109 Covered / 0 Partial / 0 Not Covered** of 109 ACs. This assesses test evidence for each AC; it does not by itself establish release readiness |
-| Defects | 54 tracked defects in the [defect summary](defect-summary.md) (28 October 2026 snapshot, plus BUG-54 on 29 October; reconciled with the tracker at release), all Closed: 39 fixed in v0.1.0–v0.2.0, 13 fixed in v1.0.0 (including BUG-54), and 2 closed without a fix |
+| Defects | 54 tracked defects in the [defect summary](defect-summary.md) (28 October 2026 snapshot, plus BUG-54 on 29 October; reconciled with the tracker at the v1.0.0 release), all Closed: 39 fixed in v0.1.0–v0.2.0, 13 fixed in v1.0.0 (including BUG-54), and 2 closed without a fix |
 | Main limitations | Chromium-only browser automation; no full accessibility audit; small, assisted-review AI samples |
 
 ## Environment and conventions
@@ -40,12 +39,41 @@ not run) are labelled as such.
 - Suites run serially. Runs interrupted by sandbox or environment setup problems
   are not counted as passes.
 
+## v1.0.1 release — 3 November 2026
+
+A patch release: it corrects the Privacy Policy's explanation of the v1.0.0 database
+replacement, adds Try Demo guidance (TC-513), reports the build commit in `/version`
+(TC-514) and adds gated staging and production deployment. The database schema is unchanged
+at version 4, so no data was migrated. No full local regression is recorded for v1.0.1; its
+automated evidence is the required CI checks below.
+
+| Item | Value |
+| --- | --- |
+| Git tag and GitHub Release | [`v1.0.1`](https://github.com/Ventilatorrr/ai-qa-bug-triage/releases/tag/v1.0.1), published 3 November 2026 as the latest stable release; the tag points to the commit below |
+| Commit | `7aabfdf13ac10c93585101c32c97c97f97e62002` (merge of pull request #95; `APP_VERSION` 1.0.1) |
+| Image | `ghcr.io/ventilatorrr/ai-qa-bug-triage@sha256:051f0df6ce4083c6dfff7c83ef002b6f39ddf980574af1ef5cad0c3b6d7f9328` (tag `1.0.1-rc.1`), deployed to staging and production without a rebuild |
+
+| Check | Result |
+| --- | --- |
+| Required checks on the merge commit (push to `main`) | **Passed:** [Application CI run 87](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41619789474), [Postman CI run 94](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41619789477), [JMeter CI run 88](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41619789620) |
+| Release image | **Passed:** [Release image run 4](https://github.com/Ventilatorrr/ai-qa-bug-triage/actions/runs/41621721501) (`staging-then-production`) built the commit once, smoke-tested the container and published it, then deployed the digest to staging and, after approval, to production. Each deploy confirmed `/version` reported 1.0.1 at the release commit and checked the security headers, the Privacy Policy and a 401 for unauthenticated `/projects` |
+| Staging (manual, project owner) | Existing accounts, projects and bugs preserved; after a restart, the version and database persisted; Privacy Policy and Try Demo checked |
+| Production (manual, project owner) | Existing accounts, projects and bugs preserved; Privacy Policy, Try Demo and About page checked. No live AI Assist request was made |
+| Configured images | Both Render services' configured image references aligned with the release digest |
+| Independent production check (read-only HTTP requests) | `/version` returned `{"version":"1.0.1","commit":"7aabfdf13ac10c93585101c32c97c97f97e62002"}`; responses include `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`; the Privacy Policy shows "Last updated 3 November 2026 · Version 1.0.1" |
+| Go/No-Go | **GO**, project owner |
+
+The manual staging and production checks, the production approval and the configured-image
+alignment are reported by the project owner. The CI and Release image runs, the registry digest
+for tag `1.0.1-rc.1`, the production check and the GitHub tag and Release are independently
+verified.
+
 ## v1.0.0 production release — 30 October 2026
 
 The release promoted the release candidate below unchanged: the final tag `v1.0.0` references
-commit `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7`, and production runs image digest
-`sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef`. Later commits on
-`main` change documentation only.
+commit `22af3b38b924173f3cb0e765a9b3ffc2f497c1e7`, and production ran image digest
+`sha256:521487fab6b59b20c1aafbfad4ef1a8b4a7993a16479ff8ecca1d18bc60a3bef`. Later changes were
+released in [v1.0.1](#v101-release--3-november-2026).
 
 | Gate | Result |
 | --- | --- |
@@ -680,28 +708,3 @@ Covered. Token usage and cost were not recorded for this evaluation.
   limitations and issues that were evaluated and deliberately deferred based
   on their potential impact and the scope of v1.0.0. Detailed assessments
   are maintained privately.
-
-## Pending release verification
-
-v1.0.0 release verification is complete; see the
-[v1.0.0 production release](#v100-production-release--30-october-2026).
-
-**v1.0.1** is being prepared on `release/v1.0.1` (`APP_VERSION` 1.0.1). It corrects the
-Privacy Policy wording about the earlier deployment (the v1.0.0 policy said the earlier
-service was suspended and its data not yet deleted), adds Try Demo guidance (TC-513), reports
-the build commit in `/version` (TC-514) and adds gated staging and production deployment. No
-v1.0.1 image has been published, and nothing has been deployed to staging or production.
-v1.0.1 release verification is pending. Record the staging results, production smoke checks
-and Go/No-Go decision after deployment. Remaining checks, following the
-[release runbook](release-runbook.md):
-
-- **CI:** all five required checks pass on the release pull request and its merge commit.
-- **Release image:** a `staging-then-production` run from `main` with the merge commit and a
-  new tag such as `1.0.1-rc.1`; record the commit, digest and runs here and in the runbook.
-- **Staging:** the smoke checklist passes, including data persistence after a restart, and the
-  configured-image behaviour is verified.
-- **Production:** approved only after staging passes; existing accounts, projects and bugs
-  remain accessible; lightweight smoke checks pass; both services' configured images are
-  aligned. v1.0.0 (`sha256:521487fa…`) remains the rollback target.
-- **Release:** defect summary reconciled with the tracker, Go/No-Go recorded and the v1.0.1
-  GitHub Release published.
