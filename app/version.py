@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 # The release image writes the built Git commit here (see Dockerfile). Local runs have no file.
 BUILD_COMMIT_FILE = Path(__file__).resolve().parent.parent / "BUILD_COMMIT"

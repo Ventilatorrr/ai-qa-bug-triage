@@ -51,17 +51,17 @@ information. See the [Privacy Policy](https://ai-qa-bug-triage.onrender.com/priv
 <br>
 
 <p align="center">
-  <a href="docs/images/ai-assist-suggestions.png"><img src="docs/images/ai-assist-suggestions.png" width="750" alt="Edit Bug form for BUG-20 with pending AI suggestions for the title, description, reproduction steps, expected and actual results and severity, each with Use and Dismiss"></a>
+  <a href="docs/images/ai-assist-suggestions.png"><img src="docs/images/ai-assist-suggestions.png" width="900" alt="Edit Bug form for BUG-17 with the original report and pending AI suggestions for the title, affected version, description, numbered reproduction steps, expected and actual results and severity, each with Use and Dismiss"></a>
   <br>
-  <em>2. AI Assist - Reviewing BUG-20</em>
+  <em>2. AI Assist - Reviewing BUG-17</em>
 </p>
 
 <br>
 
 <p align="center">
-  <a href="docs/images/bug-20-report.png"><img src="docs/images/bug-20-report.png" width="750" alt="BUG-20 report, still in Triage, after review with the improved title, description, reproduction steps, expected and actual results and Major severity"></a>
+  <a href="docs/images/bug-17-report.png"><img src="docs/images/bug-17-report.png" width="900" alt="BUG-17 report, still in Triage, after review with the improved title, description, numbered reproduction steps, expected and actual results and Major severity"></a>
   <br>
-  <em>3. BUG-20 - Report after review</em>
+  <em>3. BUG-17 - Report after review</em>
 </p>
 
 ## QA artifacts

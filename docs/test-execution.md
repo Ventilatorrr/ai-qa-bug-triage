@@ -1,6 +1,6 @@
 # QA test execution report
 
-Reporting date: **30 October 2026**. This report summarizes what was executed and
+Reporting date: **3 November 2026**. This report summarizes what was executed and
 what the results show. The [test-case catalogue](test-cases.md) defines the cases,
 the [RTM](traceability-matrix.md) owns acceptance-criteria coverage, and the
 [defect summary](defect-summary.md) records tracked defects. Counts below are
@@ -14,6 +14,7 @@ not run) are labelled as such.
 | Released | **v1.0.0** (first public portfolio release, 30 October 2026) at `22af3b3`, the tested release-candidate commit: REQ-001–REQ-026. Earlier: v0.2.0 (GitHub development release, 24 October 2026), Increments 1–3 |
 | Deployed | v1.0.0 in production on Render since 30 October 2026: the existing `ai-qa-bug-triage` service, which ran v0.2.0, now runs the release-candidate image on a new disk. `v1.0.0-rc.1` on Render staging |
 | Release candidate | `v1.0.0-rc.1` at `22af3b3` (`APP_VERSION` 1.0.0), with Try Demo (REQ-024), AI usage limits (REQ-025) and the v1.0.0 release hardening; promoted unchanged as v1.0.0 |
+| In preparation | v1.0.1 on `release/v1.0.1`: not yet merged, published or deployed (see [pending release verification](#pending-release-verification)) |
 | Latest full local regression | 30 October 2026, release candidate: Python **829 passed** (backend 766, offline AI evaluation 63), frontend JavaScript **138 passed**, Chromium Playwright + BDD full suite passed (count not recorded), Postman **50/50** assertions, JMeter 0 errors. See [release-candidate verification](#v100-release-candidate-verification--30-october-2026) |
 | Pull request CI | All five required checks passed on the release-candidate pull request #90 and its merge commit. CI runs for the earlier pull requests #84 and #85 are not recorded here; the release-candidate runs cover the merged code |
 | Release checks | Staging verification **passed** and production smoke testing **passed** on 30 October 2026; release decision **GO** (see [v1.0.0 production release](#v100-production-release--30-october-2026)) |
@@ -105,7 +106,7 @@ Six live AI evaluation attempts also ran locally on 30 October. Their outputs ha
 semantically reviewed, so they are not reported as quality results.
 
 **Staging verification: Passed.** This is not a public release or a production Go decision;
-the remaining steps are listed under [pending release verification](#pending-release-verification).
+the production steps are recorded under [v1.0.0 production release](#v100-production-release--30-october-2026).
 
 ## v1.0.0 development verification
 
@@ -683,14 +684,24 @@ Covered. Token usage and cost were not recorded for this evaluation.
 ## Pending release verification
 
 v1.0.0 release verification is complete; see the
-[v1.0.0 production release](#v100-production-release--30-october-2026). One known,
-non-blocking correction remains:
+[v1.0.0 production release](#v100-production-release--30-october-2026).
 
-- **Privacy Policy wording about the earlier deployment.** The v1.0.0 policy still says the
-  earlier version's service is suspended and its data not yet deleted; the service was
-  converted for production and its disk replaced. The page is part of the application, so
-  the correction needs a new application image, possibly v1.0.1. Replace that paragraph
-  with: "Version 1.0.0 started with a new database. Accounts and projects from earlier
-  versions were not migrated, and the earlier version's active database was deleted when
-  its persistent disk was replaced." Update the policy's "Last updated" date when the
-  correction is deployed.
+**v1.0.1** is being prepared on `release/v1.0.1` (`APP_VERSION` 1.0.1). It corrects the
+Privacy Policy wording about the earlier deployment (the v1.0.0 policy said the earlier
+service was suspended and its data not yet deleted), adds Try Demo guidance (TC-513), reports
+the build commit in `/version` (TC-514) and adds gated staging and production deployment. No
+v1.0.1 image has been published, and nothing has been deployed to staging or production.
+v1.0.1 release verification is pending. Record the staging results, production smoke checks
+and Go/No-Go decision after deployment. Remaining checks, following the
+[release runbook](release-runbook.md):
+
+- **CI:** all five required checks pass on the release pull request and its merge commit.
+- **Release image:** a `staging-then-production` run from `main` with the merge commit and a
+  new tag such as `1.0.1-rc.1`; record the commit, digest and runs here and in the runbook.
+- **Staging:** the smoke checklist passes, including data persistence after a restart, and the
+  configured-image behaviour is verified.
+- **Production:** approved only after staging passes; existing accounts, projects and bugs
+  remain accessible; lightweight smoke checks pass; both services' configured images are
+  aligned. v1.0.0 (`sha256:521487fa…`) remains the rollback target.
+- **Release:** defect summary reconciled with the tracker, Go/No-Go recorded and the v1.0.1
+  GitHub Release published.
