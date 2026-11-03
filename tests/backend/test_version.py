@@ -8,7 +8,7 @@ COMMIT = "0123456789abcdef0123456789abcdef01234567"
 
 # TC-227 | Technical — Application version is shared by openapi and endpoint
 def test_application_version_is_shared_by_openapi_and_endpoint(test_client):
-    assert APP_VERSION == "1.0.0"
+    assert APP_VERSION == "1.0.1"
 
     openapi_response = test_client.get("/openapi.json")
     version_response = test_client.get("/version")
